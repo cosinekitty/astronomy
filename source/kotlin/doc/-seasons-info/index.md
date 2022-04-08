@@ -7,7 +7,7 @@ class [SeasonsInfo](index.md)(marchEquinox: [AstroTime](../-astro-time/index.md)
 
 The dates and times of changes of season for a given calendar year.
 
-Call [Astronomy.seasons](../-astronomy/seasons.md) to calculate this data structure for a given year.
+Call [seasons](../seasons.md) to calculate this data structure for a given year.
 
 ## Constructors
 

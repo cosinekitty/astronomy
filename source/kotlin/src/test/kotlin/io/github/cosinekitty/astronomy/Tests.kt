@@ -236,7 +236,7 @@ class Tests {
         // in sidereal time in case it is broken.
         val correct = 9.398368460418821
         val time = AstroTime(2022, 3, 15, 21, 50, 0.0)
-        val gast = Astronomy.siderealTime(time)
+        val gast = siderealTime(time)
         assertTrue(gast.isFinite())
         val diff = abs(gast - correct)
         assertTrue(diff < 1.0e-15, "correct=$correct, gast=$gast, diff=$diff")
@@ -281,7 +281,7 @@ class Tests {
                 val ra = token[1].toDouble()
                 val dec = token[2].toDouble()
                 val time = AstroTime(jd - 2451545.0)
-                val axis = Astronomy.rotationAxis(body, time)
+                val axis = rotationAxis(body, time)
 
                 // Convert the reference angles to a reference north pole vector.
                 // tricky: `ra` is in degrees, not sidereal hours; so don't multiply by 15.
@@ -304,7 +304,7 @@ class Tests {
     fun `Sanity check geocentric moon`() {
         val time = AstroTime(2019, 6, 24, 15, 45, 37.0)
 
-        val eclSphere = Astronomy.eclipticGeoMoon(time)
+        val eclSphere = eclipticGeoMoon(time)
         val dlat = eclSphere.lat  - (-4.851798346972171)
         val dlon = eclSphere.lon  - (+354.5951298193645)
         var drad = eclSphere.dist - 0.0026968810499258147
@@ -312,7 +312,7 @@ class Tests {
         assertTrue(abs(dlon) < 1.0e-15, "eclipticGeoMoon: excessive longitude error $dlon")
         assertTrue(abs(drad) < 1.0e-17, "eclipticGeoMoon: excessive distance error $drad")
 
-        val equVec = Astronomy.geoMoon(time)
+        val equVec = geoMoon(time)
         checkVector(
             equVec,
             +0.002674037026701135, -0.0001531610316600666, -0.0003150159927069429,
@@ -439,7 +439,7 @@ class Tests {
     fun `Venus horizontal coords`() {
         val body = Body.Venus
         val time = AstroTime.fromTerrestrialTime(10373.141119633277)  // UT 2028-05-26T15:21:56.183Z
-        val pos = Astronomy.helioVector(body, time)
+        val pos = helioVector(body, time)
         checkVector(
             pos,
             -0.34191041083994594, -0.5908265808125958, -0.24422546639998666,
@@ -449,12 +449,12 @@ class Tests {
 
         val observer = Observer(29.0, -81.0, 10.0)
 
-        val ofdate = Astronomy.equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+        val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
         checkScalar(ofdate.ra,   4.893134408107621,   8.9e-16, "Venus EQD RA")
         checkScalar(ofdate.dec, 24.6998405830952,     1.0e-16, "Venus EQD DEC")
         checkScalar(ofdate.dist, 0.29355004763155124, 1.0e-16, "Venus EQD distance")
 
-        val hor = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+        val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
         checkScalar(hor.azimuth,  87.5963687042015,   1.0e-16, "Venus azimuth")
         checkScalar(hor.altitude, 54.929061963517746, 7.2e-15, "Venus altitude")
     }
@@ -466,14 +466,14 @@ class Tests {
         vx: Double, vy: Double, vz: Double
     ) {
         val tolerance = 1.0e-11
-        val calcPos = Astronomy.helioVector(body, time)
+        val calcPos = helioVector(body, time)
         checkVector(calcPos, x, y, z, tolerance, "helioVector($body)")
 
-        val calcDist = Astronomy.helioDistance(body, time)
+        val calcDist = helioDistance(body, time)
         val expectedDist = sqrt(x*x + y*y + z*z)
         checkScalar(calcDist, expectedDist, tolerance, "helioDistance($body)")
 
-        val calcState = Astronomy.helioState(body, time)
+        val calcState = helioState(body, time)
         checkVector(calcState.position(), x, y, z, tolerance, "helioState($body).position")
         checkVector(calcState.velocity(), vx, vy, vz, tolerance, "helioState($body).velocity")
     }
@@ -520,23 +520,23 @@ class Tests {
         outfile.println("o ${observer.latitude} ${observer.longitude} ${observer.height}")
         while (time.tt < stop.tt) {
             for (body in bodylist) {
-                pos = Astronomy.helioVector(body, time)
+                pos = helioVector(body, time)
                 outfile.println("v ${body} ${pos.t.tt} ${pos.x} ${pos.y} ${pos.z}")
                 if (body !in vectorOnlyList) {
-                    j2000 = Astronomy.equator(body, time, observer, EquatorEpoch.J2000, Aberration.None)
-                    ofdate = Astronomy.equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-                    hor = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+                    j2000 = equator(body, time, observer, EquatorEpoch.J2000, Aberration.None)
+                    ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+                    hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
                     outfile.println("s ${body} ${time.tt} ${time.ut} ${j2000.ra} ${j2000.dec} ${j2000.dist} ${hor.azimuth} ${hor.altitude}")
                 }
             }
-            pos = Astronomy.geoVector(Body.Moon, time, Aberration.None)
+            pos = geoVector(Body.Moon, time, Aberration.None)
             outfile.println("v GM ${pos.t.tt} ${pos.x} ${pos.y} ${pos.z}")
-            j2000 = Astronomy.equator(Body.Moon, time, observer, EquatorEpoch.J2000, Aberration.None)
-            ofdate = Astronomy.equator(Body.Moon, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-            hor = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+            j2000 = equator(Body.Moon, time, observer, EquatorEpoch.J2000, Aberration.None)
+            ofdate = equator(Body.Moon, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+            hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
             outfile.println("s GM ${time.tt} ${time.ut} ${j2000.ra} ${j2000.dec} ${j2000.dist} ${hor.azimuth} ${hor.altitude}")
 
-            val jm = Astronomy.jupiterMoons(time)
+            val jm = jupiterMoons(time)
             var mindex = 0
             for (moon in jm.moon) {
                 outfile.println("j ${mindex} ${time.tt} ${time.ut} ${moon.x} ${moon.y} ${moon.z} ${moon.vx} ${moon.vy} ${moon.vz}")
@@ -566,7 +566,7 @@ class Tests {
         val observer = Observer(-30.0, +150.0, 200.0)
 
         compareMatrices(
-            Astronomy.rotationEqjEcl(),
+            rotationEqjEcl(),
             RotationMatrix(
                 1.0, 0.0, 0.0,
                 0.0, +0.9174821430670688, -0.3977769691083922,
@@ -576,7 +576,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEclEqj(),
+            rotationEclEqj(),
             RotationMatrix(
                 1.0, 0.0, 0.0,
                 0.0, +0.9174821430670688, +0.3977769691083922,
@@ -586,7 +586,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEqjEqd(time),
+            rotationEqjEqd(time),
             RotationMatrix(
                 0.9999856608656787, 0.004911515527973243, 0.002134262929010771,
                 -0.004911577234051216, 0.9999879378516134, 2.367175135753887e-05,
@@ -596,7 +596,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEqdEqj(time),
+            rotationEqdEqj(time),
             RotationMatrix(
                 0.9999856608656787, -0.004911577234051216, -0.002134120921040258,
                 0.004911515527973243, 0.9999879378516134, -3.4154009138639524e-05,
@@ -606,7 +606,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEqdHor(time, observer),
+            rotationEqdHor(time, observer),
             RotationMatrix(
                 0.3272894142412824, -0.7559937548038297, 0.5668818942453582,
                 -0.3779968774019148, -0.6545788284825649, -0.6547097967625005,
@@ -616,7 +616,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationHorEqd(time, observer),
+            rotationHorEqd(time, observer),
             RotationMatrix(
                 0.3272894142412824, -0.3779968774019148, 0.8660254037844387,
                 -0.7559937548038297, -0.6545788284825649, 0.0,
@@ -626,7 +626,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationHorEqj(time, observer),
+            rotationHorEqj(time, observer),
             RotationMatrix(
                 0.3272765095764035, -0.37957932484539564, 0.86533786605545,
                 -0.7591978885882081, -0.6508578111404256, 0.0016357385795925856,
@@ -636,7 +636,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEqjHor(time, observer),
+            rotationEqjHor(time, observer),
             RotationMatrix(
                 0.3272765095764035, -0.7591978885882081, 0.5625910168521117,
                 -0.37957932484539564, -0.6508578111404256, -0.657498019637632,
@@ -646,7 +646,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEqdEcl(time),
+            rotationEqdEcl(time),
             RotationMatrix(
                 0.9999856608656787, -0.00535518855821894, -4.305530497609837e-06,
                 0.004911515527973243, 0.917457490583079, -0.39780350675706494,
@@ -656,7 +656,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEclEqd(time),
+            rotationEclEqd(time),
             RotationMatrix(
                 0.9999856608656787, 0.004911515527973243, 0.002134262929010771,
                 -0.00535518855821894, 0.917457490583079, 0.39779778145246825,
@@ -666,7 +666,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEclHor(time, observer),
+            rotationEclHor(time, observer),
             RotationMatrix(
                 0.3272765095764035, -0.7591978885882081, 0.5625910168521117,
                 -0.004045778808843881, -0.5964997602626152, -0.8026030573580397,
@@ -676,7 +676,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationHorEcl(time, observer),
+            rotationHorEcl(time, observer),
             RotationMatrix(
                 0.3272765095764035, -0.004045778808843881, 0.9449199531988498,
                 -0.7591978885882081, -0.5964997602626152, 0.26039700837346297,
@@ -686,7 +686,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationGalEqj(),
+            rotationGalEqj(),
             RotationMatrix(
                 -0.0548624779711344, -0.8734572784246782, -0.483800052994852,
                 0.4941095946388765, -0.4447938112296831, 0.7470034631630423,
@@ -696,7 +696,7 @@ class Tests {
         )
 
         compareMatrices(
-            Astronomy.rotationEqjGal(),
+            rotationEqjGal(),
             RotationMatrix(
                 -0.0548624779711344, 0.4941095946388765, -0.8676668813529025,
                 -0.8734572784246782, -0.4447938112296831, -0.1980677870294097,
@@ -720,7 +720,7 @@ class Tests {
             val ra: Double = groupDouble(m, 2, filename, lnum)
             val dec: Double = groupDouble(m, 3, filename, lnum)
             val symbol: String = groupString(m, 4, filename, lnum)
-            val constel = Astronomy.constellation(ra, dec)
+            val constel = constellation(ra, dec)
             assertTrue(constel.symbol == symbol, "$filename line $lnum: expected constellation $symbol, but found id=$id, symbol=${constel.symbol}")
 
             ++lnum;
@@ -740,7 +740,7 @@ class Tests {
         val func = CosineIdentityFunc()
         val time1 = AstroTime(0.0)
         val time2 = AstroTime(1.0)
-        val tsolve = Astronomy.search(func, time1, time2, toleranceSeconds)
+        val tsolve = search(func, time1, time2, toleranceSeconds)
         if (tsolve == null)
             fail("Basic search failed")
 
@@ -782,7 +782,7 @@ class Tests {
             val correctTime = AstroTime(year, month, day, hour, minute, 0.0)
             if (year != currentYear) {
                 currentYear = year
-                seasons = Astronomy.seasons(year)
+                seasons = seasons(year)
             }
 
             if (seasons == null)
@@ -838,7 +838,7 @@ class Tests {
         // https://github.com/cosinekitty/astronomy/issues/187
         // For years far from the present, the seasons search was sometimes failing.
         for (year in 1 .. 9999)
-            Astronomy.seasons(year)
+            seasons(year)
     }
 
     //----------------------------------------------------------------------------------------
@@ -870,7 +870,7 @@ class Tests {
 
             val expectedTime = AstroTime(year, month, day, hour, minute, second)
             val expectedElong = 90.0 * quarter
-            val calcElong = Astronomy.moonPhase(expectedTime)
+            val calcElong = moonPhase(expectedTime)
             var degreeError = abs(calcElong - expectedElong)
             if (degreeError > 180.0)
                 degreeError = 360.0 - degreeError
@@ -884,14 +884,14 @@ class Tests {
                 // Every time we see the year value change, it breaks continuity of the phases.
                 // Start the search over again.
                 val startTime = AstroTime(year, 1, 1, 0, 0, 0.0)
-                mq = Astronomy.searchMoonQuarter(startTime)
+                mq = searchMoonQuarter(startTime)
             } else {
                 if (mq == null)
                     fail("mq == null")  // should not be possible
 
                 // Yet another lunar quarter in the same year.
                 val expectedQuarter = (1 + mq.quarter) % 4
-                mq = Astronomy.nextMoonQuarter(mq)
+                mq = nextMoonQuarter(mq)
 
                 // Make sure we find the next expected quarter.
                 assertTrue(expectedQuarter == mq.quarter, "$filename line $lnum: expected quarter $expectedQuarter, but found ${mq.quarter}")
@@ -959,11 +959,11 @@ class Tests {
                 aDir = bDir
                 bEvt = null
             } else {
-                rEvt = Astronomy.searchRiseSet(body, observer, Direction.Rise, rSearchDate!!, 366.0)
+                rEvt = searchRiseSet(body, observer, Direction.Rise, rSearchDate!!, 366.0)
                 if (rEvt == null)
                     fail("$filename line $lnum: did not find $body rise event.")
 
-                sEvt = Astronomy.searchRiseSet(body, observer, Direction.Set, sSearchDate!!, 366.0)
+                sEvt = searchRiseSet(body, observer, Direction.Set, sSearchDate!!, 366.0)
                 if (sEvt == null)
                     fail("$filename line $lnum: did not find $body set event.")
 
@@ -1014,12 +1014,12 @@ class Tests {
             val searchDate = parseDate(tokens[2])
             val correctTimes = tokens.drop(3).map { it -> parseDate(it) }
             val calcTimes = arrayOf(
-                Astronomy.searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -18.0),  // astronomical dawn
-                Astronomy.searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -12.0),  // nautical dawn
-                Astronomy.searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0,  -6.0),  // civil dawn
-                Astronomy.searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0,  -6.0),  // civil dawn
-                Astronomy.searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0, -12.0),  // nautical dawn
-                Astronomy.searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0, -18.0),  // astronomical dawn
+                searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -18.0),  // astronomical dawn
+                searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0, -12.0),  // nautical dawn
+                searchAltitude(Body.Sun, observer, Direction.Rise, searchDate, 1.0,  -6.0),  // civil dawn
+                searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0,  -6.0),  // civil dawn
+                searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0, -12.0),  // nautical dawn
+                searchAltitude(Body.Sun, observer, Direction.Set,  searchDate, 1.0, -18.0),  // astronomical dawn
             )
             assertTrue(correctTimes.size == calcTimes.size, "correctTimes.size = ${correctTimes.size}, but calcTimes.size = ${calcTimes.size}")
             for (i in 0 until correctTimes.size) {

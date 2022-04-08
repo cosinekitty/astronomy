@@ -402,7 +402,7 @@ class AstroTime private constructor(
      */
     internal var st = Double.NaN
 
-    constructor(ut: Double) : this(ut, Astronomy.terrestrialTime(ut))
+    constructor(ut: Double) : this(ut, terrestrialTime(ut))
 
     /**
      * Creates an `AstroTime` object from a `Date` object.
@@ -495,7 +495,7 @@ class AstroTime private constructor(
          *
          * @param tt The number of days after the J2000 epoch.
          */
-        fun fromTerrestrialTime(tt: Double): AstroTime = AstroTime(Astronomy.universalTime(tt), tt)
+        fun fromTerrestrialTime(tt: Double): AstroTime = AstroTime(universalTime(tt), tt)
     }
 }
 
@@ -693,7 +693,7 @@ data class AstroVector(
     fun toHorizontal(refraction: Refraction): Spherical {
         val sphere = toSpherical()
         return Spherical(
-            sphere.lat + Astronomy.refractionAngle(refraction, sphere.lat),
+            sphere.lat + refractionAngle(refraction, sphere.lat),
             toggleAzimuthDirection(sphere.lon),
             sphere.dist
         )
@@ -803,7 +803,7 @@ data class StateVector(
 /**
  * Holds the positions and velocities of Jupiter's major 4 moons.
  *
- * The [Astronomy.jupiterMoons] function returns an object of this type
+ * The [jupiterMoons] function returns an object of this type
  * to report position and velocity vectors for Jupiter's largest 4 moons
  * Io, Europa, Ganymede, and Callisto. Each position vector is relative
  * to the center of Jupiter. Both position and velocity are oriented in
@@ -1038,14 +1038,14 @@ data class Spherical(
      *      [AstroVector] requires a valid time value when passed to certain other functions.
      *
      * @param refraction
-     *      The refraction option used to model atmospheric lensing. See [Astronomy.refractionAngle].
+     *      The refraction option used to model atmospheric lensing. See [refractionAngle].
      *      This specifies how refraction is to be removed from the altitude stored in `this.lat`.
      *
      * @return A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
      */
     fun toVectorFromHorizon(time: AstroTime, refraction: Refraction): AstroVector =
         Spherical(
-            lat + Astronomy.inverseRefractionAngle(refraction, lat),
+            lat + inverseRefractionAngle(refraction, lat),
             toggleAzimuthDirection(lon),
             dist
         )
@@ -1286,7 +1286,7 @@ data class Topocentric(
 /**
  * The dates and times of changes of season for a given calendar year.
  *
- * Call [Astronomy.seasons] to calculate this data structure for a given year.
+ * Call [seasons] to calculate this data structure for a given year.
  */
 class SeasonsInfo(
     /**
@@ -1328,7 +1328,7 @@ class MoonQuarterInfo(
 
 
 /**
- * Lunar libration angles, returned by [Astronomy.libration].
+ * Lunar libration angles, returned by [libration].
  */
 data class LibrationInfo(
     /**
@@ -1366,7 +1366,7 @@ data class LibrationInfo(
 /**
  * Information about a celestial body crossing a specific hour angle.
  *
- * Returned by the function [Astronomy.searchHourAngle] to report information about
+ * Returned by the function [searchHourAngle] to report information about
  * a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
  */
 class HourAngleInfo(
@@ -1385,8 +1385,8 @@ class HourAngleInfo(
 /**
  * Contains information about the visibility of a celestial body at a given date and time.
  *
- * See [Astronomy.elongation] for more detailed information about the members of this class.
- * See also [Astronomy.searchMaxElongation] for how to search for maximum elongation events.
+ * See [elongation] for more detailed information about the members of this class.
+ * See also [searchMaxElongation] for how to search for maximum elongation events.
  */
 class ElongationInfo(
     /**
@@ -1439,7 +1439,7 @@ enum class ApsisKind {
  * point is called *apogee*. The closest approach of a planet to the Sun is called
  * *perihelion* and the furthest point is called *aphelion*.
  *
- * This data structure is returned by [Astronomy.searchLunarApsis] and [Astronomy.nextLunarApsis]
+ * This data structure is returned by [searchLunarApsis] and [nextLunarApsis]
  * to iterate through consecutive alternating perigees and apogees.
  */
 class ApsisInfo(
@@ -1499,7 +1499,7 @@ enum class EclipseKind {
 /**
  * Information about a lunar eclipse.
  *
- * Returned by [Astronomy.searchLunarEclipse] or [Astronomy.nextLunarEclipse]
+ * Returned by [searchLunarEclipse] or [nextLunarEclipse]
  * to report information about a lunar eclipse event.
  * When a lunar eclipse is found, it is classified as penumbral, partial, or total.
  * Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed
@@ -1550,7 +1550,7 @@ class LunarEclipseInfo(
 /**
  * Reports the time and geographic location of the peak of a solar eclipse.
  *
- * Returned by [Astronomy.searchGlobalSolarEclipse] or [Astronomy.nextGlobalSolarEclipse]
+ * Returned by [searchGlobalSolarEclipse] or [nextGlobalSolarEclipse]
  * to report information about a solar eclipse event.
  *
  * The eclipse is classified as partial, annular, or total, depending on the
@@ -1630,7 +1630,7 @@ class EclipseEvent (
 /**
  * Information about a solar eclipse as seen by an observer at a given time and geographic location.
  *
- * Returned by [Astronomy.searchLocalSolarEclipse] or [Astronomy.nextLocalSolarEclipse]
+ * Returned by [searchLocalSolarEclipse] or [nextLocalSolarEclipse]
  * to report information about a solar eclipse as seen at a given geographic location.
  *
  * When a solar eclipse is found, it is classified as partial, annular, or total.
@@ -1688,7 +1688,7 @@ class LocalSolarEclipseInfo (
 /**
  * Information about a transit of Mercury or Venus, as seen from the Earth.
  *
- * Returned by [Astronomy.searchTransit] or [Astronomy.nextTransit] to report
+ * Returned by [searchTransit] or [nextTransit] to report
  * information about a transit of Mercury or Venus.
  * A transit is when Mercury or Venus passes between the Sun and Earth so that
  * the other planet is seen in silhouette against the Sun.
@@ -1767,7 +1767,7 @@ internal class ShadowInfo(
 /**
  * Information about the brightness and illuminated shape of a celestial body.
  *
- * Returned by the functions [Astronomy.illumination] and [Astronomy.searchPeakMagnitude]
+ * Returned by the functions [illumination] and [searchPeakMagnitude]
  * to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
  */
 class IlluminationInfo(
@@ -1809,7 +1809,7 @@ class IlluminationInfo(
 /**
  * Information about a body's rotation axis at a given time.
  *
- * This structure is returned by [Astronomy.rotationAxis] to report
+ * This structure is returned by [rotationAxis] to report
  * the orientation of a body's rotation axis at a given moment in time.
  * The axis is specified by the direction in space that the body's north pole
  * points, using angular equatorial coordinates in the J2000 system (EQJ).
@@ -1878,7 +1878,7 @@ enum class NodeEventKind {
 /**
  * Information about an ascending or descending node of a body.
  *
- * This object is returned by [Astronomy.searchMoonNode] and [Astronomy.nextMoonNode]
+ * This object is returned by [searchMoonNode] and [nextMoonNode]
  * to report information about the center of the Moon passing through the ecliptic plane.
  */
 class NodeEventInfo(
@@ -1897,7 +1897,7 @@ class NodeEventInfo(
 /**
  * Represents a function whose ascending root is to be found.
  *
- * This interface must be implemented for callers of [Astronomy.search]
+ * This interface must be implemented for callers of [search]
  * in order to find the ascending root of a smooth function.
  * A class that implements `SearchContext` can hold state information
  * needed to evaluate the scalar function `eval`.
@@ -1919,10 +1919,10 @@ interface SearchContext {
 /**
  * Reports the constellation that a given celestial point lies within.
  *
- * The [Astronomy.constellation] function returns this object
+ * The [constellation] function returns this object
  * to report which constellation corresponds with a given point in the sky.
  * Constellations are defined with respect to the B1875 equatorial system
- * per IAU standard. Although `Astronomy.constellation` requires J2000 equatorial
+ * per IAU standard. Although `constellation` requires J2000 equatorial
  * coordinates, `ConstellationInfo` contains converted B1875 coordinates for reference.
  */
 class ConstellationInfo(
@@ -2700,2568 +2700,2549 @@ private fun calcJupiterMoon(time: AstroTime, m: JupiterMoon): StateVector {
 
 //---------------------------------------------------------------------------------------
 
+
+internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / SECONDS_PER_DAY
+
+private val epoch2000 = AstroTime(0.0)
+
+internal fun deltaT(ut: Double): Double {
+    /*
+        Fred Espenak writes about Delta-T generically here:
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
+
+        He provides polynomial approximations for distant years here:
+        https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+
+        They start with a year value 'y' such that y=2000 corresponds
+        to the UTC Date 15-January-2000. Convert difference in days
+        to mean tropical years.
+    */
+    val u: Double
+    val u2: Double
+    val u3: Double
+    val u4: Double
+    val u5: Double
+    val u6: Double
+    val u7: Double
+    val y = 2000 + (ut - 14) / DAYS_PER_TROPICAL_YEAR
+    return when {
+        y < -500 -> {
+            u = (y - 1820) / 100
+            -20.0 + (32.0 * u * u)
+        }
+        y < 500.0 -> {
+            u = y / 100
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3
+            10583.6 - (1014.41 * u) + (33.78311 * u2) - (5.952053 * u3) - (0.1798452 * u4) + (0.022174192 * u5) + (0.0090316521 * u6)
+        }
+        y < 1600.0 -> {
+            u = (y - 1000) / 100
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3
+            1574.2 - (556.01 * u) + (71.23472 * u2) + (0.319781 * u3) - (0.8503463 * u4) - (0.005050998 * u5) + (0.0083572073 * u6)
+        }
+        y < 1700.0 -> {
+            u = y - 1600
+            u2 = u * u; u3 = u * u2
+            120.0 - (0.9808 * u) - (0.01532 * u2) + (u3 / 7129)
+        }
+        y < 1800.0 -> {
+            u = y - 1700
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2
+            8.83 + (0.1603 * u) - (0.0059285 * u2) + (0.00013336 * u3) - (u4 / 1174000)
+        }
+        y < 1860.0 -> {
+            u = y - 1800
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3; u7 = u3 * u4
+            13.72 - (0.332447 * u) + (0.0068612 * u2) + (0.0041116 * u3) - (0.00037436 * u4) + (0.0000121272 * u5) - (0.0000001699 * u6) + (0.000000000875 * u7)
+        }
+        y < 1900.0 -> {
+            u = y - 1860
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3
+            7.62 + (0.5737 * u) - (0.251754 * u2) + (0.01680668 * u3) - (0.0004473624 * u4) + (u5 / 233174)
+        }
+        y < 1920.0 -> {
+            u = y - 1900
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2
+            -2.79 + (1.494119 * u) - (0.0598939 * u2) + (0.0061966 * u3) - (0.000197 * u4)
+        }
+        y < 1941.0 -> {
+            u = y - 1920
+            u2 = u * u; u3 = u * u2
+            21.20 + (0.84493 * u) - (0.076100 * u2) + (0.0020936 * u3)
+        }
+        y < 1961 -> {
+            u = y - 1950
+            u2 = u * u; u3 = u * u2
+            29.07 + (0.407 * u) - (u2 / 233) + (u3 / 2547)
+        }
+        y < 1986.0 -> {
+            u = y - 1975
+            u2 = u * u; u3 = u * u2
+            45.45 + (1.067 * u) - (u2 / 260) - (u3 / 718)
+        }
+        y < 2005 -> {
+            u = y - 2000
+            u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3
+            63.86 + (0.3345 * u) - (0.060374 * u2) + (0.0017275 * u3) + (0.000651814 * u4) + (0.00002373599 * u5)
+        }
+        y < 2050 -> {
+            u = y - 2000
+            62.92 + (0.32217 * u) + (0.005589 * u * u)
+        }
+        y < 2150 -> {
+            u = (y - 1820) / 100
+            -20 + (32 * u * u) - (0.5628 * (2150 - y))
+        }
+        else -> {   // all years after 2150
+            u = (y - 1820) / 100
+            -20 + (32 * u * u)
+        }
+    }
+}
+
+internal fun universalTime(tt: Double): Double {
+    // This is the inverse function of terrestrialTime.
+    // This is an iterative numerical solver, but because
+    // the relationship between UT and TT is almost perfectly linear,
+    // it converges extremely fast (never more than 3 iterations).
+
+    // dt = tt - ut
+    var dt = terrestrialTime(tt) - tt
+    while (true) {
+        val ut = tt - dt
+        val ttCheck = terrestrialTime(ut)
+        val err = ttCheck - tt
+        if (err.absoluteValue < 1.0e-12) return ut
+        dt += err
+    }
+}
+
 /**
- * The main container of astronomy calculation functions.
+ * Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+ *
+ * Given an altitude angle and a refraction option, calculates
+ * the amount of "lift" caused by atmospheric refraction.
+ * This is the number of degrees higher in the sky an object appears
+ * due to the lensing of the Earth's atmosphere.
+ *
+ * @param refraction
+ *      The option selecting which refraction correction to use.
+ *      If `Refraction.Normal`, uses a well-behaved refraction model that works well for
+ *      all valid values (-90 to +90) of `altitude`.
+ *      If `Refraction.JplHor`, this function returns a compatible value with the JPL Horizons tool.
+ *      If any other value, including `Refraction.None`, this function returns 0.
+ *
+ * @param altitude
+ *      An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
  */
-object Astronomy {
-    private const val SECONDS_PER_DAY = 24 * 3600
-    internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / SECONDS_PER_DAY
+fun refractionAngle(refraction: Refraction, altitude: Double): Double {
+    if (altitude < -90.0 || altitude > +90.0)
+        return 0.0     // no attempt to correct an invalid altitude
 
-    // Create a rotation matrix for converting J2000 to B1875.
-    // Need to calculate the B1875 epoch. Based on this:
-    // https://en.wikipedia.org/wiki/Epoch_(astronomy)#Besselian_years
-    // B = 1900 + (JD - 2415020.31352) / 365.242198781
-    // I'm interested in using TT instead of JD, giving:
-    // B = 1900 + ((TT+2451545) - 2415020.31352) / 365.242198781
-    // B = 1900 + (TT + 36524.68648) / 365.242198781
-    // TT = 365.242198781*(B - 1900) - 36524.68648 = -45655.741449525
-    // But the AstroTime constructor wants UT, not TT.
-    // Near that date, I get a historical correction of ut-tt = 3.2 seconds.
-    // That gives UT = -45655.74141261017 for the B1875 epoch,
-    // or 1874-12-31T18:12:21.950Z.
-    private val constelRot: RotationMatrix = Astronomy.rotationEqjEqd(AstroTime(-45655.74141261017))
+    var angle: Double
+    if (refraction == Refraction.Normal || refraction == Refraction.JplHor) {
+        // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+        // JPL Horizons says it uses refraction algorithm from
+        // Meeus "Astronomical Algorithms", 1991, p. 101-102.
+        // I found the following Go implementation:
+        // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+        // This is a translation from the function "Saemundsson" there.
+        // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+        // This is important because the tangent formula below goes crazy near hd = -5.11.
+        val hd = altitude.coerceAtLeast(-1.0)
+        angle = (1.02 / dtan(hd + 10.3/(hd + 5.11))) / 60.0
 
-    private val epoch2000 = AstroTime(0.0)
-
-    internal fun deltaT(ut: Double): Double {
-        /*
-            Fred Espenak writes about Delta-T generically here:
-            https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
-            https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
-
-            He provides polynomial approximations for distant years here:
-            https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
-
-            They start with a year value 'y' such that y=2000 corresponds
-            to the UTC Date 15-January-2000. Convert difference in days
-            to mean tropical years.
-        */
-        val u: Double
-        val u2: Double
-        val u3: Double
-        val u4: Double
-        val u5: Double
-        val u6: Double
-        val u7: Double
-        val y = 2000 + (ut - 14) / DAYS_PER_TROPICAL_YEAR
-        return when {
-            y < -500 -> {
-                u = (y - 1820) / 100
-                -20.0 + (32.0 * u * u)
-            }
-            y < 500.0 -> {
-                u = y / 100
-                u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3
-                10583.6 - (1014.41 * u) + (33.78311 * u2) - (5.952053 * u3) - (0.1798452 * u4) + (0.022174192 * u5) + (0.0090316521 * u6)
-            }
-            y < 1600.0 -> {
-                u = (y - 1000) / 100
-                u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3
-                1574.2 - (556.01 * u) + (71.23472 * u2) + (0.319781 * u3) - (0.8503463 * u4) - (0.005050998 * u5) + (0.0083572073 * u6)
-            }
-            y < 1700.0 -> {
-                u = y - 1600
-                u2 = u * u; u3 = u * u2
-                120.0 - (0.9808 * u) - (0.01532 * u2) + (u3 / 7129)
-            }
-            y < 1800.0 -> {
-                u = y - 1700
-                u2 = u * u; u3 = u * u2; u4 = u2 * u2
-                8.83 + (0.1603 * u) - (0.0059285 * u2) + (0.00013336 * u3) - (u4 / 1174000)
-            }
-            y < 1860.0 -> {
-                u = y - 1800
-                u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3; u6 = u3 * u3; u7 = u3 * u4
-                13.72 - (0.332447 * u) + (0.0068612 * u2) + (0.0041116 * u3) - (0.00037436 * u4) + (0.0000121272 * u5) - (0.0000001699 * u6) + (0.000000000875 * u7)
-            }
-            y < 1900.0 -> {
-                u = y - 1860
-                u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3
-                7.62 + (0.5737 * u) - (0.251754 * u2) + (0.01680668 * u3) - (0.0004473624 * u4) + (u5 / 233174)
-            }
-            y < 1920.0 -> {
-                u = y - 1900
-                u2 = u * u; u3 = u * u2; u4 = u2 * u2
-                -2.79 + (1.494119 * u) - (0.0598939 * u2) + (0.0061966 * u3) - (0.000197 * u4)
-            }
-            y < 1941.0 -> {
-                u = y - 1920
-                u2 = u * u; u3 = u * u2
-                21.20 + (0.84493 * u) - (0.076100 * u2) + (0.0020936 * u3)
-            }
-            y < 1961 -> {
-                u = y - 1950
-                u2 = u * u; u3 = u * u2
-                29.07 + (0.407 * u) - (u2 / 233) + (u3 / 2547)
-            }
-            y < 1986.0 -> {
-                u = y - 1975
-                u2 = u * u; u3 = u * u2
-                45.45 + (1.067 * u) - (u2 / 260) - (u3 / 718)
-            }
-            y < 2005 -> {
-                u = y - 2000
-                u2 = u * u; u3 = u * u2; u4 = u2 * u2; u5 = u2 * u3
-                63.86 + (0.3345 * u) - (0.060374 * u2) + (0.0017275 * u3) + (0.000651814 * u4) + (0.00002373599 * u5)
-            }
-            y < 2050 -> {
-                u = y - 2000
-                62.92 + (0.32217 * u) + (0.005589 * u * u)
-            }
-            y < 2150 -> {
-                u = (y - 1820) / 100
-                -20 + (32 * u * u) - (0.5628 * (2150 - y))
-            }
-            else -> {   // all years after 2150
-                u = (y - 1820) / 100
-                -20 + (32 * u * u)
-            }
+        if (refraction == Refraction.Normal && altitude < -1.0) {
+            // In "normal" mode we gradually reduce refraction toward the nadir
+            // so that we never get an altitude angle less than -90 degrees.
+            // When horizon angle is -1 degrees, the factor is exactly 1.
+            // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+            angle *= (altitude + 90.0) / 89.0
         }
+    } else {
+        // No refraction, or the refraction option is invalid.
+        angle = 0.0
     }
+    return angle
+}
 
-    internal fun universalTime(tt: Double): Double {
-        // This is the inverse function of terrestrialTime.
-        // This is an iterative numerical solver, but because
-        // the relationship between UT and TT is almost perfectly linear,
-        // it converges extremely fast (never more than 3 iterations).
+/**
+ * Calculates the inverse of an atmospheric refraction angle.
+ *
+ * Given an observed altitude angle that includes atmospheric refraction,
+ * calculates the negative angular correction to obtain the unrefracted
+ * altitude. This is useful for cases where observed horizontal
+ * coordinates are to be converted to another orientation system,
+ * but refraction first must be removed from the observed position.
+ *
+ * @param refraction
+ *      The option selecting which refraction correction to use.
+ *
+ * @param bentAltitude
+ *      The apparent altitude that includes atmospheric refraction.
+ *
+ * @param
+ *      The angular adjustment in degrees to be added to the
+ *      altitude angle to remove atmospheric lensing.
+ *      This will be less than or equal to zero.
+ */
+fun inverseRefractionAngle(refraction: Refraction, bentAltitude: Double): Double {
+    if (bentAltitude < -90.0 || bentAltitude > +90.0)
+        return 0.0     // no attempt to correct an invalid altitude
 
-        // dt = tt - ut
-        var dt = terrestrialTime(tt) - tt
-        while (true) {
-            val ut = tt - dt
-            val ttCheck = terrestrialTime(ut)
-            val err = ttCheck - tt
-            if (err.absoluteValue < 1.0e-12) return ut
-            dt += err
-        }
+    // Find the pre-adjusted altitude whose refraction correction leads to 'altitude'.
+    var altitude = bentAltitude - refractionAngle(refraction, bentAltitude)
+    while (true) {
+        // See how close we got.
+        var diff = (altitude + refractionAngle(refraction, altitude)) - bentAltitude
+        if (diff.absoluteValue < 1.0e-14)
+            return altitude - bentAltitude
+        altitude -= diff
     }
+}
 
-    /**
-     * Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
-     *
-     * Given an altitude angle and a refraction option, calculates
-     * the amount of "lift" caused by atmospheric refraction.
-     * This is the number of degrees higher in the sky an object appears
-     * due to the lensing of the Earth's atmosphere.
-     *
-     * @param refraction
-     *      The option selecting which refraction correction to use.
-     *      If `Refraction.Normal`, uses a well-behaved refraction model that works well for
-     *      all valid values (-90 to +90) of `altitude`.
-     *      If `Refraction.JplHor`, this function returns a compatible value with the JPL Horizons tool.
-     *      If any other value, including `Refraction.None`, this function returns 0.
-     *
-     * @param altitude
-     *      An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
-     */
-    fun refractionAngle(refraction: Refraction, altitude: Double): Double {
-        if (altitude < -90.0 || altitude > +90.0)
-            return 0.0     // no attempt to correct an invalid altitude
+/**
+ * Returns the product of mass and universal gravitational constant of a Solar System body.
+ *
+ * For problems involving the gravitational interactions of Solar System bodies,
+ * it is helpful to know the product GM, where G = the universal gravitational constant
+ * and M = the mass of the body. In practice, GM is known to a higher precision than
+ * either G or M alone, and thus using the product results in the most accurate results.
+ * This function returns the product GM in the units au^3/day^2.
+ * The values come from page 10 of a
+ * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+ *
+ * @param body
+ *      The body for which to find the GM product.
+ *      Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
+ *      Any other value will cause an exception to be thrown.
+ *
+ * @return The mass product of the given body in au^3/day^2.
+ */
+fun massProduct(body: Body): Double =
+    body.massProduct ?: throw InvalidBodyException(body)
 
-        var angle: Double
-        if (refraction == Refraction.Normal || refraction == Refraction.JplHor) {
-            // http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
-            // JPL Horizons says it uses refraction algorithm from
-            // Meeus "Astronomical Algorithms", 1991, p. 101-102.
-            // I found the following Go implementation:
-            // https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
-            // This is a translation from the function "Saemundsson" there.
-            // I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
-            // This is important because the tangent formula below goes crazy near hd = -5.11.
-            val hd = altitude.coerceAtLeast(-1.0)
-            angle = (1.02 / dtan(hd + 10.3/(hd + 5.11))) / 60.0
+private enum class PrecessDirection {
+    From2000,
+    Into2000,
+}
 
-            if (refraction == Refraction.Normal && altitude < -1.0) {
-                // In "normal" mode we gradually reduce refraction toward the nadir
-                // so that we never get an altitude angle less than -90 degrees.
-                // When horizon angle is -1 degrees, the factor is exactly 1.
-                // As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
-                angle *= (altitude + 90.0) / 89.0
-            }
-        } else {
-            // No refraction, or the refraction option is invalid.
-            angle = 0.0
-        }
-        return angle
+private fun precessionRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
+    val t = time.julianCenturies()
+    val eps0 = 84381.406
+
+    val psia   = (((((-    0.0000000951  * t
+                      +    0.000132851 ) * t
+                      -    0.00114045  ) * t
+                      -    1.0790069   ) * t
+                      + 5038.481507    ) * t) * ASEC2RAD
+
+    val omegaa = (((((+    0.0000003337  * t
+                      -    0.000000467 ) * t
+                      -    0.00772503  ) * t
+                      +    0.0512623   ) * t
+                      -    0.025754    ) * t + eps0) * ASEC2RAD
+
+    val chia   = (((((-    0.0000000560  * t
+                      +    0.000170663 ) * t
+                      -    0.00121197  ) * t
+                      -    2.3814292   ) * t
+                      +   10.556403    ) * t) * ASEC2RAD
+
+    val sa = sin(eps0 * ASEC2RAD)
+    val ca = cos(eps0 * ASEC2RAD)
+    val sb = sin(-psia)
+    val cb = cos(-psia)
+    val sc = sin(-omegaa)
+    val cc = cos(-omegaa)
+    val sd = sin(chia)
+    val cd = cos(chia)
+
+    val xx =  cd*cb - sb*sd*cc
+    val yx =  cd*sb*ca + sd*cc*cb*ca - sa*sd*sc
+    val zx =  cd*sb*sa + sd*cc*cb*sa + ca*sd*sc
+    val xy = -sd*cb - sb*cd*cc
+    val yy = -sd*sb * ca + cd*cc*cb*ca - sa*cd*sc
+    val zy = -sd*sb * sa + cd*cc*cb*sa + ca*cd*sc
+    val xz =  sb*sc
+    val yz = -sc*cb*ca - sa*cc
+    val zz = -sc*cb*sa + cc*ca
+
+    return when (dir) {
+        // Perform rotation from other epoch to J2000.0.
+        PrecessDirection.Into2000 ->
+            RotationMatrix(
+                xx, yx, zx,
+                xy, yy, zy,
+                xz, yz, zz
+            )
+
+        // Perform rotation from J2000.0 to other epoch.
+        PrecessDirection.From2000 ->
+            RotationMatrix(
+                xx, xy, xz,
+                yx, yy, yz,
+                zx, zy, zz
+            )
     }
+}
 
-    /**
-     * Calculates the inverse of an atmospheric refraction angle.
-     *
-     * Given an observed altitude angle that includes atmospheric refraction,
-     * calculates the negative angular correction to obtain the unrefracted
-     * altitude. This is useful for cases where observed horizontal
-     * coordinates are to be converted to another orientation system,
-     * but refraction first must be removed from the observed position.
-     *
-     * @param refraction
-     *      The option selecting which refraction correction to use.
-     *
-     * @param bentAltitude
-     *      The apparent altitude that includes atmospheric refraction.
-     *
-     * @param
-     *      The angular adjustment in degrees to be added to the
-     *      altitude angle to remove atmospheric lensing.
-     *      This will be less than or equal to zero.
-     */
-    fun inverseRefractionAngle(refraction: Refraction, bentAltitude: Double): Double {
-        if (bentAltitude < -90.0 || bentAltitude > +90.0)
-            return 0.0     // no attempt to correct an invalid altitude
+private fun precession(pos: AstroVector, dir: PrecessDirection) =
+    precessionRot(pos.t, dir).rotate(pos)
 
-        // Find the pre-adjusted altitude whose refraction correction leads to 'altitude'.
-        var altitude = bentAltitude - refractionAngle(refraction, bentAltitude)
-        while (true) {
-            // See how close we got.
-            var diff = (altitude + refractionAngle(refraction, altitude)) - bentAltitude
-            if (diff.absoluteValue < 1.0e-14)
-                return altitude - bentAltitude
-            altitude -= diff
-        }
-    }
+private fun precessionPosVel(state: StateVector, dir: PrecessDirection) =
+    precessionRot(state.t, dir).rotate(state)
 
-    /**
-     * Returns the product of mass and universal gravitational constant of a Solar System body.
-     *
-     * For problems involving the gravitational interactions of Solar System bodies,
-     * it is helpful to know the product GM, where G = the universal gravitational constant
-     * and M = the mass of the body. In practice, GM is known to a higher precision than
-     * either G or M alone, and thus using the product results in the most accurate results.
-     * This function returns the product GM in the units au^3/day^2.
-     * The values come from page 10 of a
-     * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
-     *
-     * @param body
-     *      The body for which to find the GM product.
-     *      Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
-     *      Any other value will cause an exception to be thrown.
-     *
-     * @return The mass product of the given body in au^3/day^2.
-     */
-    fun massProduct(body: Body): Double =
-        body.massProduct ?: throw InvalidBodyException(body)
+private class EarthTilt(
+    val tt: Double,
+    val dpsi: Double,
+    val deps: Double,
+    val ee: Double,
+    val mobl: Double,
+    val tobl: Double
+)
 
-    private enum class PrecessDirection {
-        From2000,
-        Into2000,
-    }
+private fun iau2000b(time: AstroTime) {
+    // Adapted from the NOVAS C 3.1 function of the same name.
+    // We cache Earth nutation angles `psi` and `eps` inside AstroTime for efficiency.
+    // If nutation has not already been calculated, these values will be NaN.
+    // Lazy-evaluate both angles.
 
-    private fun precessionRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
+    if (time.psi.isNaN()) {
         val t = time.julianCenturies()
-        val eps0 = 84381.406
-
-        val psia   = (((((-    0.0000000951  * t
-                          +    0.000132851 ) * t
-                          -    0.00114045  ) * t
-                          -    1.0790069   ) * t
-                          + 5038.481507    ) * t) * ASEC2RAD
-
-        val omegaa = (((((+    0.0000003337  * t
-                          -    0.000000467 ) * t
-                          -    0.00772503  ) * t
-                          +    0.0512623   ) * t
-                          -    0.025754    ) * t + eps0) * ASEC2RAD
-
-        val chia   = (((((-    0.0000000560  * t
-                          +    0.000170663 ) * t
-                          -    0.00121197  ) * t
-                          -    2.3814292   ) * t
-                          +   10.556403    ) * t) * ASEC2RAD
-
-        val sa = sin(eps0 * ASEC2RAD)
-        val ca = cos(eps0 * ASEC2RAD)
-        val sb = sin(-psia)
-        val cb = cos(-psia)
-        val sc = sin(-omegaa)
-        val cc = cos(-omegaa)
-        val sd = sin(chia)
-        val cd = cos(chia)
-
-        val xx =  cd*cb - sb*sd*cc
-        val yx =  cd*sb*ca + sd*cc*cb*ca - sa*sd*sc
-        val zx =  cd*sb*sa + sd*cc*cb*sa + ca*sd*sc
-        val xy = -sd*cb - sb*cd*cc
-        val yy = -sd*sb * ca + cd*cc*cb*ca - sa*cd*sc
-        val zy = -sd*sb * sa + cd*cc*cb*sa + ca*cd*sc
-        val xz =  sb*sc
-        val yz = -sc*cb*ca - sa*cc
-        val zz = -sc*cb*sa + cc*ca
-
-        return when (dir) {
-            // Perform rotation from other epoch to J2000.0.
-            PrecessDirection.Into2000 ->
-                RotationMatrix(
-                    xx, yx, zx,
-                    xy, yy, zy,
-                    xz, yz, zz
-                )
-
-            // Perform rotation from J2000.0 to other epoch.
-            PrecessDirection.From2000 ->
-                RotationMatrix(
-                    xx, xy, xz,
-                    yx, yy, yz,
-                    zx, zy, zz
-                )
+        val el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD
+        val elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD
+        val f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD
+        val d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD
+        val om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD
+        var dp = 0.0
+        var de = 0.0
+        for (i in 76 downTo 0) {
+            val arg = (
+                iauRow[i].nals0*el + iauRow[i].nals1*elp +
+                iauRow[i].nals2*f + iauRow[i].nals3*d +
+                iauRow[i].nals4*om
+            ) % PI2
+            val sarg = sin(arg)
+            val carg = cos(arg)
+            dp += (iauRow[i].cls0 + iauRow[i].cls1*t) * sarg + iauRow[i].cls2*carg
+            de += (iauRow[i].cls3 + iauRow[i].cls4*t) * carg + iauRow[i].cls5*sarg
         }
+        time.psi = -0.000135 + (dp * 1.0e-7)
+        time.eps = +0.000388 + (de * 1.0e-7)
+    }
+}
+
+private fun meanObliquity(time: AstroTime): Double {
+    val t = time.julianCenturies()
+    val asec =
+        ((((  -0.0000000434   * t
+            -  0.000000576  ) * t
+            +  0.00200340   ) * t
+            -  0.0001831    ) * t
+            - 46.836769     ) * t + 84381.406
+    return asec / 3600
+}
+
+private fun earthTilt(time: AstroTime): EarthTilt {
+    iau2000b(time)  // lazy-evaluate time.psi and time.eps
+    val mobl = meanObliquity(time)
+    val tobl = mobl + (time.eps / 3600)
+    val ee = time.psi * dcos(mobl) / 15.0
+    return EarthTilt(time.tt, time.psi, time.eps, ee, mobl, tobl)
+}
+
+private fun earthRotationAngle(time: AstroTime): Double {
+    val thet1 = 0.7790572732640 + (0.00273781191135448 * time.ut)
+    val thet3 = time.ut % 1.0
+    val theta = 360.0 *((thet1 + thet3) % 1.0)
+    return if (theta < 0.0) theta + 360.0 else theta
+}
+
+/**
+ * Calculates Greenwich Apparent Sidereal Time (GAST).
+ *
+ * Given a date and time, this function calculates the rotation of the
+ * Earth, represented by the equatorial angle of the Greenwich prime meridian
+ * with respect to distant stars (not the Sun, which moves relative to background
+ * stars by almost one degree per day).
+ * This angle is called Greenwich Apparent Sidereal Time (GAST).
+ * GAST is measured in sidereal hours in the half-open range [0, 24).
+ * When GAST = 0, it means the prime meridian is aligned with the of-date equinox,
+ * corrected at that time for precession and nutation of the Earth's axis.
+ * In this context, the *equinox* is the direction in space where the Earth's
+ * orbital plane (the ecliptic) intersects with the plane of the Earth's equator,
+ * at the location on the Earth's orbit of the (seasonal) March equinox.
+ * As the Earth rotates, GAST increases from 0 up to 24 sidereal hours,
+ * then starts over at 0.
+ * To convert to degrees, multiply the return value by 15.
+ *
+ * @param time
+ *      The date and time for which to find GAST.
+ *      As an optimization, this function caches the sideral time value in `time`,
+ *      unless it has already been cached, in which case the cached value is reused.
+ */
+fun siderealTime(time: AstroTime): Double {
+    if (time.st.isNaN()) {
+        val t = time.julianCenturies()
+        val eqeq = 15.0 * earthTilt(time).ee
+        val theta = earthRotationAngle(time)
+        val st = (eqeq + 0.014506 +
+               (((( -    0.0000000368  * t
+                   -    0.000029956  ) * t
+                   -    0.00000044   ) * t
+                   +    1.3915817    ) * t
+                   + 4612.156534     ) * t)
+        val gst = ((st/3600.0 + theta) % 360.0) / 15.0
+        time.st = if (gst < 0.0) gst + 24.0 else gst
+    }
+    return time.st
+}
+
+/**
+ * Calcluate the geocentric position and velocity of a topocentric observer.
+ *
+ * Given the geographic location of an observer and a time, calculate the position
+ * and velocity of the observer, relative to the center of the Earth.
+ * The state vector is expressed in the equator-of-date system (EQD).
+ *
+ * @param observer
+ *      The latitude, longitude, and elevation of the observer.
+ *
+ * @param time
+ *      The time of the observation.
+ *
+ * @return
+ * An EQD state vector that holds the geocentric position and velocity
+ * of the observer at the given time.
+ */
+private fun terra(observer: Observer, time: AstroTime): StateVector {
+    val st = siderealTime(time)
+    val phi = observer.latitude.degreesToRadians()
+    val sinphi = sin(phi)
+    val cosphi = cos(phi)
+    val c = 1.0 / hypot(cosphi,  EARTH_FLATTENING * sinphi)
+    val s = c * EARTH_FLATTENING_SQUARED
+    val heightKm = observer.height / 1000.0
+    val ach = (EARTH_EQUATORIAL_RADIUS_KM * c) + heightKm
+    val ash = (EARTH_EQUATORIAL_RADIUS_KM * s) + heightKm
+    val stlocl = (15.0*st + observer.longitude).degreesToRadians()
+    val sinst = sin(stlocl)
+    val cosst = cos(stlocl)
+
+    return StateVector(
+        ach * cosphi * cosst / KM_PER_AU,
+        ach * cosphi * sinst / KM_PER_AU,
+        ash * sinphi / KM_PER_AU,
+        -(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * sinst,
+        +(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * cosst,
+        0.0,
+        time
+    )
+}
+
+/**
+ * Calculate the geographic coordinates corresponding to a position vector.
+ *
+ * Given a geocentric position vector expressed in equator-of-date (EQD) coordinates,
+ * this function calculates the latitude, longitude, and elevation of that location.
+ * Note that the time `ovec.t` must be set correctly in order to determine the
+ * Earth's rotation angle.
+ *
+ * This function is intended for positions known to be on or near the Earth's surface.
+ *
+ * @param ovec
+ *      A geocentric position on or near the Earth's surface, in EQD coordinates.
+ *
+ * @return
+ * The location on or near the Earth's surface corresponding to
+ * the given position vector and time.
+ */
+private fun inverseTerra(ovec: AstroVector): Observer {
+    var lonDeg: Double
+    var latDeg: Double
+    var heightKm: Double
+
+    // Convert from AU to kilometers.
+    val x = ovec.x * KM_PER_AU
+    val y = ovec.y * KM_PER_AU
+    val z = ovec.z * KM_PER_AU
+    val p = hypot(x, y)
+    if (p < 1.0e-6) {
+        // Special case: within 1 millimeter of a pole!
+        // Use arbitrary longitude, and latitude determined by polarity of z.
+        lonDeg = 0.0
+        latDeg = if (z > 0.0) +90.0 else -90.0
+        // Elevation is calculated directly from z.
+        heightKm = z.absoluteValue - EARTH_POLAR_RADIUS_KM
+    } else {
+        // Calculate exact longitude in the half-open range (-180, +180].
+        val stlocl = atan2(y, x)
+        lonDeg = longitudeOffset(stlocl.radiansToDegrees() - (15 * siderealTime(ovec.t)))
+        // Numerically solve for exact latitude, using Newton's Method.
+        val F = EARTH_FLATTENING_SQUARED
+        // Start with initial latitude estimate, based on a spherical Earth.
+        var lat = atan2(z, p)
+        var c: Double
+        var s: Double
+        var denom: Double
+        while (true) {
+            // Calculate the error function W(lat).
+            // We try to find the root of W, meaning where the error is 0.
+            c = cos(lat)
+            s = sin(lat)
+            val factor = (F-1)*EARTH_EQUATORIAL_RADIUS_KM
+            val c2 = c*c
+            val s2 = s*s
+            val radicand = c2 + F*s2
+            denom = sqrt(radicand)
+            val W = ((factor * s * c) / denom) - (z * c) + (p * s)
+            if (W.absoluteValue < 1.0e-12)
+                break  // The error is now negligible.
+            // Error is still too large. Find the next estimate.
+            // Calculate D = the derivative of W with respect to lat.
+            val D = (factor * ((c2 - s2) / denom) - (s2 * c2 * (F - 1)/(factor * radicand))) + (z * s) + (p * c)
+            lat -= (W / D)
+        }
+        // We now have a solution for the latitude in radians.
+        latDeg = lat.radiansToDegrees()
+        // Solve for exact height in kilometers.
+        // There are two formulas I can use. Use whichever has the less risky denominator.
+        val adjust = EARTH_EQUATORIAL_RADIUS_KM / denom
+        heightKm =
+            if (s.absoluteValue > c.absoluteValue)
+                z/s - F*adjust
+            else
+                p/c - adjust
     }
 
-    private fun precession(pos: AstroVector, dir: PrecessDirection) =
-        precessionRot(pos.t, dir).rotate(pos)
+    return Observer(latDeg, lonDeg, 1000.0 * heightKm)
+}
 
-    private fun precessionPosVel(state: StateVector, dir: PrecessDirection) =
-        precessionRot(state.t, dir).rotate(state)
+private fun gyration(pos: AstroVector, dir: PrecessDirection) =
+    when (dir) {
+        PrecessDirection.Into2000 -> precession(nutation(pos, dir), dir)
+        PrecessDirection.From2000 -> nutation(precession(pos, dir), dir)
+    }
 
-    private class EarthTilt(
-        val tt: Double,
-        val dpsi: Double,
-        val deps: Double,
-        val ee: Double,
-        val mobl: Double,
-        val tobl: Double
+private fun gyrationPosVel(state: StateVector, dir: PrecessDirection) =
+    when (dir) {
+        PrecessDirection.Into2000 -> precessionPosVel(nutationPosVel(state, dir), dir)
+        PrecessDirection.From2000 -> nutationPosVel(precessionPosVel(state, dir), dir)
+    }
+
+private fun geoPos(time: AstroTime, observer: Observer) =
+    gyration(
+        terra(observer, time).position(),
+        PrecessDirection.Into2000
     )
 
-    private fun iau2000b(time: AstroTime) {
-        // Adapted from the NOVAS C 3.1 function of the same name.
-        // We cache Earth nutation angles `psi` and `eps` inside AstroTime for efficiency.
-        // If nutation has not already been calculated, these values will be NaN.
-        // Lazy-evaluate both angles.
+private fun spin(angle: Double, pos: AstroVector): AstroVector {
+    val cosang = dcos(angle)
+    val sinang = dsin(angle)
+    return AstroVector(
+        +cosang*pos.x + sinang*pos.y,
+        -sinang*pos.x + cosang*pos.y,
+        pos.z,
+        pos.t
+    )
+}
 
-        if (time.psi.isNaN()) {
-            val t = time.julianCenturies()
-            val el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD
-            val elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD
-            val f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD
-            val d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD
-            val om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD
-            var dp = 0.0
-            var de = 0.0
-            for (i in 76 downTo 0) {
-                val arg = (
-                    iauRow[i].nals0*el + iauRow[i].nals1*elp +
-                    iauRow[i].nals2*f + iauRow[i].nals3*d +
-                    iauRow[i].nals4*om
-                ) % PI2
-                val sarg = sin(arg)
-                val carg = cos(arg)
-                dp += (iauRow[i].cls0 + iauRow[i].cls1*t) * sarg + iauRow[i].cls2*carg
-                de += (iauRow[i].cls3 + iauRow[i].cls4*t) * carg + iauRow[i].cls5*sarg
-            }
-            time.psi = -0.000135 + (dp * 1.0e-7)
-            time.eps = +0.000388 + (de * 1.0e-7)
+private fun nutationRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
+    val tilt = earthTilt(time)
+    val oblm = tilt.mobl.degreesToRadians()
+    val oblt = tilt.tobl.degreesToRadians()
+    val psi = tilt.dpsi * ASEC2RAD
+    val cobm = cos(oblm)
+    val sobm = sin(oblm)
+    val cobt = cos(oblt)
+    val sobt = sin(oblt)
+    val cpsi = cos(psi)
+    val spsi = sin(psi)
+
+    val xx = cpsi
+    val yx = -spsi * cobm
+    val zx = -spsi * sobm
+    val xy = spsi * cobt
+    val yy = cpsi * cobm * cobt + sobm * sobt
+    val zy = cpsi * sobm * cobt - cobm * sobt
+    val xz = spsi * sobt
+    val yz = cpsi * cobm * sobt - sobm * cobt
+    val zz = cpsi * sobm * sobt + cobm * cobt
+
+    return when (dir) {
+        // Perform rotation from other epoch to J2000.0.
+        PrecessDirection.Into2000 ->
+            RotationMatrix(
+                xx, yx, zx,
+                xy, yy, zy,
+                xz, yz, zz
+            )
+
+        // Perform rotation from J2000.0 to other epoch.
+        PrecessDirection.From2000 ->
+            RotationMatrix(
+                xx, xy, xz,
+                yx, yy, yz,
+                zx, zy, zz
+            )
+    }
+}
+
+private fun nutation(pos: AstroVector, dir: PrecessDirection) =
+    nutationRot(pos.t, dir).rotate(pos)
+
+private fun nutationPosVel(state: StateVector, dir: PrecessDirection) =
+    nutationRot(state.t, dir).rotate(state)
+
+private fun eclipticToEquatorial(ecl: AstroVector): AstroVector {
+    val obl = meanObliquity(ecl.t).degreesToRadians()
+    val cosObl = cos(obl)
+    val sinObl = sin(obl)
+    return AstroVector(
+        ecl.x,
+        (ecl.y * cosObl) - (ecl.z * sinObl),
+        (ecl.y * sinObl) + (ecl.z * cosObl),
+        ecl.t
+    )
+}
+
+/**
+ * Given an equatorial vector, calculates equatorial angular coordinates.
+ *
+ * @vector
+ *      A vector in an equatorial coordinate system.
+ *
+ * @return Angular coordinates expressed in the same equatorial system as `vector`.
+ */
+fun equatorFromVector(vector: AstroVector): Equatorial {
+    val sphere = vector.toSpherical()
+    return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vector)
+}
+
+
+private fun earthRotationAxis(time: AstroTime): AxisInfo {
+    // Unlike the other planets, we have a model of precession and nutation
+    // for the Earth's axis that provides a north pole vector.
+    // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
+
+    // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
+    val pos1 = AstroVector(0.0, 0.0, 1.0, time)
+
+    // Convert the vector into J2000 coordinates to find the north pole direction.
+    val pos2 = nutation(pos1, PrecessDirection.Into2000)
+    val north = precession(pos2, PrecessDirection.Into2000)
+
+    // Derive angular values: right ascension and declination.
+    val equ = north.toEquatorial()
+
+    // Use a modified version of the era() function that does not trim to 0..360 degrees.
+    // This expression is also corrected to give the correct angle at the J2000 epoch.
+    val spin = 190.41375788700253 + (360.9856122880876 * time.ut)
+
+    return AxisInfo(equ.ra, equ.dec, spin, north)
+}
+
+
+/**
+ * Calculates information about a body's rotation axis at a given time.
+ *
+ * Calculates the orientation of a body's rotation axis, along with
+ * the rotation angle of its prime meridian, at a given moment in time.
+ *
+ * This function uses formulas standardized by the IAU Working Group
+ * on Cartographics and Rotational Elements 2015 report, as described
+ * in the following document:
+ *
+ * https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
+ *
+ * See [AxisInfo] for more detailed information.
+ *
+ * @param body
+ *      One of the following values:
+ *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
+ *      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *
+ * @param time
+ *      The time at which to calculate the body's rotation axis.
+ *
+ * @return North pole orientation and body spin angle.
+ */
+fun rotationAxis(body: Body, time: AstroTime): AxisInfo {
+    if (body == Body.Earth)
+        return earthRotationAxis(time)
+
+    val d = time.tt
+    val T = time.julianCenturies()
+    val ra: Double
+    val dec: Double
+    val w: Double
+    when (body) {
+        Body.Sun -> {
+            ra = 286.13
+            dec = 63.87
+            w = 84.176 + (14.1844 * d)
         }
-    }
 
-    private fun meanObliquity(time: AstroTime): Double {
-        val t = time.julianCenturies()
-        val asec =
-            ((((  -0.0000000434   * t
-                -  0.000000576  ) * t
-                +  0.00200340   ) * t
-                -  0.0001831    ) * t
-                - 46.836769     ) * t + 84381.406
-        return asec / 3600
-    }
-
-    private fun earthTilt(time: AstroTime): EarthTilt {
-        iau2000b(time)  // lazy-evaluate time.psi and time.eps
-        val mobl = meanObliquity(time)
-        val tobl = mobl + (time.eps / 3600)
-        val ee = time.psi * dcos(mobl) / 15.0
-        return EarthTilt(time.tt, time.psi, time.eps, ee, mobl, tobl)
-    }
-
-    private fun earthRotationAngle(time: AstroTime): Double {
-        val thet1 = 0.7790572732640 + (0.00273781191135448 * time.ut)
-        val thet3 = time.ut % 1.0
-        val theta = 360.0 *((thet1 + thet3) % 1.0)
-        return if (theta < 0.0) theta + 360.0 else theta
-    }
-
-    /**
-     * Calculates Greenwich Apparent Sidereal Time (GAST).
-     *
-     * Given a date and time, this function calculates the rotation of the
-     * Earth, represented by the equatorial angle of the Greenwich prime meridian
-     * with respect to distant stars (not the Sun, which moves relative to background
-     * stars by almost one degree per day).
-     * This angle is called Greenwich Apparent Sidereal Time (GAST).
-     * GAST is measured in sidereal hours in the half-open range [0, 24).
-     * When GAST = 0, it means the prime meridian is aligned with the of-date equinox,
-     * corrected at that time for precession and nutation of the Earth's axis.
-     * In this context, the *equinox* is the direction in space where the Earth's
-     * orbital plane (the ecliptic) intersects with the plane of the Earth's equator,
-     * at the location on the Earth's orbit of the (seasonal) March equinox.
-     * As the Earth rotates, GAST increases from 0 up to 24 sidereal hours,
-     * then starts over at 0.
-     * To convert to degrees, multiply the return value by 15.
-     *
-     * @param time
-     *      The date and time for which to find GAST.
-     *      As an optimization, this function caches the sideral time value in `time`,
-     *      unless it has already been cached, in which case the cached value is reused.
-     */
-    fun siderealTime(time: AstroTime): Double {
-        if (time.st.isNaN()) {
-            val t = time.julianCenturies()
-            val eqeq = 15.0 * earthTilt(time).ee
-            val theta = earthRotationAngle(time)
-            val st = (eqeq + 0.014506 +
-                   (((( -    0.0000000368  * t
-                       -    0.000029956  ) * t
-                       -    0.00000044   ) * t
-                       +    1.3915817    ) * t
-                       + 4612.156534     ) * t)
-            val gst = ((st/3600.0 + theta) % 360.0) / 15.0
-            time.st = if (gst < 0.0) gst + 24.0 else gst
+        Body.Mercury -> {
+            ra = 281.0103 - (0.0328 * T)
+            dec = 61.4155 - (0.0049 * T)
+            w = (
+                329.5988
+                + (6.1385108 * d)
+                + (0.01067257 * dsin((174.7910857 + 4.092335*d)))
+                - (0.00112309 * dsin((349.5821714 + 8.184670*d)))
+                - (0.00011040 * dsin((164.3732571 + 12.277005*d)))
+                - (0.00002539 * dsin((339.1643429 + 16.369340*d)))
+                - (0.00000571 * dsin((153.9554286 + 20.461675*d)))
+            )
         }
-        return time.st
+
+        Body.Venus -> {
+            ra = 272.76
+            dec = 67.16
+            w = 160.20 - (1.4813688 * d)
+        }
+
+        Body.Moon -> {
+            // See page 8, Table 2 in:
+            // https://astropedia.astrogeology.usgs.gov/alfresco/d/d/workspace/SpacesStore/28fd9e81-1964-44d6-a58b-fbbf61e64e15/WGCCRE2009reprint.pdf
+            val E1  = 125.045 -  0.0529921*d
+            val E2  = 250.089 -  0.1059842*d
+            val E3  = 260.008 + 13.0120009*d
+            val E4  = 176.625 + 13.3407154*d
+            val E5  = 357.529 +  0.9856003*d
+            val E6  = 311.589 + 26.4057084*d
+            val E7  = 134.963 + 13.0649930*d
+            val E8  = 276.617 +  0.3287146*d
+            val E9  = 34.226  +  1.7484877*d
+            val E10 = 15.134  -  0.1589763*d
+            val E11 = 119.743 +  0.0036096*d
+            val E12 = 239.961 +  0.1643573*d
+            val E13 = 25.053  + 12.9590088*d
+
+            ra = (
+                269.9949 + 0.0031*T
+                - 3.8787*dsin(E1)
+                - 0.1204*dsin(E2)
+                + 0.0700*dsin(E3)
+                - 0.0172*dsin(E4)
+                + 0.0072*dsin(E6)
+                - 0.0052*dsin(E10)
+                + 0.0043*dsin(E13)
+            )
+
+            dec = (
+                66.5392 + 0.0130*T
+                + 1.5419*dcos(E1)
+                + 0.0239*dcos(E2)
+                - 0.0278*dcos(E3)
+                + 0.0068*dcos(E4)
+                - 0.0029*dcos(E6)
+                + 0.0009*dcos(E7)
+                + 0.0008*dcos(E10)
+                - 0.0009*dcos(E13)
+            )
+
+            w = (
+                38.3213 + (13.17635815 - 1.4e-12*d)*d
+                + 3.5610*dsin(E1)
+                + 0.1208*dsin(E2)
+                - 0.0642*dsin(E3)
+                + 0.0158*dsin(E4)
+                + 0.0252*dsin(E5)
+                - 0.0066*dsin(E6)
+                - 0.0047*dsin(E7)
+                - 0.0046*dsin(E8)
+                + 0.0028*dsin(E9)
+                + 0.0052*dsin(E10)
+                + 0.0040*dsin(E11)
+                + 0.0019*dsin(E12)
+                - 0.0044*dsin(E13)
+            )
+        }
+
+        Body.Mars -> {
+            ra = (
+                317.269202 - 0.10927547*T
+                + 0.000068 * dsin(198.991226 + 19139.4819985*T)
+                + 0.000238 * dsin(226.292679 + 38280.8511281*T)
+                + 0.000052 * dsin(249.663391 + 57420.7251593*T)
+                + 0.000009 * dsin(266.183510 + 76560.6367950*T)
+                + 0.419057 * dsin(79.398797 + 0.5042615*T)
+            )
+
+            dec = (
+                54.432516 - 0.05827105*T
+                + 0.000051 * dcos(122.433576 + 19139.9407476*T)
+                + 0.000141 * dcos(43.058401 + 38280.8753272*T)
+                + 0.000031 * dcos(57.663379 + 57420.7517205*T)
+                + 0.000005 * dcos(79.476401 + 76560.6495004*T)
+                + 1.591274 * dcos(166.325722 + 0.5042615*T)
+            )
+
+            w = (
+                176.049863 + 350.891982443297*d
+                + 0.000145 * dsin(129.071773 + 19140.0328244*T)
+                + 0.000157 * dsin(36.352167 + 38281.0473591*T)
+                + 0.000040 * dsin(56.668646 + 57420.9295360*T)
+                + 0.000001 * dsin(67.364003 + 76560.2552215*T)
+                + 0.000001 * dsin(104.792680 + 95700.4387578*T)
+                + 0.584542 * dsin(95.391654 + 0.5042615*T)
+            )
+        }
+
+        Body.Jupiter -> {
+            val Ja = 99.360714  + 4850.4046*T
+            val Jb = 175.895369 + 1191.9605*T
+            val Jc = 300.323162 + 262.5475*T
+            val Jd = 114.012305 + 6070.2476*T
+            val Je = 49.511251  + 64.3000*T
+
+            ra = (
+                268.056595 - 0.006499*T
+                + 0.000117 * dsin(Ja)
+                + 0.000938 * dsin(Jb)
+                + 0.001432 * dsin(Jc)
+                + 0.000030 * dsin(Jd)
+                + 0.002150 * dsin(Je)
+            )
+
+            dec = (
+                64.495303 + 0.002413*T
+                + 0.000050 * dcos(Ja)
+                + 0.000404 * dcos(Jb)
+                + 0.000617 * dcos(Jc)
+                - 0.000013 * dcos(Jd)
+                + 0.000926 * dcos(Je)
+            )
+
+            w = 284.95 + 870.536*d
+        }
+
+        Body.Saturn -> {
+            ra = 40.589 - 0.036*T
+            dec = 83.537 - 0.004*T
+            w = 38.90 + 810.7939024*d
+        }
+
+        Body.Uranus -> {
+            ra = 257.311
+            dec = -15.175
+            w = 203.81 - 501.1600928*d
+        }
+
+        Body.Neptune -> {
+            val N = 357.85 + 52.316*T
+            val sinN = dsin(N)
+            ra = 299.36 + 0.70*sinN
+            dec = 43.46 - 0.51*dcos(N)
+            w = 249.978 + 541.1397757*d - 0.48*sinN
+        }
+
+        Body.Pluto -> {
+            ra = 132.993
+            dec = -6.163
+            w = 302.695 + 56.3625225*d
+        }
+
+        else -> throw InvalidBodyException(body)
     }
 
-    /**
-     * Calcluate the geocentric position and velocity of a topocentric observer.
-     *
-     * Given the geographic location of an observer and a time, calculate the position
-     * and velocity of the observer, relative to the center of the Earth.
-     * The state vector is expressed in the equator-of-date system (EQD).
-     *
-     * @param observer
-     *      The latitude, longitude, and elevation of the observer.
-     *
-     * @param time
-     *      The time of the observation.
-     *
-     * @return
-     * An EQD state vector that holds the geocentric position and velocity
-     * of the observer at the given time.
-     */
-    private fun terra(observer: Observer, time: AstroTime): StateVector {
-        val st = siderealTime(time)
-        val phi = observer.latitude.degreesToRadians()
-        val sinphi = sin(phi)
-        val cosphi = cos(phi)
-        val c = 1.0 / hypot(cosphi,  EARTH_FLATTENING * sinphi)
-        val s = c * EARTH_FLATTENING_SQUARED
-        val heightKm = observer.height / 1000.0
-        val ach = (EARTH_EQUATORIAL_RADIUS_KM * c) + heightKm
-        val ash = (EARTH_EQUATORIAL_RADIUS_KM * s) + heightKm
-        val stlocl = (15.0*st + observer.longitude).degreesToRadians()
-        val sinst = sin(stlocl)
-        val cosst = cos(stlocl)
+    // Calculate the north pole vector using the given angles.
+    val rcoslat = dcos(dec)
+    val north = AstroVector(
+        rcoslat * dcos(ra),
+        rcoslat * dsin(ra),
+        dsin(dec),
+        time
+    )
 
-        return StateVector(
-            ach * cosphi * cosst / KM_PER_AU,
-            ach * cosphi * sinst / KM_PER_AU,
-            ash * sinphi / KM_PER_AU,
-            -(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * sinst,
-            +(ANGVEL * 86400.0 / KM_PER_AU) * ach * cosphi * cosst,
-            0.0,
+    return AxisInfo(ra / 15.0, dec, w, north)
+}
+
+/**
+* Calculates spherical ecliptic geocentric position of the Moon.
+*
+* Given a time of observation, calculates the Moon's geocentric position
+* in ecliptic spherical coordinates. Provides the ecliptic latitude and
+* longitude in degrees, and the geocentric distance in astronomical units (AU).
+* The ecliptic longitude is measured relative to the equinox of date.
+*
+* This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+* which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+* It is adapted from Turbo Pascal code from the book
+* [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
+* by Montenbruck and Pfleger.
+*
+* To calculate an equatorial J2000 vector instead, use [geoMoon].
+*/
+fun eclipticGeoMoon(time: AstroTime) = MoonContext(time).calcMoon()
+
+/**
+ * Calculates equatorial geocentric position of the Moon at a given time.
+ *
+ * Given a time of observation, calculates the Moon's position vector.
+ * The vector indicates the Moon's center relative to the Earth's center.
+ * The vector components are expressed in AU (astronomical units).
+ * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+ * In Astronomy Engine, this orientation is called EQJ.
+ *
+ * @param time
+ *      The date and time for which to calculate the Moon's position.
+ *
+ * @return The Moon's position vector in J2000 equatorial coordinates (EQJ).
+ */
+fun geoMoon(time: AstroTime): AstroVector {
+    val eclSphere = eclipticGeoMoon(time)
+    val eclVec = eclSphere.toVector(time)
+    val equVec = eclipticToEquatorial(eclVec)
+    return precession(equVec, PrecessDirection.Into2000)
+}
+
+/**
+ * Calculates equatorial geocentric position and velocity of the Moon at a given time.
+ *
+ * Given a time of observation, calculates the Moon's position and velocity vectors.
+ * The position and velocity are of the Moon's center relative to the Earth's center.
+ * The position (x, y, z) components are expressed in AU (astronomical units).
+ * The velocity (vx, vy, vz) components are expressed in AU/day.
+ * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+ * In Astronomy Engine, this orientation is called EQJ.
+ * If you need the Moon's position only, and not its velocity,
+ * it is much more efficient to use [geoMoon] instead.
+ *
+ * @param time
+ *      The date and time for which to calculate the Moon's position and velocity.
+ *
+ * @return The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
+ */
+fun geoMoonState(time: AstroTime): StateVector {
+    // This is a hack, because trying to figure out how to derive
+    // a time derivative for MoonContext.calcMoon() would be painful!
+    // Calculate just before and just after the given time.
+    // Average to find position, subtract to find velocity.
+    val dt = 1.0e-5        // 0.864 seconds
+    val t1 = time.addDays(-dt)
+    val t2 = time.addDays(+dt)
+    val r1 = geoMoon(t1)
+    val r2 = geoMoon(t2)
+
+    // The desired position is the average of the two calculated positions.
+    // The difference of position vectors divided by the time span gives the velocity vector.
+    return StateVector(
+        (r1.x + r2.x) / 2.0,
+        (r1.y + r2.y) / 2.0,
+        (r1.z + r2.z) / 2.0,
+        (r2.x - r1.x) / (2.0 * dt),
+        (r2.y - r1.y) / (2.0 * dt),
+        (r2.z - r1.z) / (2.0 * dt),
+        time
+    )
+}
+
+private fun helioEarthPos(time: AstroTime) =
+    calcVsop(vsopModel(Body.Earth), time)
+
+private fun helioEarthState(time: AstroTime) =
+    StateVector(calcVsopPosVel(vsopModel(Body.Earth), time.tt), time)
+
+private fun barycenterPosContrib(time: AstroTime, body: Body, planetGm: Double) =
+    (planetGm / (planetGm + SUN_GM)) * vsopHelioVector(body, time)
+
+private fun solarSystemBarycenterPos(time: AstroTime): AstroVector {
+    val j = barycenterPosContrib(time, Body.Jupiter, JUPITER_GM)
+    val s = barycenterPosContrib(time, Body.Saturn,  SATURN_GM)
+    var u = barycenterPosContrib(time, Body.Uranus,  URANUS_GM)
+    var n = barycenterPosContrib(time, Body.Neptune, NEPTUNE_GM)
+    return AstroVector(
+        j.x + s.x + u.x + n.x,
+        j.y + s.y + u.y + n.y,
+        j.z + s.z + u.z + n.z,
+        time
+    )
+}
+
+private fun barycenterStateContrib(time: AstroTime, body: Body, planetGm: Double): StateVector {
+    val helioPlanet = calcVsopPosVel(vsopModel(body), time.tt)
+    val factor = planetGm / (planetGm + SUN_GM)
+    return StateVector(
+        factor * helioPlanet.r.x,
+        factor * helioPlanet.r.y,
+        factor * helioPlanet.r.z,
+        factor * helioPlanet.v.x,
+        factor * helioPlanet.v.y,
+        factor * helioPlanet.v.z,
+        time
+    )
+}
+
+private fun solarSystemBarycenterState(time: AstroTime): StateVector {
+    val j = barycenterStateContrib(time, Body.Jupiter, JUPITER_GM)
+    val s = barycenterStateContrib(time, Body.Saturn,  SATURN_GM)
+    var u = barycenterStateContrib(time, Body.Uranus,  URANUS_GM)
+    var n = barycenterStateContrib(time, Body.Neptune, NEPTUNE_GM)
+    return StateVector(
+        j.x + s.x + u.x + n.x,
+        j.y + s.y + u.y + n.y,
+        j.z + s.z + u.z + n.z,
+        j.vx + s.vx + u.vx + n.vx,
+        j.vy + s.vy + u.vy + n.vy,
+        j.vz + s.vz + u.vz + n.vz,
+        time
+    )
+}
+
+/**
+ * Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
+ *
+ * This function calculates the position of the given celestial body as a vector,
+ * using the center of the Sun as the origin.  The result is expressed as a Cartesian
+ * vector in the J2000 equatorial system: the coordinates are based on the mean equator
+ * of the Earth at noon UTC on 1 January 2000.
+ *
+ * The position is not corrected for light travel time or aberration.
+ * This is different from the behavior of [geoVector].
+ *
+ * If given an invalid value for `body`, this function will throw an [InvalidBodyException].
+ *
+ * @param body
+ *      A body for which to calculate a heliocentric position:
+ *      the Sun, Moon, EMB, SSB, or any of the planets.
+ *
+ * @param time
+ *      The date and time for which to calculate the position.
+ *
+ * @return The heliocentric position vector of the center of the given body.
+ */
+fun helioVector(body: Body, time: AstroTime): AstroVector =
+    if (body.vsopModel != null)
+        calcVsop(body.vsopModel, time)
+    else when (body) {
+        Body.Sun     -> AstroVector(0.0, 0.0, 0.0, time)
+        Body.Pluto   -> calcPluto(time, true).position()
+        Body.Moon    -> helioEarthPos(time) + geoMoon(time)
+        Body.EMB     -> helioEarthPos(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
+        Body.SSB     -> solarSystemBarycenterPos(time)
+        else -> throw InvalidBodyException(body)
+    }
+
+/**
+ * Calculates the distance between a body and the Sun at a given time.
+ *
+ * Given a date and time, this function calculates the distance between
+ * the center of `body` and the center of the Sun, expressed in AU.
+ * For the planets Mercury through Neptune, this function is significantly
+ * more efficient than calling [helioVector] followed by taking the length
+ * of the resulting vector.
+ *
+ * @param body
+ *      A body for which to calculate a heliocentric distance:
+ *      the Sun, Moon, EMB, SSB, or any of the planets.
+ *
+ * @param time
+ *      The date and time for which to calculate the distance.
+ *
+ * @return The heliocentric distance in AU.
+ */
+fun helioDistance(body: Body, time: AstroTime): Double =
+    when {
+        body == Body.Sun -> 0.0
+        body.vsopModel != null -> vsopDistance(body.vsopModel, time)
+        else -> helioVector(body, time).length()
+    }
+
+/**
+ * Calculates heliocentric position and velocity vectors for the given body.
+ *
+ * Given a body and a time, calculates the position and velocity
+ * vectors for the center of that body at that time, relative to the center of the Sun.
+ * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ * If you need the position vector only, it is more efficient to call [helioVector].
+ * The Sun's center is a non-inertial frame of reference. In other words, the Sun
+ * experiences acceleration due to gravitational forces, mostly from the larger
+ * planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum,
+ * kinetic energy, or other quantities that require a non-accelerating frame
+ * of reference, consider using [baryState] instead.
+ *
+ * @param body
+ * The celestial body whose heliocentric state vector is to be calculated.
+ * Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
+ * `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+ * `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *
+ * @param time
+ *      The date and time for which to calculate position and velocity.
+ *
+ * @return
+ * A state vector that contains heliocentric position and velocity vectors.
+ * The positions are expressed in AU.
+ * The velocities are expressed in AU/day.
+ */
+fun helioState(body: Body, time: AstroTime): StateVector =
+    if (body.vsopModel != null)
+        StateVector(calcVsopPosVel(body.vsopModel, time.tt), time)
+    else when (body) {
+        Body.Sun   -> StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+        Body.Pluto -> calcPluto(time, true)
+        Body.Moon  -> helioEarthState(time) + geoMoonState(time)
+        Body.EMB   -> helioEarthState(time) + (geoMoonState(time) / (1.0 + EARTH_MOON_MASS_RATIO))
+        Body.SSB   -> solarSystemBarycenterState(time)
+        else -> throw InvalidBodyException(body)
+    }
+
+/**
+ * Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
+ *
+ * This function calculates the position of the given celestial body as a vector,
+ * using the center of the Earth as the origin.  The result is expressed as a Cartesian
+ * vector in the J2000 equatorial system: the coordinates are based on the mean equator
+ * of the Earth at noon UTC on 1 January 2000.
+ *
+ * If given an invalid value for `body`, this function will throw an exception.
+ *
+ * Unlike [helioVector], this function always corrects for light travel time.
+ * This means the position of the body is "back-dated" by the amount of time it takes
+ * light to travel from that body to an observer on the Earth.
+ *
+ * Also, the position can optionally be corrected for
+ * [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect
+ * causing the apparent direction of the body to be shifted due to transverse
+ * movement of the Earth with respect to the rays of light coming from that body.
+ *
+ * @param body
+ *      A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
+ *
+ * @param time
+ *      The date and time for which to calculate the position.
+ *
+ * @param aberration
+ *      `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.
+ *
+ * @return A geocentric position vector of the center of the given body.
+ */
+fun geoVector(body: Body, time: AstroTime, aberration: Aberration): AstroVector {
+    if (body == Body.Earth)
+        return AstroVector(0.0, 0.0, 0.0, time)
+
+    if (body == Body.Moon)
+        return geoMoon(time)
+
+    // For all other bodies, apply light travel time correction.
+    // The intention is to find the apparent position of the body
+    // from the Earth's point of view.
+
+    var earth = helioEarthPos(time)
+
+    var ltime = time
+    for (iter in 0..9) {
+        val helio = helioVector(body, ltime)
+        if (aberration == Aberration.Corrected && iter > 0) {
+            // Include aberration, so make a good first-order approximation
+            // by backdating the Earth's position also.
+            // This is confusing, but it works for objects within the Solar System
+            // because the distance the Earth moves in that small amount of light
+            // travel time (a few minutes to a few hours) is well approximated
+            // by a line segment that substends the angle seen from the remote
+            // body viewing Earth. That angle is pretty close to the aberration
+            // angle of the moving Earth viewing the remote body.
+            // In other words, both of the following approximate the aberration angle:
+            //     (transverse distance Earth moves) / (distance to body)
+            //     (transverse speed of Earth) / (speed of light).
+            earth = helioEarthPos(ltime)
+        }
+
+        // Convert heliocentric vector to geocentric vector.
+        // Tricky: we cannot use the subtraction operator because
+        // it will get angry that we are using mismatching times!
+        // It is intentional here that the calculation time was backdated,
+        // but the observation time is not.
+        var geopos = AstroVector(
+            helio.x - earth.x,
+            helio.y - earth.y,
+            helio.z - earth.z,
             time
         )
+
+        // Calculate the time in the past when light left the body on its way toward Earth.
+        val ltime2 = time.addDays(-geopos.length() / C_AUDAY)
+
+        // Very quickly we should converge on a solution for how far
+        // in the past light must have left the planet in order to
+        // reach the Earth at the given time, even though the observed
+        // body was in a slightly different orbital position when
+        // light left it.
+        if ((ltime2.tt - ltime.tt).absoluteValue < 1.0e-9)
+            return geopos
+
+        // Otherwise we refine the estimate and try again.
+        ltime = ltime2
     }
 
-    /**
-     * Calculate the geographic coordinates corresponding to a position vector.
-     *
-     * Given a geocentric position vector expressed in equator-of-date (EQD) coordinates,
-     * this function calculates the latitude, longitude, and elevation of that location.
-     * Note that the time `ovec.t` must be set correctly in order to determine the
-     * Earth's rotation angle.
-     *
-     * This function is intended for positions known to be on or near the Earth's surface.
-     *
-     * @param ovec
-     *      A geocentric position on or near the Earth's surface, in EQD coordinates.
-     *
-     * @return
-     * The location on or near the Earth's surface corresponding to
-     * the given position vector and time.
-     */
-    private fun inverseTerra(ovec: AstroVector): Observer {
-        var lonDeg: Double
-        var latDeg: Double
-        var heightKm: Double
+    // This should never happen. Usually the solver converges
+    // after 3 iterations. We allow for 10 iterations.
+    // Something is really wrong if this ever happens.
+    throw InternalError("Light travel time did not converge")
+}
 
-        // Convert from AU to kilometers.
-        val x = ovec.x * KM_PER_AU
-        val y = ovec.y * KM_PER_AU
-        val z = ovec.z * KM_PER_AU
-        val p = hypot(x, y)
-        if (p < 1.0e-6) {
-            // Special case: within 1 millimeter of a pole!
-            // Use arbitrary longitude, and latitude determined by polarity of z.
-            lonDeg = 0.0
-            latDeg = if (z > 0.0) +90.0 else -90.0
-            // Elevation is calculated directly from z.
-            heightKm = z.absoluteValue - EARTH_POLAR_RADIUS_KM
-        } else {
-            // Calculate exact longitude in the half-open range (-180, +180].
-            val stlocl = atan2(y, x)
-            lonDeg = longitudeOffset(stlocl.radiansToDegrees() - (15 * siderealTime(ovec.t)))
-            // Numerically solve for exact latitude, using Newton's Method.
-            val F = EARTH_FLATTENING_SQUARED
-            // Start with initial latitude estimate, based on a spherical Earth.
-            var lat = atan2(z, p)
-            var c: Double
-            var s: Double
-            var denom: Double
-            while (true) {
-                // Calculate the error function W(lat).
-                // We try to find the root of W, meaning where the error is 0.
-                c = cos(lat)
-                s = sin(lat)
-                val factor = (F-1)*EARTH_EQUATORIAL_RADIUS_KM
-                val c2 = c*c
-                val s2 = s*s
-                val radicand = c2 + F*s2
-                denom = sqrt(radicand)
-                val W = ((factor * s * c) / denom) - (z * c) + (p * s)
-                if (W.absoluteValue < 1.0e-12)
-                    break  // The error is now negligible.
-                // Error is still too large. Find the next estimate.
-                // Calculate D = the derivative of W with respect to lat.
-                val D = (factor * ((c2 - s2) / denom) - (s2 * c2 * (F - 1)/(factor * radicand))) + (z * s) + (p * c)
-                lat -= (W / D)
-            }
-            // We now have a solution for the latitude in radians.
-            latDeg = lat.radiansToDegrees()
-            // Solve for exact height in kilometers.
-            // There are two formulas I can use. Use whichever has the less risky denominator.
-            val adjust = EARTH_EQUATORIAL_RADIUS_KM / denom
-            heightKm =
-                if (s.absoluteValue > c.absoluteValue)
-                    z/s - F*adjust
+/**
+ * Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
+ *
+ * Calculates topocentric equatorial coordinates in one of two different systems:
+ * J2000 or true-equator-of-date, depending on the value of the `equdate` parameter.
+ * Equatorial coordinates include right ascension, declination, and distance in astronomical units.
+ *
+ * This function corrects for light travel time: it adjusts the apparent location
+ * of the observed body based on how long it takes for light to travel from the body to the Earth.
+ *
+ * This function corrects for *topocentric parallax*, meaning that it adjusts for the
+ * angular shift depending on where the observer is located on the Earth. This is most
+ * significant for the Moon, because it is so close to the Earth. However, parallax corection
+ * has a small effect on the apparent positions of other bodies.
+ *
+ * Correction for aberration is optional, using the `aberration` parameter.
+ *
+ * @param body
+ *      The celestial body to be observed. Not allowed to be `Body.Earth`.
+ *
+ * @param time
+ *      The date and time at which the observation takes place.
+ *
+ * @param observer
+ *      A location on or near the surface of the Earth.
+ *
+ * @param equdate
+ *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ *
+ * @param aberration
+ *      Selects whether or not to correct for aberration.
+ *
+ * @return Topocentric equatorial coordinates of the celestial body.
+ */
+fun equator(
+    body: Body,
+    time: AstroTime,
+    observer: Observer,
+    equdate: EquatorEpoch,
+    aberration: Aberration
+): Equatorial {
+    val gcObserver = geoPos(time, observer)
+    val gc = geoVector(body, time, aberration)
+    val j2000 = gc - gcObserver
+    val vector = when (equdate) {
+        EquatorEpoch.OfDate -> gyration(j2000, PrecessDirection.From2000)
+        EquatorEpoch.J2000  -> j2000
+    }
+    return equatorFromVector(vector)
+}
+
+/**
+ * Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
+ *
+ * Given a date and time, the geographic location of an observer on the Earth, and
+ * equatorial coordinates (right ascension and declination) of a celestial body,
+ * this function returns horizontal coordinates (azimuth and altitude angles) for the body
+ * relative to the horizon at the geographic location.
+ *
+ * The right ascension `ra` and declination `dec` passed in must be *equator of date*
+ * coordinates, based on the Earth's true equator at the date and time of the observation.
+ * Otherwise the resulting horizontal coordinates will be inaccurate.
+ * Equator of date coordinates can be obtained by calling [equator], passing in
+ * [EquatorEpoch.OfDate] as its `equdate` parameter. It is also recommended to enable
+ * aberration correction by passing in [Aberration.Corrected] as the `aberration` parameter.
+ *
+ * This function optionally corrects for atmospheric refraction.
+ * For most uses, it is recommended to pass [Refraction.Normal] in the `refraction` parameter to
+ * correct for optical lensing of the Earth's atmosphere that causes objects
+ * to appear somewhat higher above the horizon than they actually are.
+ * However, callers may choose to avoid this correction by passing in [Refraction.None].
+ * If refraction correction is enabled, the azimuth, altitude, right ascension, and declination
+ * in the [Topocentric] object returned by this function will all be corrected for refraction.
+ * If refraction is disabled, none of these four coordinates will be corrected; in that case,
+ * the right ascension and declination in the returned structure will be numerically identical
+ * to the respective `ra` and `dec` values passed in.
+ *
+ * @param time
+ *      The date and time of the observation.
+ *
+ * @param observer
+ *      The geographic location of the observer.
+ *
+ * @param ra
+ *      The right ascension of the body in sidereal hours. See remarks above for more details.
+ *
+ * @param dec
+ *      The declination of the body in degrees. See remarks above for more details.
+ *
+ * @param refraction
+ *      Selects whether to correct for atmospheric refraction, and if so, which model to use.
+ *      The recommended value for most uses is `Refraction.Normal`.
+ *      See remarks above for more details.
+ *
+ * @return The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
+ */
+fun horizon(
+    time: AstroTime,
+    observer: Observer,
+    ra: Double,
+    dec: Double,
+    refraction: Refraction
+): Topocentric {
+    val sinlat = dsin(observer.latitude)
+    val coslat = dcos(observer.latitude)
+    val sinlon = dsin(observer.longitude)
+    val coslon = dcos(observer.longitude)
+    val sindc = dsin(dec)
+    val cosdc = dcos(dec)
+    val sinra = dsin(ra * 15.0)
+    val cosra = dcos(ra * 15.0)
+
+    // Calculate three mutually perpendicular unit vectors
+    // in equatorial coordinates: uze, une, uwe.
+    //
+    // uze = The direction of the observer's local zenith (straight up).
+    // une = The direction toward due north on the observer's horizon.
+    // uwe = The direction toward due west on the observer's horizon.
+    //
+    // HOWEVER, these are uncorrected for the Earth's rotation due to the time of day.
+    //
+    // The components of these 3 vectors are as follows:
+    // x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
+    // y = direction from center of Earth toward 90 degrees west longitude on equator.
+    // z = direction from center of Earth toward the north pole.
+    val uze = AstroVector(coslat * coslon, coslat * sinlon, sinlat, time)
+    val une = AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
+    val uwe = AstroVector(sinlon, -coslon, 0.0, time)
+
+    // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
+    // sideral time. Call spin() for each uncorrected vector to rotate about
+    // the Earth's axis to yield corrected unit vectors uz, un, uw.
+    // Multiply sidereal hours by -15 to convert to degrees and flip eastward
+    // rotation of the Earth to westward apparent movement of objects with time.
+    val angle = -15.0 * siderealTime(time)
+    val uz = spin(angle, uze)
+    val un = spin(angle, une)
+    val uw = spin(angle, uwe)
+
+    // Convert angular equatorial coordinates (RA, DEC) to
+    // cartesian equatorial coordinates in 'p', using the
+    // same orientation system as uze, une, uwe.
+    val p = AstroVector(cosdc * cosra, cosdc * sinra, sindc, time)
+
+    // Use dot products of p with the zenith, north, and west
+    // vectors to obtain the cartesian coordinates of the body in
+    // the observer's horizontal orientation system.
+    // pz = zenith component [-1, +1]
+    // pn = north  component [-1, +1]
+    // pw = west   component [-1, +1]
+    val pz = p dot uz
+    val pn = p dot un
+    val pw = p dot uw
+
+    // projHor is the "shadow" of the body vector along the observer's flat ground.
+    val projHor = hypot(pn, pw)
+
+    // Calculate az = azimuth (compass direction clockwise from East.)
+    val az = (
+        if (projHor > 0.0) (
+            // If the body is not exactly straight up/down, it has an azimuth.
+            // Invert the angle to produce degrees eastward from north.
+            (-atan2(pw, pn)).radiansToDegrees().withMinDegreeValue(0.0)
+        ) else (
+            // The body is straight up/down, so it does not have an azimuth.
+            // Report an arbitrary but reasonable value.
+            0.0
+        )
+    )
+
+    // zd = the angle of the body away from the observer's zenith, in degrees.
+    var zd = atan2(projHor, pz).radiansToDegrees()
+    var horRa = ra
+    var horDec = dec
+
+    if (refraction != Refraction.None) {
+        val zd0 = zd
+        val refr = refractionAngle(refraction, 90.0 - zd)
+        zd -= refr
+
+        if (refr > 0.0 && zd > 3.0e-4) {
+            // Calculate refraction-corrected equatorial coordinates.
+            val sinzd  = dsin(zd)
+            val coszd  = dcos(zd)
+            val sinzd0 = dsin(zd0)
+            val coszd0 = dcos(zd0)
+
+            val prx = ((p.x - coszd0 * uz.x) / sinzd0)*sinzd + uz.x*coszd
+            val pry = ((p.y - coszd0 * uz.y) / sinzd0)*sinzd + uz.y*coszd
+            val prz = ((p.z - coszd0 * uz.z) / sinzd0)*sinzd + uz.z*coszd
+
+            val projEqu = hypot(prx, pry)
+
+            horRa =
+                if (projEqu > 0.0)
+                    atan2(pry, prx).radiansToDegrees().withMinDegreeValue(0.0) / 15.0
                 else
-                    p/c - adjust
-        }
+                    0.0
 
-        return Observer(latDeg, lonDeg, 1000.0 * heightKm)
-    }
-
-    private fun gyration(pos: AstroVector, dir: PrecessDirection) =
-        when (dir) {
-            PrecessDirection.Into2000 -> precession(nutation(pos, dir), dir)
-            PrecessDirection.From2000 -> nutation(precession(pos, dir), dir)
-        }
-
-    private fun gyrationPosVel(state: StateVector, dir: PrecessDirection) =
-        when (dir) {
-            PrecessDirection.Into2000 -> precessionPosVel(nutationPosVel(state, dir), dir)
-            PrecessDirection.From2000 -> nutationPosVel(precessionPosVel(state, dir), dir)
-        }
-
-    private fun geoPos(time: AstroTime, observer: Observer) =
-        gyration(
-            terra(observer, time).position(),
-            PrecessDirection.Into2000
-        )
-
-    private fun spin(angle: Double, pos: AstroVector): AstroVector {
-        val cosang = dcos(angle)
-        val sinang = dsin(angle)
-        return AstroVector(
-            +cosang*pos.x + sinang*pos.y,
-            -sinang*pos.x + cosang*pos.y,
-            pos.z,
-            pos.t
-        )
-    }
-
-    private fun nutationRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
-        val tilt = earthTilt(time)
-        val oblm = tilt.mobl.degreesToRadians()
-        val oblt = tilt.tobl.degreesToRadians()
-        val psi = tilt.dpsi * ASEC2RAD
-        val cobm = cos(oblm)
-        val sobm = sin(oblm)
-        val cobt = cos(oblt)
-        val sobt = sin(oblt)
-        val cpsi = cos(psi)
-        val spsi = sin(psi)
-
-        val xx = cpsi
-        val yx = -spsi * cobm
-        val zx = -spsi * sobm
-        val xy = spsi * cobt
-        val yy = cpsi * cobm * cobt + sobm * sobt
-        val zy = cpsi * sobm * cobt - cobm * sobt
-        val xz = spsi * sobt
-        val yz = cpsi * cobm * sobt - sobm * cobt
-        val zz = cpsi * sobm * sobt + cobm * cobt
-
-        return when (dir) {
-            // Perform rotation from other epoch to J2000.0.
-            PrecessDirection.Into2000 ->
-                RotationMatrix(
-                    xx, yx, zx,
-                    xy, yy, zy,
-                    xz, yz, zz
-                )
-
-            // Perform rotation from J2000.0 to other epoch.
-            PrecessDirection.From2000 ->
-                RotationMatrix(
-                    xx, xy, xz,
-                    yx, yy, yz,
-                    zx, zy, zz
-                )
+            horDec = atan2(prz, projEqu).radiansToDegrees()
         }
     }
 
-    private fun nutation(pos: AstroVector, dir: PrecessDirection) =
-        nutationRot(pos.t, dir).rotate(pos)
+    return Topocentric(az, 90.0 - zd, horRa, horDec)
+}
 
-    private fun nutationPosVel(state: StateVector, dir: PrecessDirection) =
-        nutationRot(state.t, dir).rotate(state)
+/**
+ * Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
+ *
+ * Calculates position and velocity vectors for Jupiter's moons
+ * Io, Europa, Ganymede, and Callisto, at the given date and time.
+ * The vectors are jovicentric (relative to the center of Jupiter).
+ * Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+ * The position components are expressed in astronomical units (AU), and the
+ * velocity components are in AU/day.
+ *
+ * To convert to heliocentric position vectors, call [helioVector]
+ * with `Body.Jupiter` to get Jupiter's heliocentric position, then
+ * add the jovicentric positions. Likewise, you can call [geoVector]
+ * to convert to geocentric positions; however, you will have to manually
+ * correct for light travel time from the Jupiter system to Earth to
+ * figure out what time to pass to `jupiterMoons` to get an accurate picture
+ * of how Jupiter and its moons look from Earth.
+ */
+fun jupiterMoons(time: AstroTime) =
+    JupiterMoonsInfo(arrayOf(
+        calcJupiterMoon(time, jupiterMoonModel[0]),
+        calcJupiterMoon(time, jupiterMoonModel[1]),
+        calcJupiterMoon(time, jupiterMoonModel[2]),
+        calcJupiterMoon(time, jupiterMoonModel[3])
+    ))
 
-    private fun eclipticToEquatorial(ecl: AstroVector): AstroVector {
-        val obl = meanObliquity(ecl.t).degreesToRadians()
-        val cosObl = cos(obl)
-        val sinObl = sin(obl)
-        return AstroVector(
-            ecl.x,
-            (ecl.y * cosObl) - (ecl.z * sinObl),
-            (ecl.y * sinObl) + (ecl.z * cosObl),
-            ecl.t
-        )
-    }
+/**
+ * Searches for a time at which a function's value increases through zero.
+ *
+ * Certain astronomy calculations involve finding a time when an event occurs.
+ * Often such events can be defined as the root of a function:
+ * the time at which the function's value becomes zero.
+ *
+ * `search` finds the *ascending root* of a function: the time at which
+ * the function's value becomes zero while having a positive slope. That is, as time increases,
+ * the function transitions from a negative value, through zero at a specific moment,
+ * to a positive value later. The goal of the search is to find that specific moment.
+ *
+ * The `func` parameter is an instance of the interface [SearchContext].
+ * As an example, a caller may wish to find the moment a celestial body reaches a certain
+ * ecliptic longitude. In that case, the caller might derive a class that contains
+ * a [Body] member to specify the body and a `Double` to hold the target longitude.
+ * It could subtract the target longitude from the actual longitude at a given time;
+ * thus the difference would equal zero at the moment in time the planet reaches the
+ * desired longitude.
+ *
+ * Every time it is called, `func.eval` returns a `Double` value or it throws an exception.
+ * If `func.eval` throws an exception, the search immediately fails and the exception
+ * is propagated to the caller. Otherwise, the search proceeds until it either finds
+ * the ascending root or fails for some reason.
+ *
+ * The search calls `func.eval` repeatedly to rapidly narrow in on any ascending
+ * root within the time window specified by `time1` and `time2`. The search never
+ * reports a solution outside this time window.
+ *
+ * `search` uses a combination of bisection and quadratic interpolation
+ * to minimize the number of function calls. However, it is critical that the
+ * supplied time window be small enough that there cannot be more than one root
+ * (ascedning or descending) within it; otherwise the search can fail.
+ * Beyond that, it helps to make the time window as small as possible, ideally
+ * such that the function itself resembles a smooth parabolic curve within that window.
+ *
+ * If an ascending root is not found, or more than one root
+ * (ascending and/or descending) exists within the window `time1`..`time2`,
+ * the search will return `null`.
+ *
+ * If the search does not converge within 20 iterations, it will throw an exception.
+ *
+ * @param func
+ *      The function for which to find the time of an ascending root.
+ *      See remarks above for more details.
+ *
+ * @param time1
+ *      The lower time bound of the search window.
+ *      See remarks above for more details.
+ *
+ * @param time2
+ *      The upper time bound of the search window.
+ *      See remarks above for more details.
+ *
+ * @param toleranceSeconds
+ *      Specifies an amount of time in seconds within which a bounded ascending root
+ *      is considered accurate enough to stop. A typical value is 1 second.
+ *
+ * @return
+ * If successful, returns an [AstroTime] value indicating a date and time
+ * that is within `toleranceSeconds` of an ascending root.
+ * If no ascending root is found, or more than one root exists in the time
+ * window `time1`..`time2`, the function returns `null`.
+ */
+fun search(
+    func: SearchContext,
+    time1: AstroTime,
+    time2: AstroTime,
+    toleranceSeconds: Double
+): AstroTime? {
+    var t1 = time1
+    var t2 = time2
+    val iterLimit = 20
+    val toleranceDays = abs(toleranceSeconds / SECONDS_PER_DAY)
+    var f1 = func.eval(t1)
+    var f2 = func.eval(t2)
+    var calcFmid = true
+    var fmid = 0.0
 
-    /**
-     * Given an equatorial vector, calculates equatorial angular coordinates.
-     *
-     * @vector
-     *      A vector in an equatorial coordinate system.
-     *
-     * @return Angular coordinates expressed in the same equatorial system as `vector`.
-     */
-    fun equatorFromVector(vector: AstroVector): Equatorial {
-        val sphere = vector.toSpherical()
-        return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vector)
-    }
-
-
-    private fun earthRotationAxis(time: AstroTime): AxisInfo {
-        // Unlike the other planets, we have a model of precession and nutation
-        // for the Earth's axis that provides a north pole vector.
-        // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
-
-        // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
-        val pos1 = AstroVector(0.0, 0.0, 1.0, time)
-
-        // Convert the vector into J2000 coordinates to find the north pole direction.
-        val pos2 = nutation(pos1, PrecessDirection.Into2000)
-        val north = precession(pos2, PrecessDirection.Into2000)
-
-        // Derive angular values: right ascension and declination.
-        val equ = north.toEquatorial()
-
-        // Use a modified version of the era() function that does not trim to 0..360 degrees.
-        // This expression is also corrected to give the correct angle at the J2000 epoch.
-        val spin = 190.41375788700253 + (360.9856122880876 * time.ut)
-
-        return AxisInfo(equ.ra, equ.dec, spin, north)
-    }
-
-
-    /**
-     * Calculates information about a body's rotation axis at a given time.
-     *
-     * Calculates the orientation of a body's rotation axis, along with
-     * the rotation angle of its prime meridian, at a given moment in time.
-     *
-     * This function uses formulas standardized by the IAU Working Group
-     * on Cartographics and Rotational Elements 2015 report, as described
-     * in the following document:
-     *
-     * https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
-     *
-     * See [AxisInfo] for more detailed information.
-     *
-     * @param body
-     *      One of the following values:
-     *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
-     *      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
-     *
-     * @param time
-     *      The time at which to calculate the body's rotation axis.
-     *
-     * @return North pole orientation and body spin angle.
-     */
-    fun rotationAxis(body: Body, time: AstroTime): AxisInfo {
-        if (body == Body.Earth)
-            return earthRotationAxis(time)
-
-        val d = time.tt
-        val T = time.julianCenturies()
-        val ra: Double
-        val dec: Double
-        val w: Double
-        when (body) {
-            Body.Sun -> {
-                ra = 286.13
-                dec = 63.87
-                w = 84.176 + (14.1844 * d)
-            }
-
-            Body.Mercury -> {
-                ra = 281.0103 - (0.0328 * T)
-                dec = 61.4155 - (0.0049 * T)
-                w = (
-                    329.5988
-                    + (6.1385108 * d)
-                    + (0.01067257 * dsin((174.7910857 + 4.092335*d)))
-                    - (0.00112309 * dsin((349.5821714 + 8.184670*d)))
-                    - (0.00011040 * dsin((164.3732571 + 12.277005*d)))
-                    - (0.00002539 * dsin((339.1643429 + 16.369340*d)))
-                    - (0.00000571 * dsin((153.9554286 + 20.461675*d)))
-                )
-            }
-
-            Body.Venus -> {
-                ra = 272.76
-                dec = 67.16
-                w = 160.20 - (1.4813688 * d)
-            }
-
-            Body.Moon -> {
-                // See page 8, Table 2 in:
-                // https://astropedia.astrogeology.usgs.gov/alfresco/d/d/workspace/SpacesStore/28fd9e81-1964-44d6-a58b-fbbf61e64e15/WGCCRE2009reprint.pdf
-                val E1  = 125.045 -  0.0529921*d
-                val E2  = 250.089 -  0.1059842*d
-                val E3  = 260.008 + 13.0120009*d
-                val E4  = 176.625 + 13.3407154*d
-                val E5  = 357.529 +  0.9856003*d
-                val E6  = 311.589 + 26.4057084*d
-                val E7  = 134.963 + 13.0649930*d
-                val E8  = 276.617 +  0.3287146*d
-                val E9  = 34.226  +  1.7484877*d
-                val E10 = 15.134  -  0.1589763*d
-                val E11 = 119.743 +  0.0036096*d
-                val E12 = 239.961 +  0.1643573*d
-                val E13 = 25.053  + 12.9590088*d
-
-                ra = (
-                    269.9949 + 0.0031*T
-                    - 3.8787*dsin(E1)
-                    - 0.1204*dsin(E2)
-                    + 0.0700*dsin(E3)
-                    - 0.0172*dsin(E4)
-                    + 0.0072*dsin(E6)
-                    - 0.0052*dsin(E10)
-                    + 0.0043*dsin(E13)
-                )
-
-                dec = (
-                    66.5392 + 0.0130*T
-                    + 1.5419*dcos(E1)
-                    + 0.0239*dcos(E2)
-                    - 0.0278*dcos(E3)
-                    + 0.0068*dcos(E4)
-                    - 0.0029*dcos(E6)
-                    + 0.0009*dcos(E7)
-                    + 0.0008*dcos(E10)
-                    - 0.0009*dcos(E13)
-                )
-
-                w = (
-                    38.3213 + (13.17635815 - 1.4e-12*d)*d
-                    + 3.5610*dsin(E1)
-                    + 0.1208*dsin(E2)
-                    - 0.0642*dsin(E3)
-                    + 0.0158*dsin(E4)
-                    + 0.0252*dsin(E5)
-                    - 0.0066*dsin(E6)
-                    - 0.0047*dsin(E7)
-                    - 0.0046*dsin(E8)
-                    + 0.0028*dsin(E9)
-                    + 0.0052*dsin(E10)
-                    + 0.0040*dsin(E11)
-                    + 0.0019*dsin(E12)
-                    - 0.0044*dsin(E13)
-                )
-            }
-
-            Body.Mars -> {
-                ra = (
-                    317.269202 - 0.10927547*T
-                    + 0.000068 * dsin(198.991226 + 19139.4819985*T)
-                    + 0.000238 * dsin(226.292679 + 38280.8511281*T)
-                    + 0.000052 * dsin(249.663391 + 57420.7251593*T)
-                    + 0.000009 * dsin(266.183510 + 76560.6367950*T)
-                    + 0.419057 * dsin(79.398797 + 0.5042615*T)
-                )
-
-                dec = (
-                    54.432516 - 0.05827105*T
-                    + 0.000051 * dcos(122.433576 + 19139.9407476*T)
-                    + 0.000141 * dcos(43.058401 + 38280.8753272*T)
-                    + 0.000031 * dcos(57.663379 + 57420.7517205*T)
-                    + 0.000005 * dcos(79.476401 + 76560.6495004*T)
-                    + 1.591274 * dcos(166.325722 + 0.5042615*T)
-                )
-
-                w = (
-                    176.049863 + 350.891982443297*d
-                    + 0.000145 * dsin(129.071773 + 19140.0328244*T)
-                    + 0.000157 * dsin(36.352167 + 38281.0473591*T)
-                    + 0.000040 * dsin(56.668646 + 57420.9295360*T)
-                    + 0.000001 * dsin(67.364003 + 76560.2552215*T)
-                    + 0.000001 * dsin(104.792680 + 95700.4387578*T)
-                    + 0.584542 * dsin(95.391654 + 0.5042615*T)
-                )
-            }
-
-            Body.Jupiter -> {
-                val Ja = 99.360714  + 4850.4046*T
-                val Jb = 175.895369 + 1191.9605*T
-                val Jc = 300.323162 + 262.5475*T
-                val Jd = 114.012305 + 6070.2476*T
-                val Je = 49.511251  + 64.3000*T
-
-                ra = (
-                    268.056595 - 0.006499*T
-                    + 0.000117 * dsin(Ja)
-                    + 0.000938 * dsin(Jb)
-                    + 0.001432 * dsin(Jc)
-                    + 0.000030 * dsin(Jd)
-                    + 0.002150 * dsin(Je)
-                )
-
-                dec = (
-                    64.495303 + 0.002413*T
-                    + 0.000050 * dcos(Ja)
-                    + 0.000404 * dcos(Jb)
-                    + 0.000617 * dcos(Jc)
-                    - 0.000013 * dcos(Jd)
-                    + 0.000926 * dcos(Je)
-                )
-
-                w = 284.95 + 870.536*d
-            }
-
-            Body.Saturn -> {
-                ra = 40.589 - 0.036*T
-                dec = 83.537 - 0.004*T
-                w = 38.90 + 810.7939024*d
-            }
-
-            Body.Uranus -> {
-                ra = 257.311
-                dec = -15.175
-                w = 203.81 - 501.1600928*d
-            }
-
-            Body.Neptune -> {
-                val N = 357.85 + 52.316*T
-                val sinN = dsin(N)
-                ra = 299.36 + 0.70*sinN
-                dec = 43.46 - 0.51*dcos(N)
-                w = 249.978 + 541.1397757*d - 0.48*sinN
-            }
-
-            Body.Pluto -> {
-                ra = 132.993
-                dec = -6.163
-                w = 302.695 + 56.3625225*d
-            }
-
-            else -> throw InvalidBodyException(body)
+    for (iter in 1..iterLimit) {
+        val dt = (t2.tt - t1.tt) / 2.0
+        val tmid = t1.addDays(dt)
+        if (dt.absoluteValue < toleranceDays) {
+            // We are close enough to the event to stop the search.
+            return tmid
         }
 
-        // Calculate the north pole vector using the given angles.
-        val rcoslat = dcos(dec)
-        val north = AstroVector(
-            rcoslat * dcos(ra),
-            rcoslat * dsin(ra),
-            dsin(dec),
-            time
-        )
+        if (calcFmid)
+            fmid = func.eval(tmid)
+        else
+            calcFmid = true     // we already have the correct value of fmid from the previous loop
 
-        return AxisInfo(ra / 15.0, dec, w, north)
-    }
-
-    /**
-    * Calculates spherical ecliptic geocentric position of the Moon.
-    *
-    * Given a time of observation, calculates the Moon's geocentric position
-    * in ecliptic spherical coordinates. Provides the ecliptic latitude and
-    * longitude in degrees, and the geocentric distance in astronomical units (AU).
-    * The ecliptic longitude is measured relative to the equinox of date.
-    *
-    * This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
-    * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
-    * It is adapted from Turbo Pascal code from the book
-    * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
-    * by Montenbruck and Pfleger.
-    *
-    * To calculate an equatorial J2000 vector instead, use [Astronomy.geoMoon].
-    */
-    fun eclipticGeoMoon(time: AstroTime) = MoonContext(time).calcMoon()
-
-    /**
-     * Calculates equatorial geocentric position of the Moon at a given time.
-     *
-     * Given a time of observation, calculates the Moon's position vector.
-     * The vector indicates the Moon's center relative to the Earth's center.
-     * The vector components are expressed in AU (astronomical units).
-     * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
-     * In Astronomy Engine, this orientation is called EQJ.
-     *
-     * @param time
-     *      The date and time for which to calculate the Moon's position.
-     *
-     * @return The Moon's position vector in J2000 equatorial coordinates (EQJ).
-     */
-    fun geoMoon(time: AstroTime): AstroVector {
-        val eclSphere = eclipticGeoMoon(time)
-        val eclVec = eclSphere.toVector(time)
-        val equVec = eclipticToEquatorial(eclVec)
-        return precession(equVec, PrecessDirection.Into2000)
-    }
-
-    /**
-     * Calculates equatorial geocentric position and velocity of the Moon at a given time.
-     *
-     * Given a time of observation, calculates the Moon's position and velocity vectors.
-     * The position and velocity are of the Moon's center relative to the Earth's center.
-     * The position (x, y, z) components are expressed in AU (astronomical units).
-     * The velocity (vx, vy, vz) components are expressed in AU/day.
-     * The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
-     * In Astronomy Engine, this orientation is called EQJ.
-     * If you need the Moon's position only, and not its velocity,
-     * it is much more efficient to use [Astronomy.geoMoon] instead.
-     *
-     * @param time
-     *      The date and time for which to calculate the Moon's position and velocity.
-     *
-     * @return The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
-     */
-    fun geoMoonState(time: AstroTime): StateVector {
-        // This is a hack, because trying to figure out how to derive
-        // a time derivative for MoonContext.calcMoon() would be painful!
-        // Calculate just before and just after the given time.
-        // Average to find position, subtract to find velocity.
-        val dt = 1.0e-5        // 0.864 seconds
-        val t1 = time.addDays(-dt)
-        val t2 = time.addDays(+dt)
-        val r1 = geoMoon(t1)
-        val r2 = geoMoon(t2)
-
-        // The desired position is the average of the two calculated positions.
-        // The difference of position vectors divided by the time span gives the velocity vector.
-        return StateVector(
-            (r1.x + r2.x) / 2.0,
-            (r1.y + r2.y) / 2.0,
-            (r1.z + r2.z) / 2.0,
-            (r2.x - r1.x) / (2.0 * dt),
-            (r2.y - r1.y) / (2.0 * dt),
-            (r2.z - r1.z) / (2.0 * dt),
-            time
-        )
-    }
-
-    private fun helioEarthPos(time: AstroTime) =
-        calcVsop(vsopModel(Body.Earth), time)
-
-    private fun helioEarthState(time: AstroTime) =
-        StateVector(calcVsopPosVel(vsopModel(Body.Earth), time.tt), time)
-
-    private fun barycenterPosContrib(time: AstroTime, body: Body, planetGm: Double) =
-        (planetGm / (planetGm + SUN_GM)) * vsopHelioVector(body, time)
-
-    private fun solarSystemBarycenterPos(time: AstroTime): AstroVector {
-        val j = barycenterPosContrib(time, Body.Jupiter, JUPITER_GM)
-        val s = barycenterPosContrib(time, Body.Saturn,  SATURN_GM)
-        var u = barycenterPosContrib(time, Body.Uranus,  URANUS_GM)
-        var n = barycenterPosContrib(time, Body.Neptune, NEPTUNE_GM)
-        return AstroVector(
-            j.x + s.x + u.x + n.x,
-            j.y + s.y + u.y + n.y,
-            j.z + s.z + u.z + n.z,
-            time
-        )
-    }
-
-    private fun barycenterStateContrib(time: AstroTime, body: Body, planetGm: Double): StateVector {
-        val helioPlanet = calcVsopPosVel(vsopModel(body), time.tt)
-        val factor = planetGm / (planetGm + SUN_GM)
-        return StateVector(
-            factor * helioPlanet.r.x,
-            factor * helioPlanet.r.y,
-            factor * helioPlanet.r.z,
-            factor * helioPlanet.v.x,
-            factor * helioPlanet.v.y,
-            factor * helioPlanet.v.z,
-            time
-        )
-    }
-
-    private fun solarSystemBarycenterState(time: AstroTime): StateVector {
-        val j = barycenterStateContrib(time, Body.Jupiter, JUPITER_GM)
-        val s = barycenterStateContrib(time, Body.Saturn,  SATURN_GM)
-        var u = barycenterStateContrib(time, Body.Uranus,  URANUS_GM)
-        var n = barycenterStateContrib(time, Body.Neptune, NEPTUNE_GM)
-        return StateVector(
-            j.x + s.x + u.x + n.x,
-            j.y + s.y + u.y + n.y,
-            j.z + s.z + u.z + n.z,
-            j.vx + s.vx + u.vx + n.vx,
-            j.vy + s.vy + u.vy + n.vy,
-            j.vz + s.vz + u.vz + n.vz,
-            time
-        )
-    }
-
-    /**
-     * Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
-     *
-     * This function calculates the position of the given celestial body as a vector,
-     * using the center of the Sun as the origin.  The result is expressed as a Cartesian
-     * vector in the J2000 equatorial system: the coordinates are based on the mean equator
-     * of the Earth at noon UTC on 1 January 2000.
-     *
-     * The position is not corrected for light travel time or aberration.
-     * This is different from the behavior of [Astronomy.geoVector].
-     *
-     * If given an invalid value for `body`, this function will throw an [InvalidBodyException].
-     *
-     * @param body
-     *      A body for which to calculate a heliocentric position:
-     *      the Sun, Moon, EMB, SSB, or any of the planets.
-     *
-     * @param time
-     *      The date and time for which to calculate the position.
-     *
-     * @return The heliocentric position vector of the center of the given body.
-     */
-    fun helioVector(body: Body, time: AstroTime): AstroVector =
-        if (body.vsopModel != null)
-            calcVsop(body.vsopModel, time)
-        else when (body) {
-            Body.Sun     -> AstroVector(0.0, 0.0, 0.0, time)
-            Body.Pluto   -> calcPluto(time, true).position()
-            Body.Moon    -> helioEarthPos(time) + geoMoon(time)
-            Body.EMB     -> helioEarthPos(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
-            Body.SSB     -> solarSystemBarycenterPos(time)
-            else -> throw InvalidBodyException(body)
-        }
-
-    /**
-     * Calculates the distance between a body and the Sun at a given time.
-     *
-     * Given a date and time, this function calculates the distance between
-     * the center of `body` and the center of the Sun, expressed in AU.
-     * For the planets Mercury through Neptune, this function is significantly
-     * more efficient than calling [Astronomy.helioVector] followed by taking the length
-     * of the resulting vector.
-     *
-     * @param body
-     *      A body for which to calculate a heliocentric distance:
-     *      the Sun, Moon, EMB, SSB, or any of the planets.
-     *
-     * @param time
-     *      The date and time for which to calculate the distance.
-     *
-     * @return The heliocentric distance in AU.
-     */
-    fun helioDistance(body: Body, time: AstroTime): Double =
-        when {
-            body == Body.Sun -> 0.0
-            body.vsopModel != null -> vsopDistance(body.vsopModel, time)
-            else -> helioVector(body, time).length()
-        }
-
-    /**
-     * Calculates heliocentric position and velocity vectors for the given body.
-     *
-     * Given a body and a time, calculates the position and velocity
-     * vectors for the center of that body at that time, relative to the center of the Sun.
-     * The vectors are expressed in equatorial J2000 coordinates (EQJ).
-     * If you need the position vector only, it is more efficient to call [Astronomy.helioVector].
-     * The Sun's center is a non-inertial frame of reference. In other words, the Sun
-     * experiences acceleration due to gravitational forces, mostly from the larger
-     * planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum,
-     * kinetic energy, or other quantities that require a non-accelerating frame
-     * of reference, consider using [Astronomy.baryState] instead.
-     *
-     * @param body
-     * The celestial body whose heliocentric state vector is to be calculated.
-     * Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
-     * `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
-     * `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
-     *
-     * @param time
-     *      The date and time for which to calculate position and velocity.
-     *
-     * @return
-     * A state vector that contains heliocentric position and velocity vectors.
-     * The positions are expressed in AU.
-     * The velocities are expressed in AU/day.
-     */
-    fun helioState(body: Body, time: AstroTime): StateVector =
-        if (body.vsopModel != null)
-            StateVector(calcVsopPosVel(body.vsopModel, time.tt), time)
-        else when (body) {
-            Body.Sun   -> StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
-            Body.Pluto -> calcPluto(time, true)
-            Body.Moon  -> helioEarthState(time) + geoMoonState(time)
-            Body.EMB   -> helioEarthState(time) + (geoMoonState(time) / (1.0 + EARTH_MOON_MASS_RATIO))
-            Body.SSB   -> solarSystemBarycenterState(time)
-            else -> throw InvalidBodyException(body)
-        }
-
-    /**
-     * Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
-     *
-     * This function calculates the position of the given celestial body as a vector,
-     * using the center of the Earth as the origin.  The result is expressed as a Cartesian
-     * vector in the J2000 equatorial system: the coordinates are based on the mean equator
-     * of the Earth at noon UTC on 1 January 2000.
-     *
-     * If given an invalid value for `body`, this function will throw an exception.
-     *
-     * Unlike [Astronomy.helioVector], this function always corrects for light travel time.
-     * This means the position of the body is "back-dated" by the amount of time it takes
-     * light to travel from that body to an observer on the Earth.
-     *
-     * Also, the position can optionally be corrected for
-     * [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect
-     * causing the apparent direction of the body to be shifted due to transverse
-     * movement of the Earth with respect to the rays of light coming from that body.
-     *
-     * @param body
-     *      A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
-     *
-     * @param time
-     *      The date and time for which to calculate the position.
-     *
-     * @param aberration
-     *      `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.
-     *
-     * @return A geocentric position vector of the center of the given body.
-     */
-    fun geoVector(body: Body, time: AstroTime, aberration: Aberration): AstroVector {
-        if (body == Body.Earth)
-            return AstroVector(0.0, 0.0, 0.0, time)
-
-        if (body == Body.Moon)
-            return geoMoon(time)
-
-        // For all other bodies, apply light travel time correction.
-        // The intention is to find the apparent position of the body
-        // from the Earth's point of view.
-
-        var earth = helioEarthPos(time)
-
-        var ltime = time
-        for (iter in 0..9) {
-            val helio = helioVector(body, ltime)
-            if (aberration == Aberration.Corrected && iter > 0) {
-                // Include aberration, so make a good first-order approximation
-                // by backdating the Earth's position also.
-                // This is confusing, but it works for objects within the Solar System
-                // because the distance the Earth moves in that small amount of light
-                // travel time (a few minutes to a few hours) is well approximated
-                // by a line segment that substends the angle seen from the remote
-                // body viewing Earth. That angle is pretty close to the aberration
-                // angle of the moving Earth viewing the remote body.
-                // In other words, both of the following approximate the aberration angle:
-                //     (transverse distance Earth moves) / (distance to body)
-                //     (transverse speed of Earth) / (speed of light).
-                earth = helioEarthPos(ltime)
+        // Quadratic interpolation:
+        // Try to find a parabola that passes through the 3 points we have sampled:
+        // (t1,f1), (tmid,fmid), (t2,f2).
+        val tm = tmid.ut
+        val tspan = t2.ut - tmid.ut
+        val q = (f2 + f1)/2.0 - fmid
+        val r = (f2 - f1)/2.0
+        val s = fmid
+        var foundInterpolation = false
+        var x = Double.NaN
+        if (q == 0.0) {
+            // This is a line, not a parabola.
+            if (r != 0.0) {     // skip horizontal lines: they don't have a root
+                x = -s / r
+                foundInterpolation = (-1.0 <= x && x <= +1.0)
             }
-
-            // Convert heliocentric vector to geocentric vector.
-            // Tricky: we cannot use the subtraction operator because
-            // it will get angry that we are using mismatching times!
-            // It is intentional here that the calculation time was backdated,
-            // but the observation time is not.
-            var geopos = AstroVector(
-                helio.x - earth.x,
-                helio.y - earth.y,
-                helio.z - earth.z,
-                time
-            )
-
-            // Calculate the time in the past when light left the body on its way toward Earth.
-            val ltime2 = time.addDays(-geopos.length() / C_AUDAY)
-
-            // Very quickly we should converge on a solution for how far
-            // in the past light must have left the planet in order to
-            // reach the Earth at the given time, even though the observed
-            // body was in a slightly different orbital position when
-            // light left it.
-            if ((ltime2.tt - ltime.tt).absoluteValue < 1.0e-9)
-                return geopos
-
-            // Otherwise we refine the estimate and try again.
-            ltime = ltime2
-        }
-
-        // This should never happen. Usually the solver converges
-        // after 3 iterations. We allow for 10 iterations.
-        // Something is really wrong if this ever happens.
-        throw InternalError("Light travel time did not converge")
-    }
-
-    /**
-     * Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
-     *
-     * Calculates topocentric equatorial coordinates in one of two different systems:
-     * J2000 or true-equator-of-date, depending on the value of the `equdate` parameter.
-     * Equatorial coordinates include right ascension, declination, and distance in astronomical units.
-     *
-     * This function corrects for light travel time: it adjusts the apparent location
-     * of the observed body based on how long it takes for light to travel from the body to the Earth.
-     *
-     * This function corrects for *topocentric parallax*, meaning that it adjusts for the
-     * angular shift depending on where the observer is located on the Earth. This is most
-     * significant for the Moon, because it is so close to the Earth. However, parallax corection
-     * has a small effect on the apparent positions of other bodies.
-     *
-     * Correction for aberration is optional, using the `aberration` parameter.
-     *
-     * @param body
-     *      The celestial body to be observed. Not allowed to be `Body.Earth`.
-     *
-     * @param time
-     *      The date and time at which the observation takes place.
-     *
-     * @param observer
-     *      A location on or near the surface of the Earth.
-     *
-     * @param equdate
-     *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
-     *
-     * @param aberration
-     *      Selects whether or not to correct for aberration.
-     *
-     * @return Topocentric equatorial coordinates of the celestial body.
-     */
-    fun equator(
-        body: Body,
-        time: AstroTime,
-        observer: Observer,
-        equdate: EquatorEpoch,
-        aberration: Aberration
-    ): Equatorial {
-        val gcObserver = geoPos(time, observer)
-        val gc = geoVector(body, time, aberration)
-        val j2000 = gc - gcObserver
-        val vector = when (equdate) {
-            EquatorEpoch.OfDate -> gyration(j2000, PrecessDirection.From2000)
-            EquatorEpoch.J2000  -> j2000
-        }
-        return equatorFromVector(vector)
-    }
-
-    /**
-     * Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
-     *
-     * Given a date and time, the geographic location of an observer on the Earth, and
-     * equatorial coordinates (right ascension and declination) of a celestial body,
-     * this function returns horizontal coordinates (azimuth and altitude angles) for the body
-     * relative to the horizon at the geographic location.
-     *
-     * The right ascension `ra` and declination `dec` passed in must be *equator of date*
-     * coordinates, based on the Earth's true equator at the date and time of the observation.
-     * Otherwise the resulting horizontal coordinates will be inaccurate.
-     * Equator of date coordinates can be obtained by calling [Astronomy.equator], passing in
-     * [EquatorEpoch.OfDate] as its `equdate` parameter. It is also recommended to enable
-     * aberration correction by passing in [Aberration.Corrected] as the `aberration` parameter.
-     *
-     * This function optionally corrects for atmospheric refraction.
-     * For most uses, it is recommended to pass [Refraction.Normal] in the `refraction` parameter to
-     * correct for optical lensing of the Earth's atmosphere that causes objects
-     * to appear somewhat higher above the horizon than they actually are.
-     * However, callers may choose to avoid this correction by passing in [Refraction.None].
-     * If refraction correction is enabled, the azimuth, altitude, right ascension, and declination
-     * in the [Topocentric] object returned by this function will all be corrected for refraction.
-     * If refraction is disabled, none of these four coordinates will be corrected; in that case,
-     * the right ascension and declination in the returned structure will be numerically identical
-     * to the respective `ra` and `dec` values passed in.
-     *
-     * @param time
-     *      The date and time of the observation.
-     *
-     * @param observer
-     *      The geographic location of the observer.
-     *
-     * @param ra
-     *      The right ascension of the body in sidereal hours. See remarks above for more details.
-     *
-     * @param dec
-     *      The declination of the body in degrees. See remarks above for more details.
-     *
-     * @param refraction
-     *      Selects whether to correct for atmospheric refraction, and if so, which model to use.
-     *      The recommended value for most uses is `Refraction.Normal`.
-     *      See remarks above for more details.
-     *
-     * @return The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
-     */
-    fun horizon(
-        time: AstroTime,
-        observer: Observer,
-        ra: Double,
-        dec: Double,
-        refraction: Refraction
-    ): Topocentric {
-        val sinlat = dsin(observer.latitude)
-        val coslat = dcos(observer.latitude)
-        val sinlon = dsin(observer.longitude)
-        val coslon = dcos(observer.longitude)
-        val sindc = dsin(dec)
-        val cosdc = dcos(dec)
-        val sinra = dsin(ra * 15.0)
-        val cosra = dcos(ra * 15.0)
-
-        // Calculate three mutually perpendicular unit vectors
-        // in equatorial coordinates: uze, une, uwe.
-        //
-        // uze = The direction of the observer's local zenith (straight up).
-        // une = The direction toward due north on the observer's horizon.
-        // uwe = The direction toward due west on the observer's horizon.
-        //
-        // HOWEVER, these are uncorrected for the Earth's rotation due to the time of day.
-        //
-        // The components of these 3 vectors are as follows:
-        // x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
-        // y = direction from center of Earth toward 90 degrees west longitude on equator.
-        // z = direction from center of Earth toward the north pole.
-        val uze = AstroVector(coslat * coslon, coslat * sinlon, sinlat, time)
-        val une = AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
-        val uwe = AstroVector(sinlon, -coslon, 0.0, time)
-
-        // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
-        // sideral time. Call spin() for each uncorrected vector to rotate about
-        // the Earth's axis to yield corrected unit vectors uz, un, uw.
-        // Multiply sidereal hours by -15 to convert to degrees and flip eastward
-        // rotation of the Earth to westward apparent movement of objects with time.
-        val angle = -15.0 * siderealTime(time)
-        val uz = spin(angle, uze)
-        val un = spin(angle, une)
-        val uw = spin(angle, uwe)
-
-        // Convert angular equatorial coordinates (RA, DEC) to
-        // cartesian equatorial coordinates in 'p', using the
-        // same orientation system as uze, une, uwe.
-        val p = AstroVector(cosdc * cosra, cosdc * sinra, sindc, time)
-
-        // Use dot products of p with the zenith, north, and west
-        // vectors to obtain the cartesian coordinates of the body in
-        // the observer's horizontal orientation system.
-        // pz = zenith component [-1, +1]
-        // pn = north  component [-1, +1]
-        // pw = west   component [-1, +1]
-        val pz = p dot uz
-        val pn = p dot un
-        val pw = p dot uw
-
-        // projHor is the "shadow" of the body vector along the observer's flat ground.
-        val projHor = hypot(pn, pw)
-
-        // Calculate az = azimuth (compass direction clockwise from East.)
-        val az = (
-            if (projHor > 0.0) (
-                // If the body is not exactly straight up/down, it has an azimuth.
-                // Invert the angle to produce degrees eastward from north.
-                (-atan2(pw, pn)).radiansToDegrees().withMinDegreeValue(0.0)
-            ) else (
-                // The body is straight up/down, so it does not have an azimuth.
-                // Report an arbitrary but reasonable value.
-                0.0
-            )
-        )
-
-        // zd = the angle of the body away from the observer's zenith, in degrees.
-        var zd = atan2(projHor, pz).radiansToDegrees()
-        var horRa = ra
-        var horDec = dec
-
-        if (refraction != Refraction.None) {
-            val zd0 = zd
-            val refr = refractionAngle(refraction, 90.0 - zd)
-            zd -= refr
-
-            if (refr > 0.0 && zd > 3.0e-4) {
-                // Calculate refraction-corrected equatorial coordinates.
-                val sinzd  = dsin(zd)
-                val coszd  = dcos(zd)
-                val sinzd0 = dsin(zd0)
-                val coszd0 = dcos(zd0)
-
-                val prx = ((p.x - coszd0 * uz.x) / sinzd0)*sinzd + uz.x*coszd
-                val pry = ((p.y - coszd0 * uz.y) / sinzd0)*sinzd + uz.y*coszd
-                val prz = ((p.z - coszd0 * uz.z) / sinzd0)*sinzd + uz.z*coszd
-
-                val projEqu = hypot(prx, pry)
-
-                horRa =
-                    if (projEqu > 0.0)
-                        atan2(pry, prx).radiansToDegrees().withMinDegreeValue(0.0) / 15.0
-                    else
-                        0.0
-
-                horDec = atan2(prz, projEqu).radiansToDegrees()
-            }
-        }
-
-        return Topocentric(az, 90.0 - zd, horRa, horDec)
-    }
-
-    /**
-     * Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
-     *
-     * Calculates position and velocity vectors for Jupiter's moons
-     * Io, Europa, Ganymede, and Callisto, at the given date and time.
-     * The vectors are jovicentric (relative to the center of Jupiter).
-     * Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
-     * The position components are expressed in astronomical units (AU), and the
-     * velocity components are in AU/day.
-     *
-     * To convert to heliocentric position vectors, call [Astronomy.helioVector]
-     * with `Body.Jupiter` to get Jupiter's heliocentric position, then
-     * add the jovicentric positions. Likewise, you can call [Astronomy.geoVector]
-     * to convert to geocentric positions; however, you will have to manually
-     * correct for light travel time from the Jupiter system to Earth to
-     * figure out what time to pass to `jupiterMoons` to get an accurate picture
-     * of how Jupiter and its moons look from Earth.
-     */
-    fun jupiterMoons(time: AstroTime) =
-        JupiterMoonsInfo(arrayOf(
-            calcJupiterMoon(time, jupiterMoonModel[0]),
-            calcJupiterMoon(time, jupiterMoonModel[1]),
-            calcJupiterMoon(time, jupiterMoonModel[2]),
-            calcJupiterMoon(time, jupiterMoonModel[3])
-        ))
-
-    /**
-     * Searches for a time at which a function's value increases through zero.
-     *
-     * Certain astronomy calculations involve finding a time when an event occurs.
-     * Often such events can be defined as the root of a function:
-     * the time at which the function's value becomes zero.
-     *
-     * `search` finds the *ascending root* of a function: the time at which
-     * the function's value becomes zero while having a positive slope. That is, as time increases,
-     * the function transitions from a negative value, through zero at a specific moment,
-     * to a positive value later. The goal of the search is to find that specific moment.
-     *
-     * The `func` parameter is an instance of the interface [SearchContext].
-     * As an example, a caller may wish to find the moment a celestial body reaches a certain
-     * ecliptic longitude. In that case, the caller might derive a class that contains
-     * a [Body] member to specify the body and a `Double` to hold the target longitude.
-     * It could subtract the target longitude from the actual longitude at a given time;
-     * thus the difference would equal zero at the moment in time the planet reaches the
-     * desired longitude.
-     *
-     * Every time it is called, `func.eval` returns a `Double` value or it throws an exception.
-     * If `func.eval` throws an exception, the search immediately fails and the exception
-     * is propagated to the caller. Otherwise, the search proceeds until it either finds
-     * the ascending root or fails for some reason.
-     *
-     * The search calls `func.eval` repeatedly to rapidly narrow in on any ascending
-     * root within the time window specified by `time1` and `time2`. The search never
-     * reports a solution outside this time window.
-     *
-     * `search` uses a combination of bisection and quadratic interpolation
-     * to minimize the number of function calls. However, it is critical that the
-     * supplied time window be small enough that there cannot be more than one root
-     * (ascedning or descending) within it; otherwise the search can fail.
-     * Beyond that, it helps to make the time window as small as possible, ideally
-     * such that the function itself resembles a smooth parabolic curve within that window.
-     *
-     * If an ascending root is not found, or more than one root
-     * (ascending and/or descending) exists within the window `time1`..`time2`,
-     * the search will return `null`.
-     *
-     * If the search does not converge within 20 iterations, it will throw an exception.
-     *
-     * @param func
-     *      The function for which to find the time of an ascending root.
-     *      See remarks above for more details.
-     *
-     * @param time1
-     *      The lower time bound of the search window.
-     *      See remarks above for more details.
-     *
-     * @param time2
-     *      The upper time bound of the search window.
-     *      See remarks above for more details.
-     *
-     * @param toleranceSeconds
-     *      Specifies an amount of time in seconds within which a bounded ascending root
-     *      is considered accurate enough to stop. A typical value is 1 second.
-     *
-     * @return
-     * If successful, returns an [AstroTime] value indicating a date and time
-     * that is within `toleranceSeconds` of an ascending root.
-     * If no ascending root is found, or more than one root exists in the time
-     * window `time1`..`time2`, the function returns `null`.
-     */
-    fun search(
-        func: SearchContext,
-        time1: AstroTime,
-        time2: AstroTime,
-        toleranceSeconds: Double
-    ): AstroTime? {
-        var t1 = time1
-        var t2 = time2
-        val iterLimit = 20
-        val toleranceDays = abs(toleranceSeconds / SECONDS_PER_DAY)
-        var f1 = func.eval(t1)
-        var f2 = func.eval(t2)
-        var calcFmid = true
-        var fmid = 0.0
-
-        for (iter in 1..iterLimit) {
-            val dt = (t2.tt - t1.tt) / 2.0
-            val tmid = t1.addDays(dt)
-            if (dt.absoluteValue < toleranceDays) {
-                // We are close enough to the event to stop the search.
-                return tmid
-            }
-
-            if (calcFmid)
-                fmid = func.eval(tmid)
-            else
-                calcFmid = true     // we already have the correct value of fmid from the previous loop
-
-            // Quadratic interpolation:
-            // Try to find a parabola that passes through the 3 points we have sampled:
-            // (t1,f1), (tmid,fmid), (t2,f2).
-            val tm = tmid.ut
-            val tspan = t2.ut - tmid.ut
-            val q = (f2 + f1)/2.0 - fmid
-            val r = (f2 - f1)/2.0
-            val s = fmid
-            var foundInterpolation = false
-            var x = Double.NaN
-            if (q == 0.0) {
-                // This is a line, not a parabola.
-                if (r != 0.0) {     // skip horizontal lines: they don't have a root
-                    x = -s / r
-                    foundInterpolation = (-1.0 <= x && x <= +1.0)
-                }
-            } else {
-                // This really is a parabola. Find its roots x1, x2.
-                val u = r*r - 4.0*q*s
-                if (u > 0.0) {      // skip imaginary or tangent roots
-                    // See if there is a unique solution for x in the range [-1, +1].
-                    val ru = sqrt(u)
-                    val x1 = (-r + ru) / (2.0 * q)
-                    val x2 = (-r - ru) / (2.0 * q)
-                    val x1Valid = (-1.0 <= x1 && x1 <= +1.0)
-                    val x2Valid = (-1.0 <= x2 && x2 <= +1.0)
-                    if (x1Valid && !x2Valid) {
-                        x = x1
-                        foundInterpolation = true
-                    } else if (x2Valid && !x1Valid) {
-                        x = x2
-                        foundInterpolation = true
-                    }
+        } else {
+            // This really is a parabola. Find its roots x1, x2.
+            val u = r*r - 4.0*q*s
+            if (u > 0.0) {      // skip imaginary or tangent roots
+                // See if there is a unique solution for x in the range [-1, +1].
+                val ru = sqrt(u)
+                val x1 = (-r + ru) / (2.0 * q)
+                val x2 = (-r - ru) / (2.0 * q)
+                val x1Valid = (-1.0 <= x1 && x1 <= +1.0)
+                val x2Valid = (-1.0 <= x2 && x2 <= +1.0)
+                if (x1Valid && !x2Valid) {
+                    x = x1
+                    foundInterpolation = true
+                } else if (x2Valid && !x1Valid) {
+                    x = x2
+                    foundInterpolation = true
                 }
             }
-            if (foundInterpolation) {
-                val qut = tm + x*tspan
-                val qslope = (2*q*x + r) / tspan
-                val tq = AstroTime(qut)
-                val fq = func.eval(tq)
-                if (qslope != 0.0) {
-                    var dtGuess = abs(fq / qslope)
-                    if (dtGuess < toleranceDays) {
-                        // The estimated time error is small enough that we can quit now.
-                        return tq
-                    }
+        }
+        if (foundInterpolation) {
+            val qut = tm + x*tspan
+            val qslope = (2*q*x + r) / tspan
+            val tq = AstroTime(qut)
+            val fq = func.eval(tq)
+            if (qslope != 0.0) {
+                var dtGuess = abs(fq / qslope)
+                if (dtGuess < toleranceDays) {
+                    // The estimated time error is small enough that we can quit now.
+                    return tq
+                }
 
-                    // Try guessing a tighter boundary with the interpolated root at the center.
-                    dtGuess *= 1.2
-                    if (dtGuess < dt / 10.0) {
-                        val tleft = tq.addDays(-dtGuess)
-                        val tright = tq.addDays(+dtGuess)
-                        if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0.0) {
-                            if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0.0) {
-                                val fleft = func.eval(tleft)
-                                val fright = func.eval(tright)
-                                if ((fleft < 0.0) && (fright >= 0.0)) {
-                                    f1 = fleft
-                                    f2 = fright
-                                    t1 = tleft
-                                    t2 = tright
-                                    fmid = fq
-                                    calcFmid = false    // save a little work; no need to recalculate fmid next time
-                                    continue
-                                }
+                // Try guessing a tighter boundary with the interpolated root at the center.
+                dtGuess *= 1.2
+                if (dtGuess < dt / 10.0) {
+                    val tleft = tq.addDays(-dtGuess)
+                    val tright = tq.addDays(+dtGuess)
+                    if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0.0) {
+                        if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0.0) {
+                            val fleft = func.eval(tleft)
+                            val fright = func.eval(tright)
+                            if ((fleft < 0.0) && (fright >= 0.0)) {
+                                f1 = fleft
+                                f2 = fright
+                                t1 = tleft
+                                t2 = tright
+                                fmid = fq
+                                calcFmid = false    // save a little work; no need to recalculate fmid next time
+                                continue
                             }
                         }
                     }
                 }
             }
-
-            // The quadratic interpolation didn't work this time.
-            // Use bisection: divide the region in two parts and pick
-            // whichever one appears to contain a root.
-            if (f1 < 0.0 && fmid >= 0.0) {
-                t2 = tmid
-                f2 = fmid
-                continue
-            }
-
-            if (fmid < 0.0 && f2 >= 0.0) {
-                t1 = tmid
-                f1 = fmid
-                continue
-            }
-
-            // Either there is no ascending zero-crossing in this range
-            // or the search window is too wide (more than one zero-crossing).
-            // Either way, the search has failed.
-            return null
         }
 
-        throw InternalError("Search did not converge within $iterLimit iterations.")
-    }
-
-    /**
-     * Calculates geocentric ecliptic coordinates for the Sun.
-     *
-     * This function calculates the position of the Sun as seen from the Earth.
-     * The returned value includes both Cartesian and spherical coordinates.
-     * The x-coordinate and longitude values in the returned object are based
-     * on the *true equinox of date*: one of two points in the sky where the instantaneous
-     * plane of the Earth's equator at the given date and time (the *equatorial plane*)
-     * intersects with the plane of the Earth's orbit around the Sun (the *ecliptic plane*).
-     * By convention, the apparent location of the Sun at the March equinox is chosen
-     * as the longitude origin and x-axis direction, instead of the one for September.
-     *
-     * `sunPosition` corrects for precession and nutation of the Earth's axis
-     * in order to obtain the exact equatorial plane at the given time.
-     *
-     * This function can be used for calculating changes of seasons: equinoxes and solstices.
-     * In fact, the function [Astronomy.seasons] does use this function for that purpose.
-     *
-     * @param time
-     *      The date and time for which to calculate the Sun's position.
-     *
-     * @return The ecliptic coordinates of the Sun using the Earth's true equator of date.
-     */
-    fun sunPosition(time: AstroTime): Ecliptic {
-        // Correct for light travel time from the Sun.
-        // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
-        val adjustedTime = time.addDays(-1.0 / C_AUDAY)
-        val earth2000 = helioEarthPos(adjustedTime)
-
-        // Convert heliocentric location of Earth to geocentric location of Sun.
-        val sun2000 = -earth2000
-
-        // Convert to equatorial Cartesian coordinates of date.
-        val sunOfDate = gyration(sun2000, PrecessDirection.From2000)
-
-        // Convert equatorial coordinates to ecliptic coordinates.
-        val trueObliq = earthTilt(adjustedTime).tobl.degreesToRadians()
-        return rotateEquatorialToEcliptic(sunOfDate, trueObliq)
-    }
-
-    private fun rotateEquatorialToEcliptic(pos: AstroVector, obliqRadians: Double): Ecliptic {
-        val cosOb = cos(obliqRadians)
-        val sinOb = sin(obliqRadians)
-        val ex = +pos.x
-        val ey = +pos.y*cosOb + pos.z*sinOb
-        val ez = -pos.y*sinOb + pos.z*cosOb
-        val xyproj = hypot(ex, ey)
-        val elon =
-            if (xyproj > 0.0)
-                atan2(ey, ex).radiansToDegrees().withMinDegreeValue(0.0)
-            else
-                0.0
-        val elat = atan2(ez, xyproj).radiansToDegrees()
-        val vec = AstroVector(ex, ey, ez, pos.t)
-        return Ecliptic(vec, elat, elon)
-    }
-
-    /**
-     * Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
-     *
-     * Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
-     * on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
-     * which are relative to the plane of the Earth's orbit around the Sun.
-     *
-     * @param equ
-     *      Equatorial coordinates in the J2000 frame of reference.
-     *      You can call [Astronomy.geoVector] to obtain suitable equatorial coordinates.
-     *
-     * @return Ecliptic coordinates in the J2000 frame of reference (ECL).
-     */
-    fun equatorialToEcliptic(equ: AstroVector): Ecliptic =
-        rotateEquatorialToEcliptic(
-            equ,
-            0.40909260059599012     // mean obliquity of the J2000 ecliptic in radians
-        )
-
-    /**
-     * Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.
-     *
-     * This function finds the moment in time, if any exists in the given time window,
-     * that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
-     *
-     * This function can be used to determine equinoxes and solstices.
-     * However, it is usually more convenient and efficient to call [Astronomy.seasons]
-     * to calculate all equinoxes and solstices for a given calendar year.
-     *
-     * The function searches the window of time specified by `startTime` and `startTime+limitDays`.
-     * The search will return `null` if the Sun never reaches the longitude `targetLon` or
-     * if the window is so large that the longitude ranges more than 180 degrees within it.
-     * It is recommended to keep the window smaller than 10 days when possible.
-     */
-    fun searchSunLongitude(targetLon: Double, startTime: AstroTime, limitDays: Double): AstroTime? {
-        class Context(val targetLon: Double) : SearchContext {
-            override fun eval(time: AstroTime) =
-                longitudeOffset(Astronomy.sunPosition(time).elon - targetLon)
+        // The quadratic interpolation didn't work this time.
+        // Use bisection: divide the region in two parts and pick
+        // whichever one appears to contain a root.
+        if (f1 < 0.0 && fmid >= 0.0) {
+            t2 = tmid
+            f2 = fmid
+            continue
         }
-        val context = Context(targetLon)
-        val time2 = startTime.addDays(limitDays)
-        return search(context, startTime, time2, 0.01)
-    }
 
-    /**
-     * Finds both equinoxes and both solstices for a given calendar year.
-     *
-     * The changes of seasons are defined by solstices and equinoxes.
-     * Given a calendar year number, this function calculates the
-     * March and September equinoxes and the June and December solstices.
-     *
-     * The equinoxes are the moments twice each year when the plane of the
-     * Earth's equator passes through the center of the Sun. In other words,
-     * the Sun's declination is zero at both equinoxes.
-     * The March equinox defines the beginning of spring in the northern hemisphere
-     * and the beginning of autumn in the southern hemisphere.
-     * The September equinox defines the beginning of autumn in the northern hemisphere
-     * and the beginning of spring in the southern hemisphere.
-     *
-     * The solstices are the moments twice each year when one of the Earth's poles
-     * is most tilted toward the Sun. More precisely, the Sun's declination reaches
-     * its minimum value at the December solstice, which defines the beginning of
-     * winter in the northern hemisphere and the beginning of summer in the southern
-     * hemisphere. The Sun's declination reaches its maximum value at the June solstice,
-     * which defines the beginning of summer in the northern hemisphere and the beginning
-     * of winter in the southern hemisphere.
-     *
-     * @param year
-     *      The calendar year number for which to calculate equinoxes and solstices.
-     *      The value may be any integer, but only the years 1800 through 2100 have been
-     *      validated for accuracy: unit testing against data from the
-     *      United States Naval Observatory confirms that all equinoxes and solstices
-     *      for that range of years are within 2 minutes of the correct time.
-     *
-     * @return
-     * A [SeasonsInfo] object that contains four [AstroTime] values:
-     * the March and September equinoxes and the June and December solstices.
-     */
-    fun seasons(year: Int) =
-        SeasonsInfo(
-            findSeasonChange(  0.0, year,  3, 10),
-            findSeasonChange( 90.0, year,  6, 10),
-            findSeasonChange(180.0, year,  9, 10),
-            findSeasonChange(270.0, year, 12, 10)
-        )
-
-    private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int): AstroTime {
-        var startTime = AstroTime(year, month, day, 0, 0, 0.0)
-        return searchSunLongitude(targetLon, startTime, 20.0) ?:
-            throw InternalError("Cannot find solution for Sun longitude $targetLon for year $year")
-    }
-
-    /**
-     * Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
-     *
-     * This function determines where one body appears around the ecliptic plane
-     * (the plane of the Earth's orbit around the Sun) as seen from the Earth,
-     * relative to the another body's apparent position.
-     * The function returns an angle in the half-open range [0, 360) degrees.
-     * The value is the ecliptic longitude of `body1` relative to the ecliptic
-     * longitude of `body2`.
-     *
-     * The angle is 0 when the two bodies are at the same ecliptic longitude
-     * as seen from the Earth. The angle increases in the prograde direction
-     * (the direction that the planets orbit the Sun and the Moon orbits the Earth).
-     *
-     * When the angle is 180 degrees, it means the two bodies appear on opposite sides
-     * of the sky for an Earthly observer.
-     *
-     * Neither `body1` nor `body2` is allowed to be `Body.Earth`.
-     * If this happens, the function throws an exception.
-     *
-     * @param body1 The first body, whose longitude is to be found relative to the second body.
-     * @param body2 The second body, relative to which the longitude of the first body is to be found.
-     * @param time  The date and time of the observation.
-     * @return An angle in the range [0, 360), expressed in degrees.
-     */
-    fun pairLongitude(body1: Body, body2: Body, time: AstroTime): Double {
-        if (body1 == Body.Earth || body2 == Body.Earth)
-            throw EarthNotAllowedException()
-
-        val vector1 = geoVector(body1, time, Aberration.None)
-        val eclip1 = equatorialToEcliptic(vector1)
-
-        val vector2 = geoVector(body2, time, Aberration.None)
-        val eclip2 = equatorialToEcliptic(vector2)
-
-        return normalizeLongitude(eclip1.elon - eclip2.elon)
-    }
-
-    /**
-     * Returns the Moon's phase as an angle from 0 to 360 degrees.
-     *
-     * This function determines the phase of the Moon using its apparent
-     * ecliptic longitude relative to the Sun, as seen from the center of the Earth.
-     * Certain values of the angle have conventional definitions:
-     *
-     * - 0 = new moon
-     * - 90 = first quarter
-     * - 180 = full moon
-     * - 270 = third quarter
-     *
-     * @param time  The date and time of the observation.
-     * @return The angle as described above, a value in the range 0..360 degrees.
-     */
-    fun moonPhase(time: AstroTime): Double =
-        pairLongitude(Body.Moon, Body.Sun, time)
-
-    /**
-     * Searches for the time that the Moon reaches a specified phase.
-     *
-     * Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
-     * longitude with respect to the Sun's geocentric ecliptic longitude.
-     * When the Moon and the Sun have the same longitude, that is defined as a new moon.
-     * When their longitudes are 180 degrees apart, that is defined as a full moon.
-     *
-     * This function searches for any value of the lunar phase expressed as an
-     * angle in degrees in the range [0, 360).
-     *
-     * If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
-     * it is much easier to call the functions [Astronomy.searchMoonQuarter] and [Astronomy.nextMoonQuarter].
-     * This function is useful for finding general phase angles outside those four quarters.
-     *
-     * @param targetLon
-     *      The difference in geocentric longitude between the Sun and Moon
-     *      that specifies the lunar phase being sought. This can be any value
-     *      in the range [0, 360).  Certain values have conventional names:
-     *      0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter.
-     *
-     * @param startTime
-     *      The beginning of the time window in which to search for the Moon reaching the specified phase.
-     *
-     * @param limitDays
-     *      The number of days after `startTime` that limits the time window for the search.
-     *
-     * @return
-     * If successful, returns the date and time the moon reaches the phase specified by
-     * `targetlon`. This function will return `null` if the phase does not
-     * occur within `limitDays` of `startTime`; that is, if the search window is too small.
-     */
-    fun searchMoonPhase(targetLon: Double, startTime: AstroTime, limitDays: Double): AstroTime? {
-        // To avoid discontinuities in the moonOffset function causing problems,
-        // we need to approximate when that function will next return 0.
-        // We probe it with the start time and take advantage of the fact
-        // that every lunar phase repeats roughly every 29.5 days.
-        // There is a surprising uncertainty in the quarter timing,
-        // due to the eccentricity of the moon's orbit.
-        // I have seen more than 0.9 days away from the simple prediction.
-        // To be safe, we take the predicted time of the event and search
-        // +/-1.5 days around it (a 3-day wide window).
-        class Context(val targetLon : Double) : SearchContext {
-            override fun eval(time: AstroTime) = longitudeOffset(moonPhase(time) - targetLon)
+        if (fmid < 0.0 && f2 >= 0.0) {
+            t1 = tmid
+            f1 = fmid
+            continue
         }
-        val moonOffset = Context(targetLon)
-        var ya = moonOffset.eval(startTime)
-        if (ya > 0.0) ya -= 360.0  // force searching forward in time, not backward
-        val uncertainty = 1.5
-        val estDt = -(MEAN_SYNODIC_MONTH * ya) / 360.0
-        val dt1 = estDt - uncertainty
-        if (dt1 > limitDays)
-            return null    // not possible for moon phase to occur within specified window (too short)
-        val dt2 = min(limitDays, estDt + uncertainty)
-        val t1 = startTime.addDays(dt1)
-        val t2 = startTime.addDays(dt2)
-        return search(moonOffset, t1, t2, 1.0)
+
+        // Either there is no ascending zero-crossing in this range
+        // or the search window is too wide (more than one zero-crossing).
+        // Either way, the search has failed.
+        return null
     }
 
-    /**
-     * Finds the first lunar quarter after the specified date and time.
-     * A lunar quarter is one of the following four lunar phase events:
-     * new moon, first quarter, full moon, third quarter.
-     * This function finds the lunar quarter that happens soonest
-     * after the specified date and time.
-     *
-     * To continue iterating through consecutive lunar quarters, call this function once,
-     * followed by calls to #Astronomy.NextMoonQuarter as many times as desired.
-     *
-     * @param startTime The date and time at which to start the search.
-     * @return A [MoonQuarterInfo] object reporting the next quarter phase and the time it will occur.
-     */
-    fun searchMoonQuarter(startTime: AstroTime): MoonQuarterInfo {
-        val currentPhaseAngle = moonPhase(startTime)
-        val quarter: Int = (1 + floor(currentPhaseAngle / 90.0).toInt()) % 4
-        val quarterTime = searchMoonPhase(90.0 * quarter, startTime, 10.0) ?:
-            throw InternalError("Unable to find moon quarter $quarter for startTime=$startTime")
-        return MoonQuarterInfo(quarter, quarterTime)
+    throw InternalError("Search did not converge within $iterLimit iterations.")
+}
+
+/**
+ * Calculates geocentric ecliptic coordinates for the Sun.
+ *
+ * This function calculates the position of the Sun as seen from the Earth.
+ * The returned value includes both Cartesian and spherical coordinates.
+ * The x-coordinate and longitude values in the returned object are based
+ * on the *true equinox of date*: one of two points in the sky where the instantaneous
+ * plane of the Earth's equator at the given date and time (the *equatorial plane*)
+ * intersects with the plane of the Earth's orbit around the Sun (the *ecliptic plane*).
+ * By convention, the apparent location of the Sun at the March equinox is chosen
+ * as the longitude origin and x-axis direction, instead of the one for September.
+ *
+ * `sunPosition` corrects for precession and nutation of the Earth's axis
+ * in order to obtain the exact equatorial plane at the given time.
+ *
+ * This function can be used for calculating changes of seasons: equinoxes and solstices.
+ * In fact, the function [seasons] does use this function for that purpose.
+ *
+ * @param time
+ *      The date and time for which to calculate the Sun's position.
+ *
+ * @return The ecliptic coordinates of the Sun using the Earth's true equator of date.
+ */
+fun sunPosition(time: AstroTime): Ecliptic {
+    // Correct for light travel time from the Sun.
+    // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
+    val adjustedTime = time.addDays(-1.0 / C_AUDAY)
+    val earth2000 = helioEarthPos(adjustedTime)
+
+    // Convert heliocentric location of Earth to geocentric location of Sun.
+    val sun2000 = -earth2000
+
+    // Convert to equatorial Cartesian coordinates of date.
+    val sunOfDate = gyration(sun2000, PrecessDirection.From2000)
+
+    // Convert equatorial coordinates to ecliptic coordinates.
+    val trueObliq = earthTilt(adjustedTime).tobl.degreesToRadians()
+    return rotateEquatorialToEcliptic(sunOfDate, trueObliq)
+}
+
+private fun rotateEquatorialToEcliptic(pos: AstroVector, obliqRadians: Double): Ecliptic {
+    val cosOb = cos(obliqRadians)
+    val sinOb = sin(obliqRadians)
+    val ex = +pos.x
+    val ey = +pos.y*cosOb + pos.z*sinOb
+    val ez = -pos.y*sinOb + pos.z*cosOb
+    val xyproj = hypot(ex, ey)
+    val elon =
+        if (xyproj > 0.0)
+            atan2(ey, ex).radiansToDegrees().withMinDegreeValue(0.0)
+        else
+            0.0
+    val elat = atan2(ez, xyproj).radiansToDegrees()
+    val vec = AstroVector(ex, ey, ez, pos.t)
+    return Ecliptic(vec, elat, elon)
+}
+
+/**
+ * Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
+ *
+ * Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
+ * on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
+ * which are relative to the plane of the Earth's orbit around the Sun.
+ *
+ * @param equ
+ *      Equatorial coordinates in the J2000 frame of reference.
+ *      You can call [geoVector] to obtain suitable equatorial coordinates.
+ *
+ * @return Ecliptic coordinates in the J2000 frame of reference (ECL).
+ */
+fun equatorialToEcliptic(equ: AstroVector): Ecliptic =
+    rotateEquatorialToEcliptic(
+        equ,
+        0.40909260059599012     // mean obliquity of the J2000 ecliptic in radians
+    )
+
+/**
+ * Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.
+ *
+ * This function finds the moment in time, if any exists in the given time window,
+ * that the center of the Sun reaches a specific ecliptic longitude as seen from the center of the Earth.
+ *
+ * This function can be used to determine equinoxes and solstices.
+ * However, it is usually more convenient and efficient to call [seasons]
+ * to calculate all equinoxes and solstices for a given calendar year.
+ *
+ * The function searches the window of time specified by `startTime` and `startTime+limitDays`.
+ * The search will return `null` if the Sun never reaches the longitude `targetLon` or
+ * if the window is so large that the longitude ranges more than 180 degrees within it.
+ * It is recommended to keep the window smaller than 10 days when possible.
+ */
+fun searchSunLongitude(targetLon: Double, startTime: AstroTime, limitDays: Double): AstroTime? {
+    class Context(val targetLon: Double) : SearchContext {
+        override fun eval(time: AstroTime) =
+            longitudeOffset(sunPosition(time).elon - targetLon)
     }
+    val context = Context(targetLon)
+    val time2 = startTime.addDays(limitDays)
+    return search(context, startTime, time2, 0.01)
+}
 
-    /**
-     * Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
-     *
-     * The *hour angle* of a celestial body indicates its position in the sky with respect
-     * to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
-     * The hour angle is 0 when the body reaches its highest angle above the horizon in a given day.
-     * The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
-     * to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
-     * the number of hours that have passed since the most recent time that the body has culminated,
-     * or reached its highest point.
-     *
-     * This function searches for the next time a celestial body reaches the given hour angle
-     * after the date and time specified by `startTime`.
-     * To find when a body culminates, pass 0 for `hourAngle`.
-     * To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
-     *
-     * Note that, especially close to the Earth's poles, a body as seen on a given day
-     * may always be above the horizon or always below the horizon, so the caller cannot
-     * assume that a culminating object is visible nor that an object is below the horizon
-     * at its minimum altitude.
-     *
-     * On success, the function reports the date and time, along with the horizontal coordinates
-     * of the body at that time, as seen by the given observer.
-     *
-     * @param body
-     *      The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
-     * @param observer
-     *      A location on or near the surface of the Earth where the observer is located.
-     * @param hourAngle
-     *      An hour angle value in the range [0, 24) indicating the number of sidereal hours after the
-     *      body's most recent culmination.
-     * @param startTime
-     *      The date and time at which to start the search.
-     * @return The time when the body reaches the hour angle, and the horizontal coordinates of the body at that time.
-     */
-    fun searchHourAngle(
-        body: Body,
-        observer: Observer,
-        hourAngle: Double,
-        startTime: AstroTime
-    ): HourAngleInfo {
-        if (body == Body.Earth)
-            throw EarthNotAllowedException()
+/**
+ * Finds both equinoxes and both solstices for a given calendar year.
+ *
+ * The changes of seasons are defined by solstices and equinoxes.
+ * Given a calendar year number, this function calculates the
+ * March and September equinoxes and the June and December solstices.
+ *
+ * The equinoxes are the moments twice each year when the plane of the
+ * Earth's equator passes through the center of the Sun. In other words,
+ * the Sun's declination is zero at both equinoxes.
+ * The March equinox defines the beginning of spring in the northern hemisphere
+ * and the beginning of autumn in the southern hemisphere.
+ * The September equinox defines the beginning of autumn in the northern hemisphere
+ * and the beginning of spring in the southern hemisphere.
+ *
+ * The solstices are the moments twice each year when one of the Earth's poles
+ * is most tilted toward the Sun. More precisely, the Sun's declination reaches
+ * its minimum value at the December solstice, which defines the beginning of
+ * winter in the northern hemisphere and the beginning of summer in the southern
+ * hemisphere. The Sun's declination reaches its maximum value at the June solstice,
+ * which defines the beginning of summer in the northern hemisphere and the beginning
+ * of winter in the southern hemisphere.
+ *
+ * @param year
+ *      The calendar year number for which to calculate equinoxes and solstices.
+ *      The value may be any integer, but only the years 1800 through 2100 have been
+ *      validated for accuracy: unit testing against data from the
+ *      United States Naval Observatory confirms that all equinoxes and solstices
+ *      for that range of years are within 2 minutes of the correct time.
+ *
+ * @return
+ * A [SeasonsInfo] object that contains four [AstroTime] values:
+ * the March and September equinoxes and the June and December solstices.
+ */
+fun seasons(year: Int) =
+    SeasonsInfo(
+        findSeasonChange(  0.0, year,  3, 10),
+        findSeasonChange( 90.0, year,  6, 10),
+        findSeasonChange(180.0, year,  9, 10),
+        findSeasonChange(270.0, year, 12, 10)
+    )
 
-        if (hourAngle < 0.0 || hourAngle >= 24.0)
-            throw IllegalArgumentException("hourAngle=$hourAngle is out of the allowed range [0, 24).")
+private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int): AstroTime {
+    var startTime = AstroTime(year, month, day, 0, 0, 0.0)
+    return searchSunLongitude(targetLon, startTime, 20.0) ?:
+        throw InternalError("Cannot find solution for Sun longitude $targetLon for year $year")
+}
 
-        var time = startTime
-        var iter = 0
-        while (true) {
-            ++iter
+/**
+ * Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
+ *
+ * This function determines where one body appears around the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) as seen from the Earth,
+ * relative to the another body's apparent position.
+ * The function returns an angle in the half-open range [0, 360) degrees.
+ * The value is the ecliptic longitude of `body1` relative to the ecliptic
+ * longitude of `body2`.
+ *
+ * The angle is 0 when the two bodies are at the same ecliptic longitude
+ * as seen from the Earth. The angle increases in the prograde direction
+ * (the direction that the planets orbit the Sun and the Moon orbits the Earth).
+ *
+ * When the angle is 180 degrees, it means the two bodies appear on opposite sides
+ * of the sky for an Earthly observer.
+ *
+ * Neither `body1` nor `body2` is allowed to be `Body.Earth`.
+ * If this happens, the function throws an exception.
+ *
+ * @param body1 The first body, whose longitude is to be found relative to the second body.
+ * @param body2 The second body, relative to which the longitude of the first body is to be found.
+ * @param time  The date and time of the observation.
+ * @return An angle in the range [0, 360), expressed in degrees.
+ */
+fun pairLongitude(body1: Body, body2: Body, time: AstroTime): Double {
+    if (body1 == Body.Earth || body2 == Body.Earth)
+        throw EarthNotAllowedException()
 
-            // Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
-            val gast = siderealTime(time)
+    val vector1 = geoVector(body1, time, Aberration.None)
+    val eclip1 = equatorialToEcliptic(vector1)
 
-            // Obtain equatorial coordinates of date for the body.
-            val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+    val vector2 = geoVector(body2, time, Aberration.None)
+    val eclip2 = equatorialToEcliptic(vector2)
 
-            // Calculate the adjustment needed in sidereal time
-            // to bring the hour angle to the desired value.
-            var deltaSiderealHours = ((hourAngle + ofdate.ra - observer.longitude/15.0) - gast) % 24.0
-            if (iter == 1) {
-                // On the first iteration, always search forward in time.
-                if (deltaSiderealHours < 0.0)
-                    deltaSiderealHours += 24.0
-            } else {
-                // On subsequent iterations, we make the smallest possible adjustment,
-                // either forward or backward in time.
-                if (deltaSiderealHours < -12.0)
-                    deltaSiderealHours += 24.0
-                else if (deltaSiderealHours > +12.0)
-                    deltaSiderealHours -= 24.0
-            }
+    return normalizeLongitude(eclip1.elon - eclip2.elon)
+}
 
-            // If the error is tolerable (less than 0.1 seconds), the search has succeeded.
-            if (deltaSiderealHours.absoluteValue * 3600.0 < 0.1) {
-                val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.Normal)
-                return HourAngleInfo(time, hor)
-            }
+/**
+ * Returns the Moon's phase as an angle from 0 to 360 degrees.
+ *
+ * This function determines the phase of the Moon using its apparent
+ * ecliptic longitude relative to the Sun, as seen from the center of the Earth.
+ * Certain values of the angle have conventional definitions:
+ *
+ * - 0 = new moon
+ * - 90 = first quarter
+ * - 180 = full moon
+ * - 270 = third quarter
+ *
+ * @param time  The date and time of the observation.
+ * @return The angle as described above, a value in the range 0..360 degrees.
+ */
+fun moonPhase(time: AstroTime): Double =
+    pairLongitude(Body.Moon, Body.Sun, time)
 
-            // We need to loop another time to get more accuracy.
-            // Update the terrestrial time (in solar days) by adjusting sidereal time.
-            time = time.addDays((deltaSiderealHours / 24.0) * SOLAR_DAYS_PER_SIDEREAL_DAY)
-        }
+/**
+ * Searches for the time that the Moon reaches a specified phase.
+ *
+ * Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
+ * longitude with respect to the Sun's geocentric ecliptic longitude.
+ * When the Moon and the Sun have the same longitude, that is defined as a new moon.
+ * When their longitudes are 180 degrees apart, that is defined as a full moon.
+ *
+ * This function searches for any value of the lunar phase expressed as an
+ * angle in degrees in the range [0, 360).
+ *
+ * If you want to iterate through lunar quarters (new moon, first quarter, full moon, third quarter)
+ * it is much easier to call the functions [searchMoonQuarter] and [nextMoonQuarter].
+ * This function is useful for finding general phase angles outside those four quarters.
+ *
+ * @param targetLon
+ *      The difference in geocentric longitude between the Sun and Moon
+ *      that specifies the lunar phase being sought. This can be any value
+ *      in the range [0, 360).  Certain values have conventional names:
+ *      0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter.
+ *
+ * @param startTime
+ *      The beginning of the time window in which to search for the Moon reaching the specified phase.
+ *
+ * @param limitDays
+ *      The number of days after `startTime` that limits the time window for the search.
+ *
+ * @return
+ * If successful, returns the date and time the moon reaches the phase specified by
+ * `targetlon`. This function will return `null` if the phase does not
+ * occur within `limitDays` of `startTime`; that is, if the search window is too small.
+ */
+fun searchMoonPhase(targetLon: Double, startTime: AstroTime, limitDays: Double): AstroTime? {
+    // To avoid discontinuities in the moonOffset function causing problems,
+    // we need to approximate when that function will next return 0.
+    // We probe it with the start time and take advantage of the fact
+    // that every lunar phase repeats roughly every 29.5 days.
+    // There is a surprising uncertainty in the quarter timing,
+    // due to the eccentricity of the moon's orbit.
+    // I have seen more than 0.9 days away from the simple prediction.
+    // To be safe, we take the predicted time of the event and search
+    // +/-1.5 days around it (a 3-day wide window).
+    class Context(val targetLon : Double) : SearchContext {
+        override fun eval(time: AstroTime) = longitudeOffset(moonPhase(time) - targetLon)
     }
+    val moonOffset = Context(targetLon)
+    var ya = moonOffset.eval(startTime)
+    if (ya > 0.0) ya -= 360.0  // force searching forward in time, not backward
+    val uncertainty = 1.5
+    val estDt = -(MEAN_SYNODIC_MONTH * ya) / 360.0
+    val dt1 = estDt - uncertainty
+    if (dt1 > limitDays)
+        return null    // not possible for moon phase to occur within specified window (too short)
+    val dt2 = min(limitDays, estDt + uncertainty)
+    val t1 = startTime.addDays(dt1)
+    val t2 = startTime.addDays(dt2)
+    return search(moonOffset, t1, t2, 1.0)
+}
 
-    private fun internalSearchAltitude(
-        body: Body,
-        observer: Observer,
-        direction: Direction,
-        startTime: AstroTime,
-        limitDays: Double,
-        context: SearchContext
-    ): AstroTime? {
-        if (body == Body.Earth)
-            throw EarthNotAllowedException()
+/**
+ * Finds the first lunar quarter after the specified date and time.
+ * A lunar quarter is one of the following four lunar phase events:
+ * new moon, first quarter, full moon, third quarter.
+ * This function finds the lunar quarter that happens soonest
+ * after the specified date and time.
+ *
+ * To continue iterating through consecutive lunar quarters, call this function once,
+ * followed by calls to #NextMoonQuarter as many times as desired.
+ *
+ * @param startTime The date and time at which to start the search.
+ * @return A [MoonQuarterInfo] object reporting the next quarter phase and the time it will occur.
+ */
+fun searchMoonQuarter(startTime: AstroTime): MoonQuarterInfo {
+    val currentPhaseAngle = moonPhase(startTime)
+    val quarter: Int = (1 + floor(currentPhaseAngle / 90.0).toInt()) % 4
+    val quarterTime = searchMoonPhase(90.0 * quarter, startTime, 10.0) ?:
+        throw InternalError("Unable to find moon quarter $quarter for startTime=$startTime")
+    return MoonQuarterInfo(quarter, quarterTime)
+}
 
-        // Find the pair of hour angles that bound the desired event.
-        // When a body's hour angle is 0, it means it is at its highest point
-        // in the observer's sky, called culmination.
-        // If the body's hour angle is 12, it means it is at its lowest point in the sky.
-        // (Note that it is possible for a body to be above OR below the horizon in either case.)
-        // If the caller wants a rising event, we want the pair haBefore=12, haAfter=0.
-        // If the caller wants a setting event, the desired pair is haBefore=0, haAfter=12.
-        val haBefore: Double = when (direction) {
-            Direction.Rise -> 12.0      // minimum altitude (bottom) happens before the body rises
-            Direction.Set  ->  0.0      // culmination happens before the body sets
-        }
-        val haAfter: Double = 12.0 - haBefore
+/**
+ * Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
+ *
+ * The *hour angle* of a celestial body indicates its position in the sky with respect
+ * to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
+ * The hour angle is 0 when the body reaches its highest angle above the horizon in a given day.
+ * The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
+ * to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
+ * the number of hours that have passed since the most recent time that the body has culminated,
+ * or reached its highest point.
+ *
+ * This function searches for the next time a celestial body reaches the given hour angle
+ * after the date and time specified by `startTime`.
+ * To find when a body culminates, pass 0 for `hourAngle`.
+ * To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
+ *
+ * Note that, especially close to the Earth's poles, a body as seen on a given day
+ * may always be above the horizon or always below the horizon, so the caller cannot
+ * assume that a culminating object is visible nor that an object is below the horizon
+ * at its minimum altitude.
+ *
+ * On success, the function reports the date and time, along with the horizontal coordinates
+ * of the body at that time, as seen by the given observer.
+ *
+ * @param body
+ *      The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+ * @param observer
+ *      A location on or near the surface of the Earth where the observer is located.
+ * @param hourAngle
+ *      An hour angle value in the range [0, 24) indicating the number of sidereal hours after the
+ *      body's most recent culmination.
+ * @param startTime
+ *      The date and time at which to start the search.
+ * @return The time when the body reaches the hour angle, and the horizontal coordinates of the body at that time.
+ */
+fun searchHourAngle(
+    body: Body,
+    observer: Observer,
+    hourAngle: Double,
+    startTime: AstroTime
+): HourAngleInfo {
+    if (body == Body.Earth)
+        throw EarthNotAllowedException()
 
-        // See if the body is currently above/below the horizon.
-        // If we are looking for next rise time and the body is below the horizon,
-        // we use the current time as the lower time bound and the next culmination
-        // as the upper bound.
-        // If the body is above the horizon, we search for the next bottom and use it
-        // as the lower bound and the next culmination after that bottom as the upper bound.
-        // The same logic applies for finding set times, only we swap the hour angles.
+    if (hourAngle < 0.0 || hourAngle >= 24.0)
+        throw IllegalArgumentException("hourAngle=$hourAngle is out of the allowed range [0, 24).")
 
-        var altBefore = context.eval(startTime)
-        var timeBefore: AstroTime
-        if (altBefore > 0.0) {
-            // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-            timeBefore = searchHourAngle(body, observer, haBefore, startTime).time
-            altBefore = context.eval(timeBefore)
+    var time = startTime
+    var iter = 0
+    while (true) {
+        ++iter
+
+        // Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
+        val gast = siderealTime(time)
+
+        // Obtain equatorial coordinates of date for the body.
+        val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+
+        // Calculate the adjustment needed in sidereal time
+        // to bring the hour angle to the desired value.
+        var deltaSiderealHours = ((hourAngle + ofdate.ra - observer.longitude/15.0) - gast) % 24.0
+        if (iter == 1) {
+            // On the first iteration, always search forward in time.
+            if (deltaSiderealHours < 0.0)
+                deltaSiderealHours += 24.0
         } else {
-            // We are before or at the sought event, so we find the next "after" event,
-            // and use the current time as the "before" event.
-            timeBefore = startTime
+            // On subsequent iterations, we make the smallest possible adjustment,
+            // either forward or backward in time.
+            if (deltaSiderealHours < -12.0)
+                deltaSiderealHours += 24.0
+            else if (deltaSiderealHours > +12.0)
+                deltaSiderealHours -= 24.0
         }
 
-        var timeAfter = searchHourAngle(body, observer, haAfter, timeBefore).time
-        var altAfter = context.eval(timeAfter)
-
-        while (true) {
-            if (altBefore <= 0.0 && altAfter > 0.0) {
-                // The body crosses the horizon during the time interval.
-                // Search between evtBefore and evtAfter for the desired event.
-                val time = search(context, timeBefore, timeAfter, 1.0)
-                if (time != null)
-                    return time
-            }
-
-            // If we didn't find the desired event, find the next hour angle bracket and try again.
-            val evtBefore = searchHourAngle(body, observer, haBefore, timeAfter)
-            val evtAfter = searchHourAngle(body, observer, haAfter, timeBefore)
-
-            if (evtBefore.time.ut >= startTime.ut + limitDays)
-                return null
-
-            timeBefore = evtBefore.time
-            timeAfter = evtAfter.time
-            altBefore = context.eval(timeBefore)
-            altAfter = context.eval(timeAfter)
+        // If the error is tolerable (less than 0.1 seconds), the search has succeeded.
+        if (deltaSiderealHours.absoluteValue * 3600.0 < 0.1) {
+            val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.Normal)
+            return HourAngleInfo(time, hor)
         }
+
+        // We need to loop another time to get more accuracy.
+        // Update the terrestrial time (in solar days) by adjusting sidereal time.
+        time = time.addDays((deltaSiderealHours / 24.0) * SOLAR_DAYS_PER_SIDEREAL_DAY)
+    }
+}
+
+private fun internalSearchAltitude(
+    body: Body,
+    observer: Observer,
+    direction: Direction,
+    startTime: AstroTime,
+    limitDays: Double,
+    context: SearchContext
+): AstroTime? {
+    if (body == Body.Earth)
+        throw EarthNotAllowedException()
+
+    // Find the pair of hour angles that bound the desired event.
+    // When a body's hour angle is 0, it means it is at its highest point
+    // in the observer's sky, called culmination.
+    // If the body's hour angle is 12, it means it is at its lowest point in the sky.
+    // (Note that it is possible for a body to be above OR below the horizon in either case.)
+    // If the caller wants a rising event, we want the pair haBefore=12, haAfter=0.
+    // If the caller wants a setting event, the desired pair is haBefore=0, haAfter=12.
+    val haBefore: Double = when (direction) {
+        Direction.Rise -> 12.0      // minimum altitude (bottom) happens before the body rises
+        Direction.Set  ->  0.0      // culmination happens before the body sets
+    }
+    val haAfter: Double = 12.0 - haBefore
+
+    // See if the body is currently above/below the horizon.
+    // If we are looking for next rise time and the body is below the horizon,
+    // we use the current time as the lower time bound and the next culmination
+    // as the upper bound.
+    // If the body is above the horizon, we search for the next bottom and use it
+    // as the lower bound and the next culmination after that bottom as the upper bound.
+    // The same logic applies for finding set times, only we swap the hour angles.
+
+    var altBefore = context.eval(startTime)
+    var timeBefore: AstroTime
+    if (altBefore > 0.0) {
+        // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
+        timeBefore = searchHourAngle(body, observer, haBefore, startTime).time
+        altBefore = context.eval(timeBefore)
+    } else {
+        // We are before or at the sought event, so we find the next "after" event,
+        // and use the current time as the "before" event.
+        timeBefore = startTime
     }
 
-    private class SearchContextPeakAltitude(
-        private val body: Body,
-        private val direction: Direction,
-        private val observer: Observer
-    ): SearchContext {
-        private val bodyRadiusAu: Double
+    var timeAfter = searchHourAngle(body, observer, haAfter, timeBefore).time
+    var altAfter = context.eval(timeAfter)
 
-        init {
-            bodyRadiusAu = when(body) {
-                Body.Sun -> SUN_RADIUS_AU
-                Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
-                else -> 0.0
-            }
+    while (true) {
+        if (altBefore <= 0.0 && altAfter > 0.0) {
+            // The body crosses the horizon during the time interval.
+            // Search between evtBefore and evtAfter for the desired event.
+            val time = search(context, timeBefore, timeAfter, 1.0)
+            if (time != null)
+                return time
         }
 
-        override fun eval(time: AstroTime): Double {
-            // Return the angular altitude above or below the horizon
-            // of the highest part (the peak) of the given object.
-            // This is defined as the apparent altitude of the center of the body plus
-            // the body's angular radius.
-            // The 'direction' parameter controls whether the angle is measured
-            // positive above the horizon or positive below the horizon,
-            // depending on whether the caller wants rise times or set times, respectively.
+        // If we didn't find the desired event, find the next hour angle bracket and try again.
+        val evtBefore = searchHourAngle(body, observer, haBefore, timeAfter)
+        val evtAfter = searchHourAngle(body, observer, haAfter, timeBefore)
 
-            val ofdate: Equatorial = Astronomy.equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-            val hor: Topocentric = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
-            return direction.sign * (hor.altitude + (bodyRadiusAu / ofdate.dist).radiansToDegrees() + REFRACTION_NEAR_HORIZON)
-        }
+        if (evtBefore.time.ut >= startTime.ut + limitDays)
+            return null
+
+        timeBefore = evtBefore.time
+        timeAfter = evtAfter.time
+        altBefore = context.eval(timeBefore)
+        altAfter = context.eval(timeAfter)
     }
+}
 
-    /**
-     * Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
-     *
-     * This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
-     * Rise time is when the body first starts to be visible above the horizon.
-     * For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
-     * Set time is the moment when the body appears to vanish below the horizon.
-     *
-     * This function corrects for typical atmospheric refraction, which causes celestial
-     * bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
-     * It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
-     *
-     * Note that rise or set may not occur in every 24 hour period.
-     * For example, near the Earth's poles, there are long periods of time where
-     * the Sun stays below the horizon, never rising.
-     * Also, it is possible for the Moon to rise just before midnight but not set during the subsequent 24-hour day.
-     * This is because the Moon sets nearly an hour later each day due to orbiting the Earth a
-     * significant amount during each rotation of the Earth.
-     * Therefore callers must not assume that the function will always succeed.
-     *
-     * @param body
-     *      The Sun, Moon, or any planet other than the Earth.
-     *
-     * @param observer
-     *      The location where observation takes place.
-     *
-     * @param direction
-     *      Either [Direction.Rise] to find a rise time or [Direction.Set] to find a set time.
-     *
-     * @param startTime
-     *      The date and time at which to start the search.
-     *
-     * @param limitDays
-     *      Limits how many days to search for a rise or set time.
-     *      To limit a rise or set time to the same day, you can use a value of 1 day.
-     *      In cases where you want to find the next rise or set time no matter how far
-     *      in the future (for example, for an observer near the south pole), you can
-     *      pass in a larger value like 365.
-     *
-     * @return
-     * On success, returns the date and time of the rise or set time as requested.
-     * If the function returns `null`, it means the rise or set event does not occur
-     * within `limitDays` days of `startTime`. This is a normal condition,
-     * not an error.
-     */
-    fun searchRiseSet(
-        body: Body,
-        observer: Observer,
-        direction: Direction,
-        startTime: AstroTime,
-        limitDays: Double
-    ): AstroTime? {
-        val context = SearchContextPeakAltitude(body, direction, observer)
-        return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
-    }
+private class SearchContextPeakAltitude(
+    private val body: Body,
+    private val direction: Direction,
+    private val observer: Observer
+): SearchContext {
+    private val bodyRadiusAu: Double
 
-    private class SearchContextAltitudeError(
-        private val body: Body,
-        private val direction: Direction,
-        private val observer: Observer,
-        private val altitude: Double
-    ): SearchContext {
-        override fun eval(time: AstroTime): Double {
-            val ofdate = Astronomy.equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-            val hor = Astronomy.horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
-            return direction.sign * (hor.altitude - altitude)
+    init {
+        bodyRadiusAu = when(body) {
+            Body.Sun -> SUN_RADIUS_AU
+            Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
+            else -> 0.0
         }
     }
 
-    /**
-     * Finds the next time a body reaches a given altitude.
-     *
-     * Finds when the given body ascends or descends through a given
-     * altitude angle, as seen by an observer at the specified location on the Earth.
-     * By using the appropriate combination of `direction` and `altitude` parameters,
-     * this function can be used to find when civil, nautical, or astronomical twilight
-     * begins (dawn) or ends (dusk).
-     *
-     * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
-     * the horizon. To find civil dawn, pass `Direction.Rise` for `direction` and -6 for `altitude`.
-     *
-     * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
-     * To find civil dusk, pass `Direction.Set` for `direction` and -6 for `altitude`.
-     *
-     * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
-     *
-     * Astronomical twilight uses -18 degrees as the `altitude` value.
-     *
-     * @param body The Sun, Moon, or any planet other than the Earth.
-     * @param observer The location where observation takes place.
-     * @param direction Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event.
-     * @param startTime The date and time at which to start the search.
-     * @param limitDays The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number.
-     * @param altitude The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90].
-     * @return The date and time of the altitude event, or `null` if no such event occurs within the specified time window.
-     */
-    fun searchAltitude(
-        body: Body,
-        observer: Observer,
-        direction: Direction,
-        startTime: AstroTime,
-        limitDays: Double,
-        altitude: Double
-    ): AstroTime? {
-        val context = SearchContextAltitudeError(body, direction, observer, altitude)
-        return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
+    override fun eval(time: AstroTime): Double {
+        // Return the angular altitude above or below the horizon
+        // of the highest part (the peak) of the given object.
+        // This is defined as the apparent altitude of the center of the body plus
+        // the body's angular radius.
+        // The 'direction' parameter controls whether the angle is measured
+        // positive above the horizon or positive below the horizon,
+        // depending on whether the caller wants rise times or set times, respectively.
+
+        val ofdate: Equatorial = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+        val hor: Topocentric = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+        return direction.sign * (hor.altitude + (bodyRadiusAu / ofdate.dist).radiansToDegrees() + REFRACTION_NEAR_HORIZON)
     }
+}
 
-    /**
-     * Continues searching for lunar quarters from a previous search.
-     *
-     * After calling [Astronomy.searchMoonQuarter], this function can be called
-     * one or more times to continue finding consecutive lunar quarters.
-     * This function finds the next consecutive moon quarter event after
-     * the one passed in as the parameter `mq`.
-     *
-     * @param The previous moon quarter found by a call to [Astronomy.searchMoonQuarter] or `Astronomy.nextMoonQuarter`.
-     * @return The moon quarter that occurs next in time after the one passed in `mq`.
-     */
-    fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
-        // Skip 6 days past the previous found moon quarter to find the next one.
-        // This is less than the minimum possible increment.
-        // So far I have seen the interval well contained by the range (6.5, 8.3) days.
-        val time = mq.time.addDays(6.0)
-        val nextMoonQuarter = searchMoonQuarter(time)
-        // Verify that we found the expected moon quarter.
-        val expected = (1 + mq.quarter) % 4
-        if (nextMoonQuarter.quarter != expected)
-            throw InternalError("Expected to find next quarter $expected, but found ${nextMoonQuarter.quarter}")
-        return nextMoonQuarter
+/**
+ * Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
+ *
+ * This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
+ * Rise time is when the body first starts to be visible above the horizon.
+ * For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
+ * Set time is the moment when the body appears to vanish below the horizon.
+ *
+ * This function corrects for typical atmospheric refraction, which causes celestial
+ * bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
+ * It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+ *
+ * Note that rise or set may not occur in every 24 hour period.
+ * For example, near the Earth's poles, there are long periods of time where
+ * the Sun stays below the horizon, never rising.
+ * Also, it is possible for the Moon to rise just before midnight but not set during the subsequent 24-hour day.
+ * This is because the Moon sets nearly an hour later each day due to orbiting the Earth a
+ * significant amount during each rotation of the Earth.
+ * Therefore callers must not assume that the function will always succeed.
+ *
+ * @param body
+ *      The Sun, Moon, or any planet other than the Earth.
+ *
+ * @param observer
+ *      The location where observation takes place.
+ *
+ * @param direction
+ *      Either [Direction.Rise] to find a rise time or [Direction.Set] to find a set time.
+ *
+ * @param startTime
+ *      The date and time at which to start the search.
+ *
+ * @param limitDays
+ *      Limits how many days to search for a rise or set time.
+ *      To limit a rise or set time to the same day, you can use a value of 1 day.
+ *      In cases where you want to find the next rise or set time no matter how far
+ *      in the future (for example, for an observer near the south pole), you can
+ *      pass in a larger value like 365.
+ *
+ * @return
+ * On success, returns the date and time of the rise or set time as requested.
+ * If the function returns `null`, it means the rise or set event does not occur
+ * within `limitDays` days of `startTime`. This is a normal condition,
+ * not an error.
+ */
+fun searchRiseSet(
+    body: Body,
+    observer: Observer,
+    direction: Direction,
+    startTime: AstroTime,
+    limitDays: Double
+): AstroTime? {
+    val context = SearchContextPeakAltitude(body, direction, observer)
+    return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
+}
+
+private class SearchContextAltitudeError(
+    private val body: Body,
+    private val direction: Direction,
+    private val observer: Observer,
+    private val altitude: Double
+): SearchContext {
+    override fun eval(time: AstroTime): Double {
+        val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+        val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+        return direction.sign * (hor.altitude - altitude)
     }
+}
 
-    /**
-     * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: EQJ = equatorial system, using equator at J2000 epoch.
-     * Target: ECL = ecliptic system, using equator at J2000 epoch.
-     */
-    fun rotationEqjEcl(): RotationMatrix {
-        // ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
-        val c = 0.9174821430670688    // cos(ob)
-        val s = 0.3977769691083922    // sin(ob)
-        return RotationMatrix(
-            1.0, 0.0, 0.0,
-            0.0,  +c,  -s,
-            0.0,  +s,  +c
-        )
-    }
+/**
+ * Finds the next time a body reaches a given altitude.
+ *
+ * Finds when the given body ascends or descends through a given
+ * altitude angle, as seen by an observer at the specified location on the Earth.
+ * By using the appropriate combination of `direction` and `altitude` parameters,
+ * this function can be used to find when civil, nautical, or astronomical twilight
+ * begins (dawn) or ends (dusk).
+ *
+ * Civil dawn begins before sunrise when the Sun ascends through 6 degrees below
+ * the horizon. To find civil dawn, pass `Direction.Rise` for `direction` and -6 for `altitude`.
+ *
+ * Civil dusk ends after sunset when the Sun descends through 6 degrees below the horizon.
+ * To find civil dusk, pass `Direction.Set` for `direction` and -6 for `altitude`.
+ *
+ * Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
+ *
+ * Astronomical twilight uses -18 degrees as the `altitude` value.
+ *
+ * @param body The Sun, Moon, or any planet other than the Earth.
+ * @param observer The location where observation takes place.
+ * @param direction Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event.
+ * @param startTime The date and time at which to start the search.
+ * @param limitDays The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number.
+ * @param altitude The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90].
+ * @return The date and time of the altitude event, or `null` if no such event occurs within the specified time window.
+ */
+fun searchAltitude(
+    body: Body,
+    observer: Observer,
+    direction: Direction,
+    startTime: AstroTime,
+    limitDays: Double,
+    altitude: Double
+): AstroTime? {
+    val context = SearchContextAltitudeError(body, direction, observer, altitude)
+    return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
+}
 
-    /**
-     * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: ECL = ecliptic system, using equator at J2000 epoch.
-     * Target: EQJ = equatorial system, using equator at J2000 epoch.
-     */
-    fun rotationEclEqj(): RotationMatrix {
-        // ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
-        val c = 0.9174821430670688    // cos(ob)
-        val s = 0.3977769691083922    // sin(ob)
-        return RotationMatrix(
-            1.0, 0.0, 0.0,
-            0.0,  +c,  +s,
-            0.0,  -s,  +c
-        )
-    }
+/**
+ * Continues searching for lunar quarters from a previous search.
+ *
+ * After calling [searchMoonQuarter], this function can be called
+ * one or more times to continue finding consecutive lunar quarters.
+ * This function finds the next consecutive moon quarter event after
+ * the one passed in as the parameter `mq`.
+ *
+ * @param The previous moon quarter found by a call to [searchMoonQuarter] or `nextMoonQuarter`.
+ * @return The moon quarter that occurs next in time after the one passed in `mq`.
+ */
+fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
+    // Skip 6 days past the previous found moon quarter to find the next one.
+    // This is less than the minimum possible increment.
+    // So far I have seen the interval well contained by the range (6.5, 8.3) days.
+    val time = mq.time.addDays(6.0)
+    val nextMoonQuarter = searchMoonQuarter(time)
+    // Verify that we found the expected moon quarter.
+    val expected = (1 + mq.quarter) % 4
+    if (nextMoonQuarter.quarter != expected)
+        throw InternalError("Expected to find next quarter $expected, but found ${nextMoonQuarter.quarter}")
+    return nextMoonQuarter
+}
 
-    /**
-     * Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: EQJ = equatorial system, using equator at J2000 epoch.
-     * Target: EQD = equatorial system, using equator of the specified date/time.
-     *
-     * @param time
-     *      The date and time at which the Earth's equator defines the target orientation.
-     */
-    fun rotationEqjEqd(time: AstroTime): RotationMatrix =
-        precessionRot(time, PrecessDirection.From2000) combine
-        nutationRot(time, PrecessDirection.From2000)
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ */
+fun rotationEqjEcl(): RotationMatrix {
+    // ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+    val c = 0.9174821430670688    // cos(ob)
+    val s = 0.3977769691083922    // sin(ob)
+    return RotationMatrix(
+        1.0, 0.0, 0.0,
+        0.0,  +c,  -s,
+        0.0,  +s,  +c
+    )
+}
 
-    /**
-     * Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: EQD = equatorial system, using equator of the specified date/time.
-     * Target: EQJ = equatorial system, using equator at J2000 epoch.
-     *
-     * @param time
-     *      The date and time at which the Earth's equator defines the source orientation.
-     */
-    fun rotationEqdEqj(time: AstroTime): RotationMatrix =
-        nutationRot(time, PrecessDirection.Into2000) combine
-        precessionRot(time, PrecessDirection.Into2000)
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ */
+fun rotationEclEqj(): RotationMatrix {
+    // ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+    val c = 0.9174821430670688    // cos(ob)
+    val s = 0.3977769691083922    // sin(ob)
+    return RotationMatrix(
+        1.0, 0.0, 0.0,
+        0.0,  +c,  +s,
+        0.0,  -s,  +c
+    )
+}
 
-    /**
-     * Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: EQD = equatorial system, using equator of the specified date/time.
-     * Target: HOR = horizontal system.
-     *
-     * @param time
-     *      The date and time at which the Earth's equator applies.
-     *
-     * @param observer
-     *      A location near the Earth's mean sea level that defines the observer's horizon.
-     *
-     * @return
-     * A rotation matrix that converts EQD to HOR at `time` and for `observer`.
-     * The components of the horizontal vector are:
-     * x = north, y = west, z = zenith (straight up from the observer).
-     * These components are chosen so that the "right-hand rule" works for the vector
-     * and so that north represents the direction where azimuth = 0.
-     */
-    fun rotationEqdHor(time: AstroTime, observer: Observer): RotationMatrix {
-        // See the `horizon` function for more explanation of how this works.
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: EQD = equatorial system, using equator of the specified date/time.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ */
+fun rotationEqjEqd(time: AstroTime): RotationMatrix =
+    precessionRot(time, PrecessDirection.From2000) combine
+    nutationRot(time, PrecessDirection.From2000)
 
-        val sinlat = dsin(observer.latitude)
-        val coslat = dcos(observer.latitude)
-        val sinlon = dsin(observer.longitude)
-        val coslon = dcos(observer.longitude)
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator defines the source orientation.
+ */
+fun rotationEqdEqj(time: AstroTime): RotationMatrix =
+    nutationRot(time, PrecessDirection.Into2000) combine
+    precessionRot(time, PrecessDirection.Into2000)
 
-        val uze = AstroVector(coslat * coslon, coslat * sinlon, sinlat, time)
-        val une = AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
-        val uwe = AstroVector(sinlon, -coslon, 0.0, time)
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of the specified date/time.
+ * Target: HOR = horizontal system.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator applies.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ * A rotation matrix that converts EQD to HOR at `time` and for `observer`.
+ * The components of the horizontal vector are:
+ * x = north, y = west, z = zenith (straight up from the observer).
+ * These components are chosen so that the "right-hand rule" works for the vector
+ * and so that north represents the direction where azimuth = 0.
+ */
+fun rotationEqdHor(time: AstroTime, observer: Observer): RotationMatrix {
+    // See the `horizon` function for more explanation of how this works.
 
-        // Multiply sidereal hours by -15 to convert to degrees and flip eastward
-        // rotation of the Earth to westward apparent movement of objects with time.
+    val sinlat = dsin(observer.latitude)
+    val coslat = dcos(observer.latitude)
+    val sinlon = dsin(observer.longitude)
+    val coslon = dcos(observer.longitude)
 
-        val angle = -15.0 * siderealTime(time)
-        val uz = spin(angle, uze)
-        val un = spin(angle, une)
-        val uw = spin(angle, uwe)
+    val uze = AstroVector(coslat * coslon, coslat * sinlon, sinlat, time)
+    val une = AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
+    val uwe = AstroVector(sinlon, -coslon, 0.0, time)
 
-        return RotationMatrix(
-            un.x, uw.x, uz.x,
-            un.y, uw.y, uz.y,
-            un.z, uw.z, uz.z
-        )
-    }
+    // Multiply sidereal hours by -15 to convert to degrees and flip eastward
+    // rotation of the Earth to westward apparent movement of objects with time.
 
-    /**
-     * Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
-     * Target: EQD = equatorial system, using equator of the specified date/time.
-     *
-     * @param time
-     *      The date and time at which the Earth's equator applies.
-     *
-     * @param observer
-     *      A location near the Earth's mean sea level that defines the observer's horizon.
-     *
-     * @return A rotation matrix that converts HOR to EQD at `time` and for `observer`.
-     */
-    fun rotationHorEqd(time: AstroTime, observer: Observer): RotationMatrix =
-        rotationEqdHor(time, observer).inverse()
+    val angle = -15.0 * siderealTime(time)
+    val uz = spin(angle, uze)
+    val un = spin(angle, une)
+    val uw = spin(angle, uwe)
 
-    /**
-     * Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
-     * Target: EQJ = equatorial system, using equator at the J2000 epoch.
-     *
-     * @param time
-     *      The date and time of the observation.
-     *
-     * @param observer
-     *      A location near the Earth's mean sea level that defines the observer's horizon.
-     *
-     * @return A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
-     */
-    fun rotationHorEqj(time: AstroTime, observer: Observer): RotationMatrix =
-        rotationHorEqd(time, observer) combine
-        rotationEqdEqj(time)
+    return RotationMatrix(
+        un.x, uw.x, uz.x,
+        un.y, uw.y, uz.y,
+        un.z, uw.z, uz.z
+    )
+}
 
-    /**
-     * Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
-     * Target: HOR = horizontal system.
-     *
-     * @param time
-     *      The date and time of the observation.
-     *
-     * @param observer
-     *      A location near the Earth's mean sea level that defines the observer's horizon.
-     *
-     * @return
-     * A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
-     * The components of the horizontal vector are:
-     * x = north, y = west, z = zenith (straight up from the observer).
-     * These components are chosen so that the "right-hand rule" works for the vector
-     * and so that north represents the direction where azimuth = 0.
-     */
-    fun rotationEqjHor(time: AstroTime, observer: Observer): RotationMatrix =
-        rotationHorEqj(time, observer).inverse()
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+ * Target: EQD = equatorial system, using equator of the specified date/time.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator applies.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return A rotation matrix that converts HOR to EQD at `time` and for `observer`.
+ */
+fun rotationHorEqd(time: AstroTime, observer: Observer): RotationMatrix =
+    rotationEqdHor(time, observer).inverse()
 
-    /**
-     * Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: EQD = equatorial system, using equator of date.
-     * Target: ECL = ecliptic system, using equator at J2000 epoch.
-     *
-     * @param time
-     *      The date and time of the source equator.
-     *
-     * @return A rotation matrix that converts EQD to ECL.
-     */
-    fun rotationEqdEcl(time: AstroTime): RotationMatrix =
-        rotationEqdEqj(time) combine
-        rotationEqjEcl()
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system (x=North, y=West, z=Zenith).
+ * Target: EQJ = equatorial system, using equator at the J2000 epoch.
+ *
+ * @param time
+ *      The date and time of the observation.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
+ */
+fun rotationHorEqj(time: AstroTime, observer: Observer): RotationMatrix =
+    rotationHorEqd(time, observer) combine
+    rotationEqdEqj(time)
 
-    /**
-     * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: ECL = ecliptic system, using equator at J2000 epoch.
-     * Target: EQD = equatorial system, using equator of date.
-     *
-     * @param time
-     *      The date and time of the desired equator.
-     *
-     * @return A rotation matrix that converts ECL to EQD.
-     */
-    fun rotationEclEqd(time: AstroTime): RotationMatrix =
-        rotationEqdEcl(time).inverse()
+/**
+ * Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using the equator at the J2000 epoch.
+ * Target: HOR = horizontal system.
+ *
+ * @param time
+ *      The date and time of the observation.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ * A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
+ * The components of the horizontal vector are:
+ * x = north, y = west, z = zenith (straight up from the observer).
+ * These components are chosen so that the "right-hand rule" works for the vector
+ * and so that north represents the direction where azimuth = 0.
+ */
+fun rotationEqjHor(time: AstroTime, observer: Observer): RotationMatrix =
+    rotationHorEqj(time, observer).inverse()
 
-    /**
-     * Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: ECL = ecliptic system, using equator at J2000 epoch.
-     * Target: HOR = horizontal system.
-     *
-     * @param time
-     *      The date and time of the desired horizontal orientation.
-     *
-     * @param observer
-     *      A location near the Earth's mean sea level that defines the observer's horizon.
-     *
-     * @return
-     * A rotation matrix that converts ECL to HOR at `time` and for `observer`.
-     * The components of the horizontal vector are:
-     * x = north, y = west, z = zenith (straight up from the observer).
-     * These components are chosen so that the "right-hand rule" works for the vector
-     * and so that north represents the direction where azimuth = 0.
-     */
-    fun rotationEclHor(time: AstroTime, observer: Observer): RotationMatrix =
-        rotationEclEqd(time) combine
-        rotationEqdHor(time, observer)
+/**
+ * Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equatorial system, using equator of date.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @param time
+ *      The date and time of the source equator.
+ *
+ * @return A rotation matrix that converts EQD to ECL.
+ */
+fun rotationEqdEcl(time: AstroTime): RotationMatrix =
+    rotationEqdEqj(time) combine
+    rotationEqjEcl()
 
-    /**
-     * Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: HOR = horizontal system.
-     * Target: ECL = ecliptic system, using equator at J2000 epoch.
-     *
-     * @param time
-     *      The date and time of the horizontal observation.
-     *
-     * @param observer
-     *      The location of the horizontal observer.
-     *
-     * @return A rotation matrix that converts HOR to ECL.
-     */
-    fun rotationHorEcl(time: AstroTime, observer: Observer): RotationMatrix =
-        rotationEclHor(time, observer).inverse()
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: EQD = equatorial system, using equator of date.
+ *
+ * @param time
+ *      The date and time of the desired equator.
+ *
+ * @return A rotation matrix that converts ECL to EQD.
+ */
+fun rotationEclEqd(time: AstroTime): RotationMatrix =
+    rotationEqdEcl(time).inverse()
 
-    /**
-     * Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: GAL = galactic system (IAU 1958 definition).
-     * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
-     *
-     * @return A rotation matrix that converts GAL to EQJ.
-     */
-    fun rotationEqjGal() =
-        // This rotation matrix was calculated by the following script:
-        // demo/python/galeqj_matrix.py
-        RotationMatrix(
-            -0.0548624779711344, +0.4941095946388765, -0.8676668813529025,
-            -0.8734572784246782, -0.4447938112296831, -0.1980677870294097,
-            -0.4838000529948520, +0.7470034631630423, +0.4559861124470794
-        )
+/**
+ * Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECL = ecliptic system, using equator at J2000 epoch.
+ * Target: HOR = horizontal system.
+ *
+ * @param time
+ *      The date and time of the desired horizontal orientation.
+ *
+ * @param observer
+ *      A location near the Earth's mean sea level that defines the observer's horizon.
+ *
+ * @return
+ * A rotation matrix that converts ECL to HOR at `time` and for `observer`.
+ * The components of the horizontal vector are:
+ * x = north, y = west, z = zenith (straight up from the observer).
+ * These components are chosen so that the "right-hand rule" works for the vector
+ * and so that north represents the direction where azimuth = 0.
+ */
+fun rotationEclHor(time: AstroTime, observer: Observer): RotationMatrix =
+    rotationEclEqd(time) combine
+    rotationEqdHor(time, observer)
 
-    /**
-     * Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
-     *
-     * This is one of the family of functions that returns a rotation matrix
-     * for converting from one orientation to another.
-     * Source: GAL = galactic system (IAU 1958 definition).
-     * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
-     *
-     * @return A rotation matrix that converts GAL to EQJ.
-     */
-    fun rotationGalEqj() =
-        // This rotation matrix was calculated by the following script:
-        // demo/python/galeqj_matrix.py
-        RotationMatrix(
-            -0.0548624779711344, -0.8734572784246782, -0.4838000529948520,
-            +0.4941095946388765, -0.4447938112296831, +0.7470034631630423,
-            -0.8676668813529025, -0.1980677870294097, +0.4559861124470794
-        )
+/**
+ * Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: HOR = horizontal system.
+ * Target: ECL = ecliptic system, using equator at J2000 epoch.
+ *
+ * @param time
+ *      The date and time of the horizontal observation.
+ *
+ * @param observer
+ *      The location of the horizontal observer.
+ *
+ * @return A rotation matrix that converts HOR to ECL.
+ */
+fun rotationHorEcl(time: AstroTime, observer: Observer): RotationMatrix =
+    rotationEclHor(time, observer).inverse()
 
-    /**
-     * Determines the constellation that contains the given point in the sky.
-     *
-     * Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
-     * constellation that contains that point.
-     *
-     * @param ra
-     *      The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ).
-     *
-     * @param dec
-     *      The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
-     *
-     * @return
-     * A structure that contains the 3-letter abbreviation and full name
-     * of the constellation that contains the given (ra,dec), along with
-     * the converted B1875 (ra,dec) for that point.
-     */
-    fun constellation(ra: Double, dec: Double): ConstellationInfo {
-        if (dec < -90.0 || dec > +90.0)
-            throw IllegalArgumentException("Invalid declination angle $dec. Must be -90..+90.")
+/**
+ * Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: GAL = galactic system (IAU 1958 definition).
+ * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
+ *
+ * @return A rotation matrix that converts GAL to EQJ.
+ */
+fun rotationEqjGal() =
+    // This rotation matrix was calculated by the following script:
+    // demo/python/galeqj_matrix.py
+    RotationMatrix(
+        -0.0548624779711344, +0.4941095946388765, -0.8676668813529025,
+        -0.8734572784246782, -0.4447938112296831, -0.1980677870294097,
+        -0.4838000529948520, +0.7470034631630423, +0.4559861124470794
+    )
 
-        // Convert right ascension to degrees, and normalize to the range [0, 360).
-        val raDeg = (ra * 15.0).withMinDegreeValue(0.0)
+/**
+ * Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: GAL = galactic system (IAU 1958 definition).
+ * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
+ *
+ * @return A rotation matrix that converts GAL to EQJ.
+ */
+fun rotationGalEqj() =
+    // This rotation matrix was calculated by the following script:
+    // demo/python/galeqj_matrix.py
+    RotationMatrix(
+        -0.0548624779711344, -0.8734572784246782, -0.4838000529948520,
+        +0.4941095946388765, -0.4447938112296831, +0.7470034631630423,
+        -0.8676668813529025, -0.1980677870294097, +0.4559861124470794
+    )
 
-        // Convert coordinates from J2000 to B1875.
-        var sph2000 = Spherical(dec, raDeg, 1.0)
-        val vec2000 = sph2000.toVector(epoch2000)
-        val vec1875 = constelRot.rotate(vec2000)
-        val equ1875 = vec1875.toEquatorial()
+/**
+ * Determines the constellation that contains the given point in the sky.
+ *
+ * Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
+ * constellation that contains that point.
+ *
+ * @param ra
+ *      The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ).
+ *
+ * @param dec
+ *      The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
+ *
+ * @return
+ * A structure that contains the 3-letter abbreviation and full name
+ * of the constellation that contains the given (ra,dec), along with
+ * the converted B1875 (ra,dec) for that point.
+ */
+fun constellation(ra: Double, dec: Double): ConstellationInfo {
+    if (dec < -90.0 || dec > +90.0)
+        throw IllegalArgumentException("Invalid declination angle $dec. Must be -90..+90.")
 
-        // Convert DEC from degrees and RA from hours,
-        // into compact angle units used in the constelBounds table.
-        val xDec = 24.0 * equ1875.dec
-        val xRa = (24.0 * 15.0) * equ1875.ra
+    // Convert right ascension to degrees, and normalize to the range [0, 360).
+    val raDeg = (ra * 15.0).withMinDegreeValue(0.0)
 
-        // Search for the constellation using the B1875 coordinates.
-        for (b in constelBounds)
-            if ((b.decLo <= xDec) && (b.raHi > xRa) && (b.raLo <= xRa))
-                return ConstellationInfo(constelNames[b.index].symbol, constelNames[b.index].name, equ1875.ra, equ1875.dec)
+    // Convert coordinates from J2000 to B1875.
+    var sph2000 = Spherical(dec, raDeg, 1.0)
+    val vec2000 = sph2000.toVector(epoch2000)
+    val vec1875 = constelRot.rotate(vec2000)
+    val equ1875 = vec1875.toEquatorial()
 
-        // This should never happen! If it does, please report to: https://github.com/cosinekitty/astronomy/issues
-        throw InternalError("Unable to find constellation for coordinates RA=$ra, DEC=$dec")
-    }
+    // Convert DEC from degrees and RA from hours,
+    // into compact angle units used in the constelBounds table.
+    val xDec = 24.0 * equ1875.dec
+    val xRa = (24.0 * 15.0) * equ1875.ra
+
+    // Search for the constellation using the B1875 coordinates.
+    for (b in constelBounds)
+        if ((b.decLo <= xDec) && (b.raHi > xRa) && (b.raLo <= xRa))
+            return ConstellationInfo(constelNames[b.index].symbol, constelNames[b.index].name, equ1875.ra, equ1875.dec)
+
+    // This should never happen! If it does, please report to: https://github.com/cosinekitty/astronomy/issues
+    throw InternalError("Unable to find constellation for coordinates RA=$ra, DEC=$dec")
 }
 
 //=======================================================================================
@@ -5321,3 +5302,17 @@ $ASTRO_JUPITER_MOONS()
 $ASTRO_CONSTEL()
 
 //---------------------------------------------------------------------------------------
+
+// Create a rotation matrix for converting J2000 to B1875.
+// Need to calculate the B1875 epoch. Based on this:
+// https://en.wikipedia.org/wiki/Epoch_(astronomy)#Besselian_years
+// B = 1900 + (JD - 2415020.31352) / 365.242198781
+// I'm interested in using TT instead of JD, giving:
+// B = 1900 + ((TT+2451545) - 2415020.31352) / 365.242198781
+// B = 1900 + (TT + 36524.68648) / 365.242198781
+// TT = 365.242198781*(B - 1900) - 36524.68648 = -45655.741449525
+// But the AstroTime constructor wants UT, not TT.
+// Near that date, I get a historical correction of ut-tt = 3.2 seconds.
+// That gives UT = -45655.74141261017 for the B1875 epoch,
+// or 1874-12-31T18:12:21.950Z.
+private val constelRot: RotationMatrix = rotationEqjEqd(AstroTime(-45655.74141261017))

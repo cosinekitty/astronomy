@@ -7,7 +7,7 @@ class [LocalSolarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/ind
 
 Information about a solar eclipse as seen by an observer at a given time and geographic location.
 
-Returned by Astronomy.searchLocalSolarEclipse or Astronomy.nextLocalSolarEclipse to report information about a solar eclipse as seen at a given geographic location.
+Returned by searchLocalSolarEclipse or nextLocalSolarEclipse to report information about a solar eclipse as seen at a given geographic location.
 
 When a solar eclipse is found, it is classified as partial, annular, or total. The kind field thus holds EclipseKind.Partial, EclipseKind.Annular, or EclipseKind.Total. A partial solar eclipse is when the Moon does not line up directly enough with the Sun to completely block the Sun's light from reaching the observer. An annular eclipse occurs when the Moon's disc is completely visible against the Sun but the Moon is too far away to completely block the Sun's light; this leaves the Sun with a ring-like appearance. A total eclipse occurs when the Moon is close enough to the Earth and aligned with the Sun just right to completely block all sunlight from reaching the observer.
 

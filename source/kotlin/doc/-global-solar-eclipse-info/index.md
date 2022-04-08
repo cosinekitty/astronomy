@@ -7,7 +7,7 @@ class [GlobalSolarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/in
 
 Reports the time and geographic location of the peak of a solar eclipse.
 
-Returned by Astronomy.searchGlobalSolarEclipse or Astronomy.nextGlobalSolarEclipse to report information about a solar eclipse event.
+Returned by searchGlobalSolarEclipse or nextGlobalSolarEclipse to report information about a solar eclipse event.
 
 The eclipse is classified as partial, annular, or total, depending on the maximum amount of the Sun's disc obscured, as seen at the peak location on the surface of the Earth.
 
