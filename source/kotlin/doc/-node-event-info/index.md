@@ -7,7 +7,7 @@ class [NodeEventInfo](index.md)(time: [AstroTime](../-astro-time/index.md), kind
 
 Information about an ascending or descending node of a body.
 
-This object is returned by Astronomy.searchMoonNode and Astronomy.nextMoonNode to report information about the center of the Moon passing through the ecliptic plane.
+This object is returned by searchMoonNode and nextMoonNode to report information about the center of the Moon passing through the ecliptic plane.
 
 ## Constructors
 

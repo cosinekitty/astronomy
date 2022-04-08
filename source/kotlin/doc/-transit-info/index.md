@@ -7,7 +7,7 @@ class [TransitInfo](index.md)(start: [AstroTime](../-astro-time/index.md), peak:
 
 Information about a transit of Mercury or Venus, as seen from the Earth.
 
-Returned by Astronomy.searchTransit or Astronomy.nextTransit to report information about a transit of Mercury or Venus. A transit is when Mercury or Venus passes between the Sun and Earth so that the other planet is seen in silhouette against the Sun.
+Returned by searchTransit or nextTransit to report information about a transit of Mercury or Venus. A transit is when Mercury or Venus passes between the Sun and Earth so that the other planet is seen in silhouette against the Sun.
 
 The start field reports the moment in time when the planet first becomes visible against the Sun in its background. The peak field reports when the planet is most aligned with the Sun, as seen from the Earth. The finish field reports the last moment when the planet is visible against the Sun in its background.
 

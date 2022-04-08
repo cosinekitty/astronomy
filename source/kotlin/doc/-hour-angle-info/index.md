@@ -7,7 +7,7 @@ class [HourAngleInfo](index.md)(time: [AstroTime](../-astro-time/index.md), hor:
 
 Information about a celestial body crossing a specific hour angle.
 
-Returned by the function [Astronomy.searchHourAngle](../-astronomy/search-hour-angle.md) to report information about a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
+Returned by the function [searchHourAngle](../search-hour-angle.md) to report information about a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
 
 ## Constructors
 
