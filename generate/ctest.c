@@ -172,6 +172,7 @@ static int AstroCheck(void);
 static int Diff(double tolerance, const char *a_filename, const char *b_filename);
 static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_column_t column[]);
 static int SeasonsTest(void);
+static int SeasonsIssue187(void);
 static int MoonPhase(void);
 static int MoonNodes(void);
 static int RiseSet(void);
@@ -261,6 +262,7 @@ static unit_test_t UnitTests[] =
     {"riseset",                 RiseSet},
     {"rotation",                RotationTest},
     {"seasons",                 SeasonsTest},
+    {"seasons187",              SeasonsIssue187},
     {"sidereal",                SiderealTimeTest},
     {"time",                    Test_AstroTime},
     {"topostate",               TopoStateTest},
@@ -981,6 +983,43 @@ fail:
     return error;
 }
 
+static int SeasonsIssue187(void)
+{
+    int error, year;
+    astro_seasons_t seasons;
+    char text[TIME_TEXT_BYTES];
+
+    // This is a regression test for:
+    // https://github.com/cosinekitty/astronomy/issues/187
+    // For years far from the present, the seasons search was sometimes failing.
+
+    for (year = -2000; year <= +9999; ++year)
+    {
+        seasons = Astronomy_Seasons(year);
+        if (seasons.status != ASTRO_SUCCESS)
+            FAIL("C SeasonsIssue187: Search error %d for year %d.\n", (int)seasons.status, year);
+
+        if (Verbose && ((year > 0) && (year % 1000 == 999)))
+        {
+            printf("C SeasonsIssue187: DEBUG");
+            Astronomy_FormatTime(seasons.mar_equinox, TIME_FORMAT_DAY, text, sizeof(text));
+            printf(" %s", text);
+            Astronomy_FormatTime(seasons.jun_solstice, TIME_FORMAT_DAY, text, sizeof(text));
+            printf(" %s", text);
+            Astronomy_FormatTime(seasons.sep_equinox, TIME_FORMAT_DAY, text, sizeof(text));
+            printf(" %s", text);
+            Astronomy_FormatTime(seasons.dec_solstice, TIME_FORMAT_DAY, text, sizeof(text));
+            printf(" %s\n", text);
+        }
+    }
+
+    printf("C SeasonsIssue187: PASS\n");
+    error = 0;
+
+fail:
+    return error;
+}
+
 /*-----------------------------------------------------------------------------------------------------------*/
 
 static int MoonPhase(void)
@@ -997,7 +1036,7 @@ static int MoonPhase(void)
     astro_angle_result_t result;
     double degree_error, arcmin, max_arcmin = 0.0;
     double diff_seconds, maxdiff = 0.0;
-    const double threshold_seconds = 120.0; /* max tolerable prediction error in seconds */
+    const double threshold_seconds = 90.0; /* max tolerable prediction error in seconds */
     astro_moon_quarter_t mq;
     char line[200];
 
@@ -6187,13 +6226,13 @@ static int SiderealTimeTest(void)
     int error;
     astro_time_t time;
     double gast, diff;
-    const double correct = 140.975528 / 15;    /* https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/gst_en.cgi */
+    const double correct = 9.398368460418821;
 
     time = Astronomy_MakeTime(2022, 3, 15, 21, 50, 0.0);
     gast = Astronomy_SiderealTime(&time);
-    diff = 3.6e+6 * ABS(gast - correct);    /* calculate error in milliseconds */
-    printf("C SiderealTimeTest: gast=%0.10lf, correct=%0.10lf, diff=%0.3lf milliseconds.\n", gast, correct, diff);
-    if (diff > 0.263)
+    diff = ABS(gast - correct);
+    printf("C SiderealTimeTest: gast=%0.15f, correct=%0.15lf, diff=%0.3le hours.\n", gast, correct, diff);
+    if (diff > 1.0e-15)
         FAIL("C SiderealTimeTest: EXCESSIVE ERROR\n");
 
     printf("C SiderealTimeTest: PASS\n");

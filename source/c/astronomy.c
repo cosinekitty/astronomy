@@ -5681,7 +5681,7 @@ astro_search_result_t Astronomy_SearchSunLongitude(
     double limitDays)
 {
     astro_time_t t2 = Astronomy_AddDays(startTime, limitDays);
-    return Astronomy_Search(sun_offset, &targetLon, startTime, t2, 1.0);
+    return Astronomy_Search(sun_offset, &targetLon, startTime, t2, 0.01);
 }
 
 /** @cond DOXYGEN_SKIP */
@@ -5932,7 +5932,7 @@ static int QuadInterp(
 static astro_status_t FindSeasonChange(double targetLon, int year, int month, int day, astro_time_t *time)
 {
     astro_time_t startTime = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
-    astro_search_result_t result = Astronomy_SearchSunLongitude(targetLon, startTime, 4.0);
+    astro_search_result_t result = Astronomy_SearchSunLongitude(targetLon, startTime, 20.0);
     *time = result.time;
     return result.status;
 }
@@ -5981,16 +5981,26 @@ astro_seasons_t Astronomy_Seasons(int year)
 
     seasons.status = ASTRO_SUCCESS;
 
-    status = FindSeasonChange(  0, year,  3, 19, &seasons.mar_equinox);
+    /*
+        https://github.com/cosinekitty/astronomy/issues/187
+        Solstices and equinoxes drift over long spans of time,
+        due to precession of the Earth's axis.
+        Therefore, we have to search a wider range of time than
+        one might expect. It turns out this has very little
+        effect on efficiency, thanks to the quick convergence
+        of quadratic interpolation inside Astronomy_Search().
+    */
+
+    status = FindSeasonChange(  0, year,  3, 10, &seasons.mar_equinox);
     if (status != ASTRO_SUCCESS) seasons.status = status;
 
-    status = FindSeasonChange( 90, year,  6, 19, &seasons.jun_solstice);
+    status = FindSeasonChange( 90, year,  6, 10, &seasons.jun_solstice);
     if (status != ASTRO_SUCCESS) seasons.status = status;
 
-    status = FindSeasonChange(180, year,  9, 21, &seasons.sep_equinox);
+    status = FindSeasonChange(180, year,  9, 10, &seasons.sep_equinox);
     if (status != ASTRO_SUCCESS) seasons.status = status;
 
-    status = FindSeasonChange(270, year, 12, 20, &seasons.dec_solstice);
+    status = FindSeasonChange(270, year, 12, 10, &seasons.dec_solstice);
     if (status != ASTRO_SUCCESS) seasons.status = status;
 
     return seasons;

@@ -5914,19 +5914,27 @@ namespace CosineKitty
         /// </returns>
         public static SeasonsInfo Seasons(int year)
         {
+            // https://github.com/cosinekitty/astronomy/issues/187
+            // Solstices and equinoxes drift over long spans of time,
+            // due to precession of the Earth's axis.
+            // Therefore, we have to search a wider range of time than
+            // one might expect. It turns out this has very little
+            // effect on efficiency, thanks to the quick convergence
+            // of quadratic interpolation inside the `Search` function.
+
             return new SeasonsInfo(
-                FindSeasonChange(  0, year,  3, 19),
-                FindSeasonChange( 90, year,  6, 19),
-                FindSeasonChange(180, year,  9, 21),
-                FindSeasonChange(270, year, 12, 20)
+                FindSeasonChange(  0, year,  3, 10),
+                FindSeasonChange( 90, year,  6, 10),
+                FindSeasonChange(180, year,  9, 10),
+                FindSeasonChange(270, year, 12, 10)
             );
         }
 
         private static AstroTime FindSeasonChange(double targetLon, int year, int month, int day)
         {
             var startTime = new AstroTime(year, month, day, 0, 0, 0);
-            return SearchSunLongitude(targetLon, startTime, 4.0) ??
-                throw new InternalError($"Cannot find solution for Sun longitude {targetLon}");
+            return SearchSunLongitude(targetLon, startTime, 20.0) ??
+                throw new InternalError($"Cannot find solution for Sun longitude {targetLon} in year {year}");
         }
 
         /// <summary>
@@ -5941,7 +5949,7 @@ namespace CosineKitty
         /// to calculate all equinoxes and solstices for a given calendar year.
         ///
         /// The function searches the window of time specified by `startTime` and `startTime+limitDays`.
-        /// The search will return an error if the Sun never reaches the longitude `targetLon` or
+        /// The search will return `null` if the Sun never reaches the longitude `targetLon` or
         /// if the window is so large that the longitude ranges more than 180 degrees within it.
         /// It is recommended to keep the window smaller than 10 days when possible.
         /// </remarks>
@@ -5967,7 +5975,7 @@ namespace CosineKitty
         {
             var sun_offset = new SearchContext_SunOffset(targetLon);
             AstroTime t2 = startTime.AddDays(limitDays);
-            return Search(sun_offset, startTime, t2, 1.0);
+            return Search(sun_offset, startTime, t2, 0.01);
         }
 
         /// <summary>
@@ -5990,8 +5998,6 @@ namespace CosineKitty
         /// It could subtract the target longitude from the actual longitude at a given time;
         /// thus the difference would equal zero at the moment in time the planet reaches the
         /// desired longitude.
-        ///
-        /// Every call to `func.Eval` must either return a valid #AstroTime or throw an exception.
         ///
         /// The search calls `func.Eval` repeatedly to rapidly narrow in on any ascending
         /// root within the time window specified by `t1` and `t2`. The search never
@@ -6068,8 +6074,8 @@ namespace CosineKitty
                 /* Try to find a parabola that passes through the 3 points we have sampled: */
                 /* (t1,f1), (tmid,fmid), (t2,f2) */
 
-                double q_x, q_ut, q_df_dt;
-                if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, out q_x, out q_ut, out q_df_dt))
+                double q_ut, q_df_dt;
+                if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, out q_ut, out q_df_dt))
                 {
                     var tq = new AstroTime(q_ut);
                     double fq = func.Eval(tq);
@@ -6092,9 +6098,8 @@ namespace CosineKitty
                             {
                                 if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0.0)
                                 {
-                                    double fleft, fright;
-                                    fleft = func.Eval(tleft);
-                                    fright = func.Eval(tright);
+                                    double fleft = func.Eval(tleft);
+                                    double fright = func.Eval(tright);
                                     if (fleft<0.0 && fright>=0.0)
                                     {
                                         f1 = fleft;
@@ -6135,12 +6140,13 @@ namespace CosineKitty
 
         private static bool QuadInterp(
             double tm, double dt, double fa, double fm, double fb,
-            out double out_x, out double out_t, out double out_df_dt)
+            out double out_t, out double out_df_dt)
         {
             double Q, R, S;
-            double u, ru, x1, x2;
+            double u, ru;
+            double x, x1, x2;
 
-            out_x = out_t = out_df_dt = 0.0;
+            out_t = out_df_dt = 0.0;
 
             Q = (fb + fa)/2.0 - fm;
             R = (fb - fa)/2.0;
@@ -6151,8 +6157,8 @@ namespace CosineKitty
                 /* This is a line, not a parabola. */
                 if (R == 0.0)
                     return false;       /* This is a HORIZONTAL line... can't make progress! */
-                out_x = -S / R;
-                if (out_x < -1.0 || out_x > +1.0)
+                x = -S / R;
+                if (x < -1.0 || x > +1.0)
                     return false;   /* out of bounds */
             }
             else
@@ -6169,16 +6175,16 @@ namespace CosineKitty
                 {
                     if (-1.0 <= x2 && x2 <= +1.0)
                         return false;   /* two roots are within bounds; we require a unique zero-crossing. */
-                    out_x = x1;
+                    x = x1;
                 }
                 else if (-1.0 <= x2 && x2 <= +1.0)
-                    out_x = x2;
+                    x = x2;
                 else
                     return false;   /* neither root is within bounds */
             }
 
-            out_t = tm + out_x*dt;
-            out_df_dt = (2*Q*out_x + R) / dt;
+            out_t = tm + x*dt;
+            out_df_dt = (2*Q*x + R) / dt;
             return true;   /* success */
         }
 
@@ -6396,13 +6402,12 @@ namespace CosineKitty
             */
 
             HourAngleInfo evt_before, evt_after;
-            AstroTime time_start = startTime;
-            double alt_before = context.Eval(time_start);
+            double alt_before = context.Eval(startTime);
             AstroTime time_before;
             if (alt_before > 0.0)
             {
                 /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
-                evt_before = SearchHourAngle(body, observer, ha_before, time_start);
+                evt_before = SearchHourAngle(body, observer, ha_before, startTime);
                 time_before = evt_before.time;
                 alt_before = context.Eval(time_before);
             }
@@ -6410,7 +6415,7 @@ namespace CosineKitty
             {
                 /* We are before or at the sought event, so we find the next "after" event (bottom/culm), */
                 /* and use the current time as the "before" event. */
-                time_before = time_start;
+                time_before = startTime;
             }
 
             evt_after = SearchHourAngle(body, observer, ha_after, time_before);
@@ -6421,16 +6426,16 @@ namespace CosineKitty
                 if (alt_before <= 0.0 && alt_after > 0.0)
                 {
                     /* Search between evt_before and evt_after for the desired event. */
-                    AstroTime result = Search(context, time_before, evt_after.time, 1.0);
-                    if (result != null)
-                        return result;
+                    AstroTime time = Search(context, time_before, evt_after.time, 1.0);
+                    if (time != null)
+                        return time;
                 }
 
                 /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
                 evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time);
                 evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time);
 
-                if (evt_before.time.ut >= time_start.ut + limitDays)
+                if (evt_before.time.ut >= startTime.ut + limitDays)
                     return null;
 
                 time_before = evt_before.time;

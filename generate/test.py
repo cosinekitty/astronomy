@@ -217,10 +217,24 @@ def Seasons(filename = 'seasons/seasons.txt'):
     print('PY Seasons: Event counts: mar={}, jun={}, sep={}, dec={}'.format(mar_count, jun_count, sep_count, dec_count))
     return 0
 
+
+def SeasonsIssue187():
+    # This is a regression test for:
+    # https://github.com/cosinekitty/astronomy/issues/187
+    # For years far from the present, the seasons search was sometimes failing.
+    for year in range(1, 9999, 1):
+        try:
+            astronomy.Seasons(year)
+        except astronomy.InternalError:
+            print('PY SeasonsIssue187: FAIL - internal error for year {}'.format(year))
+            return 1
+    print('PY SeasonsIssue187: PASS')
+    return 0
+
 #-----------------------------------------------------------------------------------------------------------
 
 def MoonPhase(filename = 'moonphase/moonphases.txt'):
-    threshold_seconds = 120.0       # max tolerable prediction error in seconds
+    threshold_seconds = 90.0       # max tolerable prediction error in seconds
     max_arcmin = 0.0
     maxdiff = 0.0
     quarter_count = 0
@@ -2424,12 +2438,12 @@ def Lagrange():
 #-----------------------------------------------------------------------------------------------------------
 
 def SiderealTime():
-    correct = 140.975528 / 15    # https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/gst_en.cgi
+    correct = 9.398368460418821
     time = astronomy.Time.Make(2022, 3, 15, 21, 50, 0)
     gast = astronomy.SiderealTime(time)
-    diff = 3.6e+6 * abs(gast - correct)     # calculate error in millseconds
-    print('PY SiderealTime: gast={:0.10f}, correct={:0.10f}, diff={:0.3f} milliseconds.'.format(gast, correct, diff))
-    if diff > 0.263:
+    diff = abs(gast - correct)
+    print('PY SiderealTime: gast={:0.15f}, correct={:0.15f}, diff={:0.3e}'.format(gast, correct, diff))
+    if diff > 1.0e-15:
         print('PY SiderealTime: EXCESSIVE ERROR')
         return 1
     print('PY SiderealTime: PASS')
@@ -2510,6 +2524,7 @@ UnitTests = {
     'riseset':                  RiseSet,
     'rotation':                 Rotation,
     'seasons':                  Seasons,
+    'seasons187':               SeasonsIssue187,
     'sidereal':                 SiderealTime,
     'time':                     AstroTime,
     'topostate':                TopoState,
