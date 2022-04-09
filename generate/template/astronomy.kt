@@ -1,5 +1,3 @@
-package io.github.cosinekitty.astronomy
-
 /*
     Astronomy Engine for Kotlin / JVM.
     https://github.com/cosinekitty/astronomy
@@ -26,6 +24,9 @@ package io.github.cosinekitty.astronomy
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 */
+@file:JvmName("Astronomy")
+
+package io.github.cosinekitty.astronomy
 
 import java.text.SimpleDateFormat
 import java.util.*
