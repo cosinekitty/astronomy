@@ -25,6 +25,7 @@ A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
 | [plus](plus.md) | [jvm]<br>operator fun [plus](plus.md)(other: [AstroVector](index.md)): [AstroVector](index.md)<br>Adds two vectors. Both operands must have identical times. |
 | [toEquatorial](to-equatorial.md) | [jvm]<br>fun [toEquatorial](to-equatorial.md)(): [Equatorial](../-equatorial/index.md)<br>Given an equatorial vector, calculates equatorial angular coordinates. |
 | [toHorizontal](to-horizontal.md) | [jvm]<br>fun [toHorizontal](to-horizontal.md)(refraction: [Refraction](../-refraction/index.md)): [Spherical](../-spherical/index.md)<br>Converts Cartesian coordinates to horizontal coordinates. |
+| [toObserver](to-observer.md) | [jvm]<br>fun [toObserver](to-observer.md)(equator: [EquatorEpoch](../-equator-epoch/index.md)): [Observer](../-observer/index.md)<br>Calculates the geographic location corresponding to a geocentric equatorial vector. |
 | [toSpherical](to-spherical.md) | [jvm]<br>fun [toSpherical](to-spherical.md)(): [Spherical](../-spherical/index.md)<br>Converts Cartesian coordinates to spherical coordinates. |
 | [unaryMinus](unary-minus.md) | [jvm]<br>operator fun [unaryMinus](unary-minus.md)(): [AstroVector](index.md)<br>Negates a vector; the same as multiplying the vector by the scalar -1. |
 

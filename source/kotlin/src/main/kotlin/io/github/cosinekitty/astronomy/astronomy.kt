@@ -699,13 +699,39 @@ data class AstroVector(
             sphere.dist
         )
     }
+
+    /**
+     * Calculates the geographic location corresponding to a geocentric equatorial vector.
+     *
+     * This is the inverse function of [Observer.toVector].
+     * Given an equatorial vector from the center of the Earth to
+     * an observer on or near the Earth's surface, this function returns
+     * the geographic latitude, longitude, and elevation for that observer.
+     *
+     * @param equator
+     *      Selects the date of the Earth's equator in which this vector is expressed.
+     *      The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
+     *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+     *      and nutation of the Earth as it was at the moment specified by the time `this.t`.
+     *      Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `this.t`
+     *      as the orientation.
+     *
+     * @return The geographic coordinates corresponding to the vector.
+     */
+    fun toObserver(equator: EquatorEpoch): Observer {
+        val vector = when(equator) {
+            EquatorEpoch.J2000  -> gyration(this, PrecessDirection.From2000)
+            EquatorEpoch.OfDate -> this
+        }
+        return inverseTerra(vector)
+    }
 }
 
 /**
  * Multiply a scalar by a vector, yielding another vector.
  */
 operator fun Double.times(vec: AstroVector) =
-        AstroVector(this*vec.x, this*vec.y, this*vec.z, vec.t)
+    AstroVector(this*vec.x, this*vec.y, this*vec.z, vec.t)
 
 
 /**

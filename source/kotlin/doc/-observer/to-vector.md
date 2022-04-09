@@ -13,7 +13,7 @@ The caller may pass a value in equator to select either [EquatorEpoch.J2000](../
 
 The returned vector has components expressed in astronomical units (AU). To convert to kilometers, multiply the vector values by the scalar value [KM_PER_AU](../-k-m_-p-e-r_-a-u.md).
 
-The inverse of this function is also available: AstroVector.toObserver.
+The inverse of this function is also available: [AstroVector.toObserver](../-astro-vector/to-observer.md).
 
 #### Return
 

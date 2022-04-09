@@ -1074,4 +1074,41 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    private fun VerifyGeoid(observer: Observer, time: AstroTime, equator: EquatorEpoch) {
+        val degreeTolerance = 1.0e-12
+        val meterTolerance = 1.0e-8
+        val vector = observer.toVector(time, equator)
+        val check = vector.toObserver(equator)
+        val latDiff = abs(check.latitude - observer.latitude)
+        val lonDiff = dcos(observer.latitude) * abs(check.longitude - observer.longitude)
+        val heightDiff = abs(check.height - observer.height)
+        assertTrue(latDiff < degreeTolerance, "excessive latitude error = $latDiff")
+        assertTrue(lonDiff < degreeTolerance, "excessive longitude error = $lonDiff")
+        assertTrue(heightDiff < meterTolerance, "excessive height error = $heightDiff")
+    }
+
+    @Test
+    fun `Verify inverse geoid calculations`() {
+        // Calculate position vectors for a variety of geographic coordinates.
+        // Verify that we can convert each observer back into a matching vector.
+        val time = AstroTime(8134.392799058808)     // 2022-04-09T21:25:37.839Z
+        var latitude = -85.0
+        while (latitude <= +85.0) {
+            var longitude = -175.0
+            while (longitude <= +175.0) {
+                var height = -5000.0
+                while (height <= +5000.0) {
+                    val observer = Observer(latitude, longitude, height)
+                    VerifyGeoid(observer, time, EquatorEpoch.OfDate)
+                    VerifyGeoid(observer, time, EquatorEpoch.J2000)
+                    height += 1000.0
+                }
+                longitude += 5.0
+            }
+            latitude += 5.0
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
 }
