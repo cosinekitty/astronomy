@@ -18,6 +18,7 @@ echo "run_worldmap: creating image"
 rm -f sun_moon_map.png
 time ./worldmap sun_moon_map.png 2022-04-09T16:05:35Z || exit $?
 ls -l sun_moon_map.png || exit $?
+sha256sum -c worldmap.sha256 || exit $?
 
 echo "run_worldmap: PASS"
 

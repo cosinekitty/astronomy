@@ -121,20 +121,17 @@ int main(int argc, const char *argv[])
 
 double VerticalComponent(
     const astro_rotation_t &rot,
-    const astro_observer_t &observer,
-    astro_vector_t &geo)
+    astro_vector_t &ovec,   // vector from center of Earth to the observer
+    astro_vector_t &bvec)   // vector from center of Earth to the celestial body (Sun/Moon)
 {
-    // Calculate a vector from the center of the Earth to the observer.
-    astro_vector_t ovec = Astronomy_ObserverVector(&geo.t, observer, EQUATOR_OF_DATE);
-
     // Subtract the vectors to get a vector from the observer to the Sun/Moon.
     // This is called a topocentric vector.
     astro_vector_t topo;
     topo.status = ASTRO_SUCCESS;
-    topo.t = geo.t;
-    topo.x = geo.x - ovec.x;
-    topo.y = geo.y - ovec.y;
-    topo.z = geo.z - ovec.z;
+    topo.t = bvec.t;
+    topo.x = bvec.x - ovec.x;
+    topo.y = bvec.y - ovec.y;
+    topo.z = bvec.z - ovec.z;
 
     // Rotate the topocentric vector into horizontal orientation.
     astro_vector_t hor = Astronomy_RotateVector(rot, topo);
@@ -193,14 +190,25 @@ int Render(Image &image, astro_time_t time)
         {
             observer.latitude = ((PixelsHigh - (j + 1)) / (double)PixelsPerDegree) + MinLatitude;
 
+            // Calculate a vector from the center of the Earth to the observer's
+            // geographic location that corresponds to this pixel.
+            astro_vector_t ovec = Astronomy_ObserverVector(&time, observer, EQUATOR_OF_DATE);
+
             // Create a rotation matrix that converts equator-of-date vectors
             // into horizontal vectors for this pixel's location on the Earth.
             astro_rotation_t rot = Astronomy_Rotation_EQD_HOR(&time, observer);
 
-            double sunVert  = VerticalComponent(rot, observer, geo_sun_eqd);
-            double moonVert = VerticalComponent(rot, observer, geo_moon_eqd);
+            // Use the rotation matrix and observer vector to calculate
+            // a vertical component value in the range -1.0 .. +1.0.
+            // This number tells whether the Sun/Moon are above that observer's
+            // horizon, and if so, how high it appears in the sky.
+            double sunVert  = VerticalComponent(rot, ovec, geo_sun_eqd);
+            double moonVert = VerticalComponent(rot, ovec, geo_moon_eqd);
 
+            // Add yellow for sunlight intensity for this pixel.
             ColorPixel(image.pixel(i, j), sunVert,  1.0, 1.0, 0.0);
+
+            // Add blue for moonlight intensity for this pixel.
             ColorPixel(image.pixel(i, j), moonVert, 0.0, 0.0, 0.5);
         }
     }
