@@ -15,8 +15,13 @@ g++ -Wall -Werror -x c++ -std=c++11 -o worldmap $BUILDOPT \
 
 echo "run_worldmap: creating image"
 
-rm -f sun_moon_map.png
-time ./worldmap sun_moon_map.png 2022-04-09T16:05:35Z || exit $?
+rm -f sun_moon_map.png test/worldmap.txt
+time ./worldmap sun_moon_map.png 2022-04-09T16:05:35Z > test/worldmap.txt || exit $?
+more test/worldmap.txt || exit $?
+if ! diff test/worldmap{,_correct}.txt; then
+    echo "run_worldmap: FAIL - incorrect zenith location output."
+    exit 1
+fi
 ls -l sun_moon_map.png || exit $?
 sha256sum -c worldmap.sha256 || exit $?
 

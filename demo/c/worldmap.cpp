@@ -162,6 +162,14 @@ void ColorPixel(Pixel &pixel, double vert, double red, double green, double blue
 }
 
 
+void PrintZenithPoint(const char *name, astro_vector_t geovec)
+{
+    // Convert the geocentric vector into an observer location.
+    astro_observer_t observer = Astronomy_VectorObserver(&geovec, EQUATOR_OF_DATE);
+    printf("%-4s is at zenith for: lat = %7.3lf, lon = %8.3lf\n", name, observer.latitude, observer.longitude);
+}
+
+
 int Render(Image &image, astro_time_t time)
 {
     // To minimize the work for each pixel, we calculate the
@@ -179,6 +187,11 @@ int Render(Image &image, astro_time_t time)
     astro_rotation_t rot = Astronomy_Rotation_EQJ_EQD(&time);
     astro_vector_t geo_sun_eqd  = Astronomy_RotateVector(rot, geo_sun_eqj);
     astro_vector_t geo_moon_eqd = Astronomy_RotateVector(rot, geo_moon_eqj);
+
+    // Just for fun, find the geographic locations where the Sun/Moon
+    // appear directly overhead (at the zenith = straight up).
+    PrintZenithPoint("Sun",  geo_sun_eqd);
+    PrintZenithPoint("Moon", geo_moon_eqd);
 
     astro_observer_t observer;
     observer.height = 0.0;

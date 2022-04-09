@@ -1,0 +1,2 @@
+Sun  is at zenith for: lat =   7.741, lon =  -61.004
+Moon is at zenith for: lat =  25.795, lon =   37.529
