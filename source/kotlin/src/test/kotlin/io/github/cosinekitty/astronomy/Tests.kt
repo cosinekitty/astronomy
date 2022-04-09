@@ -1032,4 +1032,46 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Compare geoid state vectors with C`() {
+        val filename = dataRootDir + "topostate/geoid.txt"
+        val infile = File(filename)
+        var lnum = 0
+        val speedConvert = KM_PER_AU / 24.0     // converts AU/day into km/hour
+        val posTolerance = 1.0e-6   // 1 millimeter
+        val velTolerance = 1.0e-6   // 1 mm/hour
+        for (line in infile.readLines()) {
+            ++lnum
+            // 0   -340866.750000000000    1.5     2.7     7.4  2233.390067 -5966.178081   311.806727  1559.005842   591.264250   146.628157
+            val tokens = tokenize(line)
+            assertTrue(tokens.size == 11, "$filename line $lnum: unexpected number of tokens: ${tokens.size}")
+            val equator: EquatorEpoch = when (tokens[0]) {
+                "0" -> EquatorEpoch.J2000
+                "1" -> EquatorEpoch.OfDate
+                else -> fail("$filename line $lnum: unexpected EquatorEpoch code: ${tokens[0]}")
+            }
+            val ut = tokens[1].toDouble()
+            val latitude = tokens[2].toDouble()
+            val longitude = tokens[3].toDouble()
+            val height = tokens[4].toDouble()
+            val x = tokens[5].toDouble()
+            val y = tokens[6].toDouble()
+            val z = tokens[7].toDouble()
+            val vx = tokens[8].toDouble()
+            val vy = tokens[9].toDouble()
+            val vz = tokens[10].toDouble()
+
+            val time = AstroTime(ut)
+            val observer = Observer(latitude, longitude, height)
+            val correctState = StateVector(x, y, z, vx, vy, vz, time)
+            val calcState = observer.toStateVector(time, equator)
+            val posDiff = ((KM_PER_AU * calcState.position()) - correctState.position()).length()
+            val velDiff = ((speedConvert * calcState.velocity()) - correctState.velocity()).length()
+            assertTrue(posDiff < posTolerance, "$filename line $lnum: excessive position error $posDiff km")
+            assertTrue(velDiff < velTolerance, "$filename line $lnum: excessive velocity error $velDiff km/hour")
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
 }

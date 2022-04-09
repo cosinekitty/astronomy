@@ -1074,7 +1074,78 @@ data class Observer(
      * The height above (positive) or below (negative) sea level, expressed in meters.
      */
     val height: Double
-)
+) {
+    /**
+     * Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
+     *
+     * This function calculates a vector from the center of the Earth to
+     * a point on or near the surface of the Earth, expressed in equatorial
+     * coordinates. It takes into account the rotation of the Earth at the given
+     * time, along with the given latitude, longitude, and elevation of the observer.
+     *
+     * The caller may pass a value in `equator` to select either [EquatorEpoch.J2000]
+     * for using J2000 coordinates, or [EquatorEpoch.OfDate] for using coordinates relative
+     * to the Earth's equator at the specified time.
+     *
+     * The returned vector has components expressed in astronomical units (AU).
+     * To convert to kilometers, multiply the vector values by the scalar value [KM_PER_AU].
+     *
+     * The inverse of this function is also available: [AstroVector.toObserver].
+     *
+     * @param time
+     *      The date and time for which to calculate the observer's position vector.
+     *
+     * @param equator
+     *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+     *      The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
+     *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+     *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+     *      Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `time`
+     *      as the orientation.
+     *
+     * @return A vector from the center of the Earth to this geographic location.
+     */
+    fun toVector(time: AstroTime, equator: EquatorEpoch): AstroVector =
+        toStateVector(time, equator).position()
+
+    /**
+     * Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.
+     *
+     * This function calculates position and velocity vectors of an observer
+     * on or near the surface of the Earth, expressed in equatorial
+     * coordinates. It takes into account the rotation of the Earth at the given
+     * time, along with the given latitude, longitude, and elevation of the observer.
+     *
+     * The caller may pass a value in `equator` to select either [EquatorEpoch.J2000]
+     * for using J2000 coordinates, or [EquatorEpoch.OfDate] for using coordinates relative
+     * to the Earth's equator at the specified time.
+     *
+     * The returned position vector has components expressed in astronomical units (AU).
+     * To convert to kilometers, multiply the vector values by the scalar value [KM_PER_AU].
+     *
+     * The returned velocity vector is measured in AU/day.
+     *
+     * @param time
+     *      The date and time for which to calculate the observer's position vector.
+     *
+     * @param equator
+     *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+     *      The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
+     *      at noon UTC on January 1, 2000, in which case this function corrects for precession
+     *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
+     *      Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `time`
+     *      as the orientation.
+     *
+     * @return The position and velocity of this observer with respect to the Earth's center.
+     */
+    fun toStateVector(time: AstroTime, equator: EquatorEpoch): StateVector {
+        val state = terra(this, time)
+        return when (equator) {
+            EquatorEpoch.OfDate -> state
+            EquatorEpoch.J2000  -> gyrationPosVel(state, PrecessDirection.Into2000)
+        }
+    }
+}
 
 
 /**

@@ -4112,9 +4112,10 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equator_date_t equdate)
+static int GeoidTestCase(FILE *outfile, astro_time_t time, astro_observer_t observer, astro_equator_date_t equdate)
 {
     int error;
+    astro_state_vector_t state;
     astro_vector_t surface;
     astro_vector_t geo_moon;
     astro_equatorial_t topo_moon;
@@ -4126,6 +4127,35 @@ static int GeoidTestCase(astro_time_t time, astro_observer_t observer, astro_equ
 
     surface = Astronomy_ObserverVector(&time, observer, equdate);
     CHECK_STATUS(surface);
+
+    state = Astronomy_ObserverState(&time, observer, equdate);
+    CHECK_STATUS(state);
+
+    /* Verify state vector's position exactly matches the lone position vector. */
+    if (state.x != surface.x) FAIL("C GeoidTestCase: state vector x = %0.16le, but position vector x = %0.16le\n", state.x, surface.x);
+    if (state.y != surface.y) FAIL("C GeoidTestCase: state vector x = %0.16le, but position vector x = %0.16le\n", state.y, surface.y);
+    if (state.z != surface.z) FAIL("C GeoidTestCase: state vector x = %0.16le, but position vector x = %0.16le\n", state.z, surface.z);
+
+    if (outfile != NULL)
+    {
+        const double speedConvert = KM_PER_AU / 24.0;   /* converts AU/day into km/hour */
+
+        fprintf(
+            outfile,
+            "%d %22.12lf %6.1lf %7.1lf %7.1lf %12.6lf %12.6lf %12.6lf %12.6lf %12.6lf %12.6lf\n",
+            (int)equdate,
+            time.ut,
+            observer.latitude,
+            observer.longitude,
+            observer.height,
+            KM_PER_AU * state.x,
+            KM_PER_AU * state.y,
+            KM_PER_AU * state.z,
+            speedConvert * state.vx,
+            speedConvert * state.vy,
+            speedConvert * state.vz
+        );
+    }
 
     geo_moon = Astronomy_GeoMoon(time);
     CHECK_STATUS(geo_moon);
@@ -4200,6 +4230,8 @@ static int GeoidTest(void)
     astro_vector_t vec;
     astro_observer_t observer;
     int lat, lon;
+    FILE *outfile = NULL;
+    const char *outFileName = "temp/c_geoid.txt";
 
     const astro_time_t time_list[] =
     {
@@ -4228,13 +4260,17 @@ static int GeoidTest(void)
     DEBUG("C GeoidTest: Astronomy_ObserverVector correctly detected invalid astro_equator_date_t parameter.\n");
 
     /* Test a variety of times and locations, in both supported orientation systems. */
+    /* Also write reference data for comparing with other language implementations. */
+    outfile = fopen(outFileName, "wt");
+    if (outfile == NULL)
+        FAIL("C GeoidTest: FAIL - cannot open output file: %s\n", outFileName);
 
     for (oindex = 0; oindex < nobs; ++oindex)
     {
         for (tindex = 0; tindex < ntimes; ++tindex)
         {
-            CHECK(GeoidTestCase(time_list[tindex], observer_list[oindex], EQUATOR_J2000));
-            CHECK(GeoidTestCase(time_list[tindex], observer_list[oindex], EQUATOR_OF_DATE));
+            CHECK(GeoidTestCase(outfile, time_list[tindex], observer_list[oindex], EQUATOR_J2000));
+            CHECK(GeoidTestCase(outfile, time_list[tindex], observer_list[oindex], EQUATOR_OF_DATE));
         }
     }
 
@@ -4245,13 +4281,14 @@ static int GeoidTest(void)
         for (lon = -175; lon <= +180; lon += 5)
         {
             observer = Astronomy_MakeObserver(lat, lon, 0.0);
-            CHECK(GeoidTestCase(time, observer, EQUATOR_OF_DATE));
+            CHECK(GeoidTestCase(NULL, time, observer, EQUATOR_OF_DATE));
         }
     }
 
     printf("C GeoidTest: PASS\n");
     error = 0;
 fail:
+    if (outfile) fclose(outfile);
     return error;
 }
 

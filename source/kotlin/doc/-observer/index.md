@@ -15,6 +15,13 @@ This object is passed to functions that calculate phenomena as observed from a p
 |---|---|
 | [Observer](-observer.md) | [jvm]<br>fun [Observer](-observer.md)(latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), height: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
 
+## Functions
+
+| Name | Summary |
+|---|---|
+| [toStateVector](to-state-vector.md) | [jvm]<br>fun [toStateVector](to-state-vector.md)(time: [AstroTime](../-astro-time/index.md), equator: [EquatorEpoch](../-equator-epoch/index.md)): [StateVector](../-state-vector/index.md)<br>Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth. |
+| [toVector](to-vector.md) | [jvm]<br>fun [toVector](to-vector.md)(time: [AstroTime](../-astro-time/index.md), equator: [EquatorEpoch](../-equator-epoch/index.md)): [AstroVector](../-astro-vector/index.md)<br>Calculates geocentric equatorial coordinates of an observer on the surface of the Earth. |
+
 ## Properties
 
 | Name | Summary |
