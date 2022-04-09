@@ -46,6 +46,12 @@ of the point they are both looking at. This example demonstrates
 use of the geoid functions `VectorObserver` and `ObserverVector`
 that convert between geographic coordinates and vectors.
 
+### [World Map](worldmap.cpp)
+This C++ program generates a PNG image showing intensity of
+sunlight and moonlight on a Mercator projection of the Earth.
+This example is helpful for showing how to minimize per-pixel
+calculations across the globe for a given time of observation.
+
 ---
 
 # [API Reference](../../source/c/)

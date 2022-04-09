@@ -64,5 +64,7 @@ cd raytrace || Fail "error changing to raytrace directory"
 ./run || Fail "run raytracer"
 cd ..
 
+./run_worldmap || Fail "error in run_worldmap"
+
 echo "PASS: C examples"
 exit 0

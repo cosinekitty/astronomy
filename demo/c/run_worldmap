@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [[ "$1" == "debug" ]]; then
+    BUILDOPT='-g -Og'
+else
+    BUILDOPT='-O3'
+fi
+
+echo "run_worldmap: building C++ code"
+
+g++ -Wall -Werror -x c++ -std=c++11 -o worldmap $BUILDOPT \
+    -I./raytrace -I../../source/c \
+    worldmap.cpp astro_demo_common.c ../../source/c/astronomy.c raytrace/lodepng.cpp \
+    || exit $?
+
+echo "run_worldmap: creating image"
+
+rm -f sun_moon_map.png
+time ./worldmap sun_moon_map.png 2022-04-09T16:05:35Z || exit $?
+ls -l sun_moon_map.png || exit $?
+
+echo "run_worldmap: PASS"
+
+exit 0
+
