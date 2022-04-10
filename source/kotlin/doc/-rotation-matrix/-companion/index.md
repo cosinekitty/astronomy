@@ -5,8 +5,8 @@
 [jvm]\
 object [Companion](index.md)
 
-## Properties
+## Functions
 
 | Name | Summary |
 |---|---|
-| [identity](identity.md) | [jvm]<br>val [identity](identity.md): [RotationMatrix](../index.md)<br>The identity rotation matrix. |
+| [identity](identity.md) | [jvm]<br>fun [identity](identity.md)(): [RotationMatrix](../index.md)<br>Creates an identity rotation matrix. |

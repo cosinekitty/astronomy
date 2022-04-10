@@ -996,13 +996,13 @@ class RotationMatrix(
 
     companion object {
         /**
-         * The identity rotation matrix.
+         * Creates an identity rotation matrix.
          *
-         * A matrix that has no effect on orientation.
+         * Creates a matrix that has no effect on orientation.
          * This matrix can be the starting point for other operations,
          * such as calling a series of [RotationMatrix.combine] or [RotationMatrix.pivot].
          */
-        val identity = RotationMatrix (
+        fun identity() = RotationMatrix (
             1.0, 0.0, 0.0,
             0.0, 1.0, 0.0,
             0.0, 0.0, 1.0
@@ -1617,7 +1617,6 @@ enum class EclipseKind {
  * may determine the date and time of the beginning/end of each eclipse phase.
  */
 class LunarEclipseInfo(
-
     /**
      * The type of lunar eclipse found.
      */
@@ -3406,20 +3405,6 @@ private fun eclipticToEquatorial(ecl: AstroVector): AstroVector {
     )
 }
 
-/**
- * Given an equatorial vector, calculates equatorial angular coordinates.
- *
- * @vector
- *      A vector in an equatorial coordinate system.
- *
- * @return Angular coordinates expressed in the same equatorial system as `vector`.
- */
-fun equatorFromVector(vector: AstroVector): Equatorial {
-    val sphere = vector.toSpherical()
-    return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vector)
-}
-
-
 private fun earthRotationAxis(time: AstroTime): AxisInfo {
     // Unlike the other planets, we have a model of precession and nutation
     // for the Earth's axis that provides a north pole vector.
@@ -4032,7 +4017,7 @@ fun equator(
         EquatorEpoch.OfDate -> gyration(j2000, PrecessDirection.From2000)
         EquatorEpoch.J2000  -> j2000
     }
-    return equatorFromVector(vector)
+    return vector.toEquatorial()
 }
 
 /**
@@ -4689,6 +4674,30 @@ fun searchMoonQuarter(startTime: AstroTime): MoonQuarterInfo {
 }
 
 /**
+ * Continues searching for lunar quarters from a previous search.
+ *
+ * After calling [searchMoonQuarter], this function can be called
+ * one or more times to continue finding consecutive lunar quarters.
+ * This function finds the next consecutive moon quarter event after
+ * the one passed in as the parameter `mq`.
+ *
+ * @param The previous moon quarter found by a call to [searchMoonQuarter] or `nextMoonQuarter`.
+ * @return The moon quarter that occurs next in time after the one passed in `mq`.
+ */
+fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
+    // Skip 6 days past the previous found moon quarter to find the next one.
+    // This is less than the minimum possible increment.
+    // So far I have seen the interval well contained by the range (6.5, 8.3) days.
+    val time = mq.time.addDays(6.0)
+    val nextMoonQuarter = searchMoonQuarter(time)
+    // Verify that we found the expected moon quarter.
+    val expected = (1 + mq.quarter) % 4
+    if (nextMoonQuarter.quarter != expected)
+        throw InternalError("Expected to find next quarter $expected, but found ${nextMoonQuarter.quarter}")
+    return nextMoonQuarter
+}
+
+/**
  * Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
  *
  * The *hour angle* of a celestial body indicates its position in the sky with respect
@@ -4849,14 +4858,10 @@ private class SearchContextPeakAltitude(
     private val direction: Direction,
     private val observer: Observer
 ): SearchContext {
-    private val bodyRadiusAu: Double
-
-    init {
-        bodyRadiusAu = when(body) {
-            Body.Sun -> SUN_RADIUS_AU
-            Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
-            else -> 0.0
-        }
+    private val bodyRadiusAu = when(body) {
+        Body.Sun -> SUN_RADIUS_AU
+        Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
+        else -> 0.0
     }
 
     override fun eval(time: AstroTime): Double {
@@ -4980,30 +4985,6 @@ fun searchAltitude(
 ): AstroTime? {
     val context = SearchContextAltitudeError(body, direction, observer, altitude)
     return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
-}
-
-/**
- * Continues searching for lunar quarters from a previous search.
- *
- * After calling [searchMoonQuarter], this function can be called
- * one or more times to continue finding consecutive lunar quarters.
- * This function finds the next consecutive moon quarter event after
- * the one passed in as the parameter `mq`.
- *
- * @param The previous moon quarter found by a call to [searchMoonQuarter] or `nextMoonQuarter`.
- * @return The moon quarter that occurs next in time after the one passed in `mq`.
- */
-fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
-    // Skip 6 days past the previous found moon quarter to find the next one.
-    // This is less than the minimum possible increment.
-    // So far I have seen the interval well contained by the range (6.5, 8.3) days.
-    val time = mq.time.addDays(6.0)
-    val nextMoonQuarter = searchMoonQuarter(time)
-    // Verify that we found the expected moon quarter.
-    val expected = (1 + mq.quarter) % 4
-    if (nextMoonQuarter.quarter != expected)
-        throw InternalError("Expected to find next quarter $expected, but found ${nextMoonQuarter.quarter}")
-    return nextMoonQuarter
 }
 
 /**

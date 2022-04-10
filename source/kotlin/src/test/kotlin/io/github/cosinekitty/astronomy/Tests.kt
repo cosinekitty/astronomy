@@ -160,7 +160,7 @@ class Tests {
     @Test
     fun `Pivot rotation matrix`() {
         // Pivot an identity matrix 90 degrees counterclockwise around the z-axis.
-        var r = RotationMatrix.identity.pivot(2, +90.0)
+        var r = RotationMatrix.identity().pivot(2, +90.0)
 
         compareMatrices("Pivot #1", r, RotationMatrix(
              0.0, +1.0,  0.0,
@@ -194,7 +194,7 @@ class Tests {
         // in the Python version of Astronomy Engine, which has already been validated.
 
         val a = RotationMatrix
-            .identity
+            .identity()
             .pivot(0, +37.0)
             .pivot(1, -72.0)
             .pivot(2, +23.0)
@@ -206,7 +206,7 @@ class Tests {
         ))
 
         val b = RotationMatrix
-            .identity
+            .identity()
             .pivot(0, -94.0)
             .pivot(1, +63.0)
             .pivot(2, +112.0)
