@@ -12,8 +12,6 @@
 #include <ctype.h>
 #include "astronomy.h"
 
-#define PERFORMANCE_TESTS 0
-
 char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 {
     char *ret = fgets(s, n, f);
@@ -213,10 +211,7 @@ static int LibrationTest(void);
 static int DE405_Check(void);
 static int AxisTest(void);
 static int SiderealTimeTest(void);
-
-#if PERFORMANCE_TESTS
 static int MapPerformanceTest(void);
-#endif
 
 typedef int (* unit_test_func_t) (void);
 
@@ -224,8 +219,11 @@ typedef struct
 {
     const char *name;
     unit_test_func_t func;
+    int optional;   /* nonzero for tests that should not be run by default */
 }
 unit_test_t;
+
+#define TEST_IS_OPTIONAL 1
 
 static unit_test_t UnitTests[] =
 {
@@ -249,9 +247,7 @@ static unit_test_t UnitTests[] =
     {"lunar_eclipse",           LunarEclipseTest},
     {"lunar_eclipse_78",        LunarEclipseIssue78},
     {"magnitude",               MagnitudeTest},
-#if PERFORMANCE_TESTS
-    {"map",                     MapPerformanceTest},
-#endif
+    {"map",                     MapPerformanceTest,     TEST_IS_OPTIONAL},
     {"moon",                    MoonTest},
     {"moon_apsis",              LunarApsis},
     {"moon_nodes",              MoonNodes},
@@ -293,7 +289,7 @@ int main(int argc, const char *argv[])
             if (!strcmp(verb, "all"))
             {
                 for (i=0; i < NUM_UNIT_TESTS; ++i)
-                    if (UnitTests[i].func())
+                    if (!UnitTests[i].optional && UnitTests[i].func())
                         FAIL("ctest: Unit test failed: %s\n", UnitTests[i].name);
                 goto success;
             }
@@ -6006,8 +6002,6 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-#if PERFORMANCE_TESTS
-
 static int MapPerformanceTest(void)
 {
     int error;
@@ -6054,8 +6048,6 @@ static int MapPerformanceTest(void)
 fail:
     return error;
 }
-
-#endif
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
