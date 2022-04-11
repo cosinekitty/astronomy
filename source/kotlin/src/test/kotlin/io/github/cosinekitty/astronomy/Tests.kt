@@ -1111,4 +1111,22 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Angle between body and Sun`() {
+        val time = AstroTime(8135.494708473634)     // 2022-04-10T23:52:22.812Z
+        VerifyAngleFromSun(time, Body.Sun,       0.0)
+        VerifyAngleFromSun(time, Body.Moon,    108.91126797125484)
+        VerifyAngleFromSun(time, Body.Venus,    45.2998026289299)
+        VerifyAngleFromSun(time, Body.Mars,     54.22257479675931)
+        VerifyAngleFromSun(time, Body.Jupiter,  27.49401812548837)
+    }
+
+    private fun VerifyAngleFromSun(time: AstroTime, body: Body, correctAngle: Double) {
+        val angle = angleFromSun(body, time)
+        val diff = abs(correctAngle - angle)
+        assertTrue(diff < 1.0e-13, "Excessive angle error $diff for $body at $time")
+    }
+
+    //----------------------------------------------------------------------------------------
 }

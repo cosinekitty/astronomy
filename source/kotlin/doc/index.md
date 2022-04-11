@@ -49,6 +49,7 @@
 
 | Name | Summary |
 |---|---|
+| [angleFromSun](angle-from-sun.md) | [jvm]<br>fun [angleFromSun](angle-from-sun.md)(body: [Body](-body/index.md), time: [AstroTime](-astro-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Returns the angle between the given body and the Sun, as seen from the Earth. |
 | [constellation](constellation.md) | [jvm]<br>fun [constellation](constellation.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [ConstellationInfo](-constellation-info/index.md)<br>Determines the constellation that contains the given point in the sky. |
 | [degreesToRadians](degrees-to-radians.md) | [jvm]<br>fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[degreesToRadians](degrees-to-radians.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Convert an angle expressed in degrees to an angle expressed in radians. |
 | [eclipticGeoMoon](ecliptic-geo-moon.md) | [jvm]<br>fun [eclipticGeoMoon](ecliptic-geo-moon.md)(time: [AstroTime](-astro-time/index.md)): [Spherical](-spherical/index.md)<br>Calculates spherical ecliptic geocentric position of the Moon. |

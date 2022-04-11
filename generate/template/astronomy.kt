@@ -4987,6 +4987,32 @@ fun searchAltitude(
     return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
 }
 
+
+/**
+ * Returns the angle between the given body and the Sun, as seen from the Earth.
+ *
+ * This function calculates the angular separation between the given body and the Sun,
+ * as seen from the center of the Earth. This angle is helpful for determining how
+ * easy it is to see the body away from the glare of the Sun.
+ *
+ * @param body
+ *      The celestial body whose angle from the Sun is to be measured.
+ *      Not allowed to be `Body.Earth`.
+ *
+ * @param time
+ *      The time at which the observation is made.
+ *
+ * @return The angle in degrees between the Sun and the specified body as seen from the center of the Earth.
+ */
+fun angleFromSun(body: Body, time: AstroTime): Double {
+    if (body == Body.Earth)
+        throw EarthNotAllowedException()
+    val sv = geoVector(Body.Sun, time, Aberration.Corrected)
+    val bv = geoVector(body, time, Aberration.Corrected)
+    return sv.angleWith(bv)
+}
+
+
 /**
  * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
  *
