@@ -1194,7 +1194,6 @@ static double mean_obliq(double tt)
 /** @cond DOXYGEN_SKIP */
 typedef struct
 {
-    double tt;
     double dpsi;
     double deps;
     double ee;
@@ -1213,7 +1212,6 @@ static earth_tilt_t e_tilt(astro_time_t *time)
     et.deps = time->eps;
     et.mobl = mean_obliq(time->tt);
     et.tobl = et.mobl + (et.deps / 3600.0);
-    et.tt = time->tt;
     et.ee = et.dpsi * cos(et.mobl * DEG2RAD) / 15.0;
 
     return et;

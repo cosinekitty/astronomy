@@ -1426,7 +1426,6 @@ class _e_tilt:
         self.deps = e.deps
         self.mobl = _mean_obliq(time.tt)
         self.tobl = self.mobl + (e.deps / 3600.0)
-        self.tt = time.tt
         self.ee = e.dpsi * math.cos(math.radians(self.mobl)) / 15.0
 
 def _ecl2equ_vec(time, ecl):

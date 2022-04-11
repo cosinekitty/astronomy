@@ -3162,16 +3162,14 @@ $ASTRO_JUPITER_MOONS();
 
         private struct earth_tilt_t
         {
-            public double tt;
             public double dpsi;
             public double deps;
             public double ee;
             public double mobl;
             public double tobl;
 
-            public earth_tilt_t(double tt, double dpsi, double deps, double ee, double mobl, double tobl)
+            public earth_tilt_t(double dpsi, double deps, double ee, double mobl, double tobl)
             {
-                this.tt = tt;
                 this.dpsi = dpsi;
                 this.deps = deps;
                 this.ee = ee;
@@ -3252,7 +3250,7 @@ $ASTRO_IAU_DATA()
             double mobl = mean_obliq(time.tt);
             double tobl = mobl + (time.eps / 3600.0);
             double ee = time.psi * Math.Cos(mobl * DEG2RAD) / 15.0;
-            return new earth_tilt_t(time.tt, time.psi, time.eps, ee, mobl, tobl);
+            return new earth_tilt_t(time.psi, time.eps, ee, mobl, tobl);
         }
 
         private static double era(double ut)        /* Earth Rotation Angle */
