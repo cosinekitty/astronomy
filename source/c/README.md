@@ -940,6 +940,78 @@ When the body is Saturn, the returned structure contains a field `ring_tilt` tha
 
 ---
 
+<a name="Astronomy_InitInterpolator"></a>
+### Astronomy_InitInterpolator(interp, t1, t2, t3) &#8658; `void`
+
+**Initialize a structure for interpolating nutation angles.** 
+
+
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_interpolator_t">astro_interpolator_t</a> *</code> | `interp` |  The structure to hold the interpolation model.  | 
+| [`astro_time_t`](#astro_time_t) | `t1` |  The first sampled time on an interval to be searched.  | 
+| [`astro_time_t`](#astro_time_t) | `t2` |  The middle sampled time on an interval to be searched.  | 
+| [`astro_time_t`](#astro_time_t) | `t3` |  The last sampled time on an interval to be searched.  | 
+
+
+
+
+---
+
+<a name="Astronomy_InterpolateParabola"></a>
+### Astronomy_InterpolateParabola(t, t1, t2, t3, y1, y2, y3) &#8658; `double`
+
+**Interpolate a parabolic curve passing through 3 points.** 
+
+
+
+
+
+**Returns:**  The interpolated dependent value at time `t`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `t` |  The independent variable for which to find a parabolic interpolation.  | 
+| `double` | `t1` |  The first of three known independent variable value values.  | 
+| `double` | `t2` |  The second of three known independent variable value values.  | 
+| `double` | `t3` |  The third of three known independent variable value values.  | 
+| `double` | `y1` |  The first of three known dependent variable value values.  | 
+| `double` | `y2` |  The second of three known dependent variable value values.  | 
+| `double` | `y3` |  The third of three known dependent variable value values.  | 
+
+
+
+
+---
+
+<a name="Astronomy_InterpolateTime"></a>
+### Astronomy_InterpolateTime(interp, ut) &#8658; [`astro_time_t`](#astro_time_t)
+
+**Interpolate an `[`astro_time_t`](#astro_time_t)` for the specified `ut` value.** 
+
+
+
+
+
+**Returns:**  A time value, with nutation angles interpolated if possible. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_interpolator_t">astro_interpolator_t</a> *</code> | `interp` |  A parabolic interpolation model.  | 
+| `double` | `ut` |  A `ut` value for which to create an `[`astro_time_t`](#astro_time_t)`.  | 
+
+
+
+
+---
+
 <a name="Astronomy_InverseRefraction"></a>
 ### Astronomy_InverseRefraction(refraction, bent_altitude) &#8658; `double`
 
@@ -3884,6 +3956,22 @@ Returned by the functions [`Astronomy_Illumination`](#Astronomy_Illumination) an
 | `double` | `phase_fraction` |  A value in the range [0.0, 1.0] indicating what fraction of the body's apparent disc is illuminated, as seen from the Earth.  |
 | `double` | `helio_dist` |  The distance between the Sun and the body at the observation time.  |
 | `double` | `ring_tilt` |  For Saturn, the tilt angle in degrees of its rings as seen from Earth. For all other bodies, 0.  |
+
+
+---
+
+<a name="astro_interpolator_t"></a>
+### `astro_interpolator_t`
+
+**Used for interpolating nutation angles as a search optimization.** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_time_t`](#astro_time_t) | `t1` |  The first sampled time on an interval to be searched.  |
+| [`astro_time_t`](#astro_time_t) | `t2` |  The middle sampled time on an interval to be searched.  |
+| [`astro_time_t`](#astro_time_t) | `t3` |  The last sampled time on an interval to be searched.  |
 
 
 ---

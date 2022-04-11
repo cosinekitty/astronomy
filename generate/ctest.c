@@ -213,6 +213,7 @@ static int AxisTest(void);
 static int SiderealTimeTest(void);
 static int MapPerformanceTest(void);
 static int SearchPerformance(void);
+static int InterpolateTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -239,6 +240,7 @@ static unit_test_t UnitTests[] =
     {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
     {"heliostate",              HelioStateTest},
+    {"interpolate",             InterpolateTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
     {"lagrange",                LagrangeTest},
@@ -6269,6 +6271,95 @@ static int SearchPerformance(void)
     }
 
     printf("C SearchPerformance: PASS (count = %d)\n", count);
+    error = 0;
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int InterpolateTest(void)
+{
+    int error, i;
+    double ut;
+    astro_time_t t1, t2, t3, tx, ty;
+    astro_interpolator_t interp;
+    const double timeIncrement = 5.0;
+    const double arcsec_threshold = 0.08407;
+    const int nsteps = 100;
+    double max_eps = 0.0;
+    double max_psi = 0.0;
+    double diff_eps, diff_psi;
+    double angle, max_angle = 0.0;
+    astro_angle_result_t result;
+    astro_vector_t north_pole, vecx, vecy;
+    astro_rotation_t rot;
+
+    north_pole.status = ASTRO_SUCCESS;
+    north_pole.x = 0.0;
+    north_pole.y = 0.0;
+    north_pole.z = 1.0;
+
+    t1 = Astronomy_MakeTime(2022, 4, 15, 12, 0, 0.0);
+    t2 = Astronomy_AddDays(t1, timeIncrement);
+    t3 = Astronomy_AddDays(t2, timeIncrement);
+
+    /* Make sure nutation angles are calculated. */
+    Astronomy_SiderealTime(&t1);
+    Astronomy_SiderealTime(&t2);
+    Astronomy_SiderealTime(&t3);
+
+    if (!isfinite(t1.eps) || !isfinite(t1.psi))
+        FAIL("C InterpolateTest: FAIL - t1 nutation angles not initialized as expected.\n");
+
+    if (!isfinite(t2.eps) || !isfinite(t2.psi))
+        FAIL("C InterpolateTest: FAIL - t2 nutation angles not initialized as expected.\n");
+
+    if (!isfinite(t3.eps) || !isfinite(t3.psi))
+        FAIL("C InterpolateTest: FAIL - t3 nutation angles not initialized as expected.\n");
+
+    Astronomy_InitInterpolator(&interp, t1, t2, t3);
+
+    /* Verify the accuracy of the interpolated nutation angles. */
+    for (i = 0; i <= nsteps; ++i)
+    {
+        ut = t1.ut + i*((t3.ut - t1.ut) / nsteps);
+
+        tx = Astronomy_TimeFromDays(ut);
+        Astronomy_SiderealTime(&tx);
+
+        ty = Astronomy_InterpolateTime(&interp, ut);
+
+        diff_psi = ABS(tx.psi - ty.psi);
+        if (diff_psi > max_psi)
+            max_psi = diff_psi;
+
+        diff_eps = ABS(tx.eps - ty.eps);
+        if (diff_eps > max_eps)
+            max_eps = diff_eps;
+
+        /* Compare north pole vectors rotated into both orientations. */
+        north_pole.t = tx;
+        rot = Astronomy_Rotation_EQJ_EQD(&tx);
+        CHECK_STATUS(rot);
+        vecx = Astronomy_RotateVector(rot, north_pole);
+
+        north_pole.t = ty;
+        rot = Astronomy_Rotation_EQJ_EQD(&ty);
+        CHECK_STATUS(rot);
+        vecy = Astronomy_RotateVector(rot, north_pole);
+
+        result = Astronomy_AngleBetween(vecx, vecy);
+        CHECK_STATUS(result);
+        angle = V(3600.0 * result.angle);
+        if (angle > max_angle)
+            max_angle = angle;
+    }
+
+    printf("C InterpolateTest: max_eps=%0.4le, max_psi=%0.4le, max_arcsec = %0.6lf\n", max_eps, max_psi, max_angle);
+    if (max_angle > arcsec_threshold)
+        FAIL("C InterpolateTest: EXCESSIVE angular error\n");
+    printf("C InterpolateTest: PASS\n");
     error = 0;
 fail:
     return error;

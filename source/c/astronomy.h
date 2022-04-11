@@ -354,6 +354,17 @@ typedef struct
 astro_time_t;
 
 /**
+ * @brief Used for interpolating nutation angles as a search optimization.
+ */
+typedef struct
+{
+    astro_time_t t1;    /**< The first sampled time on an interval to be searched. */
+    astro_time_t t2;    /**< The middle sampled time on an interval to be searched. */
+    astro_time_t t3;    /**< The last sampled time on an interval to be searched. */
+}
+astro_interpolator_t;
+
+/**
  * @brief A calendar date and time expressed in UTC.
  */
 typedef struct
@@ -1235,6 +1246,21 @@ astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTim
 astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransitTime);
 astro_node_event_t Astronomy_SearchMoonNode(astro_time_t startTime);
 astro_node_event_t Astronomy_NextMoonNode(astro_node_event_t prevNode);
+
+void Astronomy_InitInterpolator(
+    astro_interpolator_t *interp,
+    astro_time_t t1,
+    astro_time_t t2,
+    astro_time_t t3);
+
+double Astronomy_InterpolateParabola(
+    double t,
+    double t1, double t2, double t3,
+    double y1, double y2, double y3);
+
+astro_time_t Astronomy_InterpolateTime(
+    astro_interpolator_t *interp,
+    double ut);
 
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,

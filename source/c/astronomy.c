@@ -5693,18 +5693,15 @@ astro_search_result_t Astronomy_SearchSunLongitude(
     } while(0)
 /** @endcond */
 
-/** @cond DOXYGEN_SKIP */
-typedef struct
-{
-    astro_time_t t1;
-    astro_time_t t2;
-    astro_time_t t3;
-}
-astro_interpolator_t;
-/** @endcond */
-
-
-static void InitInterpolator(
+/**
+ * @brief Initialize a structure for interpolating nutation angles.
+ *
+ * @param interp The structure to hold the interpolation model.
+ * @param t1     The first sampled time on an interval to be searched.
+ * @param t2     The middle sampled time on an interval to be searched.
+ * @param t3     The last sampled time on an interval to be searched.
+ */
+void Astronomy_InitInterpolator(
     astro_interpolator_t *interp,
     astro_time_t t1,
     astro_time_t t2,
@@ -5716,7 +5713,19 @@ static void InitInterpolator(
 }
 
 
-static double InterpolateParabola(
+/**
+ * @brief Interpolate a parabolic curve passing through 3 points.
+ *
+ * @param t     The independent variable for which to find a parabolic interpolation.
+ * @param t1    The first of three known independent variable value values.
+ * @param t2    The second of three known independent variable value values.
+ * @param t3    The third of three known independent variable value values.
+ * @param y1    The first of three known dependent variable value values.
+ * @param y2    The second of three known dependent variable value values.
+ * @param y3    The third of three known dependent variable value values.
+ * @return      The interpolated dependent value at time `t`.
+ */
+double Astronomy_InterpolateParabola(
     double t,
     double t1, double t2, double t3,
     double y1, double y2, double y3)
@@ -5745,23 +5754,33 @@ static double InterpolateParabola(
 }
 
 
-static astro_time_t InterpolateTime(
+/**
+ * @brief Interpolate an `astro_time_t` for the specified `ut` value.
+ *
+ * @param interp    A parabolic interpolation model.
+ * @param ut        A `ut` value for which to create an `astro_time_t`.
+ * @return          A time value, with nutation angles interpolated if possible.
+ */
+astro_time_t Astronomy_InterpolateTime(
     astro_interpolator_t *interp,
     double ut)
 {
     astro_time_t time = Astronomy_TimeFromDays(ut);
 
-    time.psi = InterpolateParabola(
-        time.ut,
-        interp->t1.ut,  interp->t2.ut,  interp->t3.ut,
-        interp->t1.psi, interp->t2.psi, interp->t3.psi
-    );
+    if (fabs(interp->t3.ut - interp->t1.ut) <= 10.0)      /* limited time span over which we allow interpolation */
+    {
+        time.psi = Astronomy_InterpolateParabola(
+            time.ut,
+            interp->t1.ut,  interp->t2.ut,  interp->t3.ut,
+            interp->t1.psi, interp->t2.psi, interp->t3.psi
+        );
 
-    time.eps = InterpolateParabola(
-        time.ut,
-        interp->t1.ut,  interp->t2.ut,  interp->t3.ut,
-        interp->t1.eps, interp->t2.eps, interp->t3.eps
-    );
+        time.eps = Astronomy_InterpolateParabola(
+            time.ut,
+            interp->t1.ut,  interp->t2.ut,  interp->t3.ut,
+            interp->t1.eps, interp->t2.eps, interp->t3.eps
+        );
+    }
 
     return time;
 }
@@ -5869,7 +5888,7 @@ astro_search_result_t Astronomy_Search(
     CALLFUNC(fmid, &tmid);
     t1 = time1;
     t2 = time2;
-    InitInterpolator(&interp, t1, tmid, t2);
+    Astronomy_InitInterpolator(&interp, t1, tmid, t2);
 
     for(;;)
     {
@@ -5879,7 +5898,7 @@ astro_search_result_t Astronomy_Search(
         dt = (t2.tt - t1.tt) / 2.0;
 
         if (iter > 1)
-            tmid = InterpolateTime(&interp, (t1.ut + t2.ut) / 2.0);
+            tmid = Astronomy_InterpolateTime(&interp, (t1.ut + t2.ut) / 2.0);
 
         if (fabs(dt) < dt_days)
         {
@@ -5900,7 +5919,7 @@ astro_search_result_t Astronomy_Search(
 
         if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_ut, &q_df_dt))
         {
-            tq = InterpolateTime(&interp, q_ut);
+            tq = Astronomy_InterpolateTime(&interp, q_ut);
             CALLFUNC(fq, &tq);
             if (q_df_dt != 0.0)
             {
@@ -5917,8 +5936,8 @@ astro_search_result_t Astronomy_Search(
                 dt_guess *= 1.2;
                 if (dt_guess < dt/10.0)
                 {
-                    astro_time_t tleft  = InterpolateTime(&interp, tq.ut - dt_guess);
-                    astro_time_t tright = InterpolateTime(&interp, tq.ut + dt_guess);
+                    astro_time_t tleft  = Astronomy_InterpolateTime(&interp, tq.ut - dt_guess);
+                    astro_time_t tright = Astronomy_InterpolateTime(&interp, tq.ut + dt_guess);
                     if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0)
                     {
                         if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0)
