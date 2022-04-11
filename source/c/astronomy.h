@@ -589,6 +589,8 @@ astro_func_result_t;
  *
  * The type astro_search_func_t represents such a callback function that accepts a
  * custom `context` pointer and an astro_time_t representing the time to probe.
+ * The `astro_time_t` is passed by address to allow caching earth-tilt calculations
+ * as a speed optimization.
  * The function returns an astro_func_result_t that contains either a real
  * number in `value` or an error code in `status` that aborts the search.
  *
@@ -600,7 +602,7 @@ astro_func_result_t;
  * If the caller of `Astronomy_Search` knows that the callback function does not need a context,
  * it is safe to pass `NULL` as the context pointer.
  */
-typedef astro_func_result_t (* astro_search_func_t) (void *context, astro_time_t time);
+typedef astro_func_result_t (* astro_search_func_t) (void *context, astro_time_t *time);
 
 /**
  * @brief A pointer to a function that calculates Delta T.

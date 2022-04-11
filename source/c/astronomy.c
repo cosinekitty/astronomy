@@ -5624,11 +5624,11 @@ static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double o
     return ecl;
 }
 
-static astro_func_result_t sun_offset(void *context, astro_time_t time)
+static astro_func_result_t sun_offset(void *context, astro_time_t *time)
 {
     astro_func_result_t result;
     double targetLon = *((double *)context);
-    astro_ecliptic_t ecl = Astronomy_SunPosition(time);
+    astro_ecliptic_t ecl = Astronomy_SunPosition(*time);
     if (ecl.status != ASTRO_SUCCESS)
         return FuncError(ecl.status);
     result.value = LongitudeOffset(ecl.elon - targetLon);
@@ -5787,8 +5787,8 @@ astro_search_result_t Astronomy_Search(
     int calc_fmid = 1;
 
     dt_days = fabs(dt_tolerance_seconds / SECONDS_PER_DAY);
-    CALLFUNC(f1, t1);
-    CALLFUNC(f2, t2);
+    CALLFUNC(f1, &t1);
+    CALLFUNC(f2, &t2);
 
     for(;;)
     {
@@ -5806,7 +5806,7 @@ astro_search_result_t Astronomy_Search(
         }
 
         if (calc_fmid)
-            CALLFUNC(fmid, tmid);
+            CALLFUNC(fmid, &tmid);
         else
             calc_fmid = 1;      /* we already have the correct value of fmid from the previous loop */
 
@@ -5817,7 +5817,7 @@ astro_search_result_t Astronomy_Search(
         if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_x, &q_ut, &q_df_dt))
         {
             tq = Astronomy_TimeFromDays(q_ut);
-            CALLFUNC(fq, tq);
+            CALLFUNC(fq, &tq);
             if (q_df_dt != 0.0)
             {
                 dt_guess = fabs(fq / q_df_dt);
@@ -5840,8 +5840,8 @@ astro_search_result_t Astronomy_Search(
                         if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0)
                         {
                             double fleft, fright;
-                            CALLFUNC(fleft, tleft);
-                            CALLFUNC(fright, tright);
+                            CALLFUNC(fleft, &tleft);
+                            CALLFUNC(fright, &tright);
                             if (fleft<0.0 && fright>=0.0)
                             {
                                 f1 = fleft;
@@ -6105,14 +6105,14 @@ astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time)
     return result;
 }
 
-static astro_func_result_t neg_elong_slope(void *context, astro_time_t time)
+static astro_func_result_t neg_elong_slope(void *context, astro_time_t *time)
 {
     static const double dt = 0.1;
     astro_angle_result_t e1, e2;
     astro_func_result_t result;
     astro_body_t body = *((astro_body_t *)context);
-    astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
-    astro_time_t t2 = Astronomy_AddDays(time, +dt/2.0);
+    astro_time_t t1 = Astronomy_AddDays(*time, -dt/2.0);
+    astro_time_t t2 = Astronomy_AddDays(*time, +dt/2.0);
 
     e1 = Astronomy_AngleFromSun(body, t1);
     if (e1.status != ASTRO_SUCCESS)
@@ -6256,14 +6256,14 @@ astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t
 
         /* Now we have a time range [t1,t2] that brackets a maximum elongation event. */
         /* Confirm the bracketing. */
-        m1 = neg_elong_slope(&body, t1);
+        m1 = neg_elong_slope(&body, &t1);
         if (m1.status != ASTRO_SUCCESS)
             return ElongError(m1.status);
 
         if (m1.value >= 0)
             return ElongError(ASTRO_INTERNAL_ERROR);    /* there is a bug in the bracketing algorithm! */
 
-        m2 = neg_elong_slope(&body, t2);
+        m2 = neg_elong_slope(&body, &t2);
         if (m2.status != ASTRO_SUCCESS)
             return ElongError(m2.status);
 
@@ -6379,11 +6379,11 @@ astro_angle_result_t Astronomy_MoonPhase(astro_time_t time)
     return Astronomy_PairLongitude(BODY_MOON, BODY_SUN, time);
 }
 
-static astro_func_result_t moon_offset(void *context, astro_time_t time)
+static astro_func_result_t moon_offset(void *context, astro_time_t *time)
 {
     astro_func_result_t result;
     double targetLon = *((double *)context);
-    astro_angle_result_t angres = Astronomy_MoonPhase(time);
+    astro_angle_result_t angres = Astronomy_MoonPhase(*time);
     if (angres.status != ASTRO_SUCCESS)
         return FuncError(angres.status);
     result.value = LongitudeOffset(angres.angle - targetLon);
@@ -6446,7 +6446,7 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t s
     double ya, est_dt, dt1, dt2;
     astro_time_t t1, t2;
 
-    funcres = moon_offset(&targetLon, startTime);
+    funcres = moon_offset(&targetLon, &startTime);
     if (funcres.status != ASTRO_SUCCESS)
         return SearchError(funcres.status);
 
@@ -6854,7 +6854,7 @@ static astro_search_result_t InternalSearchAltitude(
     */
 
     time_start = startTime;
-    alt_before = altitude_error_func(altitude_error_context, time_start);
+    alt_before = altitude_error_func(altitude_error_context, &time_start);
     if (alt_before.status != ASTRO_SUCCESS)
         return SearchError(alt_before.status);
 
@@ -6867,7 +6867,7 @@ static astro_search_result_t InternalSearchAltitude(
 
         time_before = evt_before.time;
 
-        alt_before = altitude_error_func(altitude_error_context, time_before);
+        alt_before = altitude_error_func(altitude_error_context, &time_before);
         if (alt_before.status != ASTRO_SUCCESS)
             return SearchError(alt_before.status);
     }
@@ -6882,7 +6882,7 @@ static astro_search_result_t InternalSearchAltitude(
     if (evt_after.status != ASTRO_SUCCESS)
         return SearchError(evt_after.status);
 
-    alt_after = altitude_error_func(altitude_error_context, evt_after.time);
+    alt_after = altitude_error_func(altitude_error_context, &evt_after.time);
     if (alt_after.status != ASTRO_SUCCESS)
         return SearchError(alt_after.status);
 
@@ -6918,18 +6918,18 @@ static astro_search_result_t InternalSearchAltitude(
 
         time_before = evt_before.time;
 
-        alt_before = altitude_error_func(altitude_error_context, evt_before.time);
+        alt_before = altitude_error_func(altitude_error_context, &evt_before.time);
         if (alt_before.status != ASTRO_SUCCESS)
             return SearchError(alt_before.status);
 
-        alt_after = altitude_error_func(altitude_error_context, evt_after.time);
+        alt_after = altitude_error_func(altitude_error_context, &evt_after.time);
         if (alt_after.status != ASTRO_SUCCESS)
             return SearchError(alt_after.status);
     }
 }
 
 
-static astro_func_result_t peak_altitude(void *context, astro_time_t time)
+static astro_func_result_t peak_altitude(void *context, astro_time_t *time)
 {
     astro_func_result_t result;
     astro_equatorial_t ofdate;
@@ -6946,30 +6946,30 @@ static astro_func_result_t peak_altitude(void *context, astro_time_t time)
         depending on whether the caller wants rise times or set times, respectively.
     */
 
-    ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
+    ofdate = Astronomy_Equator(p->body, time, p->observer, EQUATOR_OF_DATE, ABERRATION);
     if (ofdate.status != ASTRO_SUCCESS)
         return FuncError(ofdate.status);
 
     /* We calculate altitude without refraction, then add fixed refraction near the horizon. */
     /* This gives us the time of rise/set without the extra work. */
-    hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+    hor = Astronomy_Horizon(time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
     result.value = p->direction * (hor.altitude + RAD2DEG*(p->body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON);
     result.status = ASTRO_SUCCESS;
     return result;
 }
 
-static astro_func_result_t altitude_error(void *context, astro_time_t time)
+static astro_func_result_t altitude_error(void *context, astro_time_t *time)
 {
     astro_func_result_t result;
     astro_equatorial_t ofdate;
     astro_horizon_t hor;
     const context_search_altitude_t *p = (const context_search_altitude_t *) context;
 
-    ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
+    ofdate = Astronomy_Equator(p->body, time, p->observer, EQUATOR_OF_DATE, ABERRATION);
     if (ofdate.status != ASTRO_SUCCESS)
         return FuncError(ofdate.status);
 
-    hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+    hor = Astronomy_Horizon(time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
     result.value = p->direction * (hor.altitude - p->altitude);
     result.status = ASTRO_SUCCESS;
     return result;
@@ -7349,7 +7349,7 @@ astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time)
     return illum;
 }
 
-static astro_func_result_t mag_slope(void *context, astro_time_t time)
+static astro_func_result_t mag_slope(void *context, astro_time_t *time)
 {
     /*
         The Search() function finds a transition from negative to positive values.
@@ -7361,8 +7361,8 @@ static astro_func_result_t mag_slope(void *context, astro_time_t time)
     static const double dt = 0.01;
     astro_illum_t y1, y2;
     astro_body_t body = *((astro_body_t *)context);
-    astro_time_t t1 = Astronomy_AddDays(time, -dt/2);
-    astro_time_t t2 = Astronomy_AddDays(time, +dt/2);
+    astro_time_t t1 = Astronomy_AddDays(*time, -dt/2);
+    astro_time_t t2 = Astronomy_AddDays(*time, +dt/2);
     astro_func_result_t result;
 
     y1 = Astronomy_Illumination(body, t1);
@@ -7489,13 +7489,13 @@ astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t star
 
         /* Now we have a time range [t1,t2] that brackets a maximum magnitude event. */
         /* Confirm the bracketing. */
-        m1 = mag_slope(&body, t1.time);
+        m1 = mag_slope(&body, &t1.time);
         if (m1.status != ASTRO_SUCCESS)
             return IllumError(m1.status);
         if (m1.value >= 0.0)
             return IllumError(ASTRO_INTERNAL_ERROR);    /* should never happen! */
 
-        m2 = mag_slope(&body, t2.time);
+        m2 = mag_slope(&body, &t2.time);
         if (m2.status != ASTRO_SUCCESS)
             return IllumError(m2.status);
         if (m2.value <= 0.0)
@@ -7525,11 +7525,11 @@ static double MoonDistance(astro_time_t t)
     return dist;
 }
 
-static astro_func_result_t moon_distance_slope(void *context, astro_time_t time)
+static astro_func_result_t moon_distance_slope(void *context, astro_time_t *time)
 {
     static const double dt = 0.001;
-    astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
-    astro_time_t t2 = Astronomy_AddDays(time, +dt/2.0);
+    astro_time_t t1 = Astronomy_AddDays(*time, -dt/2.0);
+    astro_time_t t2 = Astronomy_AddDays(*time, +dt/2.0);
     double dist1, dist2;
     int direction = *((int *)context);
     astro_func_result_t result;
@@ -7591,14 +7591,14 @@ astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime)
     */
 
     t1 = startTime;
-    m1 = moon_distance_slope(&positive_direction, t1);
+    m1 = moon_distance_slope(&positive_direction, &t1);
     if (m1.status != ASTRO_SUCCESS)
         return ApsisError(m1.status);
 
     for (iter=0; iter * increment < 2.0 * MEAN_SYNODIC_MONTH; ++iter)
     {
         t2 = Astronomy_AddDays(t1, increment);
-        m2 = moon_distance_slope(&positive_direction, t2);
+        m2 = moon_distance_slope(&positive_direction, &t2);
         if (m2.status != ASTRO_SUCCESS)
             return ApsisError(m2.status);
 
@@ -7698,12 +7698,12 @@ planet_distance_context_t;
 /** @endcond */
 
 
-static astro_func_result_t planet_distance_slope(void *context, astro_time_t time)
+static astro_func_result_t planet_distance_slope(void *context, astro_time_t *time)
 {
     static const double dt = 0.001;
     const planet_distance_context_t *pc = (const planet_distance_context_t *) context;
-    astro_time_t t1 = Astronomy_AddDays(time, -dt/2.0);
-    astro_time_t t2 = Astronomy_AddDays(time, +dt/2.0);
+    astro_time_t t1 = Astronomy_AddDays(*time, -dt/2.0);
+    astro_time_t t2 = Astronomy_AddDays(*time, +dt/2.0);
     astro_func_result_t dist1, dist2, result;
 
     dist1 = Astronomy_HelioDistance(pc->body, t1);
@@ -7927,7 +7927,7 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startT
 
     t1 = startTime;
     context.direction = +1;
-    m1 = planet_distance_slope(&context, t1);
+    m1 = planet_distance_slope(&context, &t1);
     if (m1.status != ASTRO_SUCCESS)
         return ApsisError(m1.status);
 
@@ -7935,7 +7935,7 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startT
     {
         t2 = Astronomy_AddDays(t1, increment);
         context.direction = +1;
-        m2 = planet_distance_slope(&context, t2);
+        m2 = planet_distance_slope(&context, &t2);
         if (m2.status != ASTRO_SUCCESS)
             return ApsisError(m2.status);
 
@@ -9761,7 +9761,7 @@ typedef shadow_t (* shadow_func_t) (astro_time_t time);
 /** @endcond */
 
 
-static astro_func_result_t shadow_distance_slope(void *context, astro_time_t time)
+static astro_func_result_t shadow_distance_slope(void *context, astro_time_t *time)
 {
     const double dt = 1.0 / 86400.0;
     astro_time_t t1, t2;
@@ -9769,8 +9769,8 @@ static astro_func_result_t shadow_distance_slope(void *context, astro_time_t tim
     shadow_t shadow1, shadow2;
     shadow_func_t shadowfunc = (shadow_func_t) context;
 
-    t1 = Astronomy_AddDays(time, -dt);
-    t2 = Astronomy_AddDays(time, +dt);
+    t1 = Astronomy_AddDays(*time, -dt);
+    t2 = Astronomy_AddDays(*time, +dt);
 
     shadow1 = shadowfunc(t1);
     if (shadow1.status != ASTRO_SUCCESS)
@@ -9835,7 +9835,7 @@ planet_shadow_context_t;
 /** @endcond */
 
 
-static astro_func_result_t planet_shadow_distance_slope(void *context, astro_time_t time)
+static astro_func_result_t planet_shadow_distance_slope(void *context, astro_time_t *time)
 {
     const double dt = 1.0 / 86400.0;
     astro_time_t t1, t2;
@@ -9843,8 +9843,8 @@ static astro_func_result_t planet_shadow_distance_slope(void *context, astro_tim
     shadow_t shadow1, shadow2;
     const planet_shadow_context_t *p = (const planet_shadow_context_t *) context;
 
-    t1 = Astronomy_AddDays(time, -dt);
-    t2 = Astronomy_AddDays(time, +dt);
+    t1 = Astronomy_AddDays(*time, -dt);
+    t2 = Astronomy_AddDays(*time, +dt);
 
     shadow1 = PlanetShadow(p->body, p->planet_radius_km, t1);
     if (shadow1.status != ASTRO_SUCCESS)
@@ -9884,11 +9884,11 @@ static shadow_t PeakPlanetShadow(astro_body_t body, double planet_radius_km, ast
 }
 
 
-static astro_func_result_t shadow_distance(void *context, astro_time_t time)
+static astro_func_result_t shadow_distance(void *context, astro_time_t *time)
 {
     astro_func_result_t result;
     const shadow_context_t *p = (const shadow_context_t *) context;
-    shadow_t shadow = EarthShadow(time);
+    shadow_t shadow = EarthShadow(*time);
     if (shadow.status != ASTRO_SUCCESS)
         return FuncError(shadow.status);
 
@@ -10318,7 +10318,7 @@ static shadow_t LocalMoonShadow(astro_time_t time, astro_observer_t observer)
 }
 
 
-static astro_func_result_t local_shadow_distance_slope(void *context, astro_time_t time)
+static astro_func_result_t local_shadow_distance_slope(void *context, astro_time_t *time)
 {
     const double dt = 1.0 / 86400.0;
     astro_time_t t1, t2;
@@ -10326,8 +10326,8 @@ static astro_func_result_t local_shadow_distance_slope(void *context, astro_time
     shadow_t shadow1, shadow2;
     const astro_observer_t *observer = (const astro_observer_t *) context;
 
-    t1 = Astronomy_AddDays(time, -dt);
-    t2 = Astronomy_AddDays(time, +dt);
+    t1 = Astronomy_AddDays(*time, -dt);
+    t2 = Astronomy_AddDays(*time, +dt);
 
     shadow1 = LocalMoonShadow(t1, *observer);
     if (shadow1.status != ASTRO_SUCCESS)
@@ -10390,13 +10390,13 @@ eclipse_transition_t;
 /* @endcond */
 
 
-static astro_func_result_t local_eclipse_func(void *context, astro_time_t time)
+static astro_func_result_t local_eclipse_func(void *context, astro_time_t *time)
 {
     const eclipse_transition_t *trans = (const eclipse_transition_t *) context;
     shadow_t shadow;
     astro_func_result_t result;
 
-    shadow = LocalMoonShadow(time, trans->observer);
+    shadow = LocalMoonShadow(*time, trans->observer);
     if (shadow.status != ASTRO_SUCCESS)
         return FuncError(shadow.status);
 
@@ -10630,13 +10630,13 @@ astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(
 }
 
 
-static astro_func_result_t planet_transit_bound(void *context, astro_time_t time)
+static astro_func_result_t planet_transit_bound(void *context, astro_time_t *time)
 {
     shadow_t shadow;
     astro_func_result_t result;
     const planet_shadow_context_t *p = (const planet_shadow_context_t *) context;
 
-    shadow = PlanetShadow(p->body, p->planet_radius_km, time);
+    shadow = PlanetShadow(p->body, p->planet_radius_km, *time);
     if (shadow.status != ASTRO_SUCCESS)
         return FuncError(shadow.status);
 
@@ -10804,13 +10804,13 @@ static astro_node_event_t NodeError(astro_status_t status)
     return node;
 }
 
-static astro_func_result_t MoonNodeSearchFunc(void *context, astro_time_t time)
+static astro_func_result_t MoonNodeSearchFunc(void *context, astro_time_t *time)
 {
     astro_func_result_t result;
     astro_spherical_t eclip;
     astro_node_kind_t kind = *((astro_node_kind_t *)context);
 
-    eclip = Astronomy_EclipticGeoMoon(time);
+    eclip = Astronomy_EclipticGeoMoon(*time);
 
     result.value = eclip.lat * (double)kind;
     result.status = ASTRO_SUCCESS;
