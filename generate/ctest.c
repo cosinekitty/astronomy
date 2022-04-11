@@ -212,6 +212,7 @@ static int DE405_Check(void);
 static int AxisTest(void);
 static int SiderealTimeTest(void);
 static int MapPerformanceTest(void);
+static int SearchPerformance(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -257,6 +258,7 @@ static unit_test_t UnitTests[] =
     {"refraction",              RefractionTest},
     {"riseset",                 RiseSet},
     {"rotation",                RotationTest},
+    {"search",                  SearchPerformance,      TEST_IS_OPTIONAL},
     {"seasons",                 SeasonsTest},
     {"seasons187",              SeasonsIssue187},
     {"sidereal",                SiderealTimeTest},
@@ -6228,6 +6230,43 @@ static int SiderealTimeTest(void)
         FAIL("C SiderealTimeTest: EXCESSIVE ERROR\n");
 
     printf("C SiderealTimeTest: PASS\n");
+    error = 0;
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int SearchPerformance(void)
+{
+    int error;
+    int count;
+    astro_time_t time;
+    astro_time_t stopTime;
+    astro_search_result_t result;
+    astro_observer_t observer = Astronomy_MakeObserver(35.0, -105.0, 0.0);
+
+    /*
+        Do a lot of sunrise searches to measure search performance.
+        I chose this specific kind of search because I want to optimize
+        repeated calculations of earth tilt (mainly nutation) at different times,
+        and rise/set search is a case where this appears.
+
+        Log of measurements, `time ./ctest search`, median of 3 trials:
+
+        seconds     remarks
+        38.221      before any new optimizations
+    */
+    time = Astronomy_MakeTime(1600, 1, 1, 0, 0, 0.0);
+    stopTime = Astronomy_MakeTime(2400, 1, 1, 0, 0, 0.0);
+    for (count = 0; time.ut <= stopTime.ut; ++count)
+    {
+        result = Astronomy_SearchRiseSet(BODY_SUN, observer, DIRECTION_RISE, time, 1.0);
+        CHECK_STATUS(result);
+        time = Astronomy_AddDays(time, 1.0);
+    }
+
+    printf("C SearchPerformance: PASS (count = %d)\n", count);
     error = 0;
 fail:
     return error;
