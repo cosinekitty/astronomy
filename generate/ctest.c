@@ -6256,6 +6256,8 @@ static int SearchPerformance(void)
 
         seconds     remarks
         38.221      before any new optimizations
+        36.955      Search passes &time to scalar functions
+        32.659      Quadratic interpolation of psi, eps.
     */
     time = Astronomy_MakeTime(1600, 1, 1, 0, 0, 0.0);
     stopTime = Astronomy_MakeTime(2400, 1, 1, 0, 0, 0.0);

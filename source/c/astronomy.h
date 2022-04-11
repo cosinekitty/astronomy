@@ -1239,8 +1239,8 @@ astro_node_event_t Astronomy_NextMoonNode(astro_node_event_t prevNode);
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,
     void *context,
-    astro_time_t t1,
-    astro_time_t t2,
+    astro_time_t time1,
+    astro_time_t time2,
     double dt_tolerance_seconds);
 
 astro_search_result_t Astronomy_SearchSunLongitude(

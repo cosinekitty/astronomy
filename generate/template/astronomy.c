@@ -209,9 +209,11 @@ static const double PLUTO_GM   = 0.2188699765425970e-11;
 /** @endcond */
 
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians, astro_time_t time);
+
 static int QuadInterp(
-    double tm, double dt, double fa, double fm, double fb,
-    double *x, double *t, double *df_dt);
+    double tm, double dt,
+    double fa, double fm, double fb,
+    double *t, double *df_dt);
 
 static double LongitudeOffset(double diff)
 {
@@ -4452,6 +4454,80 @@ astro_search_result_t Astronomy_SearchSunLongitude(
     } while(0)
 /** @endcond */
 
+/** @cond DOXYGEN_SKIP */
+typedef struct
+{
+    astro_time_t t1;
+    astro_time_t t2;
+    astro_time_t t3;
+}
+astro_interpolator_t;
+/** @endcond */
+
+
+static void InitInterpolator(
+    astro_interpolator_t *interp,
+    astro_time_t t1,
+    astro_time_t t2,
+    astro_time_t t3)
+{
+    interp->t1 = t1;
+    interp->t2 = t2;
+    interp->t3 = t3;
+}
+
+
+static double InterpolateParabola(
+    double t,
+    double t1, double t2, double t3,
+    double y1, double y2, double y3)
+{
+    double q, r, s, w, c, a, b, v, d;
+
+    if (isnan(y1) || isnan(y2) || isnan(y3))
+    {
+        /* This happens when a value has not been calculated yet. */
+        return NAN;
+    }
+
+    /* Draw a parabola through the three points (t1,y1), (t2,y2), (t3,y3). */
+    w = t2*t2 - t1*t1;
+    v = t3*t3 - t2*t2;
+    a = t2 - t1;
+    b = t3 - t2;
+    c = y2 - y1;
+    d = y3 - y2;
+    q = (b*c - a*d) / (b*w - a*v);
+    r = (c - q*w) / a;
+    s = y1 - (q*t1 + r)*t1;
+
+    /* Evaluate the parabola at the given time. */
+    return (q*t + r)*t + s;
+}
+
+
+static astro_time_t InterpolateTime(
+    astro_interpolator_t *interp,
+    double ut)
+{
+    astro_time_t time = Astronomy_TimeFromDays(ut);
+
+    time.psi = InterpolateParabola(
+        time.ut,
+        interp->t1.ut,  interp->t2.ut,  interp->t3.ut,
+        interp->t1.psi, interp->t2.psi, interp->t3.psi
+    );
+
+    time.eps = InterpolateParabola(
+        time.ut,
+        interp->t1.ut,  interp->t2.ut,  interp->t3.ut,
+        interp->t1.eps, interp->t2.eps, interp->t3.eps
+    );
+
+    return time;
+}
+
+
 /**
  * @brief Searches for a time at which a function's value increases through zero.
  *
@@ -4484,7 +4560,7 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  * finds the ascending root or fails for some reason.
  *
  * The search calls `func` repeatedly to rapidly narrow in on any ascending
- * root within the time window specified by `t1` and `t2`. The search never
+ * root within the time window specified by `time1` and `time2`. The search never
  * reports a solution outside this time window.
  *
  * `Astronomy_Search` uses a combination of bisection and quadratic interpolation
@@ -4495,7 +4571,7 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  * such that the function itself resembles a smooth parabolic curve within that window.
  *
  * If an ascending root is not found, or more than one root
- * (ascending and/or descending) exists within the window `t1`..`t2`,
+ * (ascending and/or descending) exists within the window `time1`..`time2`,
  * the search will fail with status code `ASTRO_SEARCH_FAILURE`.
  *
  * If the search does not converge within 20 iterations, it will fail
@@ -4511,11 +4587,11 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  *      For example, the function may involve a specific celestial body that
  *      must be specified somehow.
  *
- * @param t1
+ * @param time1
  *      The lower time bound of the search window.
  *      See function remarks for more details.
  *
- * @param t2
+ * @param time2
  *      The upper time bound of the search window.
  *      See function remarks for more details.
  *
@@ -4526,30 +4602,35 @@ astro_search_result_t Astronomy_SearchSunLongitude(
  * @return
  *      If successful, the returned structure has `status` equal to `ASTRO_SUCCESS`
  *      and `time` set to a value within `dt_tolerance_seconds` of an ascending root.
- *      On success, the `time` value will always be in the inclusive range [`t1`, `t2`].
+ *      On success, the `time` value will always be in the inclusive range [`time1`, `time2`].
  *      If the search fails, `status` will be set to a value other than `ASTRO_SUCCESS`.
  *      See function remarks for more details.
  */
 astro_search_result_t Astronomy_Search(
     astro_search_func_t func,
     void *context,
-    astro_time_t t1,
-    astro_time_t t2,
+    astro_time_t time1,
+    astro_time_t time2,
     double dt_tolerance_seconds)
 {
     astro_search_result_t result;
-    astro_time_t tmid;
-    astro_time_t tq;
+    astro_time_t t1, t2, tmid, tq;
     astro_func_result_t funcres;
     double f1, f2, fmid=0.0, fq, dt_days, dt, dt_guess;
-    double q_x, q_ut, q_df_dt;
+    double q_ut, q_df_dt;
     const int iter_limit = 20;
     int iter = 0;
-    int calc_fmid = 1;
+    int calc_fmid = 0;
+    astro_interpolator_t interp;
 
     dt_days = fabs(dt_tolerance_seconds / SECONDS_PER_DAY);
-    CALLFUNC(f1, &t1);
-    CALLFUNC(f2, &t2);
+    tmid = Astronomy_TimeFromDays((time1.ut + time2.ut) / 2.0);
+    CALLFUNC(f1, &time1);
+    CALLFUNC(f2, &time2);
+    CALLFUNC(fmid, &tmid);
+    t1 = time1;
+    t2 = time2;
+    InitInterpolator(&interp, t1, tmid, t2);
 
     for(;;)
     {
@@ -4557,7 +4638,10 @@ astro_search_result_t Astronomy_Search(
             return SearchError(ASTRO_NO_CONVERGE);
 
         dt = (t2.tt - t1.tt) / 2.0;
-        tmid = Astronomy_AddDays(t1, dt);
+
+        if (iter > 1)
+            tmid = InterpolateTime(&interp, (t1.ut + t2.ut) / 2.0);
+
         if (fabs(dt) < dt_days)
         {
             /* We are close enough to the event to stop the search. */
@@ -4575,9 +4659,9 @@ astro_search_result_t Astronomy_Search(
         /* Try to find a parabola that passes through the 3 points we have sampled: */
         /* (t1,f1), (tmid,fmid), (t2,f2) */
 
-        if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_x, &q_ut, &q_df_dt))
+        if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_ut, &q_df_dt))
         {
-            tq = Astronomy_TimeFromDays(q_ut);
+            tq = InterpolateTime(&interp, q_ut);
             CALLFUNC(fq, &tq);
             if (q_df_dt != 0.0)
             {
@@ -4594,8 +4678,8 @@ astro_search_result_t Astronomy_Search(
                 dt_guess *= 1.2;
                 if (dt_guess < dt/10.0)
                 {
-                    astro_time_t tleft = Astronomy_AddDays(tq, -dt_guess);
-                    astro_time_t tright = Astronomy_AddDays(tq, +dt_guess);
+                    astro_time_t tleft  = InterpolateTime(&interp, tq.ut - dt_guess);
+                    astro_time_t tright = InterpolateTime(&interp, tq.ut + dt_guess);
                     if ((tleft.ut - t1.ut)*(tleft.ut - t2.ut) < 0)
                     {
                         if ((tright.ut - t1.ut)*(tright.ut - t2.ut) < 0)
@@ -4642,10 +4726,11 @@ astro_search_result_t Astronomy_Search(
 }
 
 static int QuadInterp(
-    double tm, double dt, double fa, double fm, double fb,
-    double *out_x, double *out_t, double *out_df_dt)
+    double tm, double dt,
+    double fa, double fm, double fb,
+    double *out_t, double *out_df_dt)
 {
-    double Q, R, S;
+    double x, Q, R, S;
     double u, ru, x1, x2;
 
     Q = (fb + fa)/2.0 - fm;
@@ -4657,8 +4742,8 @@ static int QuadInterp(
         /* This is a line, not a parabola. */
         if (R == 0.0)
             return 0;       /* This is a HORIZONTAL line... can't make progress! */
-        *out_x = -S / R;
-        if (*out_x < -1.0 || *out_x > +1.0)
+        x = -S / R;
+        if (x < -1.0 || x > +1.0)
             return 0;   /* out of bounds */
     }
     else
@@ -4675,16 +4760,16 @@ static int QuadInterp(
         {
             if (-1.0 <= x2 && x2 <= +1.0)
                 return 0;   /* two roots are within bounds; we require a unique zero-crossing. */
-            *out_x = x1;
+            x = x1;
         }
         else if (-1.0 <= x2 && x2 <= +1.0)
-            *out_x = x2;
+            x = x2;
         else
             return 0;   /* neither root is within bounds */
     }
 
-    *out_t = tm + (*out_x)*dt;
-    *out_df_dt = (2*Q*(*out_x) + R) / dt;
+    *out_t = tm + x*dt;
+    *out_df_dt = (2*Q*x + R) / dt;
     return 1;   /* success */
 }
 
