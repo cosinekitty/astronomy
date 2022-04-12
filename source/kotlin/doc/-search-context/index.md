@@ -3,7 +3,7 @@
 # SearchContext
 
 [jvm]\
-interface [SearchContext](index.md)
+fun interface [SearchContext](index.md)
 
 Represents a function whose ascending root is to be found.
 
