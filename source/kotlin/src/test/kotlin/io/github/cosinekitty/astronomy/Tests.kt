@@ -734,16 +734,11 @@ class Tests {
 
     @Test
     fun `Basic search`() {
-        class CosineIdentityFunc : SearchContext {
-            override fun eval(time: Time) = time.ut - cos(time.ut)
-        }
-
         val toleranceDays = 1.0e-9
         val toleranceSeconds = toleranceDays / 86400.0
-        val func = CosineIdentityFunc()
         val time1 = Time(0.0)
         val time2 = Time(1.0)
-        val tsolve = search(func, time1, time2, toleranceSeconds)
+        val tsolve = search(time1, time2, toleranceSeconds) { time -> time.ut - cos(time.ut) }
         if (tsolve == null)
             fail("Basic search failed")
 

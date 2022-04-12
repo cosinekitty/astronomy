@@ -1941,7 +1941,7 @@ internal fun searchEarthShadow(radiusLimit: Double, direction: Double, t1: Time,
         override fun eval(time: Time) = direction * (earthShadow(time).r - radiusLimit)
     }
     val context = Context(radiusLimit, direction)
-    return search(context, t1, t2, 1.0) ?: throw InternalError("Failed to find Earth shadow transition.")
+    return search(t1, t2, 1.0, context) ?: throw InternalError("Failed to find Earth shadow transition.")
 }
 
 
@@ -1965,7 +1965,7 @@ internal fun peakEarthShadow(searchCenterTime: Time): ShadowInfo {
     val window = 0.03       // initial search window, in days, before/after searchCenterTime
     val t1 = searchCenterTime.addDays(-window)
     val t2 = searchCenterTime.addDays(+window)
-    val tx = search(earthShadowSlopeContext, t1, t2, 1.0) ?:
+    val tx = search(t1, t2, 1.0, earthShadowSlopeContext) ?:
         throw InternalError("Failed to find Earth peak shadow event.")
     return earthShadow(tx)
 }
@@ -2368,7 +2368,7 @@ class NodeEventInfo(
  * A class that implements `SearchContext` can hold state information
  * needed to evaluate the scalar function `eval`.
  */
-interface SearchContext {
+fun interface SearchContext {
     /**
      * Evaluates a scalar function at a given time.
      *
@@ -4635,10 +4635,10 @@ fun jupiterMoons(time: Time) =
  * window `time1`..`time2`, the function returns `null`.
  */
 fun search(
-    func: SearchContext,
     time1: Time,
     time2: Time,
-    toleranceSeconds: Double
+    toleranceSeconds: Double,
+    func: SearchContext,
 ): Time? {
     var t1 = time1
     var t2 = time2
@@ -4855,7 +4855,7 @@ fun searchSunLongitude(targetLon: Double, startTime: Time, limitDays: Double): T
     }
     val context = Context(targetLon)
     val time2 = startTime.addDays(limitDays)
-    return search(context, startTime, time2, 0.01)
+    return search(startTime, time2, 0.01, context)
 }
 
 /**
@@ -5018,7 +5018,7 @@ fun searchMoonPhase(targetLon: Double, startTime: Time, limitDays: Double): Time
     val dt2 = min(limitDays, estDt + uncertainty)
     val t1 = startTime.addDays(dt1)
     val t2 = startTime.addDays(dt2)
-    return search(moonOffset, t1, t2, 1.0)
+    return search(t1, t2, 1.0, moonOffset)
 }
 
 /**
@@ -5203,7 +5203,7 @@ private fun internalSearchAltitude(
         if (altBefore <= 0.0 && altAfter > 0.0) {
             // The body crosses the horizon during the time interval.
             // Search between evtBefore and evtAfter for the desired event.
-            val time = search(context, timeBefore, timeAfter, 1.0)
+            val time = search(timeBefore, timeAfter, 1.0, context)
             if (time != null)
                 return time
         }
