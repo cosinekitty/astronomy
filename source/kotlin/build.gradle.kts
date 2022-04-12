@@ -35,6 +35,12 @@ val sourceJar by tasks.creating(Jar::class) {
     from(sourceSets["main"].allSource)
 }
 
+task("fatJar", type = Jar::class) {
+    from(configurations.runtimeClasspath.get().map(::zipTree))
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    with(tasks.jar.get())
+}
+
 publishing {
     publications {
         register("mavenJava", MavenPublication::class) {
