@@ -473,6 +473,7 @@ class Time private constructor(
     internal fun julianMillennia() = tt / DAYS_PER_MILLENNIUM
 
     companion object {
+        @JvmStatic
         private val origin = GregorianCalendar(TimeZoneUtc).also {
             it.set(2000, 0, 1, 12, 0, 0)
             it.set(Calendar.MILLISECOND, 0)
@@ -480,6 +481,7 @@ class Time private constructor(
 
         private const val MILLIS_PER_DAY = 24 * 3600 * 1000
 
+        @JvmStatic
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").also {
             it.timeZone = TimeZoneUtc
         }
@@ -498,6 +500,7 @@ class Time private constructor(
          *
          * @param tt The number of days after the J2000 epoch.
          */
+        @JvmStatic
         fun fromTerrestrialTime(tt: Double): Time = Time(universalTime(tt), tt)
     }
 }
@@ -547,6 +550,7 @@ internal data class TerseVector(var x: Double, var y: Double, var z: Double) {
     }
 
     companion object {
+        @JvmStatic
         fun zero() = TerseVector(0.0, 0.0, 0.0)
     }
 }
@@ -1004,7 +1008,8 @@ class RotationMatrix(
          * This matrix can be the starting point for other operations,
          * such as calling a series of [RotationMatrix.combine] or [RotationMatrix.pivot].
          */
-        fun identity() = RotationMatrix (
+        @JvmStatic
+        fun identity() = RotationMatrix(
             1.0, 0.0, 0.0,
             0.0, 1.0, 0.0,
             0.0, 0.0, 1.0
@@ -1989,7 +1994,7 @@ internal fun peakMoonShadow(searchCenterTime: Time): ShadowInfo {
     val window = 0.03       // days before/after new moon to search for minimum shadow distance
     val t1 = searchCenterTime.addDays(-window)
     val t2 = searchCenterTime.addDays(+window)
-    val tx = search(moonShadowSlopeContext, t1, t2, 1.0) ?:
+    val tx = search(t1, t2, 1.0, moonShadowSlopeContext) ?:
         throw InternalError("Failed to find Moon peak shadow event.")
     return moonShadow(tx)
 }
