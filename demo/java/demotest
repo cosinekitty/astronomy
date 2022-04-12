@@ -10,8 +10,6 @@ RunDemo()
     java -jar build/libs/astronomy-demo-0.0.1.jar $*
 }
 
-(echo "Build astronomy library jar" && cd ../../source/kotlin && ./gradlew fatJar)
-
 echo "Build astronomy java demo"
 ./gradlew jar || Fail "Cannot build jar file."
 echo ""
