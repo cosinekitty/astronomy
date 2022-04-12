@@ -34,6 +34,7 @@ import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.math.abs
 import kotlin.math.acos
+import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
@@ -1969,7 +1970,30 @@ internal fun peakEarthShadow(searchCenterTime: Time): ShadowInfo {
     return earthShadow(tx)
 }
 
-//internal fun moonEclipticLatitudeDegrees(time: Time) = eclipticGeoMoon(time).lat
+
+internal class SearchContextMoonShadowSlope: SearchContext {
+    override fun eval(time: Time): Double {
+        val dt = 1.0 / SECONDS_PER_DAY
+        val t1 = time.addDays(-dt)
+        val t2 = time.addDays(+dt)
+        val shadow1 = moonShadow(t1)
+        val shadow2 = moonShadow(t2)
+        return (shadow2.r - shadow1.r) / dt
+    }
+}
+
+internal val moonShadowSlopeContext = SearchContextMoonShadowSlope()
+
+internal fun peakMoonShadow(searchCenterTime: Time): ShadowInfo {
+    // Search for when the Moon's shadow axis is closest to the center of the Earth.
+    val window = 0.03       // days before/after new moon to search for minimum shadow distance
+    val t1 = searchCenterTime.addDays(-window)
+    val t2 = searchCenterTime.addDays(+window)
+    val tx = search(moonShadowSlopeContext, t1, t2, 1.0) ?:
+        throw InternalError("Failed to find Moon peak shadow event.")
+    return moonShadow(tx)
+}
+
 
 /**
  * Searches for a lunar eclipse.
@@ -2051,6 +2075,160 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
  */
 fun nextLunarEclipse(prevEclipseTime: Time) =
     searchLunarEclipse(prevEclipseTime.addDays(10.0))
+
+internal fun moonEclipticLatitudeDegrees(time: Time) = eclipticGeoMoon(time).lat
+
+// Convert all distances from AU to km.
+// But dilate the z-coordinates so that the Earth becomes a perfect sphere.
+// Then find the intersection of the vector with the sphere.
+// See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
+internal fun kmSpherical(v: Vector) =
+    Vector(
+        v.x * KM_PER_AU,
+        v.y * KM_PER_AU,
+        v.z * (KM_PER_AU / EARTH_FLATTENING),
+        v.t
+    )
+
+internal fun eclipseKindFromUmbra(k: Double) = (
+    // The umbra radius tells us what kind of eclipse the observer sees.
+    // If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular.
+    // HACK: I added a tiny bias (14 meters) to match Espenak test data.
+    if (k > 0.014)
+        EclipseKind.Total
+    else
+        EclipseKind.Annular
+)
+
+internal fun geoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
+    var kind = EclipseKind.Partial
+    var latitude = Double.NaN
+    var longitude = Double.NaN
+
+    // We want to calculate the intersection of the shadow axis with the Earth's geoid.
+    // First we must convert EQJ (equator of J2000) coordinates to EQD (equator of date)
+    // coordinates that are perfectly aligned with the Earth's equator at this
+    // moment in time.
+    val rot = rotationEqjEqd(shadow.time)
+    val v = kmSpherical(rot.rotate(shadow.dir))      // shadow axis vector passing through Sun and Moon
+    val e = kmSpherical(rot.rotate(shadow.target))   // lunacentric Earth
+
+    // Solve the quadratic equation that finds whether and where
+    // the shadow axis intersects with the Earth in the dilated coordinate system.
+    val R = EARTH_EQUATORIAL_RADIUS_KM
+    val A = v dot v
+    val B = -2.0 * (v dot e)
+    val C = (e dot e) - R*R
+    val radic = B*B - 4.0*A*C
+    if (radic > 0.0) {
+        // Calculate the closer of the two intersection points.
+        // This will be on the sunlit side of the Earth.
+        val u = (-B - sqrt(radic)) / (2.0 * A)
+
+        // Convert lunacentric dilated coordinates to geocentric coordinates.
+        val px = u*v.x - e.x
+        val py = u*v.y - e.y
+        val pz = (u*v.z - e.z) * EARTH_FLATTENING
+
+        // Convert cartesian coordinates into geodetic latitude/longitude.
+        val proj = hypot(px, py) * EARTH_FLATTENING_SQUARED
+        latitude = if (proj == 0.0) (
+            if (pz > 0.0) +90.0 else -90.0
+        ) else (
+            atan(pz / proj).radiansToDegrees()
+        )
+
+        // Adjust longitude for Earth's rotation at the given time.
+        val gast = siderealTime(shadow.time)
+        longitude = ((atan2(py,px).radiansToDegrees() - (15.0 * gast)) % 360.0).withMaxDegreeValue(180.0)
+
+        // We want to determine whether the observer sees a total eclipse or an annular eclipse.
+        // We need to perform a series of vector calculations.
+        // Calculate the inverse rotation matrix, so we can convert EQD to EQJ.
+        val inv = rot.inverse()
+
+        // Get the EQD geocentric coordinates of the observer.
+        val obs = Vector(px / KM_PER_AU, py / KM_PER_AU, pz / KM_PER_AU, shadow.time)
+
+        // Rotate the observer's geocentric EQD back to the EQJ system,
+        // and convert the geocentric vector to a lunacentric vector.
+        val luna = inv.rotate(obs) + shadow.target
+
+        // Calculate the shadow using a vector from the Moon's center toward the observer.
+        var surface = calcShadow(MOON_POLAR_RADIUS_KM, shadow.time, luna, shadow.dir)
+
+        // If we did everything right, the shadow distance should be very close to zero.
+        // That's because we already determined the observer is on the shadow axis!
+        if (surface.r > 1.0e-9 || surface.r < 0.0)
+            throw InternalError("Invalid surface distance from intersection.")
+
+        kind = eclipseKindFromUmbra(surface.k)
+    }
+
+    return GlobalSolarEclipseInfo(kind, shadow.time, shadow.r, latitude, longitude)
+}
+
+
+/**
+ * Searches for a solar eclipse visible anywhere on the Earth's surface.
+ *
+ * This function finds the first solar eclipse that occurs after `startTime`.
+ * A solar eclipse may be partial, annular, or total.
+ * See [GlobalSolarEclipseInfo] for more information.
+ * To find a series of solar eclipses, call this function once,
+ * then keep calling [nextGlobalSolarEclipse] as many times as desired,
+ * passing in the `peak` value returned from the previous call.
+ *
+ * @param startTime
+ *      The date and time for starting the search for a solar eclipse.
+ *
+ * @return Information about the first solar eclipse after `startTime`.
+ */
+fun searchGlobalSolarEclipse(startTime: Time): GlobalSolarEclipseInfo {
+    val pruneLatitude = 1.8     // Moon's ecliptic latitude beyond which eclipse is impossible
+    var nmtime = startTime
+    for (nmcount in 0..11) {
+        // Search for the next new moon. Any solar eclipse will be near it.
+        val newmoon = searchMoonPhase(0.0, nmtime, 40.0) ?:
+            throw InternalError("Failed to find next new moon.")
+
+        // Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
+        val eclipLat = moonEclipticLatitudeDegrees(newmoon)
+        if (abs(eclipLat) < pruneLatitude) {
+            // Search near the new moon for the time when the center of the Earth
+            // is closest to the line passing through the centers of the Sun and Moon.
+            val shadow = peakMoonShadow(newmoon)
+            if (shadow.r < shadow.p + EARTH_MEAN_RADIUS_KM) {
+                // This is at least a partial solar eclipse visible somewhere on Earth.
+                // Try to find an intersection between the shadow axis and the Earth's oblate geoid.
+                return geoidIntersect(shadow)
+            }
+        }
+
+        nmtime = newmoon.addDays(10.0)
+    }
+    // This should never happen, because at least 2 solar eclipses happen every year.
+    throw InternalError("Failure to find global solar eclipse.")
+}
+
+
+/**
+ * Searches for the next global solar eclipse in a series.
+ *
+ * After using [searchGlobalSolarEclipse] to find the first solar eclipse
+ * in a series, you can call this function to find the next consecutive solar eclipse.
+ * Pass in the `peak` value from the [GlobalSolarEclipseInfo] returned by the
+ * previous call to `searchGlobalSolarEclipse` or `nextGlobalSolarEclipse`
+ * to find the next solar eclipse.
+ *
+ * @param prevEclipseTime
+ *      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+ *
+ * @return Information about the next consecutive solar eclipse.
+ */
+fun nextGlobalSolarEclipse(prevEclipseTime: Time) =
+    searchGlobalSolarEclipse(prevEclipseTime.addDays(10.0))
+
 
 /**
  * Information about the brightness and illuminated shape of a celestial body.

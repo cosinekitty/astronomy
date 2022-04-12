@@ -42,6 +42,8 @@ private fun groupDirection(match: MatchResult, groupIndex: Int, filename: String
 
 private val regexDate = Regex("""^(\d+)-(\d+)-(\d+)T(\d+):(\d+)(:(\d+))?Z$""")
 
+private val epoch2000 = Time(0.0)
+
 private fun parseDate(text: String): Time {
     val m = regexDate.matchEntire(text) ?: fail("parseDate failed for string: '$text'")
     val year   = (m.groups[1] ?: fail("Cannot parse year from string: '$text'")).value.toInt()
@@ -1175,6 +1177,74 @@ class Tests {
             // Find the next consecutive lunar eclipse.
             eclipse = nextLunarEclipse(eclipse.peak)
         }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Global solar eclipse search`() {
+        val filename = dataRootDir + "eclipse/solar_eclipse.txt"
+        val infile = File(filename)
+        var lnum = 0
+        var skipCount = 0
+        var eclipse: GlobalSolarEclipseInfo = searchGlobalSolarEclipse(Time(1701, 1, 1, 0, 0, 0.0))
+        for (line in infile.readLines()) {
+            ++lnum
+            val token = tokenize(line)
+            assertTrue(token.size == 5, "$filename line $lnum: wrong token count")
+            val peak = parseDate(token[0])
+            val typeChar = token[2]
+            val lat = token[3].toDouble()
+            val lon = token[4].toDouble()
+            val expectedKind = when(typeChar) {
+                "P"  -> EclipseKind.Partial
+                "A"  -> EclipseKind.Annular
+                "T"  -> EclipseKind.Total
+                "H"  -> EclipseKind.Total
+                else -> fail("$filename line $lnum: invalid eclipse kind '$typeChar'")
+            }
+
+            var diffDays = eclipse.peak.ut - peak.ut
+
+            // Sometimes we find marginal eclipses that aren't listed in the test data.
+            // Ignore them if the distance between the Sun/Moon shadow axis and the Earth's center is large.
+            while (diffDays < -25.0 && eclipse.distance > 9000.0) {
+                ++skipCount
+                eclipse = nextGlobalSolarEclipse(eclipse.peak)
+                diffDays = eclipse.peak.ut - peak.ut
+            }
+
+            // Validate the eclipse prediction.
+            val diffMinutes = MINUTES_PER_DAY * abs(diffDays)
+            assertTrue(diffMinutes < 6.93, "$filename line $lnum: excessive time error = $diffMinutes minutes; expected $peak, found ${eclipse.peak}")
+
+            // Validate the eclipse kind, but only when it is not a "glancing" eclipse.
+            if (eclipse.distance < 6360.0)
+                assertTrue(eclipse.kind == expectedKind, "$filename line $lnum: wrong eclipse kind; expected $expectedKind, found ${eclipse.kind}")
+
+            if (eclipse.kind == EclipseKind.Total || eclipse.kind == EclipseKind.Annular) {
+                // When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
+                // it creates a glancing blow whose geographic coordinates are excessively sensitive
+                // to slight changes in the ray. Therefore, it is unreasonable to count large errors there.
+                if (eclipse.distance < 6100.0) {
+                    val diffAngle = angleDiff(lat, lon, eclipse.latitude, eclipse.longitude)
+                    assertTrue(diffAngle < 0.247, "$filename line $lnum: excessive geographic location error = $diffAngle degrees.")
+                }
+            }
+
+            eclipse = nextGlobalSolarEclipse(eclipse.peak)
+        }
+
+        val expectedCount = 1180
+        assertTrue(lnum == expectedCount, "$filename: expected $expectedCount lines, found $lnum")
+        assertTrue(skipCount < 3, "$filename: excessive skip count $skipCount")
+    }
+
+    private fun angleDiff(alat: Double, alon: Double, blat: Double, blon: Double): Double {
+        // Find the angle between two geocentric locations.
+        val avec = Spherical(alat, alon, 1.0).toVector(epoch2000)
+        val bvec = Spherical(blat, blon, 1.0).toVector(epoch2000)
+        return avec.angleWith(bvec)
     }
 
     //----------------------------------------------------------------------------------------
