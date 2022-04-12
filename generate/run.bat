@@ -238,6 +238,11 @@ call gradlew.bat assemble build test dokkaGfm fatJar
 if errorlevel 1 (exit /b 1)
 popd
 
+cd kotlindoc
+py format_kotlin_doc.py
+if errorlevel 1 (exit /b 1)
+cd ..
+
 !GENEXE! check temp\k_check.txt
 if errorlevel 1 (exit /b 1)
 
