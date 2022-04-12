@@ -234,7 +234,7 @@ if exist build (
         exit /b 1
     )
 )
-call gradlew.bat assemble build test dokkaHtml fatJar
+call gradlew.bat assemble build test dokkaGfm fatJar
 if errorlevel 1 (exit /b 1)
 popd
 
