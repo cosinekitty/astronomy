@@ -46,7 +46,9 @@ android {
 }
 
 dependencies {
-    implementation("com.github.cosinekitty:astronomy:8fd8d7b62465d6de91a9fe39de6d1d711904fd4b")
+    implementation(fileTree("../../../source/kotlin/build/libs"))
+    // In an independent project resolve it from jitpack like,
+    //   implementation("com.github.cosinekitty:astronomy:x.y.z")
     implementation("androidx.core:core-ktx:1.7.0")
     implementation("androidx.compose.ui:ui:$composeVersion")
     implementation("androidx.compose.material:material:$composeVersion")

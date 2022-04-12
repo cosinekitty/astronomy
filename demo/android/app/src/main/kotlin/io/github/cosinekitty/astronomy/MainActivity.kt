@@ -32,7 +32,7 @@ fun MainScreen() {
 
 @Composable
 fun Content() {
-    Text(text = AstroTime(Date()).toString())
+    Text(text = Time(Date()).toString())
 }
 
 @Composable

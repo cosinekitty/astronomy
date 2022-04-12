@@ -12,7 +12,7 @@ rm -f temp/k_check.txt
 
 cd ../source/kotlin || Fail "Cannot change dir to ../source/kotlin"
 rm -rf build
-if ! ./gradlew assemble build test dokkaGfm fatJar; then
+if ! ./gradlew assemble build test dokkaGfm jar; then
     # Dump the contents of the unit tests to the console,
     # so if the test fails on GitHub Actions, I can see what went wrong.
     cat build/test-results/test/*.xml
