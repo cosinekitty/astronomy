@@ -3,6 +3,6 @@
 # decemberSolstice
 
 [jvm]\
-val [decemberSolstice](december-solstice.md): [AstroTime](../-astro-time/index.md)
+val [decemberSolstice](december-solstice.md): [Time](../-time/index.md)
 
 The date and time of the December solstice for the specified year.

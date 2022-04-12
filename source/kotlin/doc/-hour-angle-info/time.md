@@ -3,6 +3,6 @@
 # time
 
 [jvm]\
-val [time](time.md): [AstroTime](../-astro-time/index.md)
+val [time](time.md): [Time](../-time/index.md)
 
 The date and time when the body crosses the specified hour angle.

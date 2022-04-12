@@ -3,6 +3,6 @@
 # velocity
 
 [jvm]\
-fun [velocity](velocity.md)(): [AstroVector](../-astro-vector/index.md)
+fun [velocity](velocity.md)(): [Vector](../-vector/index.md)
 
 Returns the velocity vector associated with this state vector.

@@ -3,7 +3,7 @@
 # jupiterMoons
 
 [jvm]\
-fun [jupiterMoons](jupiter-moons.md)(time: [AstroTime](-astro-time/index.md)): [JupiterMoonsInfo](-jupiter-moons-info/index.md)
+fun [jupiterMoons](jupiter-moons.md)(time: [Time](-time/index.md)): [JupiterMoonsInfo](-jupiter-moons-info/index.md)
 
 Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
 

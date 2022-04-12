@@ -3,6 +3,6 @@
 # finish
 
 [jvm]\
-val [finish](finish.md): [AstroTime](../-astro-time/index.md)
+val [finish](finish.md): [Time](../-time/index.md)
 
 Date and time at the end of the transit.

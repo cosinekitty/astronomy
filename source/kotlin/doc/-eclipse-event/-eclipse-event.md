@@ -3,4 +3,4 @@
 # EclipseEvent
 
 [jvm]\
-fun [EclipseEvent](-eclipse-event.md)(time: [AstroTime](../-astro-time/index.md), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+fun [EclipseEvent](-eclipse-event.md)(time: [Time](../-time/index.md), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))

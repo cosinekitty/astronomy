@@ -1,4 +1,4 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[AstroVector](index.md)/[toEquatorial](to-equatorial.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[Vector](index.md)/[toEquatorial](to-equatorial.md)
 
 # toEquatorial
 

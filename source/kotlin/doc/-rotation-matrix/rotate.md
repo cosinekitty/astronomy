@@ -3,7 +3,7 @@
 # rotate
 
 [jvm]\
-fun [rotate](rotate.md)(vec: [AstroVector](../-astro-vector/index.md)): [AstroVector](../-astro-vector/index.md)
+fun [rotate](rotate.md)(vec: [Vector](../-vector/index.md)): [Vector](../-vector/index.md)
 
 Applies a rotation to a vector, yielding a rotated vector.
 

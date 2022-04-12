@@ -3,7 +3,7 @@
 # geoMoonState
 
 [jvm]\
-fun [geoMoonState](geo-moon-state.md)(time: [AstroTime](-astro-time/index.md)): [StateVector](-state-vector/index.md)
+fun [geoMoonState](geo-moon-state.md)(time: [Time](-time/index.md)): [StateVector](-state-vector/index.md)
 
 Calculates equatorial geocentric position and velocity of the Moon at a given time.
 

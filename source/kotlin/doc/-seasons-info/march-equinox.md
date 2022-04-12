@@ -3,6 +3,6 @@
 # marchEquinox
 
 [jvm]\
-val [marchEquinox](march-equinox.md): [AstroTime](../-astro-time/index.md)
+val [marchEquinox](march-equinox.md): [Time](../-time/index.md)
 
 The date and time of the March equinox for the specified year.

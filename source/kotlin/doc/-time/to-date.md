@@ -1,4 +1,4 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[AstroTime](index.md)/[toDate](to-date.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[Time](index.md)/[toDate](to-date.md)
 
 # toDate
 
@@ -9,4 +9,4 @@ Converts this object to a native Date equivalent.
 
 #### Return
 
-A UTC Date object for this AstroTime value.
+A UTC Date object for this Time value.

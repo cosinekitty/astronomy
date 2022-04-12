@@ -3,7 +3,7 @@
 # searchMoonPhase
 
 [jvm]\
-fun [searchMoonPhase](search-moon-phase.md)(targetLon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), startTime: [AstroTime](-astro-time/index.md), limitDays: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [AstroTime](-astro-time/index.md)?
+fun [searchMoonPhase](search-moon-phase.md)(targetLon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), startTime: [Time](-time/index.md), limitDays: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Time](-time/index.md)?
 
 Searches for the time that the Moon reaches a specified phase.
 

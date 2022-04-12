@@ -3,4 +3,4 @@
 # HourAngleInfo
 
 [jvm]\
-fun [HourAngleInfo](-hour-angle-info.md)(time: [AstroTime](../-astro-time/index.md), hor: [Topocentric](../-topocentric/index.md))
+fun [HourAngleInfo](-hour-angle-info.md)(time: [Time](../-time/index.md), hor: [Topocentric](../-topocentric/index.md))

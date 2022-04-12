@@ -17,8 +17,8 @@ Spherical coordinates: latitude, longitude, distance.
 
 | Name | Summary |
 |---|---|
-| [toVector](to-vector.md) | [jvm]<br>fun [toVector](to-vector.md)(time: [AstroTime](../-astro-time/index.md)): [AstroVector](../-astro-vector/index.md)<br>Converts spherical coordinates to Cartesian coordinates. |
-| [toVectorFromHorizon](to-vector-from-horizon.md) | [jvm]<br>fun [toVectorFromHorizon](to-vector-from-horizon.md)(time: [AstroTime](../-astro-time/index.md), refraction: [Refraction](../-refraction/index.md)): [AstroVector](../-astro-vector/index.md)<br>Given apparent angular horizontal coordinates, calculate the unrefracted horizontal vector. |
+| [toVector](to-vector.md) | [jvm]<br>fun [toVector](to-vector.md)(time: [Time](../-time/index.md)): [Vector](../-vector/index.md)<br>Converts spherical coordinates to Cartesian coordinates. |
+| [toVectorFromHorizon](to-vector-from-horizon.md) | [jvm]<br>fun [toVectorFromHorizon](to-vector-from-horizon.md)(time: [Time](../-time/index.md), refraction: [Refraction](../-refraction/index.md)): [Vector](../-vector/index.md)<br>Given apparent angular horizontal coordinates, calculate the unrefracted horizontal vector. |
 
 ## Properties
 

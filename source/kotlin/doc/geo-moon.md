@@ -3,7 +3,7 @@
 # geoMoon
 
 [jvm]\
-fun [geoMoon](geo-moon.md)(time: [AstroTime](-astro-time/index.md)): [AstroVector](-astro-vector/index.md)
+fun [geoMoon](geo-moon.md)(time: [Time](-time/index.md)): [Vector](-vector/index.md)
 
 Calculates equatorial geocentric position of the Moon at a given time.
 

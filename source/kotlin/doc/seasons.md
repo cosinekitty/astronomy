@@ -15,7 +15,7 @@ The solstices are the moments twice each year when one of the Earth's poles is m
 
 #### Return
 
-A [SeasonsInfo](-seasons-info/index.md) object that contains four [AstroTime](-astro-time/index.md) values: the March and September equinoxes and the June and December solstices.
+A [SeasonsInfo](-seasons-info/index.md) object that contains four [Time](-time/index.md) values: the March and September equinoxes and the June and December solstices.
 
 ## Parameters
 

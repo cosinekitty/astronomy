@@ -1,4 +1,4 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[AstroTime](index.md)/[tt](tt.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[Time](index.md)/[tt](tt.md)
 
 # tt
 

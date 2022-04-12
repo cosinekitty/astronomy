@@ -3,6 +3,6 @@
 # times
 
 [jvm]\
-operator fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[times](times.md)(vec: [AstroVector](-astro-vector/index.md)): [AstroVector](-astro-vector/index.md)
+operator fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[times](times.md)(vec: [Vector](-vector/index.md)): [Vector](-vector/index.md)
 
 Multiply a scalar by a vector, yielding another vector.

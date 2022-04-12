@@ -3,7 +3,7 @@
 # TransitInfo
 
 [jvm]\
-class [TransitInfo](index.md)(start: [AstroTime](../-astro-time/index.md), peak: [AstroTime](../-astro-time/index.md), finish: [AstroTime](../-astro-time/index.md), separation: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+class [TransitInfo](index.md)(start: [Time](../-time/index.md), peak: [Time](../-time/index.md), finish: [Time](../-time/index.md), separation: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 Information about a transit of Mercury or Venus, as seen from the Earth.
 
@@ -17,13 +17,13 @@ The calculations are performed from the point of view of a geocentric observer.
 
 | | |
 |---|---|
-| [TransitInfo](-transit-info.md) | [jvm]<br>fun [TransitInfo](-transit-info.md)(start: [AstroTime](../-astro-time/index.md), peak: [AstroTime](../-astro-time/index.md), finish: [AstroTime](../-astro-time/index.md), separation: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
+| [TransitInfo](-transit-info.md) | [jvm]<br>fun [TransitInfo](-transit-info.md)(start: [Time](../-time/index.md), peak: [Time](../-time/index.md), finish: [Time](../-time/index.md), separation: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [finish](finish.md) | [jvm]<br>val [finish](finish.md): [AstroTime](../-astro-time/index.md)<br>Date and time at the end of the transit. |
-| [peak](peak.md) | [jvm]<br>val [peak](peak.md): [AstroTime](../-astro-time/index.md)<br>Date and time of the peak of the transit. |
+| [finish](finish.md) | [jvm]<br>val [finish](finish.md): [Time](../-time/index.md)<br>Date and time at the end of the transit. |
+| [peak](peak.md) | [jvm]<br>val [peak](peak.md): [Time](../-time/index.md)<br>Date and time of the peak of the transit. |
 | [separation](separation.md) | [jvm]<br>val [separation](separation.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Angular separation in arcminutes between the centers of the Sun and the planet at time peak. |
-| [start](start.md) | [jvm]<br>val [start](start.md): [AstroTime](../-astro-time/index.md)<br>Date and time at the beginning of the transit. |
+| [start](start.md) | [jvm]<br>val [start](start.md): [Time](../-time/index.md)<br>Date and time at the beginning of the transit. |

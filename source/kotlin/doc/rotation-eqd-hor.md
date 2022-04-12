@@ -3,7 +3,7 @@
 # rotationEqdHor
 
 [jvm]\
-fun [rotationEqdHor](rotation-eqd-hor.md)(time: [AstroTime](-astro-time/index.md), observer: [Observer](-observer/index.md)): [RotationMatrix](-rotation-matrix/index.md)
+fun [rotationEqdHor](rotation-eqd-hor.md)(time: [Time](-time/index.md), observer: [Observer](-observer/index.md)): [RotationMatrix](-rotation-matrix/index.md)
 
 Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
 

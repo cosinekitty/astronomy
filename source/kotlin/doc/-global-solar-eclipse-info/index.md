@@ -3,7 +3,7 @@
 # GlobalSolarEclipseInfo
 
 [jvm]\
-class [GlobalSolarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/index.md), peak: [AstroTime](../-astro-time/index.md), distance: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+class [GlobalSolarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/index.md), peak: [Time](../-time/index.md), distance: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 Reports the time and geographic location of the peak of a solar eclipse.
 
@@ -19,7 +19,7 @@ If kind is EclipseKind.Total or EclipseKind.Annular, the latitude and longitude 
 
 | | |
 |---|---|
-| [GlobalSolarEclipseInfo](-global-solar-eclipse-info.md) | [jvm]<br>fun [GlobalSolarEclipseInfo](-global-solar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), peak: [AstroTime](../-astro-time/index.md), distance: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
+| [GlobalSolarEclipseInfo](-global-solar-eclipse-info.md) | [jvm]<br>fun [GlobalSolarEclipseInfo](-global-solar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), peak: [Time](../-time/index.md), distance: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
 
 ## Properties
 
@@ -29,4 +29,4 @@ If kind is EclipseKind.Total or EclipseKind.Annular, the latitude and longitude 
 | [kind](kind.md) | [jvm]<br>val [kind](kind.md): [EclipseKind](../-eclipse-kind/index.md)<br>The type of solar eclipse: EclipseKind.Partial, EclipseKind.Annular, or EclipseKind.Total. |
 | [latitude](latitude.md) | [jvm]<br>val [latitude](latitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The geographic latitude at the center of the peak eclipse shadow. |
 | [longitude](longitude.md) | [jvm]<br>val [longitude](longitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The geographic longitude at the center of the peak eclipse shadow. |
-| [peak](peak.md) | [jvm]<br>val [peak](peak.md): [AstroTime](../-astro-time/index.md)<br>The date and time when the solar eclipse is darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. |
+| [peak](peak.md) | [jvm]<br>val [peak](peak.md): [Time](../-time/index.md)<br>The date and time when the solar eclipse is darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. |

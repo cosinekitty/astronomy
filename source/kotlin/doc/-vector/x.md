@@ -1,4 +1,4 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[AstroVector](index.md)/[x](x.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[Vector](index.md)/[x](x.md)
 
 # x
 

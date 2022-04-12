@@ -343,7 +343,7 @@ enum class Body(
 /**
  * A date and time used for astronomical calculations.
  */
-class AstroTime private constructor(
+class Time private constructor(
     /**
      * UT1/UTC number of days since noon on January 1, 2000.
      *
@@ -406,21 +406,21 @@ class AstroTime private constructor(
     constructor(ut: Double) : this(ut, terrestrialTime(ut))
 
     /**
-     * Creates an `AstroTime` object from a `Date` object.
+     * Creates a `Time` object from a `Date` object.
      *
-     * @param d The date and time to be converted to AstroTime format.
+     * @param d The date and time to be converted to Time format.
      */
     constructor(d: Date) : this((d.time - origin.time).toDouble() / MILLIS_PER_DAY)
 
     /**
-     * Creates an `AstroTime` object from a `Calendar` object.
+     * Creates a `Time` object from a `Calendar` object.
      *
-     * @param d The date and time to be converted to AstroTime format.
+     * @param d The date and time to be converted to Time format.
      */
     constructor(d: Calendar) : this(d.time)
 
     /**
-     * Creates an `AstroTime` object from a UTC year, month, day, hour, minute and second.
+     * Creates a `Time` object from a UTC year, month, day, hour, minute and second.
      *
      * @param year The UTC year value.
      * @param month The UTC month value 1..12.
@@ -440,21 +440,21 @@ class AstroTime private constructor(
     /**
      * Converts this object to a native `Date` equivalent.
      *
-     * @return A UTC `Date` object for this `AstroTime` value.
+     * @return A UTC `Date` object for this `Time` value.
      */
     fun toDate(): Date = Date(origin.time + (ut * MILLIS_PER_DAY).roundToLong())
 
     /**
-     * Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
+     * Converts this `Time` to ISO 8601 format, expressed in UTC with millisecond resolution.
      *
      * @return Example: "2019-08-30T17:45:22.763Z".
      */
     override fun toString(): String = dateFormat.format(toDate())
 
     /**
-     * Calculates the sum or difference of an [AstroTime] with a specified floating point number of days.
+     * Calculates the sum or difference of an [Time] with a specified floating point number of days.
      *
-     * Sometimes we need to adjust a given [AstroTime] value by a certain amount of time.
+     * Sometimes we need to adjust a given [Time] value by a certain amount of time.
      * This function adds the given real number of days in `days` to the date and time in this object.
      *
      * More precisely, the result's Universal Time field `ut` is exactly adjusted by `days` and
@@ -465,7 +465,7 @@ class AstroTime private constructor(
      * @param days A floating point number of days by which to adjust `time`. May be negative, 0, or positive.
      * @return A date and time that is conceptually equal to `time + days`.
      */
-    fun addDays(days: Double) = AstroTime(ut + days)
+    fun addDays(days: Double) = Time(ut + days)
 
     internal fun julianCenturies() = tt / 36525.0
     internal fun julianMillennia() = tt / DAYS_PER_MILLENNIUM
@@ -483,27 +483,27 @@ class AstroTime private constructor(
         }
 
         /**
-         * Creates an `AstroTime` object from a Terrestrial Time day value.
+         * Creates a `Time` object from a Terrestrial Time day value.
          *
          * This function can be used in rare cases where a time must be based
          * on Terrestrial Time (TT) rather than Universal Time (UT).
-         * Most developers will want to invoke `new AstroTime(ut)` with a universal time
+         * Most developers will want to invoke `new Time(ut)` with a universal time
          * instead of this function, because usually time is based on civil time adjusted
          * by leap seconds to match the Earth's rotation, rather than the uniformly
          * flowing TT used to calculate solar system dynamics. In rare cases
          * where the caller already knows TT, this function is provided to create
-         * an `AstroTime` value that can be passed to Astronomy Engine functions.
+         * a `Time` value that can be passed to Astronomy Engine functions.
          *
          * @param tt The number of days after the J2000 epoch.
          */
-        fun fromTerrestrialTime(tt: Double): AstroTime = AstroTime(universalTime(tt), tt)
+        fun fromTerrestrialTime(tt: Double): Time = Time(universalTime(tt), tt)
     }
 }
 
 
 internal data class TerseVector(var x: Double, var y: Double, var z: Double) {
-    fun toAstroVector(time: AstroTime) =
-        AstroVector(x, y, z, time)
+    fun toAstroVector(time: Time) =
+        Vector(x, y, z, time)
 
     operator fun plus(other: TerseVector) =
         TerseVector(x + other.x, y + other.y, z + other.z)
@@ -553,7 +553,7 @@ internal operator fun Double.times(vec: TerseVector) =
     TerseVector(this * vec.x, this * vec.y, this * vec.z)
 
 
-internal fun verifyIdenticalTimes(t1: AstroTime, t2: AstroTime): AstroTime {
+internal fun verifyIdenticalTimes(t1: Time, t2: Time): Time {
     if (t1.tt != t2.tt)
         throw IllegalArgumentException("Attempt to operate on two vectors from different times.")
     return t1
@@ -563,7 +563,7 @@ internal fun verifyIdenticalTimes(t1: AstroTime, t2: AstroTime): AstroTime {
 /**
  * A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
  */
-data class AstroVector(
+data class Vector(
     /**
      * A Cartesian x-coordinate expressed in AU.
      */
@@ -582,7 +582,7 @@ data class AstroVector(
     /**
      * The date and time at which this vector is valid.
      */
-    val t: AstroTime
+    val t: Time
 ) {
     /**
      * The total distance in AU represented by this vector.
@@ -592,25 +592,25 @@ data class AstroVector(
     /**
      * Adds two vectors. Both operands must have identical times.
      */
-    operator fun plus(other: AstroVector) =
-        AstroVector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(t, other.t))
+    operator fun plus(other: Vector) =
+        Vector(x + other.x, y + other.y, z + other.z, verifyIdenticalTimes(t, other.t))
 
     /**
      * Subtracts one vector from another. Both operands must have identical times.
      */
-    operator fun minus(other: AstroVector) =
-        AstroVector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(t, other.t))
+    operator fun minus(other: Vector) =
+        Vector(x - other.x, y - other.y, z - other.z, verifyIdenticalTimes(t, other.t))
 
     /**
      * Negates a vector; the same as multiplying the vector by the scalar -1.
      */
     operator fun unaryMinus() =
-        AstroVector(-x, -y, -z, t)
+        Vector(-x, -y, -z, t)
 
     /**
      * Takes the dot product of two vectors.
      */
-    infix fun dot(other: AstroVector): Double {
+    infix fun dot(other: Vector): Double {
         verifyIdenticalTimes(t, other.t)
         return x*other.x + y*other.y + z*other.z
     }
@@ -618,7 +618,7 @@ data class AstroVector(
     /**
      * Calculates the angle in degrees (0..180) between two vectors.
      */
-    fun angleWith(other: AstroVector): Double {
+    fun angleWith(other: Vector): Double {
         val d = (this dot other) / (length() * other.length())
         return when {
             d <= -1.0 -> 180.0
@@ -631,7 +631,7 @@ data class AstroVector(
      * Divides a vector by a scalar.
      */
     operator fun div(denom: Double) =
-        AstroVector(x/denom, y/denom, z/denom, t)
+        Vector(x/denom, y/denom, z/denom, t)
 
     /**
      * Converts Cartesian coordinates to spherical coordinates.
@@ -669,7 +669,7 @@ data class AstroVector(
      * Converts Cartesian coordinates to horizontal coordinates.
      *
      * Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
-     * *IMPORTANT:* This function differs from [AstroVector.toSpherical] in two ways:
+     * *IMPORTANT:* This function differs from [Vector.toSpherical] in two ways:
      * - `toSpherical` returns a `lon` value that represents azimuth defined counterclockwise
      *   from north (e.g., west = +90), but this function represents a clockwise rotation
      *   (e.g., east = +90). The difference is because `toSpherical` is intended
@@ -730,8 +730,8 @@ data class AstroVector(
 /**
  * Multiply a scalar by a vector, yielding another vector.
  */
-operator fun Double.times(vec: AstroVector) =
-    AstroVector(this*vec.x, this*vec.y, this*vec.z, vec.t)
+operator fun Double.times(vec: Vector) =
+    Vector(this*vec.x, this*vec.y, this*vec.z, vec.t)
 
 
 /**
@@ -771,7 +771,7 @@ data class StateVector(
     /**
      * The date and time at which this vector is valid.
      */
-    val t: AstroTime
+    val t: Time
 ) {
 
     /**
@@ -781,21 +781,21 @@ data class StateVector(
      * @param vel   A velocity vector.
      * @param time  The common time that represents the given position and velocity.
      */
-    constructor(pos: AstroVector, vel: AstroVector, time: AstroTime)
+    constructor(pos: Vector, vel: Vector, time: Time)
         : this(pos.x, pos.y, pos.z, vel.x, vel.y, vel.z, time)
 
-    internal constructor(state: BodyState, time: AstroTime)
+    internal constructor(state: BodyState, time: Time)
         : this(state.r.x, state.r.y, state.r.z, state.v.x, state.v.y, state.v.z, time)
 
     /**
      * Returns the position vector associated with this state vector.
      */
-    fun position() = AstroVector(x, y, z, t)
+    fun position() = Vector(x, y, z, t)
 
     /**
      * Returns the velocity vector associated with this state vector.
      */
-    fun velocity() = AstroVector(vx, vy, vz, t)
+    fun velocity() = Vector(vx, vy, vz, t)
 
     /**
      * Adds two state vetors, yielding the state vector sum.
@@ -894,7 +894,7 @@ class RotationMatrix(
      * @param vec
      *      The vector whose orientation is to be changed.
      */
-    fun rotate(vec: AstroVector) = AstroVector(
+    fun rotate(vec: Vector) = Vector(
         rot[0][0]*vec.x + rot[1][0]*vec.y + rot[2][0]*vec.z,
         rot[0][1]*vec.x + rot[1][1]*vec.y + rot[2][1]*vec.z,
         rot[0][2]*vec.x + rot[1][2]*vec.y + rot[2][2]*vec.z,
@@ -1035,16 +1035,16 @@ data class Spherical(
      *
      * Given spherical coordinates and a time at which they are valid,
      * returns a vector of Cartesian coordinates. The returned value
-     * includes the time, as required by the type [AstroVector].
+     * includes the time, as required by the type [Vector].
      *
      * @param time
      *      The time that should be included in the return value.
      */
-    fun toVector(time: AstroTime): AstroVector {
+    fun toVector(time: Time): Vector {
         val radlat = lat.degreesToRadians()
         val radlon = lon.degreesToRadians()
         val rcoslat = dist * cos(radlat)
-        return AstroVector(
+        return Vector(
             rcoslat * cos(radlon),
             rcoslat * sin(radlon),
             dist * sin(radlat),
@@ -1062,7 +1062,7 @@ data class Spherical(
      *
      * @param time
      *      The date and time of the observation. This is needed because the returned
-     *      [AstroVector] requires a valid time value when passed to certain other functions.
+     *      [Vector] requires a valid time value when passed to certain other functions.
      *
      * @param refraction
      *      The refraction option used to model atmospheric lensing. See [refractionAngle].
@@ -1070,7 +1070,7 @@ data class Spherical(
      *
      * @return A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
      */
-    fun toVectorFromHorizon(time: AstroTime, refraction: Refraction): AstroVector =
+    fun toVectorFromHorizon(time: Time, refraction: Refraction): Vector =
         Spherical(
             lat + inverseRefractionAngle(refraction, lat),
             toggleAzimuthDirection(lon),
@@ -1116,7 +1116,7 @@ data class Observer(
      * The returned vector has components expressed in astronomical units (AU).
      * To convert to kilometers, multiply the vector values by the scalar value [KM_PER_AU].
      *
-     * The inverse of this function is also available: [AstroVector.toObserver].
+     * The inverse of this function is also available: [Vector.toObserver].
      *
      * @param time
      *      The date and time for which to calculate the observer's position vector.
@@ -1131,7 +1131,7 @@ data class Observer(
      *
      * @return A vector from the center of the Earth to this geographic location.
      */
-    fun toVector(time: AstroTime, equator: EquatorEpoch): AstroVector =
+    fun toVector(time: Time, equator: EquatorEpoch): Vector =
         toStateVector(time, equator).position()
 
     /**
@@ -1164,7 +1164,7 @@ data class Observer(
      *
      * @return The position and velocity of this observer with respect to the Earth's center.
      */
-    fun toStateVector(time: AstroTime, equator: EquatorEpoch): StateVector {
+    fun toStateVector(time: Time, equator: EquatorEpoch): StateVector {
         val state = terra(this, time)
         return when (equator) {
             EquatorEpoch.OfDate -> state
@@ -1320,7 +1320,7 @@ class Equatorial(
     /**
      * Equatorial coordinates in cartesian vector form: x = March equinox, y = June solstice, z = north.
      */
-    val vec: AstroVector
+    val vec: Vector
 )
 
 
@@ -1337,7 +1337,7 @@ data class Ecliptic(
      * y: in the ecliptic plane 90 degrees prograde from the equinox.
      * z: perpendicular to the ecliptic plane. Positive is north.
      */
-    val vec: AstroVector,
+    val vec: Vector,
 
     /**
      * Latitude in degrees north (positive) or south (negative) of the ecliptic plane.
@@ -1390,22 +1390,22 @@ class SeasonsInfo(
     /**
      * The date and time of the March equinox for the specified year.
      */
-    val marchEquinox: AstroTime,
+    val marchEquinox: Time,
 
     /**
      * The date and time of the June soltice for the specified year.
      */
-    val juneSolstice: AstroTime,
+    val juneSolstice: Time,
 
     /**
      * The date and time of the September equinox for the specified year.
      */
-    val septemberEquinox: AstroTime,
+    val septemberEquinox: Time,
 
     /**
      * The date and time of the December solstice for the specified year.
      */
-    val decemberSolstice: AstroTime
+    val decemberSolstice: Time
 )
 
 
@@ -1421,7 +1421,7 @@ class MoonQuarterInfo(
     /**
     * The date and time of the lunar quarter.
     */
-    val time: AstroTime
+    val time: Time
 )
 
 
@@ -1471,7 +1471,7 @@ class HourAngleInfo(
     /**
      * The date and time when the body crosses the specified hour angle.
      */
-    val time: AstroTime,
+    val time: Time,
 
     /**
      * Apparent coordinates of the body at the time it crosses the specified hour angle.
@@ -1490,7 +1490,7 @@ class ElongationInfo(
     /**
      * The date and time of the observation.
      */
-    val time: AstroTime,
+    val time: Time,
 
     /**
      * Whether the body is best seen in the morning or the evening.
@@ -1544,7 +1544,7 @@ class ApsisInfo(
     /**
      * The date and time of the apsis.
      */
-    val time: AstroTime,
+    val time: Time,
 
     /**
      * Whether this is a pericenter or apocenter event.
@@ -1625,7 +1625,7 @@ class LunarEclipseInfo(
     /**
      * The time of the eclipse at its peak.
      */
-    val peak: AstroTime,
+    val peak: Time,
 
     /**
      * The semi-duration of the penumbral phase in minutes.
@@ -1677,7 +1677,7 @@ class GlobalSolarEclipseInfo(
      * The date and time when the solar eclipse is darkest.
      * This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
      */
-    val peak: AstroTime,
+    val peak: Time,
 
     /**
      * The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers.
@@ -1714,7 +1714,7 @@ class EclipseEvent (
     /**
      * The date and time of the event.
      */
-    val time: AstroTime,
+    val time: Time,
 
     /**
      * The angular altitude of the center of the Sun above/below the horizon, at `time`,
@@ -1803,17 +1803,17 @@ class TransitInfo(
     /**
      * Date and time at the beginning of the transit.
      */
-    val start: AstroTime,
+    val start: Time,
 
     /**
      * Date and time of the peak of the transit.
      */
-    val peak: AstroTime,
+    val peak: Time,
 
     /**
      * Date and time at the end of the transit.
      */
-    val finish: AstroTime,
+    val finish: Time,
 
     /**
      * Angular separation in arcminutes between the centers of the Sun and the planet at time `peak`.
@@ -1826,7 +1826,7 @@ internal class ShadowInfo(
     /**
      * The time of the shadow state.
      */
-    val time: AstroTime,
+    val time: Time,
 
     /**
      * Dot product of (heliocentric earth) and (geocentric moon).
@@ -1852,12 +1852,12 @@ internal class ShadowInfo(
     /**
      * Coordinates of target body relative to shadow-casting body at `time`.
      */
-    val target: AstroVector,
+    val target: Vector,
 
     /**
      * Heliocentric coordinates of shadow-casting body at `time`.
      */
-    val dir: AstroVector
+    val dir: Vector
 )
 
 
@@ -1871,7 +1871,7 @@ class IlluminationInfo(
     /**
      * The date and time of the observation.
      */
-    val time: AstroTime,
+    val time: Time,
 
     /**
      * The visual magnitude of the body. Smaller values are brighter.
@@ -1947,7 +1947,7 @@ class AxisInfo(
     /**
      * A J2000 dimensionless unit vector pointing in the direction of the body's north pole.
      */
-    val north: AstroVector
+    val north: Vector
 )
 
 
@@ -1982,7 +1982,7 @@ class NodeEventInfo(
     /**
      * The time of the body's node.
      */
-    val time: AstroTime,
+    val time: Time,
 
     /**
      * Whether the node is ascending or descending.
@@ -2008,7 +2008,7 @@ interface SearchContext {
      *
      * @return The floating point value of the scalar function at the given time.
      */
-    fun eval(time: AstroTime): Double
+    fun eval(time: Time): Double
 }
 
 //---------------------------------------------------------------------------------------
@@ -2096,7 +2096,7 @@ private fun vsopFormulaCalc(formula: VsopFormula, t: Double, clampAngle: Boolean
     return coord
 }
 
-private fun vsopDistance(model: VsopModel, time: AstroTime) =
+private fun vsopDistance(model: VsopModel, time: Time) =
     vsopFormulaCalc(model.rad, time.julianMillennia(), false)
 
 private fun vsopRotate(eclip: TerseVector) =
@@ -2115,7 +2115,7 @@ private fun vsopSphereToRect(lon: Double, lat: Double, radius: Double): TerseVec
     )
 }
 
-private fun calcVsop(model: VsopModel, time: AstroTime): AstroVector {
+private fun calcVsop(model: VsopModel, time: Time): Vector {
     val t = time.julianMillennia()
 
     // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
@@ -2127,7 +2127,7 @@ private fun calcVsop(model: VsopModel, time: AstroTime): AstroVector {
     val eclip = vsopSphereToRect(lon, lat, rad)
 
     // Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates.
-    // Also convert from TerseVector (coordinates only) to AstroVector (coordinates + time).
+    // Also convert from TerseVector (coordinates only) to Vector (coordinates + time).
     return vsopRotate(eclip).toAstroVector(time)
 }
 
@@ -2220,7 +2220,7 @@ private fun calcVsopPosVel(model: VsopModel, tt: Double): BodyState {
 private fun vsopModel(body: Body): VsopModel =
     body.vsopModel ?: throw InvalidBodyException(body)
 
-private fun vsopHelioVector(body: Body, time: AstroTime) =
+private fun vsopHelioVector(body: Body, time: Time) =
     calcVsop(vsopModel(body), time)
 
 //---------------------------------------------------------------------------------------
@@ -2246,7 +2246,7 @@ private class PascalArray2(
     operator fun set(x: Int, y: Int, v: Double) { array[x - xmin][y - ymin] = v }
 }
 
-private class MoonContext(time: AstroTime) {
+private class MoonContext(time: Time) {
     // Variable names inside this class do not follow coding style on purpose.
     // They reflect the exact names from the original Pascal source code,
     // for ease of porting and consistent code generation.
@@ -2626,7 +2626,7 @@ private fun calcPlutoOneWay(
     return sim
 }
 
-private fun calcPluto(time: AstroTime, helio: Boolean): StateVector {
+private fun calcPluto(time: Time, helio: Boolean): StateVector {
     val seg = getPlutoSegment(time.tt)
     var calc: BodyGravCalc
     var bary: MajorBodies? = null
@@ -2699,7 +2699,7 @@ internal class JupiterMoon (
 
 
 private fun jupiterMoonElemToPv(
-    time: AstroTime,
+    time: Time,
     mu: Double,
     A: Double,
     AL: Double,
@@ -2752,7 +2752,7 @@ private fun jupiterMoonElemToPv(
 }
 
 
-private fun calcJupiterMoon(time: AstroTime, m: JupiterMoon): StateVector {
+private fun calcJupiterMoon(time: Time, m: JupiterMoon): StateVector {
     // This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
     // https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
 
@@ -2800,7 +2800,7 @@ private fun calcJupiterMoon(time: AstroTime, m: JupiterMoon): StateVector {
 
 internal fun terrestrialTime(ut: Double): Double = ut + deltaT(ut) / SECONDS_PER_DAY
 
-private val epoch2000 = AstroTime(0.0)
+private val epoch2000 = Time(0.0)
 
 internal fun deltaT(ut: Double): Double {
     /*
@@ -3025,7 +3025,7 @@ private enum class PrecessDirection {
     Into2000,
 }
 
-private fun precessionRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
+private fun precessionRot(time: Time, dir: PrecessDirection): RotationMatrix {
     val t = time.julianCenturies()
     val eps0 = 84381.406
 
@@ -3085,7 +3085,7 @@ private fun precessionRot(time: AstroTime, dir: PrecessDirection): RotationMatri
     }
 }
 
-private fun precession(pos: AstroVector, dir: PrecessDirection) =
+private fun precession(pos: Vector, dir: PrecessDirection) =
     precessionRot(pos.t, dir).rotate(pos)
 
 private fun precessionPosVel(state: StateVector, dir: PrecessDirection) =
@@ -3100,9 +3100,9 @@ private class EarthTilt(
     val tobl: Double
 )
 
-private fun iau2000b(time: AstroTime) {
+private fun iau2000b(time: Time) {
     // Adapted from the NOVAS C 3.1 function of the same name.
-    // We cache Earth nutation angles `psi` and `eps` inside AstroTime for efficiency.
+    // We cache Earth nutation angles `psi` and `eps` inside Time for efficiency.
     // If nutation has not already been calculated, these values will be NaN.
     // Lazy-evaluate both angles.
 
@@ -3131,7 +3131,7 @@ private fun iau2000b(time: AstroTime) {
     }
 }
 
-private fun meanObliquity(time: AstroTime): Double {
+private fun meanObliquity(time: Time): Double {
     val t = time.julianCenturies()
     val asec =
         ((((  -0.0000000434   * t
@@ -3142,7 +3142,7 @@ private fun meanObliquity(time: AstroTime): Double {
     return asec / 3600
 }
 
-private fun earthTilt(time: AstroTime): EarthTilt {
+private fun earthTilt(time: Time): EarthTilt {
     iau2000b(time)  // lazy-evaluate time.psi and time.eps
     val mobl = meanObliquity(time)
     val tobl = mobl + (time.eps / 3600)
@@ -3150,7 +3150,7 @@ private fun earthTilt(time: AstroTime): EarthTilt {
     return EarthTilt(time.tt, time.psi, time.eps, ee, mobl, tobl)
 }
 
-private fun earthRotationAngle(time: AstroTime): Double {
+private fun earthRotationAngle(time: Time): Double {
     val thet1 = 0.7790572732640 + (0.00273781191135448 * time.ut)
     val thet3 = time.ut % 1.0
     val theta = 360.0 *((thet1 + thet3) % 1.0)
@@ -3180,7 +3180,7 @@ private fun earthRotationAngle(time: AstroTime): Double {
  *      As an optimization, this function caches the sideral time value in `time`,
  *      unless it has already been cached, in which case the cached value is reused.
  */
-fun siderealTime(time: AstroTime): Double {
+fun siderealTime(time: Time): Double {
     if (time.st.isNaN()) {
         val t = time.julianCenturies()
         val eqeq = 15.0 * earthTilt(time).ee
@@ -3214,7 +3214,7 @@ fun siderealTime(time: AstroTime): Double {
  * An EQD state vector that holds the geocentric position and velocity
  * of the observer at the given time.
  */
-private fun terra(observer: Observer, time: AstroTime): StateVector {
+private fun terra(observer: Observer, time: Time): StateVector {
     val st = siderealTime(time)
     val phi = observer.latitude.degreesToRadians()
     val sinphi = sin(phi)
@@ -3256,7 +3256,7 @@ private fun terra(observer: Observer, time: AstroTime): StateVector {
  * The location on or near the Earth's surface corresponding to
  * the given position vector and time.
  */
-private fun inverseTerra(ovec: AstroVector): Observer {
+private fun inverseTerra(ovec: Vector): Observer {
     var lonDeg: Double
     var latDeg: Double
     var heightKm: Double
@@ -3317,7 +3317,7 @@ private fun inverseTerra(ovec: AstroVector): Observer {
     return Observer(latDeg, lonDeg, 1000.0 * heightKm)
 }
 
-private fun gyration(pos: AstroVector, dir: PrecessDirection) =
+private fun gyration(pos: Vector, dir: PrecessDirection) =
     when (dir) {
         PrecessDirection.Into2000 -> precession(nutation(pos, dir), dir)
         PrecessDirection.From2000 -> nutation(precession(pos, dir), dir)
@@ -3329,16 +3329,16 @@ private fun gyrationPosVel(state: StateVector, dir: PrecessDirection) =
         PrecessDirection.From2000 -> nutationPosVel(precessionPosVel(state, dir), dir)
     }
 
-private fun geoPos(time: AstroTime, observer: Observer) =
+private fun geoPos(time: Time, observer: Observer) =
     gyration(
         terra(observer, time).position(),
         PrecessDirection.Into2000
     )
 
-private fun spin(angle: Double, pos: AstroVector): AstroVector {
+private fun spin(angle: Double, pos: Vector): Vector {
     val cosang = dcos(angle)
     val sinang = dsin(angle)
-    return AstroVector(
+    return Vector(
         +cosang*pos.x + sinang*pos.y,
         -sinang*pos.x + cosang*pos.y,
         pos.z,
@@ -3346,7 +3346,7 @@ private fun spin(angle: Double, pos: AstroVector): AstroVector {
     )
 }
 
-private fun nutationRot(time: AstroTime, dir: PrecessDirection): RotationMatrix {
+private fun nutationRot(time: Time, dir: PrecessDirection): RotationMatrix {
     val tilt = earthTilt(time)
     val oblm = tilt.mobl.degreesToRadians()
     val oblt = tilt.tobl.degreesToRadians()
@@ -3387,17 +3387,17 @@ private fun nutationRot(time: AstroTime, dir: PrecessDirection): RotationMatrix 
     }
 }
 
-private fun nutation(pos: AstroVector, dir: PrecessDirection) =
+private fun nutation(pos: Vector, dir: PrecessDirection) =
     nutationRot(pos.t, dir).rotate(pos)
 
 private fun nutationPosVel(state: StateVector, dir: PrecessDirection) =
     nutationRot(state.t, dir).rotate(state)
 
-private fun eclipticToEquatorial(ecl: AstroVector): AstroVector {
+private fun eclipticToEquatorial(ecl: Vector): Vector {
     val obl = meanObliquity(ecl.t).degreesToRadians()
     val cosObl = cos(obl)
     val sinObl = sin(obl)
-    return AstroVector(
+    return Vector(
         ecl.x,
         (ecl.y * cosObl) - (ecl.z * sinObl),
         (ecl.y * sinObl) + (ecl.z * cosObl),
@@ -3405,13 +3405,13 @@ private fun eclipticToEquatorial(ecl: AstroVector): AstroVector {
     )
 }
 
-private fun earthRotationAxis(time: AstroTime): AxisInfo {
+private fun earthRotationAxis(time: Time): AxisInfo {
     // Unlike the other planets, we have a model of precession and nutation
     // for the Earth's axis that provides a north pole vector.
     // So calculate the vector first, then derive the (RA,DEC) angles from the vector.
 
     // Start with a north pole vector in equator-of-date coordinates: (0,0,1).
-    val pos1 = AstroVector(0.0, 0.0, 1.0, time)
+    val pos1 = Vector(0.0, 0.0, 1.0, time)
 
     // Convert the vector into J2000 coordinates to find the north pole direction.
     val pos2 = nutation(pos1, PrecessDirection.Into2000)
@@ -3452,7 +3452,7 @@ private fun earthRotationAxis(time: AstroTime): AxisInfo {
  *
  * @return North pole orientation and body spin angle.
  */
-fun rotationAxis(body: Body, time: AstroTime): AxisInfo {
+fun rotationAxis(body: Body, time: Time): AxisInfo {
     if (body == Body.Earth)
         return earthRotationAxis(time)
 
@@ -3635,7 +3635,7 @@ fun rotationAxis(body: Body, time: AstroTime): AxisInfo {
 
     // Calculate the north pole vector using the given angles.
     val rcoslat = dcos(dec)
-    val north = AstroVector(
+    val north = Vector(
         rcoslat * dcos(ra),
         rcoslat * dsin(ra),
         dsin(dec),
@@ -3661,7 +3661,7 @@ fun rotationAxis(body: Body, time: AstroTime): AxisInfo {
 *
 * To calculate an equatorial J2000 vector instead, use [geoMoon].
 */
-fun eclipticGeoMoon(time: AstroTime) = MoonContext(time).calcMoon()
+fun eclipticGeoMoon(time: Time) = MoonContext(time).calcMoon()
 
 /**
  * Calculates equatorial geocentric position of the Moon at a given time.
@@ -3677,7 +3677,7 @@ fun eclipticGeoMoon(time: AstroTime) = MoonContext(time).calcMoon()
  *
  * @return The Moon's position vector in J2000 equatorial coordinates (EQJ).
  */
-fun geoMoon(time: AstroTime): AstroVector {
+fun geoMoon(time: Time): Vector {
     val eclSphere = eclipticGeoMoon(time)
     val eclVec = eclSphere.toVector(time)
     val equVec = eclipticToEquatorial(eclVec)
@@ -3701,7 +3701,7 @@ fun geoMoon(time: AstroTime): AstroVector {
  *
  * @return The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
  */
-fun geoMoonState(time: AstroTime): StateVector {
+fun geoMoonState(time: Time): StateVector {
     // This is a hack, because trying to figure out how to derive
     // a time derivative for MoonContext.calcMoon() would be painful!
     // Calculate just before and just after the given time.
@@ -3725,21 +3725,21 @@ fun geoMoonState(time: AstroTime): StateVector {
     )
 }
 
-private fun helioEarthPos(time: AstroTime) =
+private fun helioEarthPos(time: Time) =
     calcVsop(vsopModel(Body.Earth), time)
 
-private fun helioEarthState(time: AstroTime) =
+private fun helioEarthState(time: Time) =
     StateVector(calcVsopPosVel(vsopModel(Body.Earth), time.tt), time)
 
-private fun barycenterPosContrib(time: AstroTime, body: Body, planetGm: Double) =
+private fun barycenterPosContrib(time: Time, body: Body, planetGm: Double) =
     (planetGm / (planetGm + SUN_GM)) * vsopHelioVector(body, time)
 
-private fun solarSystemBarycenterPos(time: AstroTime): AstroVector {
+private fun solarSystemBarycenterPos(time: Time): Vector {
     val j = barycenterPosContrib(time, Body.Jupiter, JUPITER_GM)
     val s = barycenterPosContrib(time, Body.Saturn,  SATURN_GM)
     var u = barycenterPosContrib(time, Body.Uranus,  URANUS_GM)
     var n = barycenterPosContrib(time, Body.Neptune, NEPTUNE_GM)
-    return AstroVector(
+    return Vector(
         j.x + s.x + u.x + n.x,
         j.y + s.y + u.y + n.y,
         j.z + s.z + u.z + n.z,
@@ -3747,7 +3747,7 @@ private fun solarSystemBarycenterPos(time: AstroTime): AstroVector {
     )
 }
 
-private fun barycenterStateContrib(time: AstroTime, body: Body, planetGm: Double): StateVector {
+private fun barycenterStateContrib(time: Time, body: Body, planetGm: Double): StateVector {
     val helioPlanet = calcVsopPosVel(vsopModel(body), time.tt)
     val factor = planetGm / (planetGm + SUN_GM)
     return StateVector(
@@ -3761,7 +3761,7 @@ private fun barycenterStateContrib(time: AstroTime, body: Body, planetGm: Double
     )
 }
 
-private fun solarSystemBarycenterState(time: AstroTime): StateVector {
+private fun solarSystemBarycenterState(time: Time): StateVector {
     val j = barycenterStateContrib(time, Body.Jupiter, JUPITER_GM)
     val s = barycenterStateContrib(time, Body.Saturn,  SATURN_GM)
     var u = barycenterStateContrib(time, Body.Uranus,  URANUS_GM)
@@ -3799,11 +3799,11 @@ private fun solarSystemBarycenterState(time: AstroTime): StateVector {
  *
  * @return The heliocentric position vector of the center of the given body.
  */
-fun helioVector(body: Body, time: AstroTime): AstroVector =
+fun helioVector(body: Body, time: Time): Vector =
     if (body.vsopModel != null)
         calcVsop(body.vsopModel, time)
     else when (body) {
-        Body.Sun     -> AstroVector(0.0, 0.0, 0.0, time)
+        Body.Sun     -> Vector(0.0, 0.0, 0.0, time)
         Body.Pluto   -> calcPluto(time, true).position()
         Body.Moon    -> helioEarthPos(time) + geoMoon(time)
         Body.EMB     -> helioEarthPos(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
@@ -3829,7 +3829,7 @@ fun helioVector(body: Body, time: AstroTime): AstroVector =
  *
  * @return The heliocentric distance in AU.
  */
-fun helioDistance(body: Body, time: AstroTime): Double =
+fun helioDistance(body: Body, time: Time): Double =
     when {
         body == Body.Sun -> 0.0
         body.vsopModel != null -> vsopDistance(body.vsopModel, time)
@@ -3863,7 +3863,7 @@ fun helioDistance(body: Body, time: AstroTime): Double =
  * The positions are expressed in AU.
  * The velocities are expressed in AU/day.
  */
-fun helioState(body: Body, time: AstroTime): StateVector =
+fun helioState(body: Body, time: Time): StateVector =
     if (body.vsopModel != null)
         StateVector(calcVsopPosVel(body.vsopModel, time.tt), time)
     else when (body) {
@@ -3905,9 +3905,9 @@ fun helioState(body: Body, time: AstroTime): StateVector =
  *
  * @return A geocentric position vector of the center of the given body.
  */
-fun geoVector(body: Body, time: AstroTime, aberration: Aberration): AstroVector {
+fun geoVector(body: Body, time: Time, aberration: Aberration): Vector {
     if (body == Body.Earth)
-        return AstroVector(0.0, 0.0, 0.0, time)
+        return Vector(0.0, 0.0, 0.0, time)
 
     if (body == Body.Moon)
         return geoMoon(time)
@@ -3941,7 +3941,7 @@ fun geoVector(body: Body, time: AstroTime, aberration: Aberration): AstroVector 
         // it will get angry that we are using mismatching times!
         // It is intentional here that the calculation time was backdated,
         // but the observation time is not.
-        var geopos = AstroVector(
+        var geopos = Vector(
             helio.x - earth.x,
             helio.y - earth.y,
             helio.z - earth.z,
@@ -4005,7 +4005,7 @@ fun geoVector(body: Body, time: AstroTime, aberration: Aberration): AstroVector 
  */
 fun equator(
     body: Body,
-    time: AstroTime,
+    time: Time,
     observer: Observer,
     equdate: EquatorEpoch,
     aberration: Aberration
@@ -4066,7 +4066,7 @@ fun equator(
  * @return The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
  */
 fun horizon(
-    time: AstroTime,
+    time: Time,
     observer: Observer,
     ra: Double,
     dec: Double,
@@ -4094,9 +4094,9 @@ fun horizon(
     // x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
     // y = direction from center of Earth toward 90 degrees west longitude on equator.
     // z = direction from center of Earth toward the north pole.
-    val uze = AstroVector(coslat * coslon, coslat * sinlon, sinlat, time)
-    val une = AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
-    val uwe = AstroVector(sinlon, -coslon, 0.0, time)
+    val uze = Vector(coslat * coslon, coslat * sinlon, sinlat, time)
+    val une = Vector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
+    val uwe = Vector(sinlon, -coslon, 0.0, time)
 
     // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
     // sideral time. Call spin() for each uncorrected vector to rotate about
@@ -4111,7 +4111,7 @@ fun horizon(
     // Convert angular equatorial coordinates (RA, DEC) to
     // cartesian equatorial coordinates in 'p', using the
     // same orientation system as uze, une, uwe.
-    val p = AstroVector(cosdc * cosra, cosdc * sinra, sindc, time)
+    val p = Vector(cosdc * cosra, cosdc * sinra, sindc, time)
 
     // Use dot products of p with the zenith, north, and west
     // vectors to obtain the cartesian coordinates of the body in
@@ -4193,7 +4193,7 @@ fun horizon(
  * figure out what time to pass to `jupiterMoons` to get an accurate picture
  * of how Jupiter and its moons look from Earth.
  */
-fun jupiterMoons(time: AstroTime) =
+fun jupiterMoons(time: Time) =
     JupiterMoonsInfo(arrayOf(
         calcJupiterMoon(time, jupiterMoonModel[0]),
         calcJupiterMoon(time, jupiterMoonModel[1]),
@@ -4260,17 +4260,17 @@ fun jupiterMoons(time: AstroTime) =
  *      is considered accurate enough to stop. A typical value is 1 second.
  *
  * @return
- * If successful, returns an [AstroTime] value indicating a date and time
+ * If successful, returns an [Time] value indicating a date and time
  * that is within `toleranceSeconds` of an ascending root.
  * If no ascending root is found, or more than one root exists in the time
  * window `time1`..`time2`, the function returns `null`.
  */
 fun search(
     func: SearchContext,
-    time1: AstroTime,
-    time2: AstroTime,
+    time1: Time,
+    time2: Time,
     toleranceSeconds: Double
-): AstroTime? {
+): Time? {
     var t1 = time1
     var t2 = time2
     val iterLimit = 20
@@ -4331,7 +4331,7 @@ fun search(
         if (foundInterpolation) {
             val qut = tm + x*tspan
             val qslope = (2*q*x + r) / tspan
-            val tq = AstroTime(qut)
+            val tq = Time(qut)
             val fq = func.eval(tq)
             if (qslope != 0.0) {
                 var dtGuess = abs(fq / qslope)
@@ -4411,7 +4411,7 @@ fun search(
  *
  * @return The ecliptic coordinates of the Sun using the Earth's true equator of date.
  */
-fun sunPosition(time: AstroTime): Ecliptic {
+fun sunPosition(time: Time): Ecliptic {
     // Correct for light travel time from the Sun.
     // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
     val adjustedTime = time.addDays(-1.0 / C_AUDAY)
@@ -4428,7 +4428,7 @@ fun sunPosition(time: AstroTime): Ecliptic {
     return rotateEquatorialToEcliptic(sunOfDate, trueObliq)
 }
 
-private fun rotateEquatorialToEcliptic(pos: AstroVector, obliqRadians: Double): Ecliptic {
+private fun rotateEquatorialToEcliptic(pos: Vector, obliqRadians: Double): Ecliptic {
     val cosOb = cos(obliqRadians)
     val sinOb = sin(obliqRadians)
     val ex = +pos.x
@@ -4441,7 +4441,7 @@ private fun rotateEquatorialToEcliptic(pos: AstroVector, obliqRadians: Double): 
         else
             0.0
     val elat = atan2(ez, xyproj).radiansToDegrees()
-    val vec = AstroVector(ex, ey, ez, pos.t)
+    val vec = Vector(ex, ey, ez, pos.t)
     return Ecliptic(vec, elat, elon)
 }
 
@@ -4458,7 +4458,7 @@ private fun rotateEquatorialToEcliptic(pos: AstroVector, obliqRadians: Double): 
  *
  * @return Ecliptic coordinates in the J2000 frame of reference (ECL).
  */
-fun equatorialToEcliptic(equ: AstroVector): Ecliptic =
+fun equatorialToEcliptic(equ: Vector): Ecliptic =
     rotateEquatorialToEcliptic(
         equ,
         0.40909260059599012     // mean obliquity of the J2000 ecliptic in radians
@@ -4479,9 +4479,9 @@ fun equatorialToEcliptic(equ: AstroVector): Ecliptic =
  * if the window is so large that the longitude ranges more than 180 degrees within it.
  * It is recommended to keep the window smaller than 10 days when possible.
  */
-fun searchSunLongitude(targetLon: Double, startTime: AstroTime, limitDays: Double): AstroTime? {
+fun searchSunLongitude(targetLon: Double, startTime: Time, limitDays: Double): Time? {
     class Context(val targetLon: Double) : SearchContext {
-        override fun eval(time: AstroTime) =
+        override fun eval(time: Time) =
             longitudeOffset(sunPosition(time).elon - targetLon)
     }
     val context = Context(targetLon)
@@ -4520,7 +4520,7 @@ fun searchSunLongitude(targetLon: Double, startTime: AstroTime, limitDays: Doubl
  *      for that range of years are within 2 minutes of the correct time.
  *
  * @return
- * A [SeasonsInfo] object that contains four [AstroTime] values:
+ * A [SeasonsInfo] object that contains four [Time] values:
  * the March and September equinoxes and the June and December solstices.
  */
 fun seasons(year: Int) =
@@ -4531,8 +4531,8 @@ fun seasons(year: Int) =
         findSeasonChange(270.0, year, 12, 10)
     )
 
-private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int): AstroTime {
-    var startTime = AstroTime(year, month, day, 0, 0, 0.0)
+private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int): Time {
+    var startTime = Time(year, month, day, 0, 0, 0.0)
     return searchSunLongitude(targetLon, startTime, 20.0) ?:
         throw InternalError("Cannot find solution for Sun longitude $targetLon for year $year")
 }
@@ -4562,7 +4562,7 @@ private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int)
  * @param time  The date and time of the observation.
  * @return An angle in the range [0, 360), expressed in degrees.
  */
-fun pairLongitude(body1: Body, body2: Body, time: AstroTime): Double {
+fun pairLongitude(body1: Body, body2: Body, time: Time): Double {
     if (body1 == Body.Earth || body2 == Body.Earth)
         throw EarthNotAllowedException()
 
@@ -4590,7 +4590,7 @@ fun pairLongitude(body1: Body, body2: Body, time: AstroTime): Double {
  * @param time  The date and time of the observation.
  * @return The angle as described above, a value in the range 0..360 degrees.
  */
-fun moonPhase(time: AstroTime): Double =
+fun moonPhase(time: Time): Double =
     pairLongitude(Body.Moon, Body.Sun, time)
 
 /**
@@ -4625,7 +4625,7 @@ fun moonPhase(time: AstroTime): Double =
  * `targetlon`. This function will return `null` if the phase does not
  * occur within `limitDays` of `startTime`; that is, if the search window is too small.
  */
-fun searchMoonPhase(targetLon: Double, startTime: AstroTime, limitDays: Double): AstroTime? {
+fun searchMoonPhase(targetLon: Double, startTime: Time, limitDays: Double): Time? {
     // To avoid discontinuities in the moonOffset function causing problems,
     // we need to approximate when that function will next return 0.
     // We probe it with the start time and take advantage of the fact
@@ -4636,7 +4636,7 @@ fun searchMoonPhase(targetLon: Double, startTime: AstroTime, limitDays: Double):
     // To be safe, we take the predicted time of the event and search
     // +/-1.5 days around it (a 3-day wide window).
     class Context(val targetLon : Double) : SearchContext {
-        override fun eval(time: AstroTime) = longitudeOffset(moonPhase(time) - targetLon)
+        override fun eval(time: Time) = longitudeOffset(moonPhase(time) - targetLon)
     }
     val moonOffset = Context(targetLon)
     var ya = moonOffset.eval(startTime)
@@ -4665,7 +4665,7 @@ fun searchMoonPhase(targetLon: Double, startTime: AstroTime, limitDays: Double):
  * @param startTime The date and time at which to start the search.
  * @return A [MoonQuarterInfo] object reporting the next quarter phase and the time it will occur.
  */
-fun searchMoonQuarter(startTime: AstroTime): MoonQuarterInfo {
+fun searchMoonQuarter(startTime: Time): MoonQuarterInfo {
     val currentPhaseAngle = moonPhase(startTime)
     val quarter: Int = (1 + floor(currentPhaseAngle / 90.0).toInt()) % 4
     val quarterTime = searchMoonPhase(90.0 * quarter, startTime, 10.0) ?:
@@ -4736,7 +4736,7 @@ fun searchHourAngle(
     body: Body,
     observer: Observer,
     hourAngle: Double,
-    startTime: AstroTime
+    startTime: Time
 ): HourAngleInfo {
     if (body == Body.Earth)
         throw EarthNotAllowedException()
@@ -4787,10 +4787,10 @@ private fun internalSearchAltitude(
     body: Body,
     observer: Observer,
     direction: Direction,
-    startTime: AstroTime,
+    startTime: Time,
     limitDays: Double,
     context: SearchContext
-): AstroTime? {
+): Time? {
     if (body == Body.Earth)
         throw EarthNotAllowedException()
 
@@ -4816,7 +4816,7 @@ private fun internalSearchAltitude(
     // The same logic applies for finding set times, only we swap the hour angles.
 
     var altBefore = context.eval(startTime)
-    var timeBefore: AstroTime
+    var timeBefore: Time
     if (altBefore > 0.0) {
         // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
         timeBefore = searchHourAngle(body, observer, haBefore, startTime).time
@@ -4864,7 +4864,7 @@ private class SearchContextPeakAltitude(
         else -> 0.0
     }
 
-    override fun eval(time: AstroTime): Double {
+    override fun eval(time: Time): Double {
         // Return the angular altitude above or below the horizon
         // of the highest part (the peak) of the given object.
         // This is defined as the apparent altitude of the center of the body plus
@@ -4928,9 +4928,9 @@ fun searchRiseSet(
     body: Body,
     observer: Observer,
     direction: Direction,
-    startTime: AstroTime,
+    startTime: Time,
     limitDays: Double
-): AstroTime? {
+): Time? {
     val context = SearchContextPeakAltitude(body, direction, observer)
     return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
 }
@@ -4941,7 +4941,7 @@ private class SearchContextAltitudeError(
     private val observer: Observer,
     private val altitude: Double
 ): SearchContext {
-    override fun eval(time: AstroTime): Double {
+    override fun eval(time: Time): Double {
         val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
         val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
         return direction.sign * (hor.altitude - altitude)
@@ -4979,10 +4979,10 @@ fun searchAltitude(
     body: Body,
     observer: Observer,
     direction: Direction,
-    startTime: AstroTime,
+    startTime: Time,
     limitDays: Double,
     altitude: Double
-): AstroTime? {
+): Time? {
     val context = SearchContextAltitudeError(body, direction, observer, altitude)
     return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
 }
@@ -5004,7 +5004,7 @@ fun searchAltitude(
  *
  * @return The angle in degrees between the Sun and the specified body as seen from the center of the Earth.
  */
-fun angleFromSun(body: Body, time: AstroTime): Double {
+fun angleFromSun(body: Body, time: Time): Double {
     if (body == Body.Earth)
         throw EarthNotAllowedException()
     val sv = geoVector(Body.Sun, time, Aberration.Corrected)
@@ -5062,7 +5062,7 @@ fun rotationEclEqj(): RotationMatrix {
  * @param time
  *      The date and time at which the Earth's equator defines the target orientation.
  */
-fun rotationEqjEqd(time: AstroTime): RotationMatrix =
+fun rotationEqjEqd(time: Time): RotationMatrix =
     precessionRot(time, PrecessDirection.From2000) combine
     nutationRot(time, PrecessDirection.From2000)
 
@@ -5077,7 +5077,7 @@ fun rotationEqjEqd(time: AstroTime): RotationMatrix =
  * @param time
  *      The date and time at which the Earth's equator defines the source orientation.
  */
-fun rotationEqdEqj(time: AstroTime): RotationMatrix =
+fun rotationEqdEqj(time: Time): RotationMatrix =
     nutationRot(time, PrecessDirection.Into2000) combine
     precessionRot(time, PrecessDirection.Into2000)
 
@@ -5102,7 +5102,7 @@ fun rotationEqdEqj(time: AstroTime): RotationMatrix =
  * These components are chosen so that the "right-hand rule" works for the vector
  * and so that north represents the direction where azimuth = 0.
  */
-fun rotationEqdHor(time: AstroTime, observer: Observer): RotationMatrix {
+fun rotationEqdHor(time: Time, observer: Observer): RotationMatrix {
     // See the `horizon` function for more explanation of how this works.
 
     val sinlat = dsin(observer.latitude)
@@ -5110,9 +5110,9 @@ fun rotationEqdHor(time: AstroTime, observer: Observer): RotationMatrix {
     val sinlon = dsin(observer.longitude)
     val coslon = dcos(observer.longitude)
 
-    val uze = AstroVector(coslat * coslon, coslat * sinlon, sinlat, time)
-    val une = AstroVector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
-    val uwe = AstroVector(sinlon, -coslon, 0.0, time)
+    val uze = Vector(coslat * coslon, coslat * sinlon, sinlat, time)
+    val une = Vector(-sinlat * coslon, -sinlat * sinlon, coslat, time)
+    val uwe = Vector(sinlon, -coslon, 0.0, time)
 
     // Multiply sidereal hours by -15 to convert to degrees and flip eastward
     // rotation of the Earth to westward apparent movement of objects with time.
@@ -5145,7 +5145,7 @@ fun rotationEqdHor(time: AstroTime, observer: Observer): RotationMatrix {
  *
  * @return A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
-fun rotationHorEqd(time: AstroTime, observer: Observer): RotationMatrix =
+fun rotationHorEqd(time: Time, observer: Observer): RotationMatrix =
     rotationEqdHor(time, observer).inverse()
 
 /**
@@ -5163,7 +5163,7 @@ fun rotationHorEqd(time: AstroTime, observer: Observer): RotationMatrix =
  *
  * @return A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
  */
-fun rotationHorEqj(time: AstroTime, observer: Observer): RotationMatrix =
+fun rotationHorEqj(time: Time, observer: Observer): RotationMatrix =
     rotationHorEqd(time, observer) combine
     rotationEqdEqj(time)
 
@@ -5188,7 +5188,7 @@ fun rotationHorEqj(time: AstroTime, observer: Observer): RotationMatrix =
  * These components are chosen so that the "right-hand rule" works for the vector
  * and so that north represents the direction where azimuth = 0.
  */
-fun rotationEqjHor(time: AstroTime, observer: Observer): RotationMatrix =
+fun rotationEqjHor(time: Time, observer: Observer): RotationMatrix =
     rotationHorEqj(time, observer).inverse()
 
 /**
@@ -5204,7 +5204,7 @@ fun rotationEqjHor(time: AstroTime, observer: Observer): RotationMatrix =
  *
  * @return A rotation matrix that converts EQD to ECL.
  */
-fun rotationEqdEcl(time: AstroTime): RotationMatrix =
+fun rotationEqdEcl(time: Time): RotationMatrix =
     rotationEqdEqj(time) combine
     rotationEqjEcl()
 
@@ -5221,7 +5221,7 @@ fun rotationEqdEcl(time: AstroTime): RotationMatrix =
  *
  * @return A rotation matrix that converts ECL to EQD.
  */
-fun rotationEclEqd(time: AstroTime): RotationMatrix =
+fun rotationEclEqd(time: Time): RotationMatrix =
     rotationEqdEcl(time).inverse()
 
 /**
@@ -5245,7 +5245,7 @@ fun rotationEclEqd(time: AstroTime): RotationMatrix =
  * These components are chosen so that the "right-hand rule" works for the vector
  * and so that north represents the direction where azimuth = 0.
  */
-fun rotationEclHor(time: AstroTime, observer: Observer): RotationMatrix =
+fun rotationEclHor(time: Time, observer: Observer): RotationMatrix =
     rotationEclEqd(time) combine
     rotationEqdHor(time, observer)
 
@@ -5265,7 +5265,7 @@ fun rotationEclHor(time: AstroTime, observer: Observer): RotationMatrix =
  *
  * @return A rotation matrix that converts HOR to ECL.
  */
-fun rotationHorEcl(time: AstroTime, observer: Observer): RotationMatrix =
+fun rotationHorEcl(time: Time, observer: Observer): RotationMatrix =
     rotationEclHor(time, observer).inverse()
 
 /**
@@ -6996,8 +6996,8 @@ internal val constelBounds: Array<ConstellationBoundary> = arrayOf(
 // B = 1900 + ((TT+2451545) - 2415020.31352) / 365.242198781
 // B = 1900 + (TT + 36524.68648) / 365.242198781
 // TT = 365.242198781*(B - 1900) - 36524.68648 = -45655.741449525
-// But the AstroTime constructor wants UT, not TT.
+// But the Time constructor wants UT, not TT.
 // Near that date, I get a historical correction of ut-tt = 3.2 seconds.
 // That gives UT = -45655.74141261017 for the B1875 epoch,
 // or 1874-12-31T18:12:21.950Z.
-private val constelRot: RotationMatrix = rotationEqjEqd(AstroTime(-45655.74141261017))
+private val constelRot: RotationMatrix = rotationEqjEqd(Time(-45655.74141261017))

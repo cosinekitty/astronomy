@@ -1,4 +1,4 @@
-//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[AstroVector](index.md)/[toSpherical](to-spherical.md)
+//[astronomy](../../../index.md)/[io.github.cosinekitty.astronomy](../index.md)/[Vector](index.md)/[toSpherical](to-spherical.md)
 
 # toSpherical
 

@@ -3,4 +3,4 @@
 # TransitInfo
 
 [jvm]\
-fun [TransitInfo](-transit-info.md)(start: [AstroTime](../-astro-time/index.md), peak: [AstroTime](../-astro-time/index.md), finish: [AstroTime](../-astro-time/index.md), separation: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+fun [TransitInfo](-transit-info.md)(start: [Time](../-time/index.md), peak: [Time](../-time/index.md), finish: [Time](../-time/index.md), separation: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))

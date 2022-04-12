@@ -3,11 +3,11 @@
 # toVector
 
 [jvm]\
-fun [toVector](to-vector.md)(time: [AstroTime](../-astro-time/index.md)): [AstroVector](../-astro-vector/index.md)
+fun [toVector](to-vector.md)(time: [Time](../-time/index.md)): [Vector](../-vector/index.md)
 
 Converts spherical coordinates to Cartesian coordinates.
 
-Given spherical coordinates and a time at which they are valid, returns a vector of Cartesian coordinates. The returned value includes the time, as required by the type [AstroVector](../-astro-vector/index.md).
+Given spherical coordinates and a time at which they are valid, returns a vector of Cartesian coordinates. The returned value includes the time, as required by the type [Vector](../-vector/index.md).
 
 ## Parameters
 

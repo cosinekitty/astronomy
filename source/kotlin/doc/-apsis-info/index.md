@@ -3,7 +3,7 @@
 # ApsisInfo
 
 [jvm]\
-class [ApsisInfo](index.md)(time: [AstroTime](../-astro-time/index.md), kind: [ApsisKind](../-apsis-kind/index.md), distAu: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), distKm: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+class [ApsisInfo](index.md)(time: [Time](../-time/index.md), kind: [ApsisKind](../-apsis-kind/index.md), distAu: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), distKm: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 An apsis event: pericenter (closest approach) or apocenter (farthest distance).
 
@@ -17,7 +17,7 @@ This data structure is returned by searchLunarApsis and nextLunarApsis to iterat
 
 | | |
 |---|---|
-| [ApsisInfo](-apsis-info.md) | [jvm]<br>fun [ApsisInfo](-apsis-info.md)(time: [AstroTime](../-astro-time/index.md), kind: [ApsisKind](../-apsis-kind/index.md), distAu: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), distKm: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
+| [ApsisInfo](-apsis-info.md) | [jvm]<br>fun [ApsisInfo](-apsis-info.md)(time: [Time](../-time/index.md), kind: [ApsisKind](../-apsis-kind/index.md), distAu: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), distKm: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
 
 ## Properties
 
@@ -26,4 +26,4 @@ This data structure is returned by searchLunarApsis and nextLunarApsis to iterat
 | [distAu](dist-au.md) | [jvm]<br>val [distAu](dist-au.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The distance between the centers of the bodies in astronomical units. |
 | [distKm](dist-km.md) | [jvm]<br>val [distKm](dist-km.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The distance between the centers of the bodies in kilometers. |
 | [kind](kind.md) | [jvm]<br>val [kind](kind.md): [ApsisKind](../-apsis-kind/index.md)<br>Whether this is a pericenter or apocenter event. |
-| [time](time.md) | [jvm]<br>val [time](time.md): [AstroTime](../-astro-time/index.md)<br>The date and time of the apsis. |
+| [time](time.md) | [jvm]<br>val [time](time.md): [Time](../-time/index.md)<br>The date and time of the apsis. |

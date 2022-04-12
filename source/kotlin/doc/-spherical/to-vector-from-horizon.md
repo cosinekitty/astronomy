@@ -3,7 +3,7 @@
 # toVectorFromHorizon
 
 [jvm]\
-fun [toVectorFromHorizon](to-vector-from-horizon.md)(time: [AstroTime](../-astro-time/index.md), refraction: [Refraction](../-refraction/index.md)): [AstroVector](../-astro-vector/index.md)
+fun [toVectorFromHorizon](to-vector-from-horizon.md)(time: [Time](../-time/index.md), refraction: [Refraction](../-refraction/index.md)): [Vector](../-vector/index.md)
 
 Given apparent angular horizontal coordinates, calculate the unrefracted horizontal vector.
 
@@ -19,5 +19,5 @@ jvm
 
 | | |
 |---|---|
-| time | The date and time of the observation. This is needed because the returned     [AstroVector] requires a valid time value when passed to certain other functions. |
+| time | The date and time of the observation. This is needed because the returned     [Vector] requires a valid time value when passed to certain other functions. |
 | refraction | The refraction option used to model atmospheric lensing. See [refractionAngle].     This specifies how refraction is to be removed from the altitude stored in `this.lat`. |

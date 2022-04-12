@@ -3,4 +3,4 @@
 # AxisInfo
 
 [jvm]\
-fun [AxisInfo](-axis-info.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), spin: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), north: [AstroVector](../-astro-vector/index.md))
+fun [AxisInfo](-axis-info.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), spin: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), north: [Vector](../-vector/index.md))

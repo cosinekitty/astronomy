@@ -3,6 +3,6 @@
 # t
 
 [jvm]\
-val [t](t.md): [AstroTime](../-astro-time/index.md)
+val [t](t.md): [Time](../-time/index.md)
 
 The date and time at which this vector is valid.

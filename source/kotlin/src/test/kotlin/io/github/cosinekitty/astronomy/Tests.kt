@@ -41,7 +41,7 @@ private fun groupDirection(match: MatchResult, groupIndex: Int, filename: String
 
 private val regexDate = Regex("""^(\d+)-(\d+)-(\d+)T(\d+):(\d+)(:(\d+))?Z$""")
 
-private fun parseDate(text: String): AstroTime {
+private fun parseDate(text: String): Time {
     val m = regexDate.matchEntire(text) ?: fail("parseDate failed for string: '$text'")
     val year   = (m.groups[1] ?: fail("Cannot parse year from string: '$text'")).value.toInt()
     val month  = (m.groups[2] ?: fail("Cannot parse month from string: '$text'")).value.toInt()
@@ -55,12 +55,12 @@ private fun parseDate(text: String): AstroTime {
         else
             0.0
     )
-    return AstroTime(year, month, day, hour, minute, second)
+    return Time(year, month, day, hour, minute, second)
 }
 
 class Tests {
     private fun checkVector(
-        vec: AstroVector,
+        vec: Vector,
         x: Double, y: Double, z: Double,
         tolerance: Double,
         message: String
@@ -91,7 +91,7 @@ class Tests {
 
     @Test
     fun `test deltaT calculation`() {
-        val time = AstroTime(0.0)
+        val time = Time(0.0)
         assertEquals(0.0007389709440951036, time.tt)
     }
 
@@ -108,14 +108,14 @@ class Tests {
     fun `universal time calculation should match expectations`(
         year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double, ut: Double, expectedToString: String
     ) {
-        val time = AstroTime(year, month, day, hour, minute, second)
+        val time = Time(year, month, day, hour, minute, second)
         assertEquals(ut, time.ut)
         assertEquals(time.toString(), expectedToString)
     }
 
     @Test
-    fun `AstroTime should be able to add fractional days`() {
-        val time = AstroTime(2000, 1, 1, 12, 0, 0.0)
+    fun `Time should be able to add fractional days`() {
+        val time = Time(2000, 1, 1, 12, 0, 0.0)
         assertEquals("2000-01-02T18:00:00.000Z", time.addDays(1.25).toString())
     }
 
@@ -141,7 +141,7 @@ class Tests {
         }
     }
 
-    private fun compareVectors(testName: String, a: AstroVector, b: AstroVector, tolerance: Double = 1.0e-15) {
+    private fun compareVectors(testName: String, a: Vector, b: Vector, tolerance: Double = 1.0e-15) {
         assertTrue(a.x.isFinite(), "a.x is not finite")
         assertTrue(a.y.isFinite(), "a.y is not finite")
         assertTrue(a.z.isFinite(), "a.z is not finite")
@@ -175,12 +175,12 @@ class Tests {
         r = r.pivot(1, +180.0)
 
         // Use the resulting matrix to rotate a vector.
-        val time = AstroTime(2000, 1, 1, 0, 0, 0.0)
-        val v1 = AstroVector(1.0, 2.0, 3.0, time)
+        val time = Time(2000, 1, 1, 0, 0, 0.0)
+        val v1 = Vector(1.0, 2.0, 3.0, time)
 
         val v2 = r.rotate(v1)
 
-        compareVectors("Pivot #2", v2, AstroVector(
+        compareVectors("Pivot #2", v2, Vector(
             +2.0,
             +2.3660254037844390,
             -2.0980762113533156,
@@ -235,7 +235,7 @@ class Tests {
         // verified calculations. This is just to help isolate a problem
         // in sidereal time in case it is broken.
         val correct = 9.398368460418821
-        val time = AstroTime(2022, 3, 15, 21, 50, 0.0)
+        val time = Time(2022, 3, 15, 21, 50, 0.0)
         val gast = siderealTime(time)
         assertTrue(gast.isFinite())
         val diff = abs(gast - correct)
@@ -280,7 +280,7 @@ class Tests {
                 val jd = token[0].toDouble()
                 val ra = token[1].toDouble()
                 val dec = token[2].toDouble()
-                val time = AstroTime(jd - 2451545.0)
+                val time = Time(jd - 2451545.0)
                 val axis = rotationAxis(body, time)
 
                 // Convert the reference angles to a reference north pole vector.
@@ -302,7 +302,7 @@ class Tests {
 
     @Test
     fun `Sanity check geocentric moon`() {
-        val time = AstroTime(2019, 6, 24, 15, 45, 37.0)
+        val time = Time(2019, 6, 24, 15, 45, 37.0)
 
         val eclSphere = eclipticGeoMoon(time)
         val dlat = eclSphere.lat  - (-4.851798346972171)
@@ -325,7 +325,7 @@ class Tests {
 
     @Test
     fun `Heliocentric vectors and distances`() {
-        val time = AstroTime(2022, 3, 28, 15, 21, 41.0)
+        val time = Time(2022, 3, 28, 15, 21, 41.0)
 
         verifyHelio(
             Body.Sun,
@@ -426,7 +426,7 @@ class Tests {
     @Test
     fun `Another Pluto test`() {
         // This time offset caused an excessive discrepancy compared to the C code's output.
-        val time = AstroTime.fromTerrestrialTime(-58402.247295546535)
+        val time = Time.fromTerrestrialTime(-58402.247295546535)
         verifyHelio(
             Body.Pluto,
             time,
@@ -438,7 +438,7 @@ class Tests {
     @Test
     fun `Venus horizontal coords`() {
         val body = Body.Venus
-        val time = AstroTime.fromTerrestrialTime(10373.141119633277)  // UT 2028-05-26T15:21:56.183Z
+        val time = Time.fromTerrestrialTime(10373.141119633277)  // UT 2028-05-26T15:21:56.183Z
         val pos = helioVector(body, time)
         checkVector(
             pos,
@@ -461,7 +461,7 @@ class Tests {
 
     private fun verifyHelio(
         body: Body,
-        time: AstroTime,
+        time: Time,
         x: Double, y: Double, z: Double,
         vx: Double, vy: Double, vz: Double
     ) {
@@ -510,9 +510,9 @@ class Tests {
         )
 
         val observer = Observer(29.0, -81.0, 10.0)
-        var time = AstroTime(1700, 1, 1, 0, 0, 0.0)
-        val stop = AstroTime(2200, 1, 1, 0, 0, 0.0)
-        var pos: AstroVector
+        var time = Time(1700, 1, 1, 0, 0, 0.0)
+        val stop = Time(2200, 1, 1, 0, 0, 0.0)
+        var pos: Vector
         var j2000: Equatorial
         var ofdate: Equatorial
         var hor: Topocentric
@@ -560,7 +560,7 @@ class Tests {
 
     @Test
     fun `Orientation conversion using rotation matrices`() {
-        val time = AstroTime(8126.418466077072)
+        val time = Time(8126.418466077072)
         assertTrue(time.toString() == "2022-04-01T22:02:35.469Z", "Unexpected time string.")
 
         val observer = Observer(-30.0, +150.0, 200.0)
@@ -732,14 +732,14 @@ class Tests {
     @Test
     fun `Basic search`() {
         class CosineIdentityFunc : SearchContext {
-            override fun eval(time: AstroTime) = time.ut - cos(time.ut)
+            override fun eval(time: Time) = time.ut - cos(time.ut)
         }
 
         val toleranceDays = 1.0e-9
         val toleranceSeconds = toleranceDays / 86400.0
         val func = CosineIdentityFunc()
-        val time1 = AstroTime(0.0)
-        val time2 = AstroTime(1.0)
+        val time1 = Time(0.0)
+        val time2 = Time(1.0)
         val tsolve = search(func, time1, time2, toleranceSeconds)
         if (tsolve == null)
             fail("Basic search failed")
@@ -779,7 +779,7 @@ class Tests {
             val hour = groupInt(m, 4, filename, lnum)
             val minute = groupInt(m, 5, filename, lnum)
             val name = groupString(m, 6, filename, lnum)
-            val correctTime = AstroTime(year, month, day, hour, minute, 0.0)
+            val correctTime = Time(year, month, day, hour, minute, 0.0)
             if (year != currentYear) {
                 currentYear = year
                 seasons = seasons(year)
@@ -788,7 +788,7 @@ class Tests {
             if (seasons == null)
                 fail("internal error: seasons == null")
 
-            var calcTime: AstroTime
+            var calcTime: Time
             when (name) {
                 "Equinox" -> when (month) {
                     3 -> {
@@ -868,7 +868,7 @@ class Tests {
             val minute = groupInt(m, 6, filename, lnum)
             val second = groupDouble(m, 7, filename, lnum)
 
-            val expectedTime = AstroTime(year, month, day, hour, minute, second)
+            val expectedTime = Time(year, month, day, hour, minute, second)
             val expectedElong = 90.0 * quarter
             val calcElong = moonPhase(expectedTime)
             var degreeError = abs(calcElong - expectedElong)
@@ -883,7 +883,7 @@ class Tests {
                 // The test data contains a single year's worth of data for every 10 years.
                 // Every time we see the year value change, it breaks continuity of the phases.
                 // Start the search over again.
-                val startTime = AstroTime(year, 1, 1, 0, 0, 0.0)
+                val startTime = Time(year, 1, 1, 0, 0, 0.0)
                 mq = searchMoonQuarter(startTime)
             } else {
                 if (mq == null)
@@ -915,12 +915,12 @@ class Tests {
         var re = Regex("""^([A-Za-z]+)\s+([\-\+]?\d+\.?\d*)\s+([\-\+]?\d+\.?\d*)\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([rs])\s*$""")
         var currentBody: Body? = null
         var observer: Observer? = null
-        var rSearchDate: AstroTime? = null
-        var sSearchDate: AstroTime? = null
-        var rEvt: AstroTime?            // rise event search result
-        var sEvt: AstroTime?            // set event search result
-        var aEvt: AstroTime?            // chronologically first event (whether rise or set)
-        var bEvt: AstroTime? = null     // chronologically second event (whether rise or set)
+        var rSearchDate: Time? = null
+        var sSearchDate: Time? = null
+        var rEvt: Time?            // rise event search result
+        var sEvt: Time?            // set event search result
+        var aEvt: Time?            // chronologically first event (whether rise or set)
+        var bEvt: Time? = null     // chronologically second event (whether rise or set)
         var aDir: Direction
         var bDir = Direction.Rise
         val nudgeDays = 0.01
@@ -937,7 +937,7 @@ class Tests {
             val minute = groupInt(m, 8, filename, lnum)
             val direction = groupDirection(m, 9, filename, lnum)
 
-            val correctDate = AstroTime(year, month, day, hour, minute, 0.0)
+            val correctDate = Time(year, month, day, hour, minute, 0.0)
 
             // Every time we see a new geographic location or body, start a new iteration
             // of finding all rise/set times for that UTC calendar year.
@@ -946,7 +946,7 @@ class Tests {
             ) {
                 currentBody = body
                 observer = Observer(latitude, longitude, 0.0)
-                rSearchDate = AstroTime(year, 1, 1, 0, 0, 0.0)
+                rSearchDate = Time(year, 1, 1, 0, 0, 0.0)
                 sSearchDate = rSearchDate
                 bEvt = null
             }
@@ -1062,7 +1062,7 @@ class Tests {
             val vy = tokens[9].toDouble()
             val vz = tokens[10].toDouble()
 
-            val time = AstroTime(ut)
+            val time = Time(ut)
             val observer = Observer(latitude, longitude, height)
             val correctState = StateVector(x, y, z, vx, vy, vz, time)
             val calcState = observer.toStateVector(time, equator)
@@ -1075,7 +1075,7 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
-    private fun VerifyGeoid(observer: Observer, time: AstroTime, equator: EquatorEpoch) {
+    private fun VerifyGeoid(observer: Observer, time: Time, equator: EquatorEpoch) {
         val degreeTolerance = 1.0e-12
         val meterTolerance = 1.0e-8
         val vector = observer.toVector(time, equator)
@@ -1092,7 +1092,7 @@ class Tests {
     fun `Verify inverse geoid calculations`() {
         // Calculate position vectors for a variety of geographic coordinates.
         // Verify that we can convert each observer back into a matching vector.
-        val time = AstroTime(8134.392799058808)     // 2022-04-09T21:25:37.839Z
+        val time = Time(8134.392799058808)     // 2022-04-09T21:25:37.839Z
         var latitude = -85.0
         while (latitude <= +85.0) {
             var longitude = -175.0
@@ -1114,7 +1114,7 @@ class Tests {
 
     @Test
     fun `Angle between body and Sun`() {
-        val time = AstroTime(8135.494708473634)     // 2022-04-10T23:52:22.812Z
+        val time = Time(8135.494708473634)     // 2022-04-10T23:52:22.812Z
         VerifyAngleFromSun(time, Body.Sun,       0.0)
         VerifyAngleFromSun(time, Body.Moon,    108.91126797125484)
         VerifyAngleFromSun(time, Body.Venus,    45.2998026289299)
@@ -1122,7 +1122,7 @@ class Tests {
         VerifyAngleFromSun(time, Body.Jupiter,  27.49401812548837)
     }
 
-    private fun VerifyAngleFromSun(time: AstroTime, body: Body, correctAngle: Double) {
+    private fun VerifyAngleFromSun(time: Time, body: Body, correctAngle: Double) {
         val angle = angleFromSun(body, time)
         val diff = abs(correctAngle - angle)
         assertTrue(diff < 1.0e-13, "Excessive angle error $diff for $body at $time")

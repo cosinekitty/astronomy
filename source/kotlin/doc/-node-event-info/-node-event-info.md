@@ -3,4 +3,4 @@
 # NodeEventInfo
 
 [jvm]\
-fun [NodeEventInfo](-node-event-info.md)(time: [AstroTime](../-astro-time/index.md), kind: [NodeEventKind](../-node-event-kind/index.md))
+fun [NodeEventInfo](-node-event-info.md)(time: [Time](../-time/index.md), kind: [NodeEventKind](../-node-event-kind/index.md))

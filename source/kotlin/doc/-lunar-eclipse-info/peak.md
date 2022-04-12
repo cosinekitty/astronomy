@@ -3,6 +3,6 @@
 # peak
 
 [jvm]\
-val [peak](peak.md): [AstroTime](../-astro-time/index.md)
+val [peak](peak.md): [Time](../-time/index.md)
 
 The time of the eclipse at its peak.

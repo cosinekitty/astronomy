@@ -3,4 +3,4 @@
 # SeasonsInfo
 
 [jvm]\
-fun [SeasonsInfo](-seasons-info.md)(marchEquinox: [AstroTime](../-astro-time/index.md), juneSolstice: [AstroTime](../-astro-time/index.md), septemberEquinox: [AstroTime](../-astro-time/index.md), decemberSolstice: [AstroTime](../-astro-time/index.md))
+fun [SeasonsInfo](-seasons-info.md)(marchEquinox: [Time](../-time/index.md), juneSolstice: [Time](../-time/index.md), septemberEquinox: [Time](../-time/index.md), decemberSolstice: [Time](../-time/index.md))

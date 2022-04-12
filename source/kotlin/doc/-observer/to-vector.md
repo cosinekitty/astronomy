@@ -3,7 +3,7 @@
 # toVector
 
 [jvm]\
-fun [toVector](to-vector.md)(time: [AstroTime](../-astro-time/index.md), equator: [EquatorEpoch](../-equator-epoch/index.md)): [AstroVector](../-astro-vector/index.md)
+fun [toVector](to-vector.md)(time: [Time](../-time/index.md), equator: [EquatorEpoch](../-equator-epoch/index.md)): [Vector](../-vector/index.md)
 
 Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
 
@@ -13,7 +13,7 @@ The caller may pass a value in equator to select either [EquatorEpoch.J2000](../
 
 The returned vector has components expressed in astronomical units (AU). To convert to kilometers, multiply the vector values by the scalar value [KM_PER_AU](../-k-m_-p-e-r_-a-u.md).
 
-The inverse of this function is also available: [AstroVector.toObserver](../-astro-vector/to-observer.md).
+The inverse of this function is also available: [Vector.toObserver](../-vector/to-observer.md).
 
 #### Return
 

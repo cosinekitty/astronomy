@@ -3,4 +3,4 @@
 # Ecliptic
 
 [jvm]\
-fun [Ecliptic](-ecliptic.md)(vec: [AstroVector](../-astro-vector/index.md), elat: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), elon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+fun [Ecliptic](-ecliptic.md)(vec: [Vector](../-vector/index.md), elat: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), elon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))

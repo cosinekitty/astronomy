@@ -3,6 +3,6 @@
 # start
 
 [jvm]\
-val [start](start.md): [AstroTime](../-astro-time/index.md)
+val [start](start.md): [Time](../-time/index.md)
 
 Date and time at the beginning of the transit.
