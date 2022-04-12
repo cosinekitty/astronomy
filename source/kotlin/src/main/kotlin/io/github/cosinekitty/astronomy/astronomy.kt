@@ -166,7 +166,8 @@ private const val MOON_MEAN_RADIUS_KM       = 1737.4
 private const val MOON_POLAR_RADIUS_KM      = 1736.0
 private const val MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 private const val ANGVEL = 7.2921150e-5
-private const val SECONDS_PER_DAY = 24.0 * 3600.0
+private const val MINUTES_PER_DAY = 60.0 * 24.0
+private const val SECONDS_PER_DAY = 60.0 * MINUTES_PER_DAY
 private const val SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
 private const val MEAN_SYNODIC_MONTH = 29.530588     // average number of days for Moon to return to the same phase
 private const val EARTH_ORBITAL_PERIOD = 365.256
@@ -1860,6 +1861,196 @@ internal class ShadowInfo(
     val dir: Vector
 )
 
+internal fun calcShadow(
+    bodyRadiusKm: Double,
+    time: Time,
+    target: Vector,
+    dir: Vector
+): ShadowInfo {
+    val u = (dir dot target) / (dir dot dir)
+    val dx = (u * dir.x) - target.x
+    val dy = (u * dir.y) - target.y
+    val dz = (u * dir.z) - target.z
+    val r = KM_PER_AU * sqrt(dx*dx + dy*dy + dz*dz)
+    val k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - bodyRadiusKm)
+    val p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + bodyRadiusKm)
+    return ShadowInfo(time, u, r, k, p, target, dir)
+}
+
+internal fun earthShadow(time: Time): ShadowInfo {
+    // This function helps find when the Earth's shadow falls upon the Moon.
+    val e = helioEarthPos(time)
+    val m = geoMoon(time)
+    return calcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e)
+}
+
+internal fun moonShadow(time: Time): ShadowInfo {
+    // This function helps find when the Moon's shadow falls upon the Earth.
+    // This is a variation on the logic in EarthShadow().
+    // Instead of a heliocentric Earth and a geocentric Moon,
+    // we want a heliocentric Moon and a lunacentric Earth.
+
+    val e = helioEarthPos(time)
+    val m = geoMoon(time)
+
+    // -m  = lunacentric Earth
+    // m+e = heliocentric Moon
+    return calcShadow(MOON_MEAN_RADIUS_KM, time, -m, m+e)
+}
+
+internal fun localMoonShadow(time: Time, observer: Observer): ShadowInfo {
+    // Calculate observer's geocentric position.
+    // For efficiency, do this first, to populate the earth rotation parameters in 'time'.
+    // That way they can be recycled instead of recalculated.
+    val o = geoPos(time, observer)
+    val h = helioEarthPos(time)
+    val m = geoMoon(time)
+
+    // o-m = lunacentric observer
+    // m+h = heliocentric Moon
+    return calcShadow(MOON_MEAN_RADIUS_KM, time, o-m, m+h)
+}
+
+internal fun planetShadow(body: Body, planetRadiusKm: Double, time: Time): ShadowInfo {
+    // Calculate light-travel-corrected vector from Earth to planet.
+    val g = geoVector(body, time, Aberration.None)
+
+    // Calculate light-travel-corrected vector from Earth to Sun.
+    val e = geoVector(Body.Sun, time, Aberration.None)
+
+    // -g  = planetocentric Earth
+    // g-e = heliocentric planet
+    return calcShadow(planetRadiusKm, time, -g, g-e)
+}
+
+internal fun shadowSemiDurationMinutes(centerTime: Time, radiusLimit: Double, windowMinutes: Double): Double {
+    // Search backwards and forwards from the center time until
+    // the shadow axis distance crosses the specified radius limit.
+    val windowDays = windowMinutes / MINUTES_PER_DAY
+    val before = centerTime.addDays(-windowDays)
+    val after  = centerTime.addDays(+windowDays)
+    val t1 = searchEarthShadow(radiusLimit, -1.0, before, centerTime)
+    val t2 = searchEarthShadow(radiusLimit, +1.0, centerTime, after)
+    // Convert days to minutes and average the semi-durations.
+    return (t2.ut - t1.ut) * (MINUTES_PER_DAY / 2.0)
+}
+
+internal fun searchEarthShadow(radiusLimit: Double, direction: Double, t1: Time, t2: Time): Time {
+    class Context(val radiusLimit: Double, val direction: Double): SearchContext {
+        override fun eval(time: Time) = direction * (earthShadow(time).r - radiusLimit)
+    }
+    val context = Context(radiusLimit, direction)
+    return search(context, t1, t2, 1.0) ?: throw InternalError("Failed to find Earth shadow transition.")
+}
+
+
+internal class SearchContextEarthShadowSlope: SearchContext {
+    override fun eval(time: Time): Double {
+        val dt = 1.0 / SECONDS_PER_DAY
+        val t1 = time.addDays(-dt)
+        val t2 = time.addDays(+dt)
+        val shadow1 = earthShadow(t1)
+        val shadow2 = earthShadow(t2)
+        return (shadow2.r - shadow1.r) / dt
+    }
+}
+
+// We can get away with creating a single Earth shadow slope context
+// because it contains no state and it has no side-effects.
+// This reduces memory allocation overhead and is thread-safe.
+internal val earthShadowSlopeContext = SearchContextEarthShadowSlope()
+
+internal fun peakEarthShadow(searchCenterTime: Time): ShadowInfo {
+    val window = 0.03       // initial search window, in days, before/after searchCenterTime
+    val t1 = searchCenterTime.addDays(-window)
+    val t2 = searchCenterTime.addDays(+window)
+    val tx = search(earthShadowSlopeContext, t1, t2, 1.0) ?:
+        throw InternalError("Failed to find Earth peak shadow event.")
+    return earthShadow(tx)
+}
+
+//internal fun moonEclipticLatitudeDegrees(time: Time) = eclipticGeoMoon(time).lat
+
+/**
+ * Searches for a lunar eclipse.
+ *
+ * This function finds the first lunar eclipse that occurs after `startTime`.
+ * A lunar eclipse may be penumbral, partial, or total.
+ * See [LunarEclipseInfo] for more information.
+ * To find a series of lunar eclipses, call this function once,
+ * then keep calling [nextLunarEclipse] as many times as desired,
+ * passing in the `center` value returned from the previous call.
+ *
+ * @param startTime
+ *      The date and time for starting the search for a lunar eclipse.
+ *
+ * @return Information about the first lunar eclipse that occurs after `startTime`.
+ */
+fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
+    val pruneLatitude = 1.8   // full Moon's ecliptic latitude above which eclipse is impossible
+
+    // Iterate through consecutive full moons until we find any kind of lunar eclipse.
+    var fmtime = startTime
+    for (fmcount in 0..11) {
+        var fullmoon = searchMoonPhase(180.0, fmtime, 40.0) ?:
+            throw InternalError("Failed to find the next full moon.")
+
+        // Pruning: if the full Moon's ecliptic latitude is too large,
+        // a lunar eclipse is not possible. Avoid needless work searching for
+        // the minimum moon distance.
+        val moon = eclipticGeoMoon(fullmoon)
+        if (moon.lat < pruneLatitude) {
+            // Search near the full moon for the time when the center of the Moon
+            // is closest to the line passing through the centers of the Sun and Earth.
+            val shadow = peakEarthShadow(fullmoon)
+            if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM) {
+                // This is at least a penumbral eclipse. We will return a result.
+                var kind = EclipseKind.Penumbral
+                val sdPenum = shadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0)
+                var sdPartial = 0.0
+                var sdTotal = 0.0
+
+                if (shadow.r < shadow.k + MOON_MEAN_RADIUS_KM) {
+                    // This is at least a partial eclipse.
+                    kind = EclipseKind.Partial
+                    sdPartial = shadowSemiDurationMinutes(shadow.time, shadow.k + MOON_MEAN_RADIUS_KM, sdPenum)
+
+                    if (shadow.r + MOON_MEAN_RADIUS_KM < shadow.k) {
+                        // This is a total eclipse.
+                        kind = EclipseKind.Total
+                        sdTotal = shadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, sdPartial)
+                    }
+                }
+
+                return LunarEclipseInfo(kind, shadow.time, sdPenum, sdPartial, sdTotal)
+            }
+        }
+
+        fmtime = fullmoon.addDays(10.0)
+    }
+
+    // This should never happen, because there should be at least 2 lunar eclipses per year.
+    throw InternalError("Failed to find a lunar eclipse within 12 full moons.")
+}
+
+
+/**
+ * Searches for the next lunar eclipse in a series.
+ *
+ * After using [searchLunarEclipse] to find the first lunar eclipse
+ * in a series, you can call this function to find the next consecutive lunar eclipse.
+ * Pass in the `center` value from the [LunarEclipseInfo] returned by the
+ * previous call to `searchLunarEclipse` or `nextLunarEclipse`
+ * to find the next lunar eclipse.
+ *
+ * @param prevEclipseTime
+ *      A time near a full moon. Lunar eclipse search will start at the next full moon.
+ *
+ * @return
+ * Information about the next lunar eclipse in a series.
+ */
+fun nextLunarEclipse(prevEclipseTime: Time) =
+    searchLunarEclipse(prevEclipseTime.addDays(10.0))
 
 /**
  * Information about the brightness and illuminated shape of a celestial body.
@@ -3329,7 +3520,7 @@ private fun gyrationPosVel(state: StateVector, dir: PrecessDirection) =
         PrecessDirection.From2000 -> nutationPosVel(precessionPosVel(state, dir), dir)
     }
 
-private fun geoPos(time: Time, observer: Observer) =
+private fun geoPos(time: Time, observer: Observer): Vector =
     gyration(
         terra(observer, time).position(),
         PrecessDirection.Into2000

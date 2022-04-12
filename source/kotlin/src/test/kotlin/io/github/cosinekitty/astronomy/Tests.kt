@@ -15,6 +15,7 @@ import kotlin.math.sqrt
 import kotlin.text.Regex
 
 private const val dataRootDir = "../../generate/"
+private const val MINUTES_PER_DAY = 24.0 * 60.0
 
 private fun tokenize(s: String): List<String> {
     return s.split(Regex("""\s+"""))
@@ -1126,6 +1127,54 @@ class Tests {
         val angle = angleFromSun(body, time)
         val diff = abs(correctAngle - angle)
         assertTrue(diff < 1.0e-13, "Excessive angle error $diff for $body at $time")
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Lunar eclipse search`() {
+        val filename = dataRootDir + "eclipse/lunar_eclipse.txt"
+        val infile = File(filename)
+        var lnum = 0
+        val diffLimit = 2.0     // maximum tolerable error in minutes
+        var eclipse: LunarEclipseInfo = searchLunarEclipse(Time(1701, 1, 1, 0, 0, 0.0))
+        for (line in infile.readLines()) {
+            ++lnum
+            val tokens = tokenize(line)
+            assertTrue(tokens.size == 3, "$filename line $lnum: incorrect number of tokens")
+            val peakTime = parseDate(tokens[0])
+            val partialMinutes = tokens[1].toDouble()
+            val totalMinutes = tokens[2].toDouble()
+
+            // Verify that the calculated semi-durations are consistent with the kind of eclipse.
+            val valid: Boolean = when (eclipse.kind) {
+                EclipseKind.Penumbral -> (eclipse.sdPenum > 0.0) && (eclipse.sdPartial == 0.0) && (eclipse.sdTotal == 0.0)
+                EclipseKind.Partial   -> (eclipse.sdPenum > 0.0) && (eclipse.sdPartial >  0.0) && (eclipse.sdTotal == 0.0)
+                EclipseKind.Total     -> (eclipse.sdPenum > 0.0) && (eclipse.sdPartial >  0.0) && (eclipse.sdTotal >  0.0)
+                else                  -> fail("Invalid lunar eclipse kind: ${eclipse.kind}")
+            }
+            assertTrue(valid, "$filename line $lnum: invalid semiduration(s) for kind ${eclipse.kind}")
+
+            // Check eclipse peak time
+            val peakDiffDays = eclipse.peak.ut - peakTime.ut
+
+            // Tolerate missing penumbral eclipses.
+            // Skip to the next input line without calculating the next eclipse.
+            if (partialMinutes == 0.0 && peakDiffDays > 20.0)
+                continue
+
+            val peakDiffMinutes = MINUTES_PER_DAY * abs(peakDiffDays)
+            assertTrue(peakDiffMinutes < diffLimit, "excessive peak time error = $peakDiffMinutes minutes; expected $peakTime, found ${eclipse.peak}")
+
+            val partialDiffMinutes = abs(partialMinutes - eclipse.sdPartial)
+            assertTrue(partialDiffMinutes <= diffLimit, "excessive partial eclipse semiduration error = $partialDiffMinutes minutes")
+
+            val totalDiffMinutes = abs(totalMinutes - eclipse.sdTotal)
+            assertTrue(totalDiffMinutes <= diffLimit, "excessive total eclipse semiduration error = $totalDiffMinutes minutes")
+
+            // Find the next consecutive lunar eclipse.
+            eclipse = nextLunarEclipse(eclipse.peak)
+        }
     }
 
     //----------------------------------------------------------------------------------------
