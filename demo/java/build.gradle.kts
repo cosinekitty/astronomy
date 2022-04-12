@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.ebraminio:astronomy:2bcbf09edd335a42e013135e04c1418d0bdcde32")
+    implementation("com.github.cosinekitty:astronomy:57a736067a2ef005c05b30d94df08d46d78d5326")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
