@@ -1,0 +1,16 @@
+#!/bin/bash
+Fail()
+{
+    echo "FATAL($0): $1"
+    exit 1
+}
+
+echo "Kotlin demos: Native"
+cd native || Fail "Cannot cd to dir: native"
+kotlinc-native -version || Fail "Cannot run Kotlin Native compiler."
+kotlinc-native moonphase.kt -o moonphase || Fail "Error building moonphase demo."
+./moonphase.kexe || Fail "Error running moonphase demo."
+cd ..
+
+echo "Kotlin demos: PASS"
+exit 0

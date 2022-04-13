@@ -152,6 +152,8 @@ cd ../csharp || Fail "Cannot change directory to ../csharp"
 test/test || Fail "Error testing C# examples."
 cd ../java || Fail "Cannot change directory to ../java"
 ./demotest || Fail "Error testing Java examples."
+cd ../kotlin || Fail "Cannot change directory to ../kotlin"
+./demotest || Fail "Error testing Kotlin examples."
 cd ../../generate || Fail "Cannot change back to generate directory."
 
 cat pass.txt
