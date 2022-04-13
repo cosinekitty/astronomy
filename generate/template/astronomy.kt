@@ -1989,7 +1989,7 @@ internal fun peakMoonShadow(searchCenterTime: Time): ShadowInfo {
     val window = 0.03       // days before/after new moon to search for minimum shadow distance
     val t1 = searchCenterTime.addDays(-window)
     val t2 = searchCenterTime.addDays(+window)
-    val tx = search(moonShadowSlopeContext, t1, t2, 1.0) ?:
+    val tx = search(t1, t2, 1.0, moonShadowSlopeContext) ?:
         throw InternalError("Failed to find Moon peak shadow event.")
     return moonShadow(tx)
 }
