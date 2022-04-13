@@ -61,27 +61,10 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.7
-    - name: Install Python linter
-      run: |
-        python -m pip install --upgrade pip
-        pip install pylint
-    - name: Install documentation tools
-      shell: cmd
-      run: |
-        md bin
-        cd bin
-        curl -o doxygen.zip https://www.doxygen.nl/files/doxygen-1.9.3.windows.x64.bin.zip
-        7z x doxygen.zip
-        del doxygen.zip
-        cd ..
     - name: Init Node.js 14.x
       uses: actions/setup-node@v2
       with:
         node-version: 14.x
     - name: Test Astronomy Engine
       shell: cmd
-      run: |
-        cd generate
-        del output\vsop*.txt output\*.eph output\jupiter_moons.txt
-        call run.bat
-        call verify_clean.bat
+      run: call generate\commit_hook.bat
