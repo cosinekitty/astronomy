@@ -3,6 +3,9 @@
 # identity
 
 [jvm]\
+
+@[JvmStatic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-static/index.html)
+
 fun [identity](identity.md)(): [RotationMatrix](../index.md)
 
 Creates an identity rotation matrix.
