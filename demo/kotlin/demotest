@@ -14,6 +14,8 @@ IsInstalled()
 echo "Kotlin demos: Native"
 cd native || Fail "Cannot cd to dir: native"
 
+AESOURCE=../../../source/kotlin/src/main/kotlin/io/github/cosinekitty/astronomy/astronomy.kt
+
 if [[ -x ../../../bin/kotlin-native/bin/kotlinc-native ]]; then
     KOTLIN_NATIVE=../../../bin/kotlin-native/bin/kotlinc-native
 else
@@ -24,7 +26,7 @@ echo "KOTLIN_NATIVE=$KOTLIN_NATIVE"
 
 rm -f *.kexe
 $KOTLIN_NATIVE -version || Fail "Cannot run Kotlin Native compiler."
-$KOTLIN_NATIVE moonphase.kt -o moonphase || Fail "Error building moonphase demo."
+$KOTLIN_NATIVE moonphase.kt $AESOURCE -o moonphase || Fail "Error building moonphase demo."
 ./moonphase.kexe || Fail "Error running moonphase demo."
 cd ..
 
