@@ -28,9 +28,6 @@
 
 package io.github.cosinekitty.astronomy
 
-import java.text.SimpleDateFormat
-import java.util.*
-
 import kotlin.math.absoluteValue
 import kotlin.math.abs
 import kotlin.math.acos
@@ -42,6 +39,7 @@ import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.PI
+import kotlin.math.round
 import kotlin.math.roundToLong
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -144,7 +142,6 @@ fun Double.radiansToDegrees() = this * RAD2DEG
 const val KM_PER_AU = 1.4959787069098932e+8
 
 
-private val TimeZoneUtc = TimeZone.getTimeZone("UTC")
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217
 private const val DAYS_PER_MILLENNIUM = 365250.0
 
@@ -169,6 +166,7 @@ private const val MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PE
 private const val ANGVEL = 7.2921150e-5
 private const val MINUTES_PER_DAY = 60.0 * 24.0
 private const val SECONDS_PER_DAY = 60.0 * MINUTES_PER_DAY
+private const val MILLISECONDS_PER_DAY = 1000.0 * SECONDS_PER_DAY
 private const val SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
 private const val MEAN_SYNODIC_MONTH = 29.530588     // average number of days for Moon to return to the same phase
 private const val EARTH_ORBITAL_PERIOD = 365.256
@@ -342,6 +340,130 @@ enum class Body(
 }
 
 
+private fun universalTimeDays(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double): Double {
+    // This formula is adapted from NOVAS C 3.1 function julian_date().
+    val y = year.toLong()
+    val m = month.toLong()
+    val d = day.toLong()
+
+    val jd12h: Long = (
+        d - 32075L + 1461L*(y + 4800L + (m - 14L)/12L)/4L
+        + 367L*(m - 2L - ((m - 14L)/12L)*12L)/12L
+        - 3L*((y + 4900L + (m - 14L)/12L)/100L)/4L
+    )
+
+    val y2000 = jd12h - 2451545L
+    val ut = y2000.toDouble() - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0))
+    return ut
+}
+
+
+/**
+ * A universal time resolved into UTC calendar date and time fields.
+ */
+class DateTime(
+    /**
+     * The integer 4-digit year value.
+     */
+    val year: Int,
+
+    /**
+     * The month value 1=January, ..., 12=December.
+     */
+    val month: Int,
+
+    /**
+     * The day of the month, 1..31.
+     */
+    val day: Int,
+
+    /**
+     * The hour of the day, 0..23.
+     */
+    val hour: Int,
+
+    /**
+     * The minute value 0..59.
+     */
+    val minute: Int,
+
+    /**
+     * The floating point second value in the half-open range [0, 60).
+     */
+    val second: Double
+) {
+    /**
+     * Convert this date and time to the floating point number of days since the J2000 epoch.
+     */
+    fun toDays() = universalTimeDays(year, month, day, hour, minute, second)
+
+    /**
+     * Convert this date and time to a [Time] value that can be used for astronomy calculations.
+     */
+    fun toTime() = Time(year, month, day, hour, minute, second)
+
+    /**
+     * Converts this `DateTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
+     *
+     * @return Example: "2019-08-30T17:45:22.763Z".
+     */
+    override fun toString(): String {
+        // We want to round milliseconds down, not round to the nearest millisecond.
+        // Otherwise, we have to handle very complicated logic of rounding up
+        // seconds, minutes, hours, ... years, handling leap years, etc.
+        // Nothing in Astronomy Engine requires sub-millisecond precision in string formats.
+
+        val wholeSeconds: Int = second.toInt()
+        val millis: Double = 1000.0 * (second - wholeSeconds)
+        val wholeMillis: Int = millis.toInt()
+
+        return (
+            "%04d".format(year) +
+            "-" +
+            "%02d".format(month) +
+            "-" +
+            "%02d".format(day) +
+            "T" +
+            "%02d".format(hour) +
+            ":" +
+            "%02d".format(minute) +
+            ":" +
+            "%02d".format(wholeSeconds) +
+            "." +
+            "%03d".format(wholeMillis) +
+            "Z"
+        )
+    }
+}
+
+internal fun dayValueToDateTime(ut: Double): DateTime {
+    // Adapted from the NOVAS C 3.1 function cal_date()
+    val djd = ut + 2451545.5
+    val jd = djd.toLong()
+
+    var x = 24.0 * (djd % 1.0)
+    val hour = x.toInt()
+    x = 60.0 * (x % 1.0)
+    val minute = x.toInt()
+    val second = 60.0 * (x % 1.0)
+
+    var k = jd + 68569L
+    val n = 4L * k / 146097L
+    k -= (146097L * n + 3L) / 4L
+    val m = 4000L * (k + 1L) / 1461001L
+    k = k - 1461L * m / 4L + 31L
+
+    var month = (80L * k / 2447L).toInt()
+    val day = (k - 2447L * month.toLong() / 80L).toInt()
+    k = month.toLong() / 11L
+
+    month = (month.toLong() + 2L - 12L * k).toInt()
+    val year = (100L * (n - 49L) + m + k).toInt()
+
+    return DateTime(year, month, day, hour, minute, second)
+}
+
+
 /**
  * A date and time used for astronomical calculations.
  */
@@ -408,20 +530,6 @@ class Time private constructor(
     constructor(ut: Double) : this(ut, terrestrialTime(ut))
 
     /**
-     * Creates a `Time` object from a `Date` object.
-     *
-     * @param d The date and time to be converted to Time format.
-     */
-    constructor(d: Date) : this((d.time - origin.time).toDouble() / MILLIS_PER_DAY)
-
-    /**
-     * Creates a `Time` object from a `Calendar` object.
-     *
-     * @param d The date and time to be converted to Time format.
-     */
-    constructor(d: Calendar) : this(d.time)
-
-    /**
      * Creates a `Time` object from a UTC year, month, day, hour, minute and second.
      *
      * @param year The UTC year value.
@@ -431,27 +539,25 @@ class Time private constructor(
      * @param minute The UTC minute value 0..59.
      * @param second The UTC second in the half-open range [0, 60).
      */
-    constructor(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double) : this(
-        GregorianCalendar(TimeZoneUtc).also {
-            val totalMillis: Int = Math.floor(second * 1000.0).toInt()
-            it.set(year, month - 1, day, hour, minute, totalMillis / 1000)
-            it.set(Calendar.MILLISECOND, totalMillis % 1000)
-        }
-    )
+    constructor(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double):
+        this(universalTimeDays(year, month, day, hour, minute, second))
 
     /**
-     * Converts this object to a native `Date` equivalent.
-     *
-     * @return A UTC `Date` object for this `Time` value.
+     * Resolves this `Time` into year, month, day, hour, minute, second.
      */
-    fun toDate(): Date = Date(origin.time + (ut * MILLIS_PER_DAY).roundToLong())
+    fun toDateTime(): DateTime = dayValueToDateTime(ut)
+
+    /**
+     * Converts this `Time` to the integer number of millseconds since 1970.
+     */
+    fun toMillisecondsSince1970() = round((ut + 10957.5) * MILLISECONDS_PER_DAY).toLong()
 
     /**
      * Converts this `Time` to ISO 8601 format, expressed in UTC with millisecond resolution.
      *
      * @return Example: "2019-08-30T17:45:22.763Z".
      */
-    override fun toString(): String = dateFormat.format(toDate())
+    override fun toString() = toDateTime().toString()
 
     /**
      * Calculates the sum or difference of an [Time] with a specified floating point number of days.
@@ -473,25 +579,12 @@ class Time private constructor(
     internal fun julianMillennia() = tt / DAYS_PER_MILLENNIUM
 
     companion object {
-        @JvmStatic
-        private val origin = GregorianCalendar(TimeZoneUtc).also {
-            it.set(2000, 0, 1, 12, 0, 0)
-            it.set(Calendar.MILLISECOND, 0)
-        }.time
-
-        private const val MILLIS_PER_DAY = 24 * 3600 * 1000
-
-        @JvmStatic
-        private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").also {
-            it.timeZone = TimeZoneUtc
-        }
-
         /**
          * Creates a `Time` object from a Terrestrial Time day value.
          *
          * This function can be used in rare cases where a time must be based
          * on Terrestrial Time (TT) rather than Universal Time (UT).
-         * Most developers will want to invoke `new Time(ut)` with a universal time
+         * Most developers will want to use `Time(ut)` with a universal time
          * instead of this function, because usually time is based on civil time adjusted
          * by leap seconds to match the Earth's rotation, rather than the uniformly
          * flowing TT used to calculate solar system dynamics. In rare cases
@@ -501,7 +594,18 @@ class Time private constructor(
          * @param tt The number of days after the J2000 epoch.
          */
         @JvmStatic
-        fun fromTerrestrialTime(tt: Double): Time = Time(universalTime(tt), tt)
+        fun fromTerrestrialTime(tt: Double) = Time(universalTime(tt), tt)
+
+        /**
+         * Creates a `Time` object from the number of milliseconds since the 1970 epoch.
+         *
+         * Operating systems and runtime libraries commonly measure civil time
+         * in integer milliseconds since January 1, 1970 at 00:00 UTC (midnight).
+         * To facilitate using such values for astronomy calculations, this
+         * function converts a millsecond count into a `Time` object.
+         */
+        @JvmStatic
+        fun fromMillisecondsSince1970(millis: Long) = Time((millis - 946728000000L) / MILLISECONDS_PER_DAY)
     }
 }
 

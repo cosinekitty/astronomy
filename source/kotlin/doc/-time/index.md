@@ -12,8 +12,6 @@ A date and time used for astronomical calculations.
 | | |
 |---|---|
 | [Time](-time.md) | [jvm]<br>fun [Time](-time.md)(ut: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
-| [Time](-time.md) | [jvm]<br>fun [Time](-time.md)(d: [Date](https://docs.oracle.com/javase/8/docs/api/java/util/Date.html))<br>Creates a Time object from a Date object. |
-| [Time](-time.md) | [jvm]<br>fun [Time](-time.md)(d: [Calendar](https://docs.oracle.com/javase/8/docs/api/java/util/Calendar.html))<br>Creates a Time object from a Calendar object. |
 | [Time](-time.md) | [jvm]<br>fun [Time](-time.md)(year: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), month: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), day: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), hour: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), minute: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), second: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))<br>Creates a Time object from a UTC year, month, day, hour, minute and second. |
 
 ## Types
@@ -27,7 +25,8 @@ A date and time used for astronomical calculations.
 | Name | Summary |
 |---|---|
 | [addDays](add-days.md) | [jvm]<br>fun [addDays](add-days.md)(days: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Time](index.md)<br>Calculates the sum or difference of an [Time](index.md) with a specified floating point number of days. |
-| [toDate](to-date.md) | [jvm]<br>fun [toDate](to-date.md)(): [Date](https://docs.oracle.com/javase/8/docs/api/java/util/Date.html)<br>Converts this object to a native Date equivalent. |
+| [toDateTime](to-date-time.md) | [jvm]<br>fun [toDateTime](to-date-time.md)(): [DateTime](../-date-time/index.md)<br>Resolves this Time into year, month, day, hour, minute, second. |
+| [toMillisecondsSince1970](to-milliseconds-since1970.md) | [jvm]<br>fun [toMillisecondsSince1970](to-milliseconds-since1970.md)(): [Long](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>Converts this Time to the integer number of millseconds since 1970. |
 | [toString](to-string.md) | [jvm]<br>open override fun [toString](to-string.md)(): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Converts this Time to ISO 8601 format, expressed in UTC with millisecond resolution. |
 
 ## Properties

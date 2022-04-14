@@ -19,7 +19,9 @@ public class Main {
         } else {
             switch (args[0]) {
                 case "now":
-                    System.out.println(new Time(new Date()));
+                    Date now = new Date();
+                    Time time = Time.fromMillisecondsSince1970(now.getTime());
+                    System.out.println(time);
                     rc = 0;
                     break;
 

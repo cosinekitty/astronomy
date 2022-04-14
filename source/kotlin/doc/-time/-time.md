@@ -6,32 +6,6 @@
 fun [Time](-time.md)(ut: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 [jvm]\
-fun [Time](-time.md)(d: [Date](https://docs.oracle.com/javase/8/docs/api/java/util/Date.html))
-
-Creates a Time object from a Date object.
-
-## Parameters
-
-jvm
-
-| | |
-|---|---|
-| d | The date and time to be converted to Time format. |
-
-[jvm]\
-fun [Time](-time.md)(d: [Calendar](https://docs.oracle.com/javase/8/docs/api/java/util/Calendar.html))
-
-Creates a Time object from a Calendar object.
-
-## Parameters
-
-jvm
-
-| | |
-|---|---|
-| d | The date and time to be converted to Time format. |
-
-[jvm]\
 fun [Time](-time.md)(year: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), month: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), day: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), hour: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), minute: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), second: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 Creates a Time object from a UTC year, month, day, hour, minute and second.

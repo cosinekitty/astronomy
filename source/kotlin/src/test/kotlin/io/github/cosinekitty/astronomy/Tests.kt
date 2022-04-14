@@ -100,12 +100,26 @@ class Tests {
 
     @ParameterizedTest
     @CsvSource(
+        /*
+            These test data were made using the Python version of Astronmy Engine like this:
+
+            don@spearmint:~/github/astronomy/demo/python $ python3
+            Python 3.7.3 (default, Jan 22 2021, 20:04:44)
+            [GCC 8.3.0] on linux
+            Type "help", "copyright", "credits" or "license" for more information.
+            >>> from astronomy import Time
+            >>> t = Time.Make(1970, 12, 13, 23, 45, 12.345)
+            >>> t
+            Time('1970-12-13T23:45:12.345Z')
+            >>> t.ut
+            -10610.510273784721
+        */
         value = [
-            "2000, 1, 1, 12, 0, 0.0, 0.0, '2000-01-01T12:00:00.000Z'",
-            "2022, 1, 1, 12, 0, 0.0, 8036.0, '2022-01-01T12:00:00.000Z'",
-            "2022, 1, 1, 18, 0, 0.0, 8036.25, '2022-01-01T18:00:00.000Z'",
-            "1970, 12, 13, 23, 45, 12.345, -10610.510273784723, '1970-12-13T23:45:12.345Z'",
-            "2022, 1, 1, 18, 59, 59.9999, 8036.291666655093, '2022-01-01T18:59:59.999Z'",
+            "2000,  1,  1, 12,  0,  0.0,        0.0,            '2000-01-01T12:00:00.000Z'",
+            "2022,  1,  1, 12,  0,  0.0,     8036.0,            '2022-01-01T12:00:00.000Z'",
+            "2022,  1,  1, 18,  0,  0.0,     8036.25,           '2022-01-01T18:00:00.000Z'",
+            "1970, 12, 13, 23, 45, 12.345, -10610.510273784721, '1970-12-13T23:45:12.344Z'",    // we tolerate the 1 ms error in string
+            "2022,  1,  1, 18, 59, 59.9999, 8036.291666665509,  '2022-01-01T18:59:59.999Z'",
         ]
     )
     fun `universal time calculation should match expectations`(
@@ -113,7 +127,7 @@ class Tests {
     ) {
         val time = Time(year, month, day, hour, minute, second)
         assertEquals(ut, time.ut)
-        assertEquals(time.toString(), expectedToString)
+        assertEquals(expectedToString, time.toString())
     }
 
     @Test
@@ -131,6 +145,29 @@ class Tests {
         assertEquals(TerseVector(-1.5, 2.0, -1.0), TerseVector(-3.0, 4.0, -2.0) / 2.0)
         assertEquals(29.0, TerseVector(-3.0, 4.0, -2.0).quadrature())
         assertEquals(5.744562646538029, TerseVector(-2.0, -2.0, 5.0).magnitude())
+    }
+
+    private fun testTimeRoundTrip(millis: Long, expectedFormat: String) {
+        val time = Time.fromMillisecondsSince1970(millis)
+        assertEquals(millis, time.toMillisecondsSince1970())
+        assertEquals(expectedFormat, time.toString())
+    }
+
+    @Test
+    fun `Convert milliseconds since 1970 to Time`() {
+        // I created this test data using Node.js, like this:
+        // $ node
+        // Welcome to Node.js v14.19.1.
+        // Type ".help" for more information.
+        // > date = new Date('1066-07-15T11:54:37.123Z')
+        // 1066-07-15T11:54:37.123Z
+        // > date.getTime()
+        // -28510574722877
+        testTimeRoundTrip(-28510574722877L, "1066-07-15T11:54:37.123Z")
+
+        // The answer should end with ".762Z", but we are one millsecond off.
+        // We tolerate 1ms round-trip formatting error, due to the limitations of floating point math.
+        testTimeRoundTrip(1649942537762L, "2022-04-14T13:22:17.761Z")
     }
 
     //----------------------------------------------------------------------------------------
@@ -564,7 +601,7 @@ class Tests {
     @Test
     fun `Orientation conversion using rotation matrices`() {
         val time = Time(8126.418466077072)
-        assertTrue(time.toString() == "2022-04-01T22:02:35.469Z", "Unexpected time string.")
+        assertEquals("2022-04-01T22:02:35.469Z", time.toString(), "Unexpected time string.")
 
         val observer = Observer(-30.0, +150.0, 200.0)
 
@@ -835,7 +872,7 @@ class Tests {
         // This is a regression test for:
         // https://github.com/cosinekitty/astronomy/issues/187
         // For years far from the present, the seasons search was sometimes failing.
-        for (year in 1 .. 9999)
+        for (year in -2000 .. 9999)
             seasons(year)
     }
 
