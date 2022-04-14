@@ -5,10 +5,26 @@ Fail()
     exit 1
 }
 
+IsInstalled()
+{
+    type "$1" > /dev/null 2>&1
+    return $?
+}
+
 echo "Kotlin demos: Native"
 cd native || Fail "Cannot cd to dir: native"
-kotlinc-native -version || Fail "Cannot run Kotlin Native compiler."
-kotlinc-native moonphase.kt -o moonphase || Fail "Error building moonphase demo."
+
+if [[ -x ../../../bin/kotlin-native/bin/kotlinc-native ]]; then
+    KOTLIN_NATIVE=../../../bin/kotlin-native/bin/kotlinc-native
+else
+    KOTLIN_NATIVE=kotlinc-native
+fi
+
+echo "KOTLIN_NATIVE=$KOTLIN_NATIVE"
+
+rm -f *.kexe
+$KOTLIN_NATIVE -version || Fail "Cannot run Kotlin Native compiler."
+$KOTLIN_NATIVE moonphase.kt -o moonphase || Fail "Error building moonphase demo."
 ./moonphase.kexe || Fail "Error running moonphase demo."
 cd ..
 

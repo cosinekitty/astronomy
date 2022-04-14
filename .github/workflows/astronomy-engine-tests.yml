@@ -25,10 +25,9 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: Install Kotlin Native compiler
+      run: generate/install_kotlin_native 'https://github.com/JetBrains/kotlin/releases/download/v1.6.20/kotlin-native-linux-x86_64-1.6.20.tar.gz'
     - uses: gradle/wrapper-validation-action@v1
-    - uses: cosinekitty/setup-kotlin@main
-      with:
-        install-native: true
     - name: Test Astronomy Engine
       run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
 
@@ -56,10 +55,9 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: Install Kotlin Native compiler
+      run: generate/install_kotlin_native 'https://github.com/JetBrains/kotlin/releases/download/v1.6.20/kotlin-native-macos-x86_64-1.6.20.tar.gz'
     - uses: gradle/wrapper-validation-action@v1
-    - uses: cosinekitty/setup-kotlin@main
-      with:
-        install-native: true
     - name: Test Astronomy Engine
       run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
 
