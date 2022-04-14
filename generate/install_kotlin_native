@@ -9,7 +9,7 @@ Fail()
 
 mkdir -pv bin || Fail "Error creating bin directory"
 rm -rf kotlin-native* bin/kotlin-native
-wget -O kotlin-native.tar.gz "$1" || Fail "Error downloading; $1"
+wget --no-verbose -O kotlin-native.tar.gz "$1" || Fail "Error downloading; $1"
 tar xf kotlin-native.tar.gz || Fail "Error unpacking kotlin-native.tar.gz"
 rm kotlin-native.tar.gz || Fail "Error cleaning up kotlin-native.tar.gz"
 mv -v kotlin-native-* bin/kotlin-native || Fail "Error moving Kotlin Native directory"
