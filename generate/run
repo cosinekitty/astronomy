@@ -156,7 +156,7 @@ cd ../java || Fail "Cannot change directory to ../java"
 #!!!!!!!!!!!!! The Kotlin Native steps do not work yet !!!!!!!!!!!
 # cd ../kotlin || Fail "Cannot change directory to ../kotlin"
 # ./demotest || Fail "Error testing Kotlin examples."
-# cd ../../generate || Fail "Cannot change back to generate directory."
 
+cd ../../generate || Fail "Cannot change back to generate directory."
 cat pass.txt
 exit 0

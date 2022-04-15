@@ -5,14 +5,23 @@ Fail()
     exit 1
 }
 
-[[ -z "$1" ]] && Fail "Missing download URL on command line."
+if true; then
+    # [Don Cross - 2022-04-15]
+    # For now, we are postponing support for Kotlin Native.
+    # There are too many problems trying to make the same source
+    # work for both the JVM and Native builds.
+    echo "$0: Skipping installation of Kotlin Native compiler."
+else
+    [[ -z "$1" ]] && Fail "Missing download URL on command line."
 
-mkdir -pv bin || Fail "Error creating bin directory"
-rm -rf kotlin-native* bin/kotlin-native
-wget --no-verbose -O kotlin-native.tar.gz "$1" || Fail "Error downloading; $1"
-tar xf kotlin-native.tar.gz || Fail "Error unpacking kotlin-native.tar.gz"
-rm kotlin-native.tar.gz || Fail "Error cleaning up kotlin-native.tar.gz"
-mv -v kotlin-native-* bin/kotlin-native || Fail "Error moving Kotlin Native directory"
-bin/kotlin-native/bin/kotlinc-native -version || Fail "Error testing Kotlin Native compiler"
-echo "$0: SUCCESS"
+    mkdir -pv bin || Fail "Error creating bin directory"
+    rm -rf kotlin-native* bin/kotlin-native
+    wget --no-verbose -O kotlin-native.tar.gz "$1" || Fail "Error downloading; $1"
+    tar xf kotlin-native.tar.gz || Fail "Error unpacking kotlin-native.tar.gz"
+    rm kotlin-native.tar.gz || Fail "Error cleaning up kotlin-native.tar.gz"
+    mv -v kotlin-native-* bin/kotlin-native || Fail "Error moving Kotlin Native directory"
+    bin/kotlin-native/bin/kotlinc-native -version || Fail "Error testing Kotlin Native compiler"
+    echo "$0: SUCCESS"
+fi
+
 exit 0
