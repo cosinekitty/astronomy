@@ -389,7 +389,8 @@ class Tests {
 
         // I used the Python version to calculate reference state vectors.
         // This is just a sanity check.
-        // More exhaustive tests will be added later.
+        // Exhaustive tests referenced against JPL Horizons data
+        // are done separately by the test `Heliocentric state vectors`.
 
         verifyHelio(
             Body.Mercury,
@@ -1545,6 +1546,35 @@ class Tests {
     fun `Geocentric state vectors`() {
         verifyStateBody("barystate/GeoMoon.txt",  4.086e-05,  5.347e-05) { time -> geoMoonState(time) }
         verifyStateBody("barystate/GeoEMB.txt",   4.076e-05,  5.335e-05) { time -> geoEmbState(time)  }
+    }
+
+    @Test
+    fun `Heliocentric state vectors`() {
+        verifyStateBody("heliostate/SSB.txt",     -1.209e-05, -1.125e-07) { time -> helioState(Body.SSB,     time) }
+        verifyStateBody("heliostate/Mercury.txt",  1.481e-04,  2.756e-04) { time -> helioState(Body.Mercury, time) }
+        verifyStateBody("heliostate/Venus.txt",    3.528e-05,  4.485e-05) { time -> helioState(Body.Venus,   time) }
+        verifyStateBody("heliostate/Earth.txt",    1.476e-05,  6.105e-05) { time -> helioState(Body.Earth,   time) }
+        verifyStateBody("heliostate/Mars.txt",     3.154e-05,  5.603e-05) { time -> helioState(Body.Mars,    time) }
+        verifyStateBody("heliostate/Jupiter.txt",  7.455e-05,  2.562e-04) { time -> helioState(Body.Jupiter, time) }
+        verifyStateBody("heliostate/Saturn.txt",   1.066e-04,  3.150e-04) { time -> helioState(Body.Saturn,  time) }
+        verifyStateBody("heliostate/Uranus.txt",   9.034e-05,  2.712e-04) { time -> helioState(Body.Uranus,  time) }
+        verifyStateBody("heliostate/Neptune.txt",  9.834e-05,  4.534e-04) { time -> helioState(Body.Neptune, time) }
+        verifyStateBody("heliostate/Pluto.txt",    4.271e-05,  1.198e-04) { time -> helioState(Body.Pluto,   time) }
+        verifyStateBody("heliostate/Moon.txt",     1.477e-05,  6.195e-05) { time -> helioState(Body.Moon,    time) }
+        verifyStateBody("heliostate/EMB.txt",      1.476e-05,  6.106e-05) { time -> helioState(Body.EMB,     time) }
+    }
+
+    @Test
+    fun `Topocentric state vectors`() {
+        val observer = Observer(30.0, -80.0, 1000.0)
+
+        verifyStateBody("topostate/Earth_N30_W80_1000m.txt", 2.108e-04, 2.430e-04) {
+            time -> -observer.toStateVector(time, EquatorEpoch.J2000)
+        }
+
+        verifyStateBody("topostate/EMB_N30_W80_1000m.txt", 7.195e-04, 2.497e-04) {
+            time -> geoEmbState(time) - observer.toStateVector(time, EquatorEpoch.J2000)
+        }
     }
 
     //----------------------------------------------------------------------------------------

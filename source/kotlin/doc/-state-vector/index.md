@@ -19,8 +19,10 @@ Represents a combined position vector and velocity vector at a given moment in t
 | Name | Summary |
 |---|---|
 | [div](div.md) | [jvm]<br>operator fun [div](div.md)(denom: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [StateVector](index.md)<br>Divides a state vector by a scalar. |
+| [minus](minus.md) | [jvm]<br>operator fun [minus](minus.md)(other: [StateVector](index.md)): [StateVector](index.md)<br>Subtracts two state vetors, yielding the state vector difference. |
 | [plus](plus.md) | [jvm]<br>operator fun [plus](plus.md)(other: [StateVector](index.md)): [StateVector](index.md)<br>Adds two state vetors, yielding the state vector sum. |
 | [position](position.md) | [jvm]<br>fun [position](position.md)(): [Vector](../-vector/index.md)<br>Returns the position vector associated with this state vector. |
+| [unaryMinus](unary-minus.md) | [jvm]<br>operator fun [unaryMinus](unary-minus.md)(): [StateVector](index.md)<br>Negates a state vector; the same as multiplying the state vector by the scalar -1. |
 | [velocity](velocity.md) | [jvm]<br>fun [velocity](velocity.md)(): [Vector](../-vector/index.md)<br>Returns the velocity vector associated with this state vector. |
 
 ## Properties

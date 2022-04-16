@@ -922,6 +922,20 @@ data class StateVector(
         )
 
     /**
+     * Subtracts two state vetors, yielding the state vector difference.
+     */
+    operator fun minus(other: StateVector) =
+        StateVector(
+            x - other.x,
+            y - other.y,
+            z - other.z,
+            vx - other.vx,
+            vy - other.vy,
+            vz - other.vz,
+            verifyIdenticalTimes(t, other.t)
+        )
+
+    /**
      * Divides a state vector by a scalar.
      */
     operator fun div(denom: Double) =
@@ -934,6 +948,12 @@ data class StateVector(
             vz / denom,
             t
         )
+
+    /**
+     * Negates a state vector; the same as multiplying the state vector by the scalar -1.
+     */
+    operator fun unaryMinus() =
+        StateVector(-x, -y, -z, -vx, -vy, -vz, t)
 }
 
 
