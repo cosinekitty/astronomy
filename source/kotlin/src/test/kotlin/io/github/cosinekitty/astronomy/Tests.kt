@@ -21,6 +21,12 @@ private fun tokenize(s: String): List<String> {
     return s.split(Regex("""\s+"""))
 }
 
+private fun stripLine(line: String): String {
+    // Ignore anything after a '#' character and trim leading and trailing whitespace.
+    val index = line.indexOf('#')
+    return (if (index < 0) line else line.substring(0, index)).trim()
+}
+
 private fun groupString(match: MatchResult, groupIndex: Int, filename: String, lnum: Int): String =
     (match.groups[groupIndex] ?: fail("$filename line $lnum: cannot extract group $groupIndex")).value
 
@@ -60,6 +66,13 @@ private fun parseDate(text: String): Time {
     )
     return Time(year, month, day, hour, minute, second)
 }
+
+private fun optionalParseDate(text: String): Time? = (
+    if (text == "-")
+        null
+    else
+        parseDate(text)
+)
 
 class Tests {
     private fun checkVector(
@@ -1318,6 +1331,76 @@ class Tests {
         }
 
         assertTrue(skipCount <= 6, "$filename: excessive skip count = $skipCount")
+    }
+
+    @Test
+    fun `Local solar eclipse away from peak location`() {
+        val filename = dataRootDir + "eclipse/local_solar_eclipse.txt"
+        val infile = File(filename)
+        var lnum = 0
+        var verifyCount = 0
+        for (rawLine in infile.readLines()) {
+            ++lnum
+            val line = stripLine(rawLine)
+            if (line.length == 0)
+                continue
+            val token = tokenize(line)
+            assertEquals(13, token.size, "$filename line $lnum: wrong number of tokens")
+            val latitude = token[0].toDouble()
+            val longitude = token[1].toDouble()
+            val typeCode = token[2]
+            val p1 = parseDate(token[3])
+            val p1alt = token[4].toDouble()
+            val t1 = optionalParseDate(token[5])
+            val t1alt = token[6].toDouble()
+            val peak = parseDate(token[7])
+            val peakalt = token[8].toDouble()
+            val t2 = optionalParseDate(token[9])
+            val t2alt = token[10].toDouble()
+            val p2 = parseDate(token[11])
+            val p2alt = token[12].toDouble()
+
+            val expectedKind = when (typeCode) {
+                "P"  -> EclipseKind.Partial
+                "A"  -> EclipseKind.Annular
+                "T"  -> EclipseKind.Total
+                else -> fail("$filename line $lnum: invalid eclipse type '$typeCode'")
+            }
+
+            val observer = Observer(latitude, longitude, 0.0)
+            val searchTime = p1.addDays(-20.0)
+            val eclipse = searchLocalSolarEclipse(searchTime, observer)
+            assertEquals(expectedKind, eclipse.kind, "$filename line $lnum: wrong eclipse kind")
+            checkEvent(filename, lnum, "peak", peak, peakalt, eclipse.peak)
+            checkEvent(filename, lnum, "partialBegin", p1, p1alt, eclipse.partialBegin)
+            checkEvent(filename, lnum, "partialEnd", p2, p2alt, eclipse.partialEnd)
+            if (typeCode != "P") {
+                assertTrue(t1 != null, "$filename line $lnum: t1 was not supposed to be null.")
+                assertTrue(t2 != null, "$filename line $lnum: t2 was not supposed to be null.")
+                checkEvent(filename, lnum, "totalBegin", t1, t1alt, eclipse.totalBegin)
+                checkEvent(filename, lnum, "totalEnd", t2, t2alt, eclipse.totalEnd)
+            } else {
+                assertTrue(eclipse.totalBegin == null, "$filename line $lnum: eclipse.totalBegin was supposed to be null.")
+                assertTrue(eclipse.totalEnd == null, "$filename line $lnum: eclipse.totalEnd was supposed to be null.")
+            }
+            ++verifyCount;
+        }
+        assertEquals(6, verifyCount)
+    }
+
+    private fun checkEvent(
+        filename: String,
+        lnum: Int,
+        name: String,
+        expectedTime: Time,
+        expectedAltitude: Double,
+        evt: EclipseEvent?
+    ) {
+        assertTrue(evt != null, "$filename line $lnum: eclipse $name was not supposed to be null.")
+        val diffMinutes = MINUTES_PER_DAY * abs(expectedTime.ut - evt.time.ut)
+        assertTrue(diffMinutes < 1.0, "$filename line $lnum: excessive time error for $name: $diffMinutes minutes.")
+        val diffAlt = abs(expectedAltitude - evt.altitude)
+        assertTrue(diffAlt < 0.5, "$filename line $lnum: excessive altitude error for $name: $diffAlt degrees.")
     }
 
     //----------------------------------------------------------------------------------------
