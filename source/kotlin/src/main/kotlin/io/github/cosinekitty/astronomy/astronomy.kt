@@ -4808,6 +4808,33 @@ fun horizon(
     return Topocentric(az, 90.0 - zd, horRa, horDec)
 }
 
+
+/**
+ * Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.
+ *
+ * This function calculates the angle around the plane of the Earth's orbit
+ * of a celestial body, as seen from the center of the Sun.
+ * The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
+ * in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+ *
+ * @param body
+ *      A body other than the Sun.
+ *
+ * @param time
+ *      The date and time at which the body's ecliptic longitude is to be calculated.
+ *
+ * @return The ecliptic longitude in degrees of the given body at the given time.
+ */
+fun eclipticLongitude(body: Body, time: Time): Double {
+    if (body == Body.Sun)
+        throw InvalidBodyException(body)
+
+    val hv = helioVector(body, time)
+    val eclip = equatorialToEcliptic(hv)
+    return eclip.elon
+}
+
+
 /**
  * Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
  *

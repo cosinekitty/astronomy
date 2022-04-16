@@ -1404,4 +1404,30 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Heliocentric ecliptic longitude`() {
+        // These test data were generated using the Python version of Astronomy Engine.
+        val time = Time(8141.199164526366)   // 2022-04-16T16:46:47.815Z
+        verifyEclipticLongitude(time, Body.Mercury,  94.721630860364  )
+        verifyEclipticLongitude(time, Body.Venus,   265.7830489493118 )
+        verifyEclipticLongitude(time, Body.Earth,   206.37462137776242)
+        verifyEclipticLongitude(time, Body.EMB,     206.37458597072734)
+        verifyEclipticLongitude(time, Body.Moon,    206.37171443948878)
+        verifyEclipticLongitude(time, Body.Mars,    294.9980436292426 )
+        verifyEclipticLongitude(time, Body.Jupiter, 348.4960299261051 )
+        verifyEclipticLongitude(time, Body.Saturn,  317.84336759149676)
+        verifyEclipticLongitude(time, Body.Uranus,   44.28789479945196)
+        verifyEclipticLongitude(time, Body.Neptune, 352.78484144085974)
+        verifyEclipticLongitude(time, Body.Pluto,   296.58427291483525)
+        verifyEclipticLongitude(time, Body.SSB,     344.6690770393668 )
+    }
+
+    private fun verifyEclipticLongitude(time: Time, body: Body, expectedLongitude: Double) {
+        val calculatedLongitude = eclipticLongitude(body, time)
+        val diff = abs(calculatedLongitude - expectedLongitude)
+        assertTrue(diff < 1.0e-16, "excessive ecliptic longitude error for $body: $diff degrees")
+    }
+
+    //----------------------------------------------------------------------------------------
 }
