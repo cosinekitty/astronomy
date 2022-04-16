@@ -53,7 +53,7 @@ class InvalidBodyException(body: Body) : Exception("Invalid body: $body")
 /**
  * The Earth is not allowed as the body parameter.
  */
-class EarthNotAllowedException() : Exception("The Earth is not allowed as the body parameter.")
+class EarthNotAllowedException : Exception("The Earth is not allowed as the body parameter.")
 
 /**
  * An unexpected internal error occurred in Astronomy Engine
@@ -829,7 +829,7 @@ data class Vector(
      * @return The geographic coordinates corresponding to the vector.
      */
     fun toObserver(equator: EquatorEpoch): Observer {
-        val vector = when(equator) {
+        val vector = when (equator) {
             EquatorEpoch.J2000  -> gyration(this, PrecessDirection.From2000)
             EquatorEpoch.OfDate -> this
         }
@@ -2046,29 +2046,22 @@ internal fun shadowSemiDurationMinutes(centerTime: Time, radiusLimit: Double, wi
 }
 
 internal fun searchEarthShadow(radiusLimit: Double, direction: Double, t1: Time, t2: Time): Time {
-    class Context(val radiusLimit: Double, val direction: Double): SearchContext {
-        override fun eval(time: Time) = direction * (earthShadow(time).r - radiusLimit)
-    }
-    val context = Context(radiusLimit, direction)
-    return search(t1, t2, 1.0, context) ?: throw InternalError("Failed to find Earth shadow transition.")
-}
-
-
-internal class SearchContextEarthShadowSlope: SearchContext {
-    override fun eval(time: Time): Double {
-        val dt = 1.0 / SECONDS_PER_DAY
-        val t1 = time.addDays(-dt)
-        val t2 = time.addDays(+dt)
-        val shadow1 = earthShadow(t1)
-        val shadow2 = earthShadow(t2)
-        return (shadow2.r - shadow1.r) / dt
-    }
+    return search(t1, t2, 1.0) { time ->
+        direction * (earthShadow(time).r - radiusLimit)
+    } ?: throw InternalError("Failed to find Earth shadow transition.")
 }
 
 // We can get away with creating a single Earth shadow slope context
 // because it contains no state and it has no side-effects.
 // This reduces memory allocation overhead and is thread-safe.
-internal val earthShadowSlopeContext = SearchContextEarthShadowSlope()
+internal val earthShadowSlopeContext = SearchContext { time ->
+    val dt = 1.0 / SECONDS_PER_DAY
+    val t1 = time.addDays(-dt)
+    val t2 = time.addDays(+dt)
+    val shadow1 = earthShadow(t1)
+    val shadow2 = earthShadow(t2)
+    (shadow2.r - shadow1.r) / dt
+}
 
 internal fun peakEarthShadow(searchCenterTime: Time): ShadowInfo {
     val window = 0.03       // initial search window, in days, before/after searchCenterTime
@@ -2080,18 +2073,14 @@ internal fun peakEarthShadow(searchCenterTime: Time): ShadowInfo {
 }
 
 
-internal class SearchContextMoonShadowSlope: SearchContext {
-    override fun eval(time: Time): Double {
-        val dt = 1.0 / SECONDS_PER_DAY
-        val t1 = time.addDays(-dt)
-        val t2 = time.addDays(+dt)
-        val shadow1 = moonShadow(t1)
-        val shadow2 = moonShadow(t2)
-        return (shadow2.r - shadow1.r) / dt
-    }
+internal val moonShadowSlopeContext = SearchContext { time ->
+    val dt = 1.0 / SECONDS_PER_DAY
+    val t1 = time.addDays(-dt)
+    val t2 = time.addDays(+dt)
+    val shadow1 = moonShadow(t1)
+    val shadow2 = moonShadow(t2)
+    (shadow2.r - shadow1.r) / dt
 }
-
-internal val moonShadowSlopeContext = SearchContextMoonShadowSlope()
 
 internal fun peakMoonShadow(searchCenterTime: Time): ShadowInfo {
     // Search for when the Moon's shadow axis is closest to the center of the Earth.
@@ -2103,26 +2092,20 @@ internal fun peakMoonShadow(searchCenterTime: Time): ShadowInfo {
     return moonShadow(tx)
 }
 
-internal class SearchContextLocalMoonShadowSlope(val observer: Observer): SearchContext {
-    override fun eval(time: Time): Double {
+internal fun peakLocalMoonShadow(searchCenterTime: Time, observer: Observer): ShadowInfo {
+    // Search for the time near searchCenterTime that the Moon's shadow axis
+    // comes closest to the given observer.
+    val window = 0.2
+    val time1 = searchCenterTime.addDays(-window)
+    val time2 = searchCenterTime.addDays(+window)
+    val time = search(time1, time2, 1.0) { time ->
         val dt = 1.0 / SECONDS_PER_DAY
         val t1 = time.addDays(-dt)
         val t2 = time.addDays(+dt)
         val shadow1 = localMoonShadow(t1, observer)
         val shadow2 = localMoonShadow(t2, observer)
-        return (shadow2.r - shadow1.r) / dt
-    }
-}
-
-internal fun peakLocalMoonShadow(searchCenterTime: Time, observer: Observer): ShadowInfo {
-    // Search for the time near searchCenterTime that the Moon's shadow axis
-    // comes closest to the given observer.
-    val window = 0.2
-    val t1 = searchCenterTime.addDays(-window)
-    val t2 = searchCenterTime.addDays(+window)
-    val context = SearchContextLocalMoonShadowSlope(observer)
-    val time = search(t1, t2, 1.0, context) ?:
-        throw InternalError("Failed to find local Moon peak shadow event.")
+        (shadow2.r - shadow1.r) / dt
+    } ?: throw InternalError("Failed to find local Moon peak shadow event.")
     return localMoonShadow(time, observer)
 }
 
@@ -2443,15 +2426,6 @@ internal fun localEclipse(shadow: ShadowInfo, observer: Observer): LocalSolarEcl
 }
 
 
-internal class SearchContextLocalEclipseTransition(
-    val direction: Double,
-    val observer: Observer,
-    val func: (ShadowInfo) -> Double
-): SearchContext {
-    override fun eval(time: Time) = direction * func(localMoonShadow(time, observer))
-}
-
-
 internal fun localEclipseTransition(
     observer: Observer,
     direction: Double,
@@ -2459,9 +2433,9 @@ internal fun localEclipseTransition(
     t2: Time,
     func: (ShadowInfo) -> Double
 ): EclipseEvent {
-    val context = SearchContextLocalEclipseTransition(direction, observer, func)
-    val time = search(t1, t2, 1.0, context) ?:
-        throw InternalError("Local eclipse transition search failed in range [$t1, $t2].")
+    val time = search(t1, t2, 1.0) { time ->
+        direction * func(localMoonShadow(time, observer))
+    } ?: throw InternalError("Local eclipse transition search failed in range [$t1, $t2].")
     return calcEvent(observer, time)
 }
 
@@ -5222,13 +5196,10 @@ fun equatorialToEcliptic(equ: Vector): Ecliptic =
  * It is recommended to keep the window smaller than 10 days when possible.
  */
 fun searchSunLongitude(targetLon: Double, startTime: Time, limitDays: Double): Time? {
-    class Context(val targetLon: Double) : SearchContext {
-        override fun eval(time: Time) =
-            longitudeOffset(sunPosition(time).elon - targetLon)
-    }
-    val context = Context(targetLon)
     val time2 = startTime.addDays(limitDays)
-    return search(startTime, time2, 0.01, context)
+    return search(startTime, time2, 0.01) { time ->
+        longitudeOffset(sunPosition(time).elon - targetLon)
+    }
 }
 
 /**
@@ -5377,10 +5348,7 @@ fun searchMoonPhase(targetLon: Double, startTime: Time, limitDays: Double): Time
     // I have seen more than 0.9 days away from the simple prediction.
     // To be safe, we take the predicted time of the event and search
     // +/-1.5 days around it (a 3-day wide window).
-    class Context(val targetLon : Double) : SearchContext {
-        override fun eval(time: Time) = longitudeOffset(moonPhase(time) - targetLon)
-    }
-    val moonOffset = Context(targetLon)
+    val moonOffset = SearchContext { time -> longitudeOffset(moonPhase(time) - targetLon) }
     var ya = moonOffset.eval(startTime)
     if (ya > 0.0) ya -= 360.0  // force searching forward in time, not backward
     val uncertainty = 1.5
@@ -5595,32 +5563,6 @@ private fun internalSearchAltitude(
     }
 }
 
-private class SearchContextPeakAltitude(
-    private val body: Body,
-    private val direction: Direction,
-    private val observer: Observer
-): SearchContext {
-    private val bodyRadiusAu = when(body) {
-        Body.Sun -> SUN_RADIUS_AU
-        Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
-        else -> 0.0
-    }
-
-    override fun eval(time: Time): Double {
-        // Return the angular altitude above or below the horizon
-        // of the highest part (the peak) of the given object.
-        // This is defined as the apparent altitude of the center of the body plus
-        // the body's angular radius.
-        // The 'direction' parameter controls whether the angle is measured
-        // positive above the horizon or positive below the horizon,
-        // depending on whether the caller wants rise times or set times, respectively.
-
-        val ofdate: Equatorial = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-        val hor: Topocentric = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
-        return direction.sign * (hor.altitude + (bodyRadiusAu / ofdate.dist).radiansToDegrees() + REFRACTION_NEAR_HORIZON)
-    }
-}
-
 /**
  * Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
  *
@@ -5673,20 +5615,24 @@ fun searchRiseSet(
     startTime: Time,
     limitDays: Double
 ): Time? {
-    val context = SearchContextPeakAltitude(body, direction, observer)
-    return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
-}
+    val bodyRadiusAu = when (body) {
+        Body.Sun -> SUN_RADIUS_AU
+        Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
+        else -> 0.0
+    }
 
-private class SearchContextAltitudeError(
-    private val body: Body,
-    private val direction: Direction,
-    private val observer: Observer,
-    private val altitude: Double
-): SearchContext {
-    override fun eval(time: Time): Double {
-        val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-        val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
-        return direction.sign * (hor.altitude - altitude)
+    return internalSearchAltitude(body, observer, direction, startTime, limitDays) { time ->
+        // Return the angular altitude above or below the horizon
+        // of the highest part (the peak) of the given object.
+        // This is defined as the apparent altitude of the center of the body plus
+        // the body's angular radius.
+        // The 'direction' parameter controls whether the angle is measured
+        // positive above the horizon or positive below the horizon,
+        // depending on whether the caller wants rise times or set times, respectively.
+
+        val ofdate: Equatorial = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+        val hor: Topocentric = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+        direction.sign * (hor.altitude + (bodyRadiusAu / ofdate.dist).radiansToDegrees() + REFRACTION_NEAR_HORIZON)
     }
 }
 
@@ -5725,8 +5671,11 @@ fun searchAltitude(
     limitDays: Double,
     altitude: Double
 ): Time? {
-    val context = SearchContextAltitudeError(body, direction, observer, altitude)
-    return internalSearchAltitude(body, observer, direction, startTime, limitDays, context)
+    return internalSearchAltitude(body, observer, direction, startTime, limitDays) { time ->
+        val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+        val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+        direction.sign * (hor.altitude - altitude)
+    }
 }
 
 
