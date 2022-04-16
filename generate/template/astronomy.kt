@@ -2797,6 +2797,15 @@ internal class BodyState(
     }
 }
 
+
+private fun exportState(bodyState: BodyState, time: Time) =
+    StateVector(
+        bodyState.r.x,  bodyState.r.y,  bodyState.r.z,
+        bodyState.v.x,  bodyState.v.y,  bodyState.v.z,
+        time
+    )
+
+
 private fun calcVsopPosVel(model: VsopModel, tt: Double): BodyState {
     val t = tt / DAYS_PER_MILLENNIUM
 
@@ -4358,6 +4367,22 @@ fun geoMoonState(time: Time): StateVector {
     )
 }
 
+/**
+ * Calculates the geocentric position and velocity of the Earth/Moon barycenter.
+ *
+ * Given a time of observation, calculates the geocentric position and velocity vectors
+ * of the Earth/Moon barycenter (EMB).
+ * The position (x, y, z) components are expressed in AU (astronomical units).
+ * The velocity (vx, vy, vz) components are expressed in AU/day.
+ *
+ * @param time
+ *      The date and time for which to calculate the EMB vectors.
+ *
+ * @return The EMB's position and velocity vectors in geocentric J2000 equatorial coordinates.
+ */
+fun geoEmbState(time: Time): StateVector =
+    geoMoonState(time) / (1.0 + EARTH_MOON_MASS_RATIO)
+
 private fun helioEarthPos(time: Time) =
     calcVsop(vsopModel(Body.Earth), time)
 
@@ -4507,6 +4532,63 @@ fun helioState(body: Body, time: Time): StateVector =
         Body.SSB   -> solarSystemBarycenterState(time)
         else -> throw InvalidBodyException(body)
     }
+
+
+/**
+ * Calculates barycentric position and velocity vectors for the given body.
+ *
+ * Given a body and a time, calculates the barycentric position and velocity
+ * vectors for the center of that body at that time.
+ * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ *
+ * @param body
+ *      The celestial body whose barycentric state vector is to be calculated.
+ *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
+ *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
+ *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *
+ * @param time
+ *      The date and time for which to calculate position and velocity.
+ *
+ * @return The barycentric position and velocity vectors of the body.
+ */
+fun baryState(body: Body, time: Time): StateVector {
+    // Trival case: the solar system barycenter itself:
+    if (body == Body.SSB)
+        return StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+
+    if (body == Body.Pluto)
+        return calcPluto(time, false)
+
+    // Find the barycentric positions and velocities for the 5 major bodies.
+    val bary = majorBodyBary(time.tt)
+
+    return when (body) {
+        // If the caller is asking for one of the major bodies, we already have the answer.
+        Body.Sun     -> exportState(bary.sun,     time)
+        Body.Jupiter -> exportState(bary.jupiter, time)
+        Body.Saturn  -> exportState(bary.saturn,  time)
+        Body.Uranus  -> exportState(bary.uranus,  time)
+        Body.Neptune -> exportState(bary.neptune, time)
+
+        // The Moon and EMB require calculating both the heliocentric Earth and geocentric Moon.
+        Body.Moon -> exportState(bary.sun, time) + helioEarthState(time) + geoMoonState(time)
+        Body.EMB  -> exportState(bary.sun, time) + helioEarthState(time) + geoEmbState(time)
+
+        else -> {
+            val planet: BodyState = calcVsopPosVel(vsopModel(body), time.tt)
+            StateVector(
+                bary.sun.r.x + planet.r.x,
+                bary.sun.r.y + planet.r.y,
+                bary.sun.r.z + planet.r.z,
+                bary.sun.v.x + planet.v.x,
+                bary.sun.v.y + planet.v.y,
+                bary.sun.v.z + planet.v.z,
+                time
+            )
+        }
+    }
+}
 
 /**
  * Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.

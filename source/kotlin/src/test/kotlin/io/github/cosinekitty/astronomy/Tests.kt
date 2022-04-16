@@ -1430,4 +1430,122 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+    // Generic utility function for loading a series of state vectors
+    // from a JPL Horizons output file.
+
+    private class JplStateRecord(
+        val lnum: Int,              // the line number where the state vector ends in the JPL Horizons text file
+        val state: StateVector      // the state vector itself: position, velocity, and time
+    )
+
+    private fun jplHorizonsStateVectors(filename: String): List<JplStateRecord> {
+        val infile = File(filename)
+        var lnum = 0
+        var foundBegin = false
+        var part = 0
+        var time: Time? = null
+        val pos = arrayOf(0.0, 0.0, 0.0)
+        val vel = arrayOf(0.0, 0.0, 0.0)
+        var list = ArrayList<JplStateRecord>()
+        var match: MatchResult?
+        val regexPos = Regex("""\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)""")
+        val regexVel = Regex("""\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)""")
+        for (line in infile.readLines()) {
+            ++lnum
+            if (!foundBegin) {
+                if (line == "\$\$SOE")
+                    foundBegin = true
+            } else {
+                // Input comes in triplets of lines:
+                //
+                // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                // X =-3.314860345089456E-01 Y = 8.463418210972562E-01 Z = 3.667227830514760E-01
+                // VX=-1.642704711077836E-02 VY=-5.494770742558920E-03 VZ=-2.383170237527642E-03
+                //
+                // Track which of these 3 cases we are in using the 'part' variable...
+                when (part) {
+                    0 -> {
+                        if (line == "\$\$EOE")        // end-of-data marker: the list is complete.
+                            return list
+
+                        // 2444249.500000000 = A.D. 1980-Jan-11 00:00:00.0000 TDB
+                        // Convert JD to J2000 TT.
+                        val tt = tokenize(line)[0].toDouble() - 2451545.0
+                        time = Time.fromTerrestrialTime(tt)
+                    }
+                    1 -> {
+                        match = regexPos.matchEntire(line)
+                        assertTrue(match != null, "$filename line $lnum: cannot parse position vector")
+                        pos[0] = groupDouble(match, 1, filename, lnum)
+                        pos[1] = groupDouble(match, 2, filename, lnum)
+                        pos[2] = groupDouble(match, 3, filename, lnum)
+                    }
+                    2 -> {
+                        match = regexVel.matchEntire(line)
+                        assertTrue(match != null, "$filename line $lnum: cannot parse velocity vector")
+                        vel[0] = groupDouble(match, 1, filename, lnum)
+                        vel[1] = groupDouble(match, 2, filename, lnum)
+                        vel[2] = groupDouble(match, 3, filename, lnum)
+                        assertTrue(time != null, "$filename line $lnum: time value was never parsed")
+                        val state = StateVector(pos[0], pos[1], pos[2], vel[0], vel[1], vel[2], time)
+                        list.add(JplStateRecord(lnum, state))
+                        time = null
+                    }
+                    else -> fail("$filename line $lnum: invalid part=$part")
+                }
+                part = (part + 1) % 3
+            }
+        }
+        fail("$filename: never found end-of-data marker")
+    }
+
+    private fun stateVectorDiff(relative: Boolean, expected: Vector, calculated: Vector): Double {
+        val diff = (expected - calculated).length()
+        return if (relative)
+            diff / expected.length()
+        else
+            diff
+    }
+
+    private fun verifyStateBody(
+        relativeFileName: String,
+        rThresh: Double,
+        vThresh: Double,
+        func: (Time) -> StateVector
+    ) {
+        var filename = dataRootDir + relativeFileName
+        for (rec in jplHorizonsStateVectors(filename)) {
+            val state = func(rec.state.t)
+            val rdiff = stateVectorDiff(rThresh > 0.0, rec.state.position(), state.position())
+            val vdiff = stateVectorDiff(vThresh > 0.0, rec.state.velocity(), state.velocity())
+            assertTrue(rdiff < abs(rThresh), "$filename line ${rec.lnum}: excessive position error = $rdiff")
+            assertTrue(vdiff < abs(vThresh), "$filename line ${rec.lnum}: excessive velocity error = $vdiff")
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Barycentric state vectors`() {
+        verifyStateBody("barystate/Sun.txt",     -1.224e-05, -1.134e-07) { time -> baryState(Body.Sun,     time) }
+        verifyStateBody("barystate/Mercury.txt",  1.672e-04,  2.698e-04) { time -> baryState(Body.Mercury, time) }
+        verifyStateBody("barystate/Venus.txt",    4.123e-05,  4.308e-05) { time -> baryState(Body.Venus,   time) }
+        verifyStateBody("barystate/Earth.txt",    2.296e-05,  6.359e-05) { time -> baryState(Body.Earth,   time) }
+        verifyStateBody("barystate/Mars.txt",     3.107e-05,  5.550e-05) { time -> baryState(Body.Mars,    time) }
+        verifyStateBody("barystate/Jupiter.txt",  7.389e-05,  2.471e-04) { time -> baryState(Body.Jupiter, time) }
+        verifyStateBody("barystate/Saturn.txt",   1.067e-04,  3.220e-04) { time -> baryState(Body.Saturn,  time) }
+        verifyStateBody("barystate/Uranus.txt",   9.035e-05,  2.519e-04) { time -> baryState(Body.Uranus,  time) }
+        verifyStateBody("barystate/Neptune.txt",  9.838e-05,  4.446e-04) { time -> baryState(Body.Neptune, time) }
+        verifyStateBody("barystate/Pluto.txt",    4.259e-05,  7.827e-05) { time -> baryState(Body.Pluto,   time) }
+        verifyStateBody("barystate/Moon.txt",     2.354e-05,  6.604e-05) { time -> baryState(Body.Moon,    time) }
+        verifyStateBody("barystate/EMB.txt",      2.353e-05,  6.511e-05) { time -> baryState(Body.EMB,     time) }
+    }
+
+    @Test
+    fun `Geocentric state vectors`() {
+        verifyStateBody("barystate/GeoMoon.txt",  4.086e-05,  5.347e-05) { time -> geoMoonState(time) }
+        verifyStateBody("barystate/GeoEMB.txt",   4.076e-05,  5.335e-05) { time -> geoEmbState(time)  }
+    }
+
+    //----------------------------------------------------------------------------------------
 }
