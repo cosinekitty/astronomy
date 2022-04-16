@@ -1280,4 +1280,45 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Local solar eclipse near peak location`() {
+        // Re-use the test data for global solar eclipses, only feed the given coordinates
+        // into the local solar eclipse predictor as the observer's location.
+        // In each case, start the search 20 days before the expected eclipse.
+        // Then verify that the peak time and eclipse type is correct in each case.
+        val filename = dataRootDir + "eclipse/solar_eclipse.txt"
+        val infile = File(filename)
+        var lnum = 0
+        var skipCount = 0
+        for (line in infile.readLines()) {
+            ++lnum
+            val token = tokenize(line)
+            assertEquals(5, token.size, "$filename line $lnum: wrong token count")
+            val peak = parseDate(token[0])
+            //val typeChar = token[2]
+            val lat = token[3].toDouble()
+            val lon = token[4].toDouble()
+            val observer = Observer(lat, lon, 0.0)
+
+            // Start the search 20 days before we know the eclipse should peak.
+            val searchStart = peak.addDays(-20.0)
+            val eclipse = searchLocalSolarEclipse(searchStart, observer)
+
+            // Validate the predicted peak eclipse time.
+            val diffDays = eclipse.peak.time.ut - peak.ut
+            if (diffDays > 20.0) {
+                // Tolerate missing a small number of marginal eclipses.
+                ++skipCount
+                continue
+            }
+
+            val diffMinutes = MINUTES_PER_DAY * abs(diffDays)
+            assertTrue(diffMinutes < 7.14, "$filename line $lnum: excessive time error = $diffMinutes minutes")
+        }
+
+        assertTrue(skipCount <= 6, "$filename: excessive skip count = $skipCount")
+    }
+
+    //----------------------------------------------------------------------------------------
 }

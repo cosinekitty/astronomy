@@ -1872,9 +1872,9 @@ class LocalSolarEclipseInfo (
     val partialBegin: EclipseEvent,
 
     /**
-     * If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid.
+     * If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise `null`.
      */
-    val totalBegin: EclipseEvent,
+    val totalBegin: EclipseEvent?,
 
     /**
      * The time and Sun altitude when the eclipse reaches its peak.
@@ -1882,9 +1882,9 @@ class LocalSolarEclipseInfo (
     val peak: EclipseEvent,
 
     /**
-     * If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise invalid.
+     * If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise `null`.
      */
-    val totalEnd: EclipseEvent,
+    val totalEnd: EclipseEvent?,
 
     /**
      * The time and Sun altitude at the end of the eclipse.
@@ -2101,6 +2101,29 @@ internal fun peakMoonShadow(searchCenterTime: Time): ShadowInfo {
     val tx = search(t1, t2, 1.0, moonShadowSlopeContext) ?:
         throw InternalError("Failed to find Moon peak shadow event.")
     return moonShadow(tx)
+}
+
+internal class SearchContextLocalMoonShadowSlope(val observer: Observer): SearchContext {
+    override fun eval(time: Time): Double {
+        val dt = 1.0 / SECONDS_PER_DAY
+        val t1 = time.addDays(-dt)
+        val t2 = time.addDays(+dt)
+        val shadow1 = localMoonShadow(t1, observer)
+        val shadow2 = localMoonShadow(t2, observer)
+        return (shadow2.r - shadow1.r) / dt
+    }
+}
+
+internal fun peakLocalMoonShadow(searchCenterTime: Time, observer: Observer): ShadowInfo {
+    // Search for the time near searchCenterTime that the Moon's shadow axis
+    // comes closest to the given observer.
+    val window = 0.2
+    val t1 = searchCenterTime.addDays(-window)
+    val t2 = searchCenterTime.addDays(+window)
+    val context = SearchContextLocalMoonShadowSlope(observer)
+    val time = search(t1, t2, 1.0, context) ?:
+        throw InternalError("Failed to find local Moon peak shadow event.")
+    return localMoonShadow(time, observer)
 }
 
 
@@ -2337,6 +2360,138 @@ fun searchGlobalSolarEclipse(startTime: Time): GlobalSolarEclipseInfo {
  */
 fun nextGlobalSolarEclipse(prevEclipseTime: Time) =
     searchGlobalSolarEclipse(prevEclipseTime.addDays(10.0))
+
+
+/**
+ * Searches for a solar eclipse visible at a specific location on the Earth's surface.
+ *
+ * This function finds the first solar eclipse that occurs after `startTime`.
+ * A solar eclipse may be partial, annular, or total.
+ * See [LocalSolarEclipseInfo] for more information.
+ *
+ * To find a series of solar eclipses, call this function once,
+ * then keep calling #Astronomy.NextLocalSolarEclipse as many times as desired,
+ * passing in the `peak` value returned from the previous call.
+ *
+ * IMPORTANT: An eclipse reported by this function might be partly or
+ * completely invisible to the observer due to the time of day.
+ * See [LocalSolarEclipseInfo] for more information about this topic.
+ *
+ * @param startTime
+ *      The date and time for starting the search for a solar eclipse.
+ *
+ * @param observer
+ *      The geographic location of the observer.
+ *
+ * @return Information about the first solar eclipse visible at the specified observer location.
+ */
+fun searchLocalSolarEclipse(startTime: Time, observer: Observer): LocalSolarEclipseInfo {
+    val pruneLatitude = 1.8     // Moon's ecliptic latitude beyond which eclipise is impossible.
+
+    // Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth.
+    var nmtime = startTime
+    while (true) {
+        // Search for the next new moon. Any eclipse will be near it.
+        val newmoon = searchMoonPhase(0.0, nmtime, 40.0) ?:
+            throw InternalError("Failed to find next new moon")
+
+        // Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
+        val eclipLat = moonEclipticLatitudeDegrees(newmoon)
+        if (abs(eclipLat) < pruneLatitude) {
+            // Search near the new moon for the time when the observer
+            // is closest to the line passing through the centers of the Sun and Moon.
+            val shadow = peakLocalMoonShadow(newmoon, observer)
+            if (shadow.r < shadow.p) {
+                // This is at least a partial solar eclipse for the observer.
+                val eclipse = localEclipse(shadow, observer)
+
+                // Ignore any eclipse that happens completely at night.
+                // More precisely, the center of the the Sun must be above the horizon
+                // at the beginning or the end of the eclipse, or we skip the event.
+                if (eclipse.partialBegin.altitude > 0.0 || eclipse.partialEnd.altitude > 0.0)
+                    return eclipse
+            }
+        }
+
+        // We didn't find an eclipse on this new moon, so search for the next one.
+        nmtime = newmoon.addDays(10.0)
+    }
+}
+
+
+internal fun localEclipse(shadow: ShadowInfo, observer: Observer): LocalSolarEclipseInfo {
+    val PARTIAL_WINDOW = 0.2
+    val TOTAL_WINDOW = 0.01
+    val peak = calcEvent(observer, shadow.time)
+    val t1p = shadow.time.addDays(-PARTIAL_WINDOW)
+    val t2p = shadow.time.addDays(+PARTIAL_WINDOW)
+    val partialBegin = localEclipseTransition(observer, +1.0, t1p, shadow.time) { it.p - it.r }
+    val partialEnd   = localEclipseTransition(observer, -1.0, shadow.time, t2p) { it.p - it.r }
+    var totalBegin: EclipseEvent? = null
+    var totalEnd: EclipseEvent? = null
+    var kind: EclipseKind
+    if (shadow.r < abs(shadow.k)) {     // take absolute value of `k` to handle annular eclipses too.
+        val t1t = shadow.time.addDays(-TOTAL_WINDOW)
+        val t2t = shadow.time.addDays(+TOTAL_WINDOW)
+        totalBegin = localEclipseTransition(observer, +1.0, t1t, shadow.time) { abs(it.k) - it.r }
+        totalEnd   = localEclipseTransition(observer, -1.0, shadow.time, t2t) { abs(it.k) - it.r }
+        kind = eclipseKindFromUmbra(shadow.k)
+    } else {
+        kind = EclipseKind.Partial
+    }
+    return LocalSolarEclipseInfo(kind, partialBegin, totalBegin, peak, totalEnd, partialEnd)
+}
+
+
+internal class SearchContextLocalEclipseTransition(
+    val direction: Double,
+    val observer: Observer,
+    val func: (ShadowInfo) -> Double
+): SearchContext {
+    override fun eval(time: Time) = direction * func(localMoonShadow(time, observer))
+}
+
+
+internal fun localEclipseTransition(
+    observer: Observer,
+    direction: Double,
+    t1: Time,
+    t2: Time,
+    func: (ShadowInfo) -> Double
+): EclipseEvent {
+    val context = SearchContextLocalEclipseTransition(direction, observer, func)
+    val time = search(t1, t2, 1.0, context) ?:
+        throw InternalError("Local eclipse transition search failed in range [$t1, $t2].")
+    return calcEvent(observer, time)
+}
+
+
+internal fun calcEvent(observer: Observer, time: Time): EclipseEvent {
+    val sunEqu = equator(Body.Sun, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+    val sunHor = horizon(time, observer, sunEqu.ra, sunEqu.dec, Refraction.Normal)
+    return EclipseEvent(time, sunHor.altitude)
+}
+
+
+/**
+ * Searches for the next local solar eclipse in a series.
+ *
+ * After using [searchLocalSolarEclipse] to find the first solar eclipse
+ * in a series, you can call this function to find the next consecutive solar eclipse.
+ * Pass in the `peak` value from the [LocalSolarEclipseInfo] returned by the
+ * previous call to `searchLocalSolarEclipse` or `nextLocalSolarEclipse`
+ * to find the next solar eclipse.
+ *
+ * @param prevEclipseTime
+ *      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+ *
+ * @param observer
+ *      The geographic location of the observer.
+ *
+ * @return Information about the next solar eclipse visible at the specified observer location.
+ */
+fun nextLocalSolarEclipse(prevEclipseTime: Time, observer: Observer) =
+    searchLocalSolarEclipse(prevEclipseTime.addDays(10.0), observer)
 
 
 /**
