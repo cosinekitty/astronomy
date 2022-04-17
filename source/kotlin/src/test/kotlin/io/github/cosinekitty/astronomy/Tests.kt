@@ -1666,4 +1666,50 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Transits of Mercury and Venus`() {
+        transitFile(Body.Mercury, dataRootDir + "eclipse/mercury.txt", 10.710, 0.2121)
+        transitFile(Body.Venus,   dataRootDir + "eclipse/venus.txt",    9.109, 0.6772)
+    }
+
+    private fun transitFile(body: Body, filename: String, limitMinutes: Double, limitSep: Double) {
+        val infile = File(filename)
+        var lnum = 0
+        var transit = searchTransit(body, Time(1600, 1, 1, 0, 0, 0.0))
+        for (line in infile.readLines()) {
+            ++lnum
+            // 22:17 1881-11-08T00:57Z 03:38  3.8633
+            val token = tokenize(line, 4, filename, lnum)
+            val textp = token[1]
+            val text1 = textp.substring(0, 11) + token[0] + "Z"
+            val text2 = textp.substring(0, 11) + token[2] + "Z"
+            val timep = parseDate(textp)
+            var time1 = parseDate(text1)
+            var time2 = parseDate(text2)
+            val separation = token[3].toDouble()
+
+            // If the start time is after the peak time, it really starts on the previous day.
+            if (time1.ut > timep.ut)
+                time1 = time1.addDays(-1.0)
+
+            // If the finish time is before the peak time, it really starts on the following day.
+            if (time2.ut < timep.ut)
+                time2 = time2.addDays(+1.0)
+
+            val diffStart  = MINUTES_PER_DAY * abs(time1.ut - transit.start.ut )
+            val diffPeak   = MINUTES_PER_DAY * abs(timep.ut - transit.peak.ut  )
+            val diffFinish = MINUTES_PER_DAY * abs(time2.ut - transit.finish.ut)
+            val diffSep = abs(separation - transit.separation)
+
+            assertTrue(diffStart  < limitMinutes, "$filename line $lnum: excessive error in transit start = $diffStart minutes")
+            assertTrue(diffPeak   < limitMinutes, "$filename line $lnum: excessive error in transit peak = $diffPeak minutes")
+            assertTrue(diffFinish < limitMinutes, "$filename line $lnum: excessive error in transit finish = $diffFinish minutes")
+            assertTrue(diffSep < limitSep, "$filename line $lnum: excessive error in transit separation = $diffSep arcmin")
+
+            transit = nextTransit(body, transit.finish)
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
 }

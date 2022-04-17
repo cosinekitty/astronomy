@@ -2143,6 +2143,28 @@ internal fun peakLocalMoonShadow(searchCenterTime: Time, observer: Observer): Sh
     return localMoonShadow(time, observer)
 }
 
+internal fun peakPlanetShadow(body: Body, planetRadiusKm: Double, searchCenterTime: Time): ShadowInfo {
+    // Search for when the body's shadow axis is closest to the center of the Earth.
+    val window = 1.0        // days before/after conjunction to search for minimum shadow distance
+    val t1 = searchCenterTime.addDays(-window)
+    val t2 = searchCenterTime.addDays(+window)
+    val time = search(t1, t2, 1.0) { time ->
+        val dt = 1.0 / SECONDS_PER_DAY
+        val shadow1 = planetShadow(body, planetRadiusKm, time.addDays(-dt))
+        val shadow2 = planetShadow(body, planetRadiusKm, time.addDays(+dt))
+        (shadow2.r - shadow1.r) / dt
+    } ?: throw InternalError("Failed to find peak planet shadow event.")
+    return planetShadow(body, planetRadiusKm, time)
+}
+
+internal fun planetTransitBoundary(body: Body, planetRadiusKm: Double, t1: Time, t2: Time, direction: Double): Time {
+    // Search for the time when the planet's penumbra begins/ends making contact with the center of the Earth.
+    return search(t1, t2, 1.0) { time ->
+        val shadow = planetShadow(body, planetRadiusKm, time)
+        direction * (shadow.r - shadow.p)
+    } ?: throw InternalError("Planet transit boundary search failed.")
+}
+
 
 /**
  * Searches for a lunar eclipse.
@@ -5027,6 +5049,84 @@ fun searchRelativeLongitude(body: Body, targetRelativeLongitude: Double, startTi
 
     throw InternalError("Relative longitude search failed to converge.")
 }
+
+
+/**
+ * Searches for the first transit of Mercury or Venus after a given date.
+ *
+ * Finds the first transit of Mercury or Venus after a specified date.
+ * A transit is when an inferior planet passes between the Sun and the Earth
+ * so that the silhouette of the planet is visible against the Sun in the background.
+ * To continue the search, pass the `finish` time in the returned object to [nextTransit].
+ *
+ * @param body
+ *      The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
+ *
+ * @param startTime
+ *      The date and time for starting the search for a transit.
+ */
+fun searchTransit(body: Body, startTime: Time): TransitInfo {
+    val thresholdAngle = 0.4    // maximum angular separation to attempt transit calculations
+    val dtDays = 1.0
+
+    // Validate the planet and find its mean radius.
+    val planetRadiusKm = when (body) {
+        Body.Mercury -> 2439.7
+        Body.Venus   -> 6051.8
+        else -> throw InvalidBodyException(body)
+    }
+
+    var searchTime = startTime
+    while (true) {
+        // Search for the next inferior conjunction of the given planet.
+        // This is the next time the Earth and the other planet have the same
+        // ecliptic longitude as seen from the Sun.
+        val conj = searchRelativeLongitude(body, 0.0, searchTime)
+
+        // Calculate the angular separation between the body and Sun at this time.
+        val separation = angleFromSun(body, conj)
+
+        if (separation < thresholdAngle) {
+            // The planet's angular separation from the Sun is small enough
+            // to consider it a transit candidate.
+            // Search for the moment when the line passing through the Sun
+            // and planet are closest to the Earth's center.
+            val shadow = peakPlanetShadow(body, planetRadiusKm, conj)
+            if (shadow.r < shadow.p) {      // does the planet's penumbra touch the Earth's center?
+                // Find the beginning and end of the penumbral contact.
+                val t1 = shadow.time.addDays(-dtDays)
+                val transitStart = planetTransitBoundary(body, planetRadiusKm, t1, shadow.time, -1.0)
+
+                val t2 = shadow.time.addDays(+dtDays)
+                val transitFinish = planetTransitBoundary(body, planetRadiusKm, shadow.time, t2, +1.0)
+
+                val transitSeparation = 60.0 * angleFromSun(body, shadow.time)
+
+                return TransitInfo(transitStart, shadow.time, transitFinish, transitSeparation)
+            }
+        }
+
+        // This inferior conjunction was not a transit. Try the next inferior conjunction.
+        searchTime = conj.addDays(10.0)
+    }
+}
+
+
+/**
+ * Searches for another transit of Mercury or Venus.
+ *
+ * After calling [searchTransit] to find a transit of Mercury or Venus,
+ * this function finds the next transit after that.
+ * Keep calling this function as many times as you want to keep finding more transits.
+ *
+ * @param body
+ *      The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
+ *
+ * @param prevTransitTime
+ *      A date and time near the previous transit.
+ */
+fun nextTransit(body: Body, prevTransitTime: Time) =
+    searchTransit(body, prevTransitTime.addDays(100.0))
 
 
 /**
