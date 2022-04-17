@@ -3,7 +3,7 @@
 # Pluto
 
 [jvm]\
-[Pluto](index.md)(PLUTO_GM, null)
+[Pluto](index.md)(PLUTO_GM, 90560.0, null)
 
 The planet Pluto.
 

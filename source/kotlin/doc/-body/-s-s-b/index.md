@@ -3,7 +3,7 @@
 # SSB
 
 [jvm]\
-[SSB](index.md)(null, null)
+[SSB](index.md)(null, null, null)
 
 The Solar System Barycenter.
 

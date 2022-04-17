@@ -330,7 +330,7 @@ def TestElongFile(filename, targetRelLon):
                 return 1
             diff_minutes = (24.0 * 60.0) * (found_time.tt - expected_time.tt)
             Debug('PY TestElongFile: {:<7s} error = {:6.3} minutes'.format(name, diff_minutes))
-            if vabs(diff_minutes) > 15.0:
+            if vabs(diff_minutes) > 6.8:
                 print('PY TestElongFile({} line {}): EXCESSIVE ERROR.'.format(filename, lnum))
                 return 1
     print('PY TestElongFile: passed {} rows of data'.format(lnum))

@@ -229,6 +229,7 @@ private fun normalizeLongitude(lon: Double) = lon.withMinDegreeValue(0.0)
  */
 enum class Body(
     internal val massProduct: Double?,
+    internal val orbitalPeriod: Double?,
     internal val vsopModel: VsopModel?
 ) {
     /**
@@ -236,6 +237,7 @@ enum class Body(
      */
     Mercury(
         MERCURY_GM,
+        87.969,
         VsopModel(vsopLonMercury, vsopLatMercury, vsopRadMercury)
     ),
 
@@ -244,6 +246,7 @@ enum class Body(
      */
     Venus(
         VENUS_GM,
+        224.701,
         VsopModel(vsopLonVenus, vsopLatVenus, vsopRadVenus)
     ),
 
@@ -255,6 +258,7 @@ enum class Body(
      */
     Earth(
         EARTH_GM,
+        EARTH_ORBITAL_PERIOD,
         VsopModel(vsopLonEarth, vsopLatEarth, vsopRadEarth)
     ),
 
@@ -263,6 +267,7 @@ enum class Body(
      */
     Mars(
         MARS_GM,
+        686.980,
         VsopModel(vsopLonMars, vsopLatMars, vsopRadMars)
     ),
 
@@ -271,6 +276,7 @@ enum class Body(
      */
     Jupiter(
         JUPITER_GM,
+        4332.589,
         VsopModel(vsopLonJupiter, vsopLatJupiter, vsopRadJupiter)
     ),
 
@@ -279,6 +285,7 @@ enum class Body(
      */
     Saturn(
         SATURN_GM,
+        10759.22,
         VsopModel(vsopLonSaturn, vsopLatSaturn, vsopRadSaturn)
     ),
 
@@ -287,6 +294,7 @@ enum class Body(
      */
     Uranus(
         URANUS_GM,
+        30685.4,
         VsopModel(vsopLonUranus, vsopLatUranus, vsopRadUranus)
     ),
 
@@ -295,6 +303,7 @@ enum class Body(
      */
     Neptune(
         NEPTUNE_GM,
+        NEPTUNE_ORBITAL_PERIOD,
         VsopModel(vsopLonNeptune, vsopLatNeptune, vsopRadNeptune)
     ),
 
@@ -303,6 +312,7 @@ enum class Body(
      */
     Pluto(
         PLUTO_GM,
+        90560.0,
         null,
     ),
 
@@ -311,6 +321,7 @@ enum class Body(
      */
     Sun(
         SUN_GM,
+        null,
         null
     ),
 
@@ -319,6 +330,7 @@ enum class Body(
      */
     Moon(
         MOON_GM,
+        MEAN_SYNODIC_MONTH,
         null
     ),
 
@@ -327,6 +339,7 @@ enum class Body(
      */
     EMB(
         EARTH_GM + MOON_GM,
+        MEAN_SYNODIC_MONTH,
         null
     ),
 
@@ -334,6 +347,7 @@ enum class Body(
      * The Solar System Barycenter.
      */
     SSB(
+        null,
         null,
         null
     ),
@@ -4908,6 +4922,110 @@ fun eclipticLongitude(body: Body, time: Time): Double {
     val hv = helioVector(body, time)
     val eclip = equatorialToEcliptic(hv)
     return eclip.elon
+}
+
+
+internal fun relativeLongitudeOffset(body: Body, time: Time, direction: Int, targetRelativeLongitude: Double): Double {
+    val plon = eclipticLongitude(body, time)
+    val elon = eclipticLongitude(Body.Earth, time)
+    val diff = direction * (elon - plon)
+    return longitudeOffset(diff - targetRelativeLongitude)
+}
+
+/**
+ * Finds the mean number of days after which `body` returns to the same ecliptic longitude as seen from the Earth.
+ */
+internal fun synodicPeriod(body: Body): Double {
+    val period: Double = body.orbitalPeriod ?: throw InvalidBodyException(body)
+    return abs(EARTH_ORBITAL_PERIOD / (EARTH_ORBITAL_PERIOD/period - 1.0))
+}
+
+
+/**
+ * Searches for the time when the Earth and another planet are separated by a specified angle in ecliptic longitude, as seen from the Sun.
+ *
+ * A relative longitude is the angle between two bodies measured in the plane of the Earth's orbit
+ * (the ecliptic plane). The distance of the bodies above or below the ecliptic plane is ignored.
+ * If you imagine the shadow of the body cast onto the ecliptic plane, and the angle measured around
+ * that plane from one body to the other in the direction the planets orbit the Sun, you will get an
+ * angle somewhere between 0 and 360 degrees. This is the relative longitude.
+ *
+ * Given a planet other than the Earth in `body` and a time to start the search in `startTime`,
+ * this function searches for the next time that the relative longitude measured from the planet
+ * to the Earth is `targetRelLon`.
+ *
+ * Certain astronomical events are defined in terms of relative longitude between the Earth and another planet:
+ *
+ * - When the relative longitude is 0 degrees, it means both planets are in the same direction from the Sun.
+ *   For planets that orbit closer to the Sun (Mercury and Venus), this is known as *inferior conjunction*,
+ *   a time when the other planet becomes very difficult to see because of being lost in the Sun's glare.
+ *   (The only exception is in the rare event of a transit, when we see the silhouette of the planet passing
+ *   between the Earth and the Sun.)
+ *
+ * - When the relative longitude is 0 degrees and the other planet orbits farther from the Sun,
+ *   this is known as *opposition*.  Opposition is when the planet is closest to the Earth, and
+ *   also when it is visible for most of the night, so it is considered the best time to observe the planet.
+ *
+ * - When the relative longitude is 180 degrees, it means the other planet is on the opposite side of the Sun
+ *   from the Earth. This is called *superior conjunction*. Like inferior conjunction, the planet is
+ *   very difficult to see from the Earth. Superior conjunction is possible for any planet other than the Earth.
+ *
+ * @param body
+ *      A planet other than the Earth. Any other body will cause an exception.
+ *
+ * @param targetRelativeLongitude
+ *      The desired relative longitude, expressed in degrees. Must be in the range [0, 360).
+ *
+ * @param startTime
+ *      The date and time at which to begin the search.
+ *
+ * @returns The time of the first relative longitude event that occurs after `startTime`.
+ */
+fun searchRelativeLongitude(body: Body, targetRelativeLongitude: Double, startTime: Time): Time {
+    val direction: Int = when (body) {
+        // Planets that orbit closer to the Sun than the Earth are called "inferior" planets.
+        // Because they orbit faster than the Earth, their relative longitudes are always decreasing.
+        Body.Mercury, Body.Venus -> -1
+
+        // Planets that orbit farther from the Sun than the Earth are called "superior" planets.
+        // Because they orbit slower than the Earth, their relative longitudes are always increasing.
+        Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto -> +1
+
+        // No other bodies are supported by this function.
+        else -> throw InvalidBodyException(body)
+    }
+
+    var syn: Double = synodicPeriod(body)
+
+    // Iterate until we converge on the desired event.
+    // Calculate the error angle, which will be a negative number of degrees,
+    // meaning we are "behind" the target relative longitude.
+    var errorAngle = relativeLongitudeOffset(body, startTime, direction, targetRelativeLongitude)
+    if (errorAngle > 0.0)
+        errorAngle -= 360.0     // force searching forward in time, not backward
+
+    var time = startTime
+    for (iter in 0..99) {
+        // Estimate how many days in the future (postive) or past (negative)
+        // we have to go to get closer to the target relative longitude.
+        val dayAdjust = (-errorAngle/360.0) * syn
+        time = time.addDays(dayAdjust)
+        if (abs(dayAdjust) * SECONDS_PER_DAY < 1.0)
+            return time     // we found the solution within a 1-second tolerance
+
+        val prevAngle = errorAngle
+        errorAngle = relativeLongitudeOffset(body, time, direction, targetRelativeLongitude)
+        if (abs(prevAngle) < 30.0 && (prevAngle != errorAngle)) {
+            // Improve convergence for the Mercury and Mars, which have eccentric orbits.
+            // Adjust the synodic period to more closely match the variable speed of both
+            // planets in this part of their respective orbits.
+            val ratio = prevAngle / (prevAngle - errorAngle)
+            if (ratio > 0.5 && ratio < 2.0)
+                syn *= ratio
+        }
+    }
+
+    throw InternalError("Relative longitude search failed to converge.")
 }
 
 

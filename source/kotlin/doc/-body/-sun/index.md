@@ -3,7 +3,7 @@
 # Sun
 
 [jvm]\
-[Sun](index.md)(SUN_GM, null)
+[Sun](index.md)(SUN_GM, null, null)
 
 The Sun.
 

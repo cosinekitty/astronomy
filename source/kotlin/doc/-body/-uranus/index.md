@@ -3,7 +3,7 @@
 # Uranus
 
 [jvm]\
-[Uranus](index.md)(URANUS_GM, VsopModel(vsopLonUranus, vsopLatUranus, vsopRadUranus))
+[Uranus](index.md)(URANUS_GM, 30685.4, VsopModel(vsopLonUranus, vsopLatUranus, vsopRadUranus))
 
 The planet Uranus.
 

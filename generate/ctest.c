@@ -1162,7 +1162,7 @@ static int TestElongFile(const char *filename, double targetRelLon)
 
         diff_minutes = (24.0 * 60.0) * (search_result.time.tt - expected_time.tt);
         DEBUG("C TestElongFile: %-7s error = %6.3lf minutes\n", name, diff_minutes);
-        if (ABS(diff_minutes) > 15.0)
+        if (ABS(diff_minutes) > 6.8)
             FAIL("C TestElongFile(%s line %d): EXCESSIVE ERROR\n", filename, lnum);
     }
 

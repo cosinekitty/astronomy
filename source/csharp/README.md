@@ -1847,7 +1847,7 @@ Certain astronomical events are defined in terms of relative longitude between t
 | `double` | `targetRelLon` | The desired relative longitude, expressed in degrees. Must be in the range [0, 360). |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to begin the search. |
 
-**Returns:** If successful, returns the date and time of the relative longitude event. Otherwise this function returns null.
+**Returns:** The date and time of the relative longitude event.
 
 <a name="Astronomy.SearchRiseSet"></a>
 ### Astronomy.SearchRiseSet(body, observer, direction, startTime, limitDays) &#8658; [`AstroTime`](#AstroTime)

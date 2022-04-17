@@ -3,7 +3,7 @@
 # Earth
 
 [jvm]\
-[Earth](index.md)(EARTH_GM, VsopModel(vsopLonEarth, vsopLatEarth, vsopRadEarth))
+[Earth](index.md)(EARTH_GM, EARTH_ORBITAL_PERIOD, VsopModel(vsopLonEarth, vsopLatEarth, vsopRadEarth))
 
 The planet Earth. Some functions that accept a Body parameter will fail if passed this value because they assume that an observation is being made from the Earth, and therefore the Earth is not a target of observation.
 

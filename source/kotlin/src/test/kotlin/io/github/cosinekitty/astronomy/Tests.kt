@@ -17,8 +17,13 @@ import kotlin.text.Regex
 private const val dataRootDir = "../../generate/"
 private const val MINUTES_PER_DAY = 24.0 * 60.0
 
-private fun tokenize(s: String): List<String> {
-    return s.split(Regex("""\s+"""))
+private val regexTokenize = Regex("""\s+""")
+private fun tokenize(s: String): List<String> = s.split(regexTokenize)
+
+private fun tokenize(s: String, expectedTokenCount: Int, filename: String, lnum: Int): List<String> {
+    val token = tokenize(s)
+    assertEquals(expectedTokenCount, token.size, "$filename line $lnum: expected $expectedTokenCount tokens, found ${token.size}")
+    return token
 }
 
 private fun stripLine(line: String): String {
@@ -328,8 +333,7 @@ class Tests {
                     break
 
                 assertTrue(line.length >= 61, "axisBodyTest($filename line $lnum): line is too short")
-                val token = tokenize(line.substring(19))
-                assertTrue(token.size == 3, "axisBodyTest($filename line $lnum): expected 3 tokens but found ${token.size}")
+                val token = tokenize(line.substring(19), 3, filename, lnum)
                 val jd = token[0].toDouble()
                 val ra = token[1].toDouble()
                 val dec = token[2].toDouble()
@@ -1055,8 +1059,7 @@ class Tests {
         val infile = File(filename)
         for (line in infile.readLines()) {
             ++lnum
-            val tokens = tokenize(line)
-            assertTrue(tokens.size == 9, "$filename line $lnum: invalid number of tokens.")
+            val tokens = tokenize(line, 9, filename, lnum)
             val lat = tokens[0].toDouble()
             val lon = tokens[1].toDouble()
             val observer = Observer(lat, lon, 0.0)
@@ -1093,8 +1096,7 @@ class Tests {
         for (line in infile.readLines()) {
             ++lnum
             // 0   -340866.750000000000    1.5     2.7     7.4  2233.390067 -5966.178081   311.806727  1559.005842   591.264250   146.628157
-            val tokens = tokenize(line)
-            assertTrue(tokens.size == 11, "$filename line $lnum: unexpected number of tokens: ${tokens.size}")
+            val tokens = tokenize(line, 11, filename, lnum)
             val equator: EquatorEpoch = when (tokens[0]) {
                 "0" -> EquatorEpoch.J2000
                 "1" -> EquatorEpoch.OfDate
@@ -1188,8 +1190,7 @@ class Tests {
         var eclipse: LunarEclipseInfo = searchLunarEclipse(Time(1701, 1, 1, 0, 0, 0.0))
         for (line in infile.readLines()) {
             ++lnum
-            val tokens = tokenize(line)
-            assertTrue(tokens.size == 3, "$filename line $lnum: incorrect number of tokens")
+            val tokens = tokenize(line, 3, filename, lnum)
             val peakTime = parseDate(tokens[0])
             val partialMinutes = tokens[1].toDouble()
             val totalMinutes = tokens[2].toDouble()
@@ -1236,8 +1237,7 @@ class Tests {
         var eclipse: GlobalSolarEclipseInfo = searchGlobalSolarEclipse(Time(1701, 1, 1, 0, 0, 0.0))
         for (line in infile.readLines()) {
             ++lnum
-            val token = tokenize(line)
-            assertTrue(token.size == 5, "$filename line $lnum: wrong token count")
+            val token = tokenize(line, 5, filename, lnum)
             val peak = parseDate(token[0])
             val typeChar = token[2]
             val lat = token[3].toDouble()
@@ -1307,7 +1307,7 @@ class Tests {
         var skipCount = 0
         for (line in infile.readLines()) {
             ++lnum
-            val token = tokenize(line)
+            val token = tokenize(line, 5, filename, lnum)
             assertEquals(5, token.size, "$filename line $lnum: wrong token count")
             val peak = parseDate(token[0])
             //val typeChar = token[2]
@@ -1345,8 +1345,7 @@ class Tests {
             val line = stripLine(rawLine)
             if (line.length == 0)
                 continue
-            val token = tokenize(line)
-            assertEquals(13, token.size, "$filename line $lnum: wrong number of tokens")
+            val token = tokenize(line, 13, filename, lnum)
             val latitude = token[0].toDouble()
             val longitude = token[1].toDouble()
             val typeCode = token[2]
@@ -1574,6 +1573,29 @@ class Tests {
 
         verifyStateBody("topostate/EMB_N30_W80_1000m.txt", 7.195e-04, 2.497e-04) {
             time -> geoEmbState(time) - observer.toStateVector(time, EquatorEpoch.J2000)
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Search for relative longitude events`() {
+        testElongationFile(2018, dataRootDir + "longitude/opposition_2018.txt", 0.0)
+    }
+
+    private fun testElongationFile(year: Int, filename: String, targetRelativeLongitude: Double) {
+        val infile = File(filename)
+        var lnum = 0
+        val searchDate = Time(year, 1, 1, 0, 0, 0.0)
+        for (line in infile.readLines()) {
+            ++lnum
+            // 2018-05-09T00:28Z Jupiter
+            val token = tokenize(line, 2, filename, lnum)
+            val expectedTime = parseDate(token[0])
+            val body = Body.valueOf(token[1])
+            val searchResult = searchRelativeLongitude(body, targetRelativeLongitude, searchDate)
+            val diffMinutes = MINUTES_PER_DAY * abs(searchResult.tt - expectedTime.tt)
+            assertTrue(diffMinutes < 6.8, "$filename line $lnum: excessive search time error = $diffMinutes minutes.")
         }
     }
 

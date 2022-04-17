@@ -881,7 +881,7 @@ function Elongation() {
             let time = Astronomy.SearchRelativeLongitude(item.body, targetRelLon, startDate);
             let diff_minutes = (time.date - item.date) / 60000;
             if (Verbose) console.log(`JS ${item.body}: error = ${diff_minutes.toFixed(3)} minutes`);
-            if (abs(diff_minutes) > 15)
+            if (abs(diff_minutes) > 6.8)
                 throw `!!! Excessive error for body ${item.body}`;
         }
     }

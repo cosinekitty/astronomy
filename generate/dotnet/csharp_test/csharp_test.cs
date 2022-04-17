@@ -783,12 +783,13 @@ namespace csharp_test
                     AstroTime search_result = Astronomy.SearchRelativeLongitude(body, targetRelLon, search_date);
                     if (search_result == null)
                     {
+                        // This function should NEVER return null.
                         Console.WriteLine("C# TestElongFile({0} line {1}): SearchRelativeLongitude returned null.", filename, lnum);
                         return 1;
                     }
                     double diff_minutes = (24.0 * 60.0) * (search_result.tt - expected_time.tt);
                     Console.WriteLine("{0} error = {1} minutes.", body, diff_minutes.ToString("f3"));
-                    if (abs(diff_minutes) > 15.0)
+                    if (abs(diff_minutes) > 6.8)
                     {
                         Console.WriteLine("C# TestElongFile({0} line {1}): EXCESSIVE ERROR.", filename, lnum);
                         return 1;

@@ -6669,8 +6669,8 @@ namespace CosineKitty
         }
 
         /// <summary>
-        ///      Searches for the time when the Earth and another planet are separated by a specified angle
-        ///      in ecliptic longitude, as seen from the Sun.
+        /// Searches for the time when the Earth and another planet are separated by a specified angle
+        /// in ecliptic longitude, as seen from the Sun.
         /// </summary>
         ///
         /// <remarks>
@@ -6714,10 +6714,7 @@ namespace CosineKitty
         ///      The date and time at which to begin the search.
         /// </param>
         ///
-        /// <returns>
-        ///      If successful, returns the date and time of the relative longitude event.
-        ///      Otherwise this function returns null.
-        /// </returns>
+        /// <returns>The date and time of the relative longitude event.</returns>
         public static AstroTime SearchRelativeLongitude(Body body, double targetRelLon, AstroTime startTime)
         {
             if (body == Body.Earth || body == Body.Sun || body == Body.Moon)
@@ -6730,7 +6727,7 @@ namespace CosineKitty
             /* Calculate the error angle, which will be a negative number of degrees, */
             /* meaning we are "behind" the target relative longitude. */
 
-            double error_angle = rlon_offset(body, startTime, direction, targetRelLon);
+            double error_angle = RelativeLongitudeOffset(body, startTime, direction, targetRelLon);
             if (error_angle > 0.0)
                 error_angle -= 360.0;    /* force searching forward in time */
 
@@ -6745,7 +6742,7 @@ namespace CosineKitty
                     return time;
 
                 double prev_angle = error_angle;
-                error_angle = rlon_offset(body, time, direction, targetRelLon);
+                error_angle = RelativeLongitudeOffset(body, time, direction, targetRelLon);
                 if (Math.Abs(prev_angle) < 30.0 && (prev_angle != error_angle))
                 {
                     /* Improve convergence for Mercury/Mars (eccentric orbits) */
@@ -6760,7 +6757,7 @@ namespace CosineKitty
             throw new InternalError("Relative longitude search failed to converge.");
         }
 
-        private static double rlon_offset(Body body, AstroTime time, int direction, double targetRelLon)
+        private static double RelativeLongitudeOffset(Body body, AstroTime time, int direction, double targetRelLon)
         {
             double plon = EclipticLongitude(body, time);
             double elon = EclipticLongitude(Body.Earth, time);

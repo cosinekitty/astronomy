@@ -3,7 +3,7 @@
 # Neptune
 
 [jvm]\
-[Neptune](index.md)(NEPTUNE_GM, VsopModel(vsopLonNeptune, vsopLatNeptune, vsopRadNeptune))
+[Neptune](index.md)(NEPTUNE_GM, NEPTUNE_ORBITAL_PERIOD, VsopModel(vsopLonNeptune, vsopLatNeptune, vsopRadNeptune))
 
 The planet Neptune.
 
