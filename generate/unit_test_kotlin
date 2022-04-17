@@ -29,9 +29,9 @@ cd kotlindoc || Fail "Cannot change dir to kotlindoc"
 ./format_kotlin_doc.py || Fail "Error running ./format_kotlin_doc.py"
 cd .. || Fail "Cannot change dir to .."
 
-#for file in temp/kotlin_longitude_*.txt; do
-#    ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
-#done
+for file in temp/k_longitude_*.txt; do
+    ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
+done
 
 echo "unit_test_kotlin: success"
 exit 0

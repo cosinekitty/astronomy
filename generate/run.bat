@@ -173,7 +173,7 @@ echo.Running JavaScript unit tests.
 node test.js all
 if errorlevel 1 (exit /b 1)
 
-for %%f in (temp\longitude_*.txt) do (
+for %%f in (temp\js_longitude_*.txt) do (
     !GENEXE! check %%f
     if errorlevel 1 (exit /b 1)
 )
@@ -245,6 +245,11 @@ cd ..
 
 !GENEXE! check temp\k_check.txt
 if errorlevel 1 (exit /b 1)
+
+for %%f in (temp\k_longitude_*.txt) do (
+    !GENEXE! check %%f
+    if errorlevel 1 (exit /b 1)
+)
 
 REM -----------------------------------------------------------------------------------------
 

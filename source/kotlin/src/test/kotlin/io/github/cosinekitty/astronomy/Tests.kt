@@ -1581,6 +1581,14 @@ class Tests {
     @Test
     fun `Search for relative longitude events`() {
         testElongationFile(2018, dataRootDir + "longitude/opposition_2018.txt", 0.0)
+        testPlanetLongitudes(Body.Mercury, "inf")
+        testPlanetLongitudes(Body.Venus,   "inf")
+        testPlanetLongitudes(Body.Mars,    "opp")
+        testPlanetLongitudes(Body.Jupiter, "opp")
+        testPlanetLongitudes(Body.Saturn,  "opp")
+        testPlanetLongitudes(Body.Uranus,  "opp")
+        testPlanetLongitudes(Body.Neptune, "opp")
+        testPlanetLongitudes(Body.Pluto,   "opp")
     }
 
     private fun testElongationFile(year: Int, filename: String, targetRelativeLongitude: Double) {
@@ -1597,6 +1605,64 @@ class Tests {
             val diffMinutes = MINUTES_PER_DAY * abs(searchResult.tt - expectedTime.tt)
             assertTrue(diffMinutes < 6.8, "$filename line $lnum: excessive search time error = $diffMinutes minutes.")
         }
+    }
+
+    private fun testPlanetLongitudes(body: Body, zeroLonEventName: String) {
+        val startYear = 1700
+        val stopYear = 2200
+        var rlon = 0.0
+        var count = 0
+        var minDiff = 1.0e+99
+        var maxDiff = 1.0e+99
+        var time = Time(startYear, 1, 1, 0, 0, 0.0)
+        val stopTime = Time(stopYear, 1, 1, 0, 0, 0.0)
+        val filename = dataRootDir + "temp/k_longitude_$body.txt"
+        File(filename).printWriter().use { outfile ->
+            while (time.tt < stopTime.tt) {
+                ++count
+                val eventName = if (rlon == 0.0) zeroLonEventName else "sup"
+                val searchResult = searchRelativeLongitude(body, rlon, time)
+                assertTrue(searchResult.tt > time.tt, "searchRelativeLongitude went backwards from $time to $searchResult")
+                if (count >= 2) {
+                    // Check for consistent intervals.
+                    // Mainly I don't want to skip over an event!
+                    val dayDiff = searchResult.tt - time.tt
+                    if (count == 2) {
+                        minDiff = dayDiff
+                        maxDiff = dayDiff
+                    } else if (count > 2) {
+                        if (dayDiff < minDiff)
+                            minDiff = dayDiff
+                        if (dayDiff > maxDiff)
+                            maxDiff = dayDiff
+                    }
+                }
+
+                // Write a line of test data to the output file.
+                // This output will be checked as a separate test step
+                // later by the `unit_test_kotlin` script (Linux/Mac) or `run.bat` (Windows).
+                val geo = geoVector(body, searchResult, Aberration.Corrected)
+                val dist = geo.length()
+                outfile.println("e $body $eventName ${searchResult.tt} $dist")
+
+                // Search for the opposite longitude event next time.
+                time = searchResult
+                rlon = 180.0 - rlon
+            }
+        }
+
+        // Adjust the threshold for how much variation in intervals
+        // we tolerate, based on how eccentric the planet's orbit is.
+        // The two most eccentric orbits are for Mercury and Mars.
+        // All the other planets have reasonably circular orbits.
+        val thresh = when (body) {
+            Body.Mercury -> 1.65
+            Body.Mars    -> 1.30
+            else         -> 1.07
+        }
+
+        val ratio = maxDiff / minDiff
+        assertTrue(ratio < thresh, "excessive event interval ratio $ratio")
     }
 
     //----------------------------------------------------------------------------------------

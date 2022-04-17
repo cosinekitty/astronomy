@@ -808,7 +808,6 @@ namespace csharp_test
             double rlon = 0.0;
             double min_diff = 1.0e+99;
             double max_diff = 1.0e+99;
-            double sum_diff = 0.0;
 
             using (StreamWriter outfile = File.CreateText(outFileName))
             {
@@ -830,7 +829,6 @@ namespace csharp_test
                         /* Check for consistent intervals. */
                         /* Mainly I don't want to skip over an event! */
                         double day_diff = search_result.tt - time.tt;
-                        sum_diff += day_diff;
                         if (count == 2)
                         {
                             min_diff = max_diff = day_diff;
