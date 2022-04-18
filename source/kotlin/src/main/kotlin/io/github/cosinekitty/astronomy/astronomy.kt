@@ -5942,6 +5942,111 @@ fun angleFromSun(body: Body, time: Time): Double {
 }
 
 
+internal fun moonDistance(time: Time): Double = eclipticGeoMoon(time).dist
+
+internal fun moonRadialSpeed(time: Time): Double {
+    val dt = 0.001
+    val t1 = time.addDays(-dt/2.0)
+    val t2 = time.addDays(+dt/2.0)
+    val dist1 = moonDistance(t1)
+    val dist2 = moonDistance(t2)
+    return (dist2 - dist1) / dt
+}
+
+
+/**
+ * Finds the date and time of the Moon's perigee or apogee.
+ *
+ * Given a date and time to start the search in `startTime`, this function finds the
+ * next date and time that the center of the Moon reaches the closest or farthest point
+ * in its orbit with respect to the center of the Earth, whichever comes first
+ * after `startTime`.
+ *
+ * The closest point is called *perigee* and the farthest point is called *apogee*.
+ * The word *apsis* refers to either event.
+ *
+ * To iterate through consecutive alternating perigee and apogee events, call `searchLunarApsis`
+ * once, then use the return value to call [nextLunarApsis]. After that,
+ * keep feeding the previous return value from `Astronomy.NextLunarApsis` into another
+ * call of `Astronomy.NextLunarApsis` as many times as desired.
+ *
+ * @param startTime
+ *      The date and time at which to start searching for the next perigee or apogee.
+ */
+fun searchLunarApsis(startTime: Time): ApsisInfo {
+    val increment = 0.5     // number of days to skip in each iteration
+
+    // Check the rate of change of the distance dr/dt at the start time.
+    // If it is positive, the Moon is currently getting farther away,
+    // so start looking for apogee.
+    // Conversely, if dr/dt < 0, start looking for perigee.
+    // Either way, the polarity of the slope will change, so the product will be negative.
+    // Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
+
+    var t1 = startTime
+    var m1 = moonRadialSpeed(t1)
+    var iter = 0
+    while (iter * increment < 2.0 * MEAN_SYNODIC_MONTH) {
+        val t2 = t1.addDays(increment)
+        val m2 = moonRadialSpeed(t2)
+        if (m1 * m2 <= 0.0) {
+            // There is a change of slope polarity within the time range [t1, t2].
+            // Therefore this time range contains an apsis.
+            // Figure out whether it is perigee or apogee.
+            var apsisTime: Time
+            var kind: ApsisKind
+            var direction: Int
+            if (m1 < 0.0 || m2 > 0.0) {
+                // We found a minimum distance event: perigee.
+                // Search the time range for the time when the slope goes from negative to positive.
+                direction = +1
+                kind = ApsisKind.Pericenter
+            } else if (m1 > 0.0 || m2 < 0.0) {
+                // We found a maximum distance event: apogee.
+                // Search the time range for the time when the slope goes from positive to negative.
+                direction = -1
+                kind = ApsisKind.Apocenter
+            } else {
+                throw InternalError("Both slopes are zero in SearchLunarApsis.")
+            }
+
+            apsisTime = search(t1, t2, 1.0) { time -> direction * moonRadialSpeed(time) } ?:
+                throw InternalError("Failed to find slope transition in lunar apsis search.")
+
+            val distAu = moonDistance(apsisTime)
+            return ApsisInfo(apsisTime, kind, distAu, distAu * KM_PER_AU)
+        }
+        // We have not yet found a slope polarity change. Keep searching.
+        t1 = t2
+        m1 = m2
+        ++iter
+    }
+
+    // It should not be possible to fail to find an apsis within 2 synodic months.
+    throw InternalError("Should have found lunar apsis within 2 synodic months.")
+}
+
+
+/**
+ * Finds the next lunar perigee or apogee event in a series.
+ *
+ * Finds the next consecutive time the Moon is closest
+ * or farthest from the Earth in its orbit.
+ * See [searchLunarApsis] for more details.
+ *
+ * @param apsis
+ *      An [ApsisInfo] value obtained from a call
+ *      to [searchLunarApsis] or `nextLunarApsis`.
+ */
+fun nextLunarApsis(apsis: ApsisInfo): ApsisInfo {
+    val time = apsis.time.addDays(11.0)
+    val next = searchLunarApsis(time)
+    if (next.kind == apsis.kind)
+        throw InternalError("Found ${next.kind} for two consecutive apsis events: ${apsis.time} and ${next.time}.")
+    return next
+}
+
+
 /**
  * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
  *

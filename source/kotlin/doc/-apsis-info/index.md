@@ -11,7 +11,7 @@ For the Moon orbiting the Earth, or a planet orbiting the Sun, an *apsis* is an 
 
 More specific terminology is common for particular orbiting bodies. The Moon's closest approach to the Earth is called *perigee* and its farthest point is called *apogee*. The closest approach of a planet to the Sun is called *perihelion* and the furthest point is called *aphelion*.
 
-This data structure is returned by searchLunarApsis and nextLunarApsis to iterate through consecutive alternating perigees and apogees.
+This data structure is returned by [searchLunarApsis](../search-lunar-apsis.md) and [nextLunarApsis](../next-lunar-apsis.md) to iterate through consecutive alternating perigees and apogees.
 
 ## Constructors
 

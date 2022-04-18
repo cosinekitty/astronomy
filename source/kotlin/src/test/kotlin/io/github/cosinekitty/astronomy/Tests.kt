@@ -1712,4 +1712,37 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Lunar apsides`() {
+        val filename = dataRootDir + "apsides/moon.txt"
+        val infile = File(filename)
+        var lnum = 0
+        var startTime = Time(2001, 1, 1, 0, 0, 0.0)
+        var apsis = searchLunarApsis(startTime)
+        for (line in infile.readLines()) {
+            ++lnum
+            // 0 2001-01-10T08:59Z 357132
+            // 1 2001-01-24T19:02Z 406565
+            val token = tokenize(line, 3, filename, lnum)
+            val kind: ApsisKind = when (token[0]) {
+                "0"  -> ApsisKind.Pericenter
+                "1"  -> ApsisKind.Apocenter
+                else -> fail("$filename line $lnum: invalid apsis kind symbol '${token[0]}'")
+            }
+            val correctTime = parseDate(token[1])
+            val distKm = token[2].toDouble()
+
+            assertEquals(kind, apsis.kind, "$filename line $lnum: wrong apsis kind.")
+            val diffMinutes = MINUTES_PER_DAY * abs(apsis.time.ut - correctTime.ut)
+            assertTrue(diffMinutes < 35.0, "$filename line $lnum: excessive time error = $diffMinutes minutes.")
+            val diffKm = abs(apsis.distKm - distKm)
+            assertTrue(diffKm < 25.0, "$filename line $lnum: excessive distance error = $diffKm km.")
+
+            apsis = nextLunarApsis(apsis)
+        }
+        assertEquals(2651, lnum, "unexpected number of lunar apside test cases")
+    }
+
+    //----------------------------------------------------------------------------------------
 }
