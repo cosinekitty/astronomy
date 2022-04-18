@@ -1651,7 +1651,18 @@ class ElongationInfo(
      * The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.
      */
     val eclipticSeparation: Double
-)
+) {
+    private fun validateAngle(angle: Double, name: String) {
+        if (angle < 0.0 || angle > 180.0) {
+            throw InternalError("$name angle is not in the required range [0, 180].")
+        }
+    }
+
+    init {
+        validateAngle(elongation, "Elongation")
+        validateAngle(eclipticSeparation, "Ecliptic separation")
+    }
+}
 
 
 /**
@@ -6044,6 +6055,41 @@ fun nextLunarApsis(apsis: ApsisInfo): ApsisInfo {
     if (next.kind == apsis.kind)
         throw InternalError("Found ${next.kind} for two consecutive apsis events: ${apsis.time} and ${next.time}.")
     return next
+}
+
+
+/**
+ * Determines visibility of a celestial body relative to the Sun, as seen from the Earth.
+ *
+ * This function returns an [ElongationInfo] object, which provides the following
+ * information about the given celestial body at the given time:
+ *
+ * - `visibility` is an enumerated type that specifies whether the body is more easily seen
+ *    in the morning before sunrise, or in the evening after sunset.
+ *
+ * - `elongation` is the angle in degrees between two vectors: one from the center of the Earth to the
+ *    center of the Sun, the other from the center of the Earth to the center of the specified body.
+ *    This angle indicates how far away the body is from the glare of the Sun.
+ *    The elongation angle is always in the range [0, 180].
+ *
+ * - `eclipticSeparation` is the absolute value of the difference between the body's ecliptic longitude
+ *   and the Sun's ecliptic longitude, both as seen from the center of the Earth. This angle measures
+ *   around the plane of the Earth's orbit, and ignores how far above or below that plane the body is.
+ *   The ecliptic separation is measured in degrees and is always in the range [0, 180].
+ *
+ * @param body
+ *      The celestial body whose visibility is to be calculated.
+ *
+ * @param time
+ *      The date and time of the observation.
+ */
+fun elongation(body: Body, time: Time): ElongationInfo {
+    val relativeLongitude = pairLongitude(body, Body.Sun, time)
+    val elongation = angleFromSun(body, time)
+    return if (relativeLongitude > 180.0)
+        ElongationInfo(time, Visibility.Morning, elongation, 360.0 - relativeLongitude)
+    else
+        ElongationInfo(time, Visibility.Evening, elongation, relativeLongitude)
 }
 
 

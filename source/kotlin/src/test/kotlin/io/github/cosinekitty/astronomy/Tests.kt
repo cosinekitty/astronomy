@@ -1745,4 +1745,27 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Elongation sanity check`() {
+        // Comparison with Python calculations.
+        val time = Time(8143.135471001447)  // 2022-04-18T15:15:04.695Z
+        verifyElongation(Body.Mercury, time, Visibility.Evening, 16.100478087685758, 16.01391544801653 )
+        verifyElongation(Body.Venus,   time, Visibility.Morning, 44.380271294737405, 44.37884461595604 )
+        verifyElongation(Body.Mars,    time, Visibility.Morning, 55.92935847869356,  55.920119745861314)
+        verifyElongation(Body.Jupiter, time, Visibility.Morning, 33.25618304272404,  33.2426920240577  )
+        verifyElongation(Body.Uranus,  time, Visibility.Evening, 15.276009178442616, 15.271572246395817)
+    }
+
+    private fun verifyElongation(body: Body, time: Time, visibility: Visibility, elong: Double, sep: Double) {
+        val result = elongation(body, time)
+        val tolerance = 3.6e-15
+        val diffElong = abs(elong - result.elongation)
+        val diffSep   = abs(sep - result.eclipticSeparation)
+        assertEquals(visibility, result.visibility, "visibility mismatch: $body at $time")
+        assertTrue(diffElong < tolerance, "excessive elongation error = $diffElong for $body at $time")
+        assertTrue(diffSep < tolerance, "excessive separation error = $diffSep for $body at $time")
+    }
+
+    //----------------------------------------------------------------------------------------
 }
