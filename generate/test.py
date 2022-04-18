@@ -476,7 +476,7 @@ def TestMaxElong(body, searchText, eventText, angle, visibility):
     hour_diff = 24.0 * vabs(evt.time.tt - eventTime.tt)
     arcmin_diff = 60.0 * vabs(evt.elongation - angle)
     Debug('PY TestMaxElong: {:<7s} {:<7s} elong={:5.2f} ({:4.2f} arcmin, {:5.3f} hours)'.format(name, visibility.name, evt.elongation, arcmin_diff, hour_diff))
-    if hour_diff > 0.603:
+    if hour_diff > 0.6:
         print('PY TestMaxElong({} {}): EXCESSIVE HOUR ERROR.'.format(name, searchText))
         return 1
     if arcmin_diff > 3.4:

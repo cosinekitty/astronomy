@@ -940,10 +940,10 @@ function Elongation() {
         if (evt.visibility !== verifyVisibility)
             throw `TestMaxElong: expected visibility ${verifyVisibility}, but found ${evt.visibility}`;
 
-        if (arcmin_diff > 4.0)
+        if (arcmin_diff > 3.4)
             throw `TestMaxElong: excessive angular error = ${angle_diff} arcmin`;
 
-        if (abs(hour_diff) > 0.603)
+        if (abs(hour_diff) > 0.6)
             throw `TestMaxElong: excessive hour error = ${hour_diff}`;
     }
 

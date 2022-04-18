@@ -6093,6 +6093,128 @@ fun elongation(body: Body, time: Time): ElongationInfo {
 }
 
 
+private fun negativeElongationSlope(body: Body, time: Time): Double {
+    val dt = 0.1
+    val t1 = time.addDays(-dt / 2.0)
+    val t2 = time.addDays(+dt / 2.0)
+    val e1 = angleFromSun(body, t1)
+    val e2 = angleFromSun(body, t2)
+    return (e1 - e2) / dt
+}
+
+
+/**
+ * Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.
+ *
+ * Mercury and Venus are are often difficult to observe because they are closer to the Sun than the Earth is.
+ * Mercury especially is almost always impossible to see because it gets lost in the Sun's glare.
+ * The best opportunities for spotting Mercury, and the best opportunities for viewing Venus through
+ * a telescope without atmospheric interference, are when these planets reach maximum elongation.
+ * These are events where the planets reach the maximum angle from the Sun as seen from the Earth.
+ *
+ * This function solves for those times, reporting the next maximum elongation event's date and time,
+ * the elongation value itself, the relative longitude with the Sun, and whether the planet is best
+ * observed in the morning or evening. See [elongation] for more details about the returned structure.
+ *
+ * @param body
+ *      Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception.
+ *      To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)
+ *      use [searchRelativeLongitude] to find the next opposition event.
+ *
+ * @param startTime
+ *      The date and time at which to begin the search. The maximum elongation event found will always
+ *      be the first one that occurs after this date and time.
+ */
+fun searchMaxElongation(body: Body, startTime: Time): ElongationInfo {
+    var s1: Double
+    var s2: Double
+    when (body) {
+        Body.Mercury -> {
+            s1 = 50.0
+            s2 = 85.0
+        }
+        Body.Venus -> {
+            s1 = 40.0
+            s2 = 50.0
+        }
+        else -> throw InvalidBodyException(body)
+    }
+
+    val syn = synodicPeriod(body)
+    var searchTime = startTime
+    var iter = 0
+    while (++iter <= 2) {
+        val plon = eclipticLongitude(body, searchTime)
+        val elon = eclipticLongitude(Body.Earth, searchTime)
+        val rlon = longitudeOffset(plon - elon)     // clamp to (-180, +180].
+
+        // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
+        // because there is a cusp there that causes a discontinuity in the derivative.
+        // So we need to guard against searching near such times.
+        var adjustDays: Double
+        var rlonLo: Double
+        var rlonHi: Double
+        if (rlon >= -s1 && rlon < +s1) {
+            // Seek to the window [+s1, +s2].
+            adjustDays = 0.0
+            // Search forward for the time t1 when rel lon = +s1.
+            rlonLo = +s1
+            // Search forward for the time t2 when rel lon = +s2.
+            rlonHi = +s2;
+        } else if (rlon > +s2 || rlon < -s2) {
+            // Seek to the next search window at [-s2, -s1].
+            adjustDays = 0.0
+            // Search forward for the time t1 when rel lon = -s2.
+            rlonLo = -s2
+            // Search forward for the time t2 when rel lon = -s1.
+            rlonHi = -s1
+        } else if (rlon >= 0.0) {
+            // rlon must be in the middle of the window [+s1, +s2].
+            // Search BACKWARD for the time t1 when rel lon = +s1.
+            adjustDays = -syn / 4.0
+            rlonLo = +s1
+            rlonHi = +s2
+            // Search forward from t1 to find t2 such that rel lon = +s2.
+        } else {
+            // rlon must be in the middle of the window [-s2, -s1].
+            // Search BACKWARD for the time t1 when rel lon = -s2.
+            adjustDays = -syn / 4.0
+            rlonLo = -s2
+            // Search forward from t1 to find t2 such that rel lon = -s1.
+            rlonHi = -s1
+        }
+
+        val tStart = startTime.addDays(adjustDays)
+
+        val t1 = searchRelativeLongitude(body, rlonLo, tStart)
+        val t2 = searchRelativeLongitude(body, rlonHi, t1)
+
+        // Now we have a time range [t1,t2] that brackets a maximum elongation event.
+        // Confirm the bracketing.
+        val m1 = negativeElongationSlope(body, t1)
+        if (m1 >= 0.0)
+            throw InternalError("There is a bug in the bracketing algorithm! m1 = $m1")
+
+        val m2 = negativeElongationSlope(body, t2)
+        if (m2 <= 0.0)
+            throw InternalError("There is a bug in the bracketing algorithm! m2 = $m2")
+
+        // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
+        val searchx = search(t1, t2, 10.0) { time -> negativeElongationSlope(body, time) } ?:
+            throw InternalError("Maximum elongation search failed.")
+
+        if (searchx.tt >= startTime.tt)
+            return elongation(body, searchx)
+
+        // This event is in the past (earlier than startTime).
+        // We need to search forward from t2 to find the next possible window.
+        searchTime = t2.addDays(1.0)
+    }
+
+    throw InternalError("Maximum elongation search iterated too many times.")
+}
+
+
 /**
  * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
  *

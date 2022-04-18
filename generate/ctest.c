@@ -1327,7 +1327,7 @@ static int TestMaxElong(const elong_test_t *test)
 
     DEBUG("C TestMaxElong: %-7s %-7s elong=%5.2lf (%4.2lf arcmin, %5.3lf hours)\n", name, vis, evt.elongation, arcmin_diff, hour_diff);
 
-    if (hour_diff > 0.603)
+    if (hour_diff > 0.6)
         FAIL("C TestMaxElong(%s %s): excessive hour error.\n", name, test->searchDate);
 
     if (arcmin_diff > 3.4)

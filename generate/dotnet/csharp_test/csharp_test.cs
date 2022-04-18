@@ -926,7 +926,7 @@ namespace csharp_test
             double hour_diff = 24.0 * abs(evt.time.tt - eventTime.tt);
             double arcmin_diff = 60.0 * abs(evt.elongation - test.angle);
             Debug("C# TestMaxElong: {0,7} {1,7} elong={2,5} ({3} arcmin, {4} hours)", test.body, test.visibility, evt.elongation, arcmin_diff, hour_diff);
-            if (hour_diff > 0.603)
+            if (hour_diff > 0.6)
             {
                 Console.WriteLine("C# TestMaxElong({0} {1}): excessive hour error.", test.body, test.searchDate);
                 return 1;

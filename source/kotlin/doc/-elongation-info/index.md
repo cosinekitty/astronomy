@@ -7,7 +7,7 @@ class [ElongationInfo](index.md)(time: [Time](../-time/index.md), visibility: [V
 
 Contains information about the visibility of a celestial body at a given date and time.
 
-See [elongation](elongation.md) for more detailed information about the members of this class. See also searchMaxElongation for how to search for maximum elongation events.
+See [elongation](elongation.md) for more detailed information about the members of this class. See also [searchMaxElongation](../search-max-elongation.md) for how to search for maximum elongation events.
 
 ## Constructors
 
