@@ -1322,7 +1322,7 @@ namespace csharp_test
                 }
                 if (count == 0)
                 {
-                    Console.WriteLine("C# CheckMagnitudeData: Data not find any data in file: {0}", filename);
+                    Console.WriteLine("C# CheckMagnitudeData: Did not find any data in file: {0}", filename);
                     return 1;
                 }
                 double rms = sqrt(sum_squared_diff / count);

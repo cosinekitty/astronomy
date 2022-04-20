@@ -31,12 +31,14 @@ package io.github.cosinekitty.astronomy
 import kotlin.math.absoluteValue
 import kotlin.math.abs
 import kotlin.math.acos
+import kotlin.math.asin
 import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
+import kotlin.math.log10
 import kotlin.math.min
 import kotlin.math.PI
 import kotlin.math.round
@@ -6212,6 +6214,312 @@ fun searchMaxElongation(body: Body, startTime: Time): ElongationInfo {
     }
 
     throw InternalError("Maximum elongation search iterated too many times.")
+}
+
+
+/**
+ * Finds visual magnitude, phase angle, and other illumination information about a celestial body.
+ *
+ * This function calculates information about how bright a celestial body appears from the Earth,
+ * reported as visual magnitude, which is a smaller (or even negative) number for brighter objects
+ * and a larger number for dimmer objects.
+ *
+ * For bodies other than the Sun, it reports a phase angle, which is the angle in degrees between
+ * the Sun and the Earth, as seen from the center of the body. Phase angle indicates what fraction
+ * of the body appears illuminated as seen from the Earth. For example, when the phase angle is
+ * near zero, it means the body appears "full" as seen from the Earth.  A phase angle approaching
+ * 180 degrees means the body appears as a thin crescent as seen from the Earth.  A phase angle
+ * of 90 degrees means the body appears "half full".
+ * For the Sun, the phase angle is always reported as 0; the Sun emits light rather than reflecting it,
+ * so it doesn't have a phase angle.
+ *
+ * When the body is Saturn, the returned structure contains a field `ringTilt` that holds
+ * the tilt angle in degrees of Saturn's rings as seen from the Earth. A value of 0 means
+ * the rings appear edge-on, and are thus nearly invisible from the Earth. The `ringTilt` holds
+ * 0 for all bodies other than Saturn.
+ *
+ * @param body
+ *      The Sun, Moon, or any planet other than the Earth.
+ *
+ * @param time
+ *      The date and time of the observation.
+ */
+fun illumination(body: Body, time: Time): IlluminationInfo {
+    if (body == Body.Earth)
+        throw EarthNotAllowedException()
+
+    val earth = helioEarthPos(time)
+
+    var gc: Vector
+    var hc: Vector
+    var phaseAngle: Double
+
+    if (body == Body.Sun) {
+        gc = -earth
+        hc = Vector(0.0, 0.0, 0.0, time)
+        // The Sun emits light instead of reflecting it,
+        // so we report a placeholder phase angle of 0.
+        phaseAngle = 0.0
+    } else {
+        if (body == Body.Moon) {
+            // For extra numeric precision, use geocentric Moon formula directly.
+            gc = geoMoon(time)
+            hc = earth + gc
+        } else {
+            // For planets, the heliocentric vector is more direct to calculate.
+            hc = helioVector(body, time)
+            gc = hc - earth
+        }
+        phaseAngle = gc.angleWith(hc)
+    }
+
+    val geoDist = gc.length()
+    val helioDist = hc.length()
+    var mag: Double
+    var ringTilt: Double
+
+    if (body == Body.Saturn) {
+        val saturn = saturnMagnitude(phaseAngle, helioDist, geoDist, gc, time)
+        ringTilt = saturn.tilt
+        mag = saturn.mag
+    } else {
+        ringTilt = 0.0
+        mag = when (body) {
+            Body.Sun  -> -0.17 + 5.0*log10(geoDist / AU_PER_PARSEC)
+            Body.Moon -> moonMagnitude(phaseAngle, helioDist, geoDist)
+            else      -> visualMagnitude(body, phaseAngle, helioDist, geoDist)
+        }
+    }
+
+    val phaseFraction = (1.0 + dcos(phaseAngle)) / 2.0
+    return IlluminationInfo(time, mag, phaseAngle, phaseFraction, helioDist, ringTilt)
+}
+
+internal class MagTiltResult(
+    val mag: Double,
+    val tilt: Double
+)
+
+internal fun saturnMagnitude(
+    phase: Double,
+    helioDist: Double,
+    geoDist: Double,
+    gc: Vector,
+    time: Time
+): MagTiltResult {
+    // Based on formulas by Paul Schlyter found here:
+    // http://www.stjarnhimlen.se/comp/ppcomp.html#15
+
+    // We must handle Saturn's rings as a major component of its visual magnitude.
+    // Find geocentric ecliptic coordinates of Saturn.
+    val eclip = equatorialToEcliptic(gc)
+
+    val ir = 28.06   // tilt of Saturn's rings to the ecliptic, in degrees
+    val nr = (169.51 + (3.82e-5 * time.tt))    // ascending node of Saturn's rings, in degrees
+
+    // Find tilt of Saturn's rings, as seen from Earth.
+    val tilt = asin(dsin(eclip.elat)*dcos(ir) - dcos(eclip.elat)*dsin(ir)*dsin(eclip.elon - nr))
+    val sinTilt = sin(abs(tilt))
+
+    val mag = (
+        -9.0
+        + 0.044*phase
+        + sinTilt*(-2.6 + 1.2*sinTilt)
+        + 5.0*log10(helioDist * geoDist)
+    )
+
+    return MagTiltResult(mag, RAD2DEG * tilt)
+}
+
+
+internal fun moonMagnitude(phase: Double, helioDist: Double, geoDist: Double): Double {
+    // https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
+    val rad = phase.degreesToRadians()
+    val rad2 = rad * rad
+    val rad4 = rad2 * rad2
+    val mag = -12.717 + 1.49*abs(rad) + 0.0431*rad4
+    val moonMeanDistanceAu = 385000.6 / KM_PER_AU
+    val geoAu = geoDist / moonMeanDistanceAu
+    return mag + 5.0*log10(helioDist * geoAu)
+}
+
+
+internal fun visualMagnitude(
+    body: Body,
+    phase: Double,
+    helioDist: Double,
+    geoDist: Double
+): Double {
+    // For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
+    var c0: Double
+    var c1 = 0.0
+    var c2 = 0.0
+    var c3 = 0.0
+    when (body) {
+        Body.Mercury -> {
+            c0 = -0.60
+            c1 = +4.98
+            c2 = -4.88
+            c3 = +3.02
+        }
+        Body.Venus -> {
+            if (phase < 163.6) {
+                c0 = -4.47
+                c1 = +1.03
+                c2 = +0.57
+                c3 = +0.13
+            } else {
+                c0 = 0.98
+                c1 = -1.02
+            }
+        }
+        Body.Mars -> {
+            c0 = -1.52
+            c1 = +1.60
+        }
+        Body.Jupiter -> {
+            c0 = -9.40
+            c1 = +0.50
+        }
+        Body.Uranus -> {
+            c0 = -7.19
+            c1 = +0.25
+        }
+        Body.Neptune -> {
+            c0 = -6.87
+        }
+        Body.Pluto -> {
+            c0 = -1.00
+            c1 = +4.00
+        }
+        else -> throw InvalidBodyException(body)
+    }
+    val x = phase / 100.0
+    return (c0 + x*(c1 + x*(c2 + x*c3))) + 5.0*log10(helioDist * geoDist)
+}
+
+
+internal fun magnitudeSlope(body: Body, time: Time): Double {
+    // The Search() function finds a transition from negative to positive values.
+    // The derivative of magnitude y with respect to time t (dy/dt)
+    // is negative as an object gets brighter, because the magnitude numbers
+    // get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
+    // dy/dt > 0.
+    val dt = 0.01
+    val t1 = time.addDays(-dt/2)
+    val t2 = time.addDays(+dt/2)
+    val y1 = illumination(body, t1)
+    val y2 = illumination(body, t2)
+    return (y2.mag - y1.mag) / dt
+}
+
+
+/**
+ * Searches for the date and time Venus will next appear brightest as seen from the Earth.
+ *
+ * This function searches for the date and time Venus appears brightest as seen from the Earth.
+ * Currently only Venus is supported for the `body` parameter, though this could change in the future.
+ * Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from the Earth,
+ * so peak magnitude events have little practical value for that planet.
+ * Planets other than Venus and Mercury reach peak magnitude at opposition, which can
+ * be found using #Astronomy.SearchRelativeLongitude.
+ * The Moon reaches peak magnitude at full moon, which can be found using
+ * [searchMoonQuarter] or [searchMoonPhase].
+ * The Sun reaches peak magnitude at perihelion, which occurs each year in January.
+ * However, the difference is minor and has little practical value.
+ *
+ * @param body
+ *      Currently only `Body.Venus` is allowed. Any other value causes an exception.
+ *
+ * @param startTime
+ *      The date and time to start searching for the next peak magnitude event.
+ */
+fun searchPeakMagnitude(body: Body, startTime: Time): IlluminationInfo {
+    if (body != Body.Venus)
+        throw InvalidBodyException(body)
+
+    // s1 and s2 are relative longitudes within which peak magnitude of Venus can occur.
+    val s1 = 10.0
+    val s2 = 30.0
+
+    var iter = 0
+    var searchTime = startTime
+    while (++iter <= 2)
+    {
+        // Find current heliocentric relative longitude between the
+        // inferior planet and the Earth.
+        val plon = eclipticLongitude(body, searchTime)
+        val elon = eclipticLongitude(Body.Earth, searchTime)
+        val rlon = longitudeOffset(plon - elon)     // clamp to (-180, +180].
+
+        // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
+        // because there is a cusp there that causes a discontinuity in the derivative.
+        // So we need to guard against searching near such times.
+
+        var rlonLo: Double
+        var rlonHi: Double
+        var adjustDays: Double
+        var syn: Double
+        if (rlon >= -s1 && rlon < +s1) {
+            // Seek to the window [+s1, +s2].
+            adjustDays = 0.0
+            // Search forward for the time t1 when rel lon = +s1.
+            rlonLo = +s1
+            // Search forward for the time t2 when rel lon = +s2.
+            rlonHi = +s2
+        } else if (rlon >= +s2 || rlon < -s2) {
+            // Seek to the next search window at [-s2, -s1].
+            adjustDays = 0.0
+            // Search forward for the time t1 when rel lon = -s2.
+            rlonLo = -s2
+            // Search forward for the time t2 when rel lon = -s1.
+            rlonHi = -s1
+        } else if (rlon >= 0.0) {
+            // rlon must be in the middle of the window [+s1, +s2].
+            // Search BACKWARD for the time t1 when rel lon = +s1.
+            syn = synodicPeriod(body)
+            adjustDays = -syn / 4.0
+            rlonLo = +s1
+            // Search forward from t1 to find t2 such that rel lon = +s2.
+            rlonHi = +s2
+        } else {
+            // rlon must be in the middle of the window [-s2, -s1].
+            // Search BACKWARD for the time t1 when rel lon = -s2.
+            syn = synodicPeriod(body)
+            adjustDays = -syn / 4.0
+            rlonLo = -s2
+            // Search forward from t1 to find t2 such that rel lon = -s1.
+            rlonHi = -s1
+        }
+
+        val tStart = searchTime.addDays(adjustDays)
+        val t1 = searchRelativeLongitude(body, rlonLo, tStart)
+        val t2 = searchRelativeLongitude(body, rlonHi, t1)
+
+        // Now we have a time range [t1,t2] that brackets a maximum magnitude event.
+        // Confirm the bracketing.
+        val m1 = magnitudeSlope(body, t1)
+        if (m1 >= 0.0)
+            throw InternalError("m1 = $m1; should have been negative.")
+
+        val m2 = magnitudeSlope(body, t2)
+        if (m2 <= 0.0)
+            throw InternalError("m2 = $m2; should have been positive.")
+
+        // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
+        val tx = search(t1, t2, 10.0) { time -> magnitudeSlope(body, time) } ?:
+            throw InternalError("Failed to find magnitude slope transition.")
+
+        if (tx.tt >= startTime.tt)
+            return illumination(body, tx)
+
+        // This event is in the past (earlier than startTime).
+        // We need to search forward from t2 to find the next possible window.
+        // We never need to search more than twice.
+        searchTime = t2.addDays(1.0)
+    }
+    // This should never happen. If it does, please report as a bug in Astronomy Engine.
+    throw InternalError("Peak magnitude search failed.")
 }
 
 

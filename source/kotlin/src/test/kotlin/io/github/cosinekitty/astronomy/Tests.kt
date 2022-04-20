@@ -1872,4 +1872,144 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Visual magnitudes`() {
+        val bodyList = arrayOf(
+            Body.Sun,
+            Body.Moon,
+            Body.Mercury,
+            Body.Venus,
+            Body.Mars,
+            Body.Jupiter,
+            Body.Uranus,
+            Body.Neptune,
+            Body.Pluto
+        )
+        for (body in bodyList)
+            checkMagnitudeData(body)
+        checkSaturn()
+        testMaxMag(Body.Venus, dataRootDir + "magnitude/maxmag_Venus.txt")
+    }
+
+    class JplDateTime(
+        val time: Time,
+        val rest: String
+    )
+
+    val jplRegex = Regex("""^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s+(\d{2}):(\d{2})\s+(.*)""")
+
+    private fun monthNumber(mtext: String): Int = when(mtext) {
+        "Jan" ->  1
+        "Feb" ->  2
+        "Mar" ->  3
+        "Apr" ->  4
+        "May" ->  5
+        "Jun" ->  6
+        "Jul" ->  7
+        "Aug" ->  8
+        "Sep" ->  9
+        "Oct" -> 10
+        "Nov" -> 11
+        "Dec" -> 12
+        else -> fail("Unexpected month name: $mtext")
+    }
+
+    private fun parseJplHorizonsDateTime(line: String, filename: String, lnum: Int): JplDateTime? {
+        val m = jplRegex.matchEntire(line)
+        if (m == null)
+            return null
+        val year = groupInt(m, 1, filename, lnum)
+        val month = monthNumber(groupString(m, 2, filename, lnum))
+        val day = groupInt(m, 3, filename, lnum)
+        val hour = groupInt(m, 4, filename, lnum)
+        val minute = groupInt(m, 5, filename, lnum)
+        val rest = groupString(m, 6, filename, lnum)
+        val time = Time(year, month, day, hour, minute, 0.0)
+        return JplDateTime(time, rest)
+    }
+
+    private fun checkMagnitudeData(body: Body) {
+        val filename = dataRootDir + "magnitude/$body.txt"
+        val infile = File(filename)
+        val limit = 0.012
+        var lnum = 0
+        var count = 0
+        for (line in infile.readLines()) {
+            ++lnum
+            val jpl = parseJplHorizonsDateTime(line, filename, lnum)
+            if (jpl == null)
+                continue
+            val token = tokenize(jpl.rest)
+            if (token.size > 0 && token[0] == "n.a.")
+                continue
+            assertEquals(7, token.size, "$filename line $lnum: invalid data format")
+            val mag = token[0].toDouble()
+            val illum = illumination(body, jpl.time)
+            val diff = abs(illum.mag - mag)
+            assertTrue(diff < limit, "$filename line $lnum: excessive error: correct mag = $mag, calc mag = ${illum.mag}, diff = $diff")
+            ++count
+        }
+        assertTrue(count > 0, "$filename: Did not find any data in file.")
+    }
+
+    private fun checkSaturn() {
+        // JPL Horizons does not include Saturn's rings in its magnitude models.
+        // I still don't have authoritative test data for Saturn's magnitude.
+        // For now, I just test for consistency with Paul Schlyter's formulas at:
+        // http://www.stjarnhimlen.se/comp/ppcomp.html#15
+
+        class SaturnTestCase(
+            val date: String,
+            val mag: Double,
+            val tilt: Double
+        )
+        val saturnTestList = arrayOf(
+            SaturnTestCase("1972-01-01T00:00Z", -0.31904865,  +24.50061220),
+            SaturnTestCase("1980-01-01T00:00Z", +0.85213663,   -1.85761461),
+            SaturnTestCase("2009-09-04T00:00Z", +1.01626809,   +0.08380716),
+            SaturnTestCase("2017-06-15T00:00Z", -0.12318790,  -26.60871409),
+            SaturnTestCase("2019-05-01T00:00Z", +0.32954097,  -23.53880802),
+            SaturnTestCase("2025-09-25T00:00Z", +0.51286575,   +1.52327932),
+            SaturnTestCase("2032-05-15T00:00Z", -0.04652109,  +26.95717765)
+        )
+        for (c in saturnTestList) {
+            val time = parseDate(c.date)
+            val illum = illumination(Body.Saturn, time)
+            val magDiff = abs(illum.mag - c.mag)
+            assertTrue(magDiff < 1.0e-4, "excessive Saturn magnitude error $magDiff for $time")
+            val tiltDiff = abs(illum.ringTilt - c.tilt)
+            assertTrue(tiltDiff < 3.0e-5, "excessive Saturn ring tilt error $tiltDiff for $time")
+        }
+    }
+
+    private fun testMaxMag(body: Body, filename: String) {
+        // Example of input data:
+        //
+        // 2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84
+        //
+        // JPL Horizons test data has limited floating point precision in the magnitude values.
+        // There is a pair of dates for the beginning and end of the max magnitude period,
+        // given the limited precision.
+        // We pick the point halfway between as the supposed max magnitude time.
+        val infile = File(filename)
+        var lnum = 0
+        var searchTime = Time(2001, 1, 1, 0, 0, 0.0)
+        for (line in infile.readLines()) {
+            ++lnum
+            val token = tokenize(line, 5, filename, lnum)
+            val time1 = parseDate(token[0])
+            val time2 = parseDate(token[1])
+            val centerTime = time1.addDays(0.5*(time2.ut - time1.ut))
+            val correctMag = token[4].toDouble()
+            val illum = searchPeakMagnitude(body, searchTime)
+            val magDiff = abs(illum.mag - correctMag)
+            val hoursDiff = 24.0 * abs(illum.time.ut - centerTime.ut)
+            assertTrue(hoursDiff < 7.1, "$filename line $lnum: excessive time error = $hoursDiff hours")
+            assertTrue(magDiff < 0.005, "$filename line $lnum: excessive magnitude error = $magDiff")
+            searchTime = time2
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
 }

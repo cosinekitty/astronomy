@@ -7225,7 +7225,7 @@ $ASTRO_IAU_DATA()
             const double s2 = 30.0;
 
             if (body != Body.Venus)
-                throw new ArgumentException("Peak magnitude currently is supported for Venus only.");
+                throw new InvalidBodyException(body);
 
             var mag_slope = new SearchContext_MagnitudeSlope(body);
 
