@@ -2012,4 +2012,29 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Gravity measured on Earth`() {
+        // Spot-check against values calculated by the Python version of Astronomy Engine.
+        verifyObserverGravity(  0.0,    0.0, 9.7803253359     )
+        verifyObserverGravity(+10.0,    0.0, 9.781882400630266)
+        verifyObserverGravity(-10.0,    0.0, 9.781882400630266)
+        verifyObserverGravity(+10.0, 1000.0, 9.778795562804849)
+        verifyObserverGravity(-10.0, 1000.0, 9.778795562804849)
+        verifyObserverGravity(+30.0,  100.0, 9.792938614507834)
+        verifyObserverGravity(-30.0,  100.0, 9.792938614507834)
+        verifyObserverGravity(+45.0,    0.0, 9.80619776937321 )
+        verifyObserverGravity(-45.0,    0.0, 9.80619776937321 )
+        verifyObserverGravity(+90.0,    0.0, 9.832184937858958)
+        verifyObserverGravity(-90.0,    0.0, 9.832184937858958)
+    }
+
+    private fun verifyObserverGravity(latitude: Double, height: Double, correct: Double) {
+        val tolerance = 1.0e-16
+        val calc = observerGravity(latitude, height)
+        val diff = abs(calc - correct)
+        assertTrue(diff < tolerance, "excessive gravity error: calc=$calc, correct=$correct")
+    }
+
+    //----------------------------------------------------------------------------------------
 }
