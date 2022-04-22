@@ -330,7 +330,7 @@ def TestElongFile(filename, targetRelLon):
                 return 1
             diff_minutes = (24.0 * 60.0) * (found_time.tt - expected_time.tt)
             Debug('PY TestElongFile: {:<7s} error = {:6.3} minutes'.format(name, diff_minutes))
-            if vabs(diff_minutes) > 15.0:
+            if vabs(diff_minutes) > 6.8:
                 print('PY TestElongFile({} line {}): EXCESSIVE ERROR.'.format(filename, lnum))
                 return 1
     print('PY TestElongFile: passed {} rows of data'.format(lnum))
@@ -476,7 +476,7 @@ def TestMaxElong(body, searchText, eventText, angle, visibility):
     hour_diff = 24.0 * vabs(evt.time.tt - eventTime.tt)
     arcmin_diff = 60.0 * vabs(evt.elongation - angle)
     Debug('PY TestMaxElong: {:<7s} {:<7s} elong={:5.2f} ({:4.2f} arcmin, {:5.3f} hours)'.format(name, visibility.name, evt.elongation, arcmin_diff, hour_diff))
-    if hour_diff > 0.603:
+    if hour_diff > 0.6:
         print('PY TestMaxElong({} {}): EXCESSIVE HOUR ERROR.'.format(name, searchText))
         return 1
     if arcmin_diff > 3.4:
@@ -2201,6 +2201,7 @@ def LibrationFile(filename):
     max_diff_elat = 0.0
     max_diff_distance = 0.0
     max_diff_diam = 0.0
+    max_eclip_lon = -900.0
     count = 0
     with open(filename, 'rt') as infile:
         lnum = 0
@@ -2247,6 +2248,9 @@ def LibrationFile(filename):
                 if diff_diam > max_diff_diam:
                     max_diff_diam = diff_diam
 
+                if lib.mlon > max_eclip_lon:
+                    max_eclip_lon = lib.mlon
+
                 if diff_elon > 0.1304:
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_elon = {}'.format(filename, lnum, diff_elon))
                     return 1
@@ -2259,9 +2263,17 @@ def LibrationFile(filename):
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_distance = {}'.format(filename, lnum, diff_distance))
                     return 1
 
+                if diff_diam > 0.00009:
+                    print('PY LibrationFile({} line {}): EXCESSIVE diff_diam = {}'.format(filename, lnum, diff_diam))
+                    return 1
+
                 count += 1
 
-    print('PY Libration({}): PASS ({} test cases, max_diff_elon = {} arcmin, max_diff_elat = {} arcmin, max_diff_distance = {} km, max_diff_diam = {} deg)'.format(
+    if not (359.0 < max_eclip_lon < 360.0):
+        print('PY LibrationFile({}): INVALID max ecliptic longitude = {:0.3f}'.format(filename, max_eclip_lon))
+        return 1
+
+    print('PY LibrationFile({}): PASS ({} test cases, max_diff_elon = {} arcmin, max_diff_elat = {} arcmin, max_diff_distance = {} km, max_diff_diam = {} deg)'.format(
         filename, count, max_diff_elon, max_diff_elat, max_diff_distance, max_diff_diam
     ))
     return 0
@@ -2270,8 +2282,7 @@ def Libration():
     return (
         LibrationFile('libration/mooninfo_2020.txt') or
         LibrationFile('libration/mooninfo_2021.txt') or
-        LibrationFile('libration/mooninfo_2022.txt') or
-        0
+        LibrationFile('libration/mooninfo_2022.txt')
     )
 
 #-----------------------------------------------------------------------------------------------------------

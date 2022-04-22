@@ -523,8 +523,8 @@ for a given moment in time. See [`Libration`](#Libration) for more details.
 | --- | --- | --- |
 | `float` | `elat` | Sub-Earth libration ecliptic latitude angle, in degrees. |
 | `float` | `elon` | Sub-Earth libration ecliptic longitude angle, in degrees. |
-| `float` | `mlat` | Moon's geocentric ecliptic latitude. |
-| `float` | `mlon` | Moon's geocentric ecliptic longitude. |
+| `float` | `mlat` | Moon's geocentric ecliptic latitude, in degrees. |
+| `float` | `mlon` | Moon's geocentric ecliptic longitude, in degrees. |
 | `float` | `dist_km` | Distance between the centers of the Earth and Moon in kilometers. |
 | `float` | `diam_deg` | The apparent angular diameter of the Moon as seen from the center of the Earth. |
 

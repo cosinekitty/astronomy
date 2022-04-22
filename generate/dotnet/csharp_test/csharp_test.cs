@@ -783,12 +783,13 @@ namespace csharp_test
                     AstroTime search_result = Astronomy.SearchRelativeLongitude(body, targetRelLon, search_date);
                     if (search_result == null)
                     {
+                        // This function should NEVER return null.
                         Console.WriteLine("C# TestElongFile({0} line {1}): SearchRelativeLongitude returned null.", filename, lnum);
                         return 1;
                     }
                     double diff_minutes = (24.0 * 60.0) * (search_result.tt - expected_time.tt);
                     Console.WriteLine("{0} error = {1} minutes.", body, diff_minutes.ToString("f3"));
-                    if (abs(diff_minutes) > 15.0)
+                    if (abs(diff_minutes) > 6.8)
                     {
                         Console.WriteLine("C# TestElongFile({0} line {1}): EXCESSIVE ERROR.", filename, lnum);
                         return 1;
@@ -807,7 +808,6 @@ namespace csharp_test
             double rlon = 0.0;
             double min_diff = 1.0e+99;
             double max_diff = 1.0e+99;
-            double sum_diff = 0.0;
 
             using (StreamWriter outfile = File.CreateText(outFileName))
             {
@@ -829,7 +829,6 @@ namespace csharp_test
                         /* Check for consistent intervals. */
                         /* Mainly I don't want to skip over an event! */
                         double day_diff = search_result.tt - time.tt;
-                        sum_diff += day_diff;
                         if (count == 2)
                         {
                             min_diff = max_diff = day_diff;
@@ -927,7 +926,7 @@ namespace csharp_test
             double hour_diff = 24.0 * abs(evt.time.tt - eventTime.tt);
             double arcmin_diff = 60.0 * abs(evt.elongation - test.angle);
             Debug("C# TestMaxElong: {0,7} {1,7} elong={2,5} ({3} arcmin, {4} hours)", test.body, test.visibility, evt.elongation, arcmin_diff, hour_diff);
-            if (hour_diff > 0.603)
+            if (hour_diff > 0.6)
             {
                 Console.WriteLine("C# TestMaxElong({0} {1}): excessive hour error.", test.body, test.searchDate);
                 return 1;
@@ -1323,7 +1322,7 @@ namespace csharp_test
                 }
                 if (count == 0)
                 {
-                    Console.WriteLine("C# CheckMagnitudeData: Data not find any data in file: {0}", filename);
+                    Console.WriteLine("C# CheckMagnitudeData: Did not find any data in file: {0}", filename);
                     return 1;
                 }
                 double rms = sqrt(sum_squared_diff / count);
@@ -3218,6 +3217,7 @@ namespace csharp_test
             double max_diff_elat = 0.0;
             double max_diff_distance = 0.0;
             double max_diff_diam = 0.0;
+            double max_eclip_lon = -900.0;
             string line;
             while (null != (line = infile.ReadLine()))
             {
@@ -3295,8 +3295,18 @@ namespace csharp_test
                         Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_distance = {diff_distance} km");
                         return 1;
                     }
+
+                    if (lib.mlon > max_eclip_lon)
+                        max_eclip_lon = lib.mlon;
+
                     ++count;
                 }
+            }
+
+            if (max_eclip_lon < 359.0 || max_eclip_lon > 360.0)
+            {
+                Console.WriteLine($"C# Libration({filename}): INVALID max ecliptic longitude {max_eclip_lon:F3} degrees.");
+                return 1;
             }
 
             Console.WriteLine($"C# Libration({filename}): PASS ({count} test cases, max_diff_elon = {max_diff_elon} arcmin, max_diff_elat = {max_diff_elat} arcmin, max_diff_distance = {max_diff_distance} km, max_diff_diam = {max_diff_diam} deg)");

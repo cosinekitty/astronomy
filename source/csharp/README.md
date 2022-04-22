@@ -1847,7 +1847,7 @@ Certain astronomical events are defined in terms of relative longitude between t
 | `double` | `targetRelLon` | The desired relative longitude, expressed in degrees. Must be in the range [0, 360). |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to begin the search. |
 
-**Returns:** If successful, returns the date and time of the relative longitude event. Otherwise this function returns null.
+**Returns:** The date and time of the relative longitude event.
 
 <a name="Astronomy.SearchRiseSet"></a>
 ### Astronomy.SearchRiseSet(body, observer, direction, startTime, limitDays) &#8658; [`AstroTime`](#AstroTime)
@@ -2571,8 +2571,8 @@ and the velocities in AU/day.
 | --- | --- | --- |
 | `double` | `elat` | Sub-Earth libration ecliptic latitude angle, in degrees. |
 | `double` | `elon` | Sub-Earth libration ecliptic longitude angle, in degrees. |
-| `double` | `mlat` | Moon's geocentric ecliptic latitude. |
-| `double` | `mlon` | Moon's geocentric ecliptic longitude. |
+| `double` | `mlat` | Moon's geocentric ecliptic latitude in degrees. |
+| `double` | `mlon` | Moon's geocentric ecliptic longitude in degrees. |
 | `double` | `dist_km` | Distance between the centers of the Earth and Moon in kilometers. |
 | `double` | `diam_deg` | The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth. |
 

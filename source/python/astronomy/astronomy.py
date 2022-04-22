@@ -9136,9 +9136,9 @@ class LibrationInfo:
     elon : float
         Sub-Earth libration ecliptic longitude angle, in degrees.
     mlat : float
-        Moon's geocentric ecliptic latitude.
+        Moon's geocentric ecliptic latitude, in degrees.
     mlon : float
-        Moon's geocentric ecliptic longitude.
+        Moon's geocentric ecliptic longitude, in degrees.
     dist_km : float
         Distance between the centers of the Earth and Moon in kilometers.
     diam_deg : float
@@ -9284,7 +9284,7 @@ def Libration(time):
     ldash2 = -tau + (rho*math.cos(a) + sigma*math.sin(a))*math.tan(bdash)
     bdash = math.degrees(bdash)
     bdash2 = sigma*math.cos(a) - rho*math.sin(a)
-    return LibrationInfo(bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km, diam_deg)
+    return LibrationInfo(bdash + bdash2, ldash + ldash2, math.degrees(mlat), math.degrees(mlon), dist_km, diam_deg)
 
 
 class AxisInfo:

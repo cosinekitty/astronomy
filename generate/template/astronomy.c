@@ -2099,7 +2099,11 @@ astro_libration_t Astronomy_Libration(astro_time_t time)
     t3 = t2 * t;
     t4 = t2 * t2;
 
-    CalcMoon(t, &lib.mlon, &lib.mlat, &lib.dist_km);
+    double mlon;    /* Moon's ecliptic longitude in radians. */
+    double mlat;    /* Moon's ecliptic latitude in radians. */
+    CalcMoon(t, &mlon, &mlat, &lib.dist_km);
+    lib.mlon = RAD2DEG * mlon;
+    lib.mlat = RAD2DEG * mlat;
     lib.dist_km *= KM_PER_AU;
     lib.diam_deg = (2.0 * RAD2DEG) * atan(MOON_MEAN_RADIUS_KM / sqrt(lib.dist_km*lib.dist_km - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM));
 
@@ -2122,10 +2126,10 @@ astro_libration_t Astronomy_Libration(astro_time_t time)
     e = 1.0 - 0.002516*t - 0.0000074*t2;
 
     /* Optical librations */
-    w = lib.mlon - omega;
-    a = atan2(sin(w)*cos(lib.mlat)*cos_I - sin(lib.mlat)*sin_I, cos(w)*cos(lib.mlat));
+    w = mlon - omega;
+    a = atan2(sin(w)*cos(mlat)*cos_I - sin(mlat)*sin_I, cos(w)*cos(mlat));
     ldash = LongitudeOffset(RAD2DEG * (a - f));
-    bdash = asin(-sin(w)*cos(lib.mlat)*sin_I - sin(lib.mlat)*cos_I);
+    bdash = asin(-sin(w)*cos(mlat)*sin_I - sin(mlat)*cos_I);
 
     /* Physical librations */
     k1 = DEG2RAD*(119.75 + 131.849*t);

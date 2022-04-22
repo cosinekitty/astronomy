@@ -3714,7 +3714,7 @@ The [`Astronomy_Constellation`](#Astronomy_Constellation) function returns this 
 
 
 
-When reporting a solar eclipse observed at a specific location on the Earth (a "local" solar eclipse), a series of events occur. In addition to the time of each event, it is important to know the altitude of the Sun, because each event may be invisible to the observer if the Sun is below the horizon (i.e. it at night).
+When reporting a solar eclipse observed at a specific location on the Earth (a "local" solar eclipse), a series of events occur. In addition to the time of each event, it is important to know the altitude of the Sun, because each event may be invisible to the observer if the Sun is below the horizon.
 
 If `altitude` is negative, the event is theoretical only; it would be visible if the Earth were transparent, but the observer cannot actually see it. If `altitude` is positive but less than a few degrees, visibility will be impaired by atmospheric interference (sunrise or sunset conditions). 
 
@@ -3809,8 +3809,6 @@ When calling [`Astronomy_Search`](#Astronomy_Search), the caller must pass in a 
 
 Returned by [`Astronomy_SearchGlobalSolarEclipse`](#Astronomy_SearchGlobalSolarEclipse) or [`Astronomy_NextGlobalSolarEclipse`](#Astronomy_NextGlobalSolarEclipse) to report information about a solar eclipse event. If a solar eclipse is found, `status` holds `ASTRO_SUCCESS` and `kind`, `peak`, and `distance` have valid values. The `latitude` and `longitude` are set only for total and annular eclipses (see more below). If `status` holds any value other than `ASTRO_SUCCESS`, it is an error code; in that case, `kind` holds `ECLIPSE_NONE` and all the other fields are undefined.
 
-Field `peak` holds the date and time of the peak of the eclipse, defined as the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
-
 The eclipse is classified as partial, annular, or total, depending on the maximum amount of the Sun's disc obscured, as seen at the peak location on the surface of the Earth.
 
 The `kind` field thus holds `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, or `ECLIPSE_TOTAL`. A total eclipse is when the peak observer sees the Sun completely blocked by the Moon. An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface to completely block the Sun; instead, the Sun takes on a ring-shaped appearance. A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth observes either a total or annular eclipse.
@@ -3821,7 +3819,7 @@ If `kind` is `ECLIPSE_TOTAL` or `ECLIPSE_ANNULAR`, the `latitude` and `longitude
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of solar eclipse found.  |
-| [`astro_time_t`](#astro_time_t) | `peak` |  The date and time of the eclipse at its peak.  |
+| [`astro_time_t`](#astro_time_t) | `peak` |  The date and time when the solar eclipse is darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.  |
 | `double` | `distance` |  The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers.  |
 | `double` | `latitude` |  The geographic latitude at the center of the peak eclipse shadow.  |
 | `double` | `longitude` |  The geographic longitude at the center of the peak eclipse shadow.  |
@@ -3917,8 +3915,8 @@ The following integer constants may be useful for indexing into the `moon` array
 | ---- | ------ | ----------- |
 | `double` | `elat` |  Sub-Earth libration ecliptic latitude angle, in degrees.  |
 | `double` | `elon` |  Sub-Earth libration ecliptic longitude angle, in degrees.  |
-| `double` | `mlat` |  Moon's geocentric ecliptic latitude.  |
-| `double` | `mlon` |  Moon's geocentric ecliptic longitude.  |
+| `double` | `mlat` |  Moon's geocentric ecliptic latitude, in degrees.  |
+| `double` | `mlon` |  Moon's geocentric ecliptic longitude, in degrees.  |
 | `double` | `dist_km` |  Distance between the centers of the Earth and Moon in kilometers.  |
 | `double` | `diam_deg` |  The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.  |
 
@@ -3960,7 +3958,7 @@ There are 5 "event" fields, each of which contains a time and a solar altitude. 
 
 Returned by [`Astronomy_SearchLunarEclipse`](#Astronomy_SearchLunarEclipse) or [`Astronomy_NextLunarEclipse`](#Astronomy_NextLunarEclipse) to report information about a lunar eclipse event. If a lunar eclipse is found, `status` holds `ASTRO_SUCCESS` and the other fields are set. If `status` holds any other value, it is an error code and the other fields are undefined.
 
-When a lunar eclipse is found, it is classified as penumbral, partial, or total. Penumbral eclipses are difficult to observe, because the moon is only slightly dimmed by the Earth's penumbra; no part of the Moon touches the Earth's umbra. Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra. Total eclipses occur when the entire Moon passes into the Earth's umbra.
+When a lunar eclipse is found, it is classified as penumbral, partial, or total. Penumbral eclipses are difficult to observe, because the Moon is only slightly dimmed by the Earth's penumbra; no part of the Moon touches the Earth's umbra. Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra. Total eclipses occur when the entire Moon passes into the Earth's umbra.
 
 The `kind` field thus holds `ECLIPSE_PENUMBRAL`, `ECLIPSE_PARTIAL`, or `ECLIPSE_TOTAL`, depending on the kind of lunar eclipse found.
 

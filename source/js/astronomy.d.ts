@@ -270,9 +270,9 @@ export declare let CalcMoonCount: number;
  * @property {number} elon
  *      Sub-Earth libration ecliptic longitude angle, in degrees.
  * @property {number} mlat
- *      Moon's geocentric ecliptic latitude.
+ *      Moon's geocentric ecliptic latitude, in degrees.
  * @property {number} mlon
- *      Moon's geocentric ecliptic longitude.
+ *      Moon's geocentric ecliptic longitude, in degrees.
  * @property {number} dist_km
  *      Distance between the centers of the Earth and Moon in kilometers.
  * @property {number} diam_deg

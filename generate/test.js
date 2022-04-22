@@ -881,7 +881,7 @@ function Elongation() {
             let time = Astronomy.SearchRelativeLongitude(item.body, targetRelLon, startDate);
             let diff_minutes = (time.date - item.date) / 60000;
             if (Verbose) console.log(`JS ${item.body}: error = ${diff_minutes.toFixed(3)} minutes`);
-            if (abs(diff_minutes) > 15)
+            if (abs(diff_minutes) > 6.8)
                 throw `!!! Excessive error for body ${item.body}`;
         }
     }
@@ -940,10 +940,10 @@ function Elongation() {
         if (evt.visibility !== verifyVisibility)
             throw `TestMaxElong: expected visibility ${verifyVisibility}, but found ${evt.visibility}`;
 
-        if (arcmin_diff > 4.0)
+        if (arcmin_diff > 3.4)
             throw `TestMaxElong: excessive angular error = ${angle_diff} arcmin`;
 
-        if (abs(hour_diff) > 0.603)
+        if (abs(hour_diff) > 0.6)
             throw `TestMaxElong: excessive hour error = ${hour_diff}`;
     }
 
@@ -2451,6 +2451,7 @@ function Libration(filename) {
     let max_diff_elat = 0.0;
     let max_diff_distance = 0.0;
     let max_diff_diam = 0.0;
+    let max_eclip_lon = -900.0;
     let count = 0;
     let lnum = 0;
     for (let line of lines) {
@@ -2502,6 +2503,9 @@ function Libration(filename) {
             if (diff_diam > max_diff_diam)
                 max_diff_diam = diff_diam;
 
+            if (lib.mlon > max_eclip_lon)
+                max_eclip_lon = lib.mlon;
+
             if (diff_elon > 0.1304) {
                 console.error(`JS Libration(${filename} line ${lnum}): EXCESSIVE diff_elon = ${diff_elon} arcmin`);
                 return 1;
@@ -2516,8 +2520,17 @@ function Libration(filename) {
                 console.error(`JS Libration(${filename} line ${lnum}): EXCESSIVE diff_distance = ${diff_distance} km`);
                 return 1;
             }
+
+            if (diff_diam > 0.00009) {
+                console.error(`JS Libration(${filename}): EXCESSIVE diff_diam = ${diff_diam} degrees.`);
+                return 1;
+            }
             ++count;
         }
+    }
+    if (max_eclip_lon < 359.0 || max_eclip_lon > 360.0) {
+        console.error(`JS Libration(${filename}): INVALID max ecliptic longitude = ${max_eclip_lon.toFixed(3)} degrees.`);
+        return 1;
     }
     console.log(`JS Libration(${filename}): PASS (${count} test cases, max_diff_elon = ${max_diff_elon} arcmin, max_diff_elat = ${max_diff_elat} arcmin, max_diff_distance = ${max_diff_distance} km, max_diff_diam = ${max_diff_diam} deg)`);
     return 0;
@@ -2528,8 +2541,7 @@ function LibrationTest() {
     return (
         Libration("libration/mooninfo_2020.txt") ||
         Libration("libration/mooninfo_2021.txt") ||
-        Libration("libration/mooninfo_2022.txt") ||
-        0
+        Libration("libration/mooninfo_2022.txt")
     );
 }
 

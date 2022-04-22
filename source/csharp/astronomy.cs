@@ -1016,10 +1016,10 @@ namespace CosineKitty
         /// <summary>Sub-Earth libration ecliptic longitude angle, in degrees.</summary>
         public double elon;
 
-        /// <summary>Moon's geocentric ecliptic latitude.</summary>
+        /// <summary>Moon's geocentric ecliptic latitude in degrees.</summary>
         public double mlat;
 
-        /// <summary>Moon's geocentric ecliptic longitude.</summary>
+        /// <summary>Moon's geocentric ecliptic longitude in degrees.</summary>
         public double mlon;
 
         /// <summary>Distance between the centers of the Earth and Moon in kilometers.</summary>
@@ -4911,8 +4911,8 @@ namespace CosineKitty
             MoonResult moon = context.CalcMoon();
 
             LibrationInfo lib;
-            lib.mlon = moon.geo_eclip_lon;
-            lib.mlat = moon.geo_eclip_lat;
+            lib.mlon = RAD2DEG * moon.geo_eclip_lon;
+            lib.mlat = RAD2DEG * moon.geo_eclip_lat;
             lib.dist_km = moon.distance_au * KM_PER_AU;
             lib.diam_deg = (2.0 * RAD2DEG) * Math.Atan(MOON_MEAN_RADIUS_KM / Math.Sqrt(lib.dist_km*lib.dist_km - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM));
 
@@ -4938,10 +4938,10 @@ namespace CosineKitty
             double e = 1.0 - 0.002516*t - 0.0000074*t2;
 
             // Optical librations
-            double w = lib.mlon - omega;
-            double a = Math.Atan2(Math.Sin(w)*Math.Cos(lib.mlat)*Math.Cos(I) - Math.Sin(lib.mlat)*Math.Sin(I), Math.Cos(w)*Math.Cos(lib.mlat));
+            double w = moon.geo_eclip_lon - omega;
+            double a = Math.Atan2(Math.Sin(w)*Math.Cos(moon.geo_eclip_lat)*Math.Cos(I) - Math.Sin(moon.geo_eclip_lat)*Math.Sin(I), Math.Cos(w)*Math.Cos(moon.geo_eclip_lat));
             double ldash = LongitudeOffset(RAD2DEG * (a - f));
-            double bdash = Math.Asin(-Math.Sin(w)*Math.Cos(lib.mlat)*Math.Sin(I) - Math.Sin(lib.mlat)*Math.Cos(I));
+            double bdash = Math.Asin(-Math.Sin(w)*Math.Cos(moon.geo_eclip_lat)*Math.Sin(I) - Math.Sin(moon.geo_eclip_lat)*Math.Cos(I));
 
             // Physical librations
             double k1 = DEG2RAD*(119.75 + 131.849*t);
@@ -6669,8 +6669,8 @@ namespace CosineKitty
         }
 
         /// <summary>
-        ///      Searches for the time when the Earth and another planet are separated by a specified angle
-        ///      in ecliptic longitude, as seen from the Sun.
+        /// Searches for the time when the Earth and another planet are separated by a specified angle
+        /// in ecliptic longitude, as seen from the Sun.
         /// </summary>
         ///
         /// <remarks>
@@ -6714,10 +6714,7 @@ namespace CosineKitty
         ///      The date and time at which to begin the search.
         /// </param>
         ///
-        /// <returns>
-        ///      If successful, returns the date and time of the relative longitude event.
-        ///      Otherwise this function returns null.
-        /// </returns>
+        /// <returns>The date and time of the relative longitude event.</returns>
         public static AstroTime SearchRelativeLongitude(Body body, double targetRelLon, AstroTime startTime)
         {
             if (body == Body.Earth || body == Body.Sun || body == Body.Moon)
@@ -6730,7 +6727,7 @@ namespace CosineKitty
             /* Calculate the error angle, which will be a negative number of degrees, */
             /* meaning we are "behind" the target relative longitude. */
 
-            double error_angle = rlon_offset(body, startTime, direction, targetRelLon);
+            double error_angle = RelativeLongitudeOffset(body, startTime, direction, targetRelLon);
             if (error_angle > 0.0)
                 error_angle -= 360.0;    /* force searching forward in time */
 
@@ -6745,7 +6742,7 @@ namespace CosineKitty
                     return time;
 
                 double prev_angle = error_angle;
-                error_angle = rlon_offset(body, time, direction, targetRelLon);
+                error_angle = RelativeLongitudeOffset(body, time, direction, targetRelLon);
                 if (Math.Abs(prev_angle) < 30.0 && (prev_angle != error_angle))
                 {
                     /* Improve convergence for Mercury/Mars (eccentric orbits) */
@@ -6760,7 +6757,7 @@ namespace CosineKitty
             throw new InternalError("Relative longitude search failed to converge.");
         }
 
-        private static double rlon_offset(Body body, AstroTime time, int direction, double targetRelLon)
+        private static double RelativeLongitudeOffset(Body body, AstroTime time, int direction, double targetRelLon)
         {
             double plon = EclipticLongitude(body, time);
             double elon = EclipticLongitude(Body.Earth, time);
@@ -8440,7 +8437,7 @@ namespace CosineKitty
             const double s2 = 30.0;
 
             if (body != Body.Venus)
-                throw new ArgumentException("Peak magnitude currently is supported for Venus only.");
+                throw new InvalidBodyException(body);
 
             var mag_slope = new SearchContext_MagnitudeSlope(body);
 

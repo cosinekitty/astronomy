@@ -1623,9 +1623,9 @@ function CalcMoon(time) {
  * @property {number} elon
  *      Sub-Earth libration ecliptic longitude angle, in degrees.
  * @property {number} mlat
- *      Moon's geocentric ecliptic latitude.
+ *      Moon's geocentric ecliptic latitude, in degrees.
  * @property {number} mlon
- *      Moon's geocentric ecliptic longitude.
+ *      Moon's geocentric ecliptic longitude, in degrees.
  * @property {number} dist_km
  *      Distance between the centers of the Earth and Moon in kilometers.
  * @property {number} diam_deg
@@ -1742,7 +1742,7 @@ function Libration(date) {
     const ldash2 = -tau + (rho * Math.cos(a) + sigma * Math.sin(a)) * Math.tan(bdash);
     const bdash2 = sigma * Math.cos(a) - rho * Math.sin(a);
     const diam_deg = 2.0 * exports.RAD2DEG * Math.atan(MOON_MEAN_RADIUS_KM / Math.sqrt(dist_km * dist_km - MOON_MEAN_RADIUS_KM * MOON_MEAN_RADIUS_KM));
-    return new LibrationInfo(exports.RAD2DEG * bdash + bdash2, ldash + ldash2, mlat, mlon, dist_km, diam_deg);
+    return new LibrationInfo(exports.RAD2DEG * bdash + bdash2, ldash + ldash2, exports.RAD2DEG * mlat, exports.RAD2DEG * mlon, dist_km, diam_deg);
 }
 exports.Libration = Libration;
 function rotate(rot, vec) {
