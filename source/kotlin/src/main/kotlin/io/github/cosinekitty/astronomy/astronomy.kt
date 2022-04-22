@@ -41,6 +41,7 @@ import kotlin.math.hypot
 import kotlin.math.log10
 import kotlin.math.min
 import kotlin.math.PI
+import kotlin.math.pow
 import kotlin.math.round
 import kotlin.math.roundToLong
 import kotlin.math.sin
@@ -202,6 +203,11 @@ private const val NEPTUNE_GM = 0.1524358900784276e-07
 private const val PLUTO_GM   = 0.2188699765425970e-11
 private const val MOON_GM = EARTH_GM / EARTH_MOON_MASS_RATIO
 
+private fun cbrt(x: Double): Double =       // cube root of any real number
+    if (x < 0.0)
+        -cbrt(-x)
+    else
+        x.pow(1.0 / 3.0)
 
 private fun Double.withMinDegreeValue(min: Double): Double {
     var deg = this
@@ -6553,6 +6559,273 @@ fun observerGravity(latitude: Double, height: Double): Double {
     val s2 = s*s
     val g0 = 9.7803253359 * (1.0 + 0.00193185265241*s2) / sqrt(1.0 - 0.00669437999013*s2)
     return g0 * (1.0 - (3.15704e-07 - 2.10269e-09*s2)*height + 7.37452e-14*height*height)
+}
+
+
+/**
+ * Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * in equatorial J2000 coordinates (EQJ), with respect to the center of the
+ * major body.
+ *
+ * To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `majorBody`
+ * and `Body.EMB` (Earth/Moon barycenter) for `minorBody`.
+ * For Lagrange points of the Sun and any other planet, pass in just that planet
+ * (e.g. `Body.Jupiter`) for `minorBody`.
+ * To calculate Earth/Moon Lagrange points, pass in `Body.Earth` and `Body.Moon`
+ * for the major and minor bodies respectively.
+ *
+ * In some cases, it may be more efficient to call [lagrangePointFast],
+ * especially when the state vectors have already been calculated, or are needed
+ * for some other purpose.
+ *
+ * @param point
+ *      An integer 1..5 that selects which of the Lagrange points to calculate.
+ *
+ * @param time
+ *      The time for which the Lagrange point is to be calculated.
+ *
+ * @param majorBody
+ *      The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`.
+ *
+ * @param minorBody
+ *      The less massive of the co-orbiting bodies. See main remarks.
+ *
+ * @return
+ * The position and velocity of the selected Lagrange point with respect to the major body's center.
+ */
+fun lagrangePoint(point: Int, time: Time, majorBody: Body, minorBody: Body): StateVector {
+    val majorMass = massProduct(majorBody)
+    val minorMass = massProduct(minorBody)
+    var majorState: StateVector
+    var minorState: StateVector
+
+    // Calculate the state vectors for the major and minor bodies.
+    if (majorBody == Body.Earth && minorBody == Body.Moon) {
+        // Use geocentric calculations for more precision.
+        majorState = StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
+        minorState = geoMoonState(time)
+    } else {
+        majorState = helioState(majorBody, time)
+        minorState = helioState(minorBody, time)
+    }
+
+    return lagrangePointFast(
+        point,
+        majorState,
+        majorMass,
+        minorState,
+        minorMass
+    )
+}
+
+
+/**
+ * Calculates one of the 5 Lagrange points from body masses and state vectors.
+ *
+ * Given a more massive "major" body and a much less massive "minor" body,
+ * calculates one of the five Lagrange points in relation to the minor body's
+ * orbit around the major body. The parameter `point` is an integer that
+ * selects the Lagrange point as follows:
+ *
+ * 1 = the Lagrange point between the major body and minor body.
+ * 2 = the Lagrange point on the far side of the minor body.
+ * 3 = the Lagrange point on the far side of the major body.
+ * 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+ * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+ *
+ * The caller passes in the state vector and mass for both bodies.
+ * The state vectors can be in any orientation and frame of reference.
+ * The body masses are expressed as GM products, where G = the universal
+ * gravitation constant and M = the body's mass. Thus the units for
+ * `major_mass` and `minor_mass` must be au^3/day^2.
+ * Use [massProduct] to obtain GM values for various solar system bodies.
+ *
+ * The function returns the state vector for the selected Lagrange point
+ * using the same orientation as the state vector parameters `majorState` and `minorState`,
+ * and the position and velocity components are with respect to the major body's center.
+ *
+ * Consider calling [lagrangePoint], instead of this function, for simpler usage in most cases.
+ *
+ * @param point
+ *      An integer 1..5 that selects which of the Lagrange points to calculate.
+ *
+ * @param majorState
+ *      The state vector of the major (more massive) of the pair of bodies.
+ *
+ * @param majorMass
+ *      The mass product GM of the major body.
+ *
+ * @param minorState
+ *      The state vector of the minor (less massive) of the pair of bodies.
+ *
+ * @param minorMass
+ *      The mass product GM of the minor body.
+ *
+ * @return
+ * The position and velocity of the selected Lagrange point with respect to the major body's center.
+ */
+fun lagrangePointFast(
+    point: Int,
+    majorState: StateVector,
+    majorMass: Double,
+    minorState: StateVector,
+    minorMass: Double
+): StateVector {
+    val cos_60 = 0.5
+    val sin_60 = 0.8660254037844386   // sqrt(3) / 2
+
+    if (point < 1 || point > 5)
+        throw IllegalArgumentException("Invalid lagrange point $point")
+
+    if (!majorMass.isFinite() || majorMass <= 0.0)
+        throw IllegalArgumentException("Major mass must be a positive number.")
+
+    if (!minorMass.isFinite() || minorMass <= 0.0)
+        throw IllegalArgumentException("Minor mass must be a positive number.")
+
+    verifyIdenticalTimes(majorState.t, minorState.t)
+
+    // Find the relative position vector <dx, dy, dz>.
+    var dx = minorState.x - majorState.x
+    var dy = minorState.y - majorState.y
+    var dz = minorState.z - majorState.z
+    val R2 = dx*dx + dy*dy + dz*dz
+
+    // R = Total distance between the bodies.
+    val R = sqrt(R2)
+
+    // Find the velocity vector <vx, vy, vz>.
+    val vx = minorState.vx - majorState.vx
+    val vy = minorState.vy - majorState.vy
+    val vz = minorState.vz - majorState.vz
+
+    if (point == 4 || point == 5) {
+        // For L4 and L5, we need to find points 60 degrees away from the
+        // line connecting the two bodies and in the instantaneous orbital plane.
+        // Define the instantaneous orbital plane as the unique plane that contains
+        // both the relative position vector and the relative velocity vector.
+
+        // Take the cross product of position and velocity to find a normal vector <nx, ny, nz>.
+        val nx = dy*vz - dz*vy
+        val ny = dz*vx - dx*vz
+        val nz = dx*vy - dy*vx
+
+        // Take the cross product normal*position to get a tangential vector <ux, uy, uz>.
+        var ux = ny*dz - nz*dy
+        var uy = nz*dx - nx*dz
+        var uz = nx*dy - ny*dx
+
+        // Convert the tangential direction vector to a unit vector.
+        val U = sqrt(ux*ux + uy*uy + uz*uz)
+        ux /= U
+        uy /= U
+        uz /= U
+
+        // Convert the relative position vector into a unit vector.
+        dx /= R
+        dy /= R
+        dz /= R
+
+        // Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'.
+
+        // Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions.
+        val vert = if (point == 4) +sin_60 else -sin_60
+
+        // Rotated radial vector
+        val Dx = cos_60*dx + vert*ux
+        val Dy = cos_60*dy + vert*uy
+        val Dz = cos_60*dz + vert*uz
+
+        // Rotated tangent vector
+        val Ux = cos_60*ux - vert*dx
+        val Uy = cos_60*uy - vert*dy
+        val Uz = cos_60*uz - vert*dz
+
+
+        // Use dot products to find radial and tangential components of the relative velocity.
+        val vrad = vx*dx + vy*dy + vz*dz
+        val vtan = vx*ux + vy*uy + vz*uz
+
+        return StateVector(
+            R * Dx,
+            R * Dy,
+            R * Dz,
+            vrad*Dx + vtan*Ux,
+            vrad*Dy + vtan*Uy,
+            vrad*Dz + vtan*Uz,
+            majorState.t
+        )
+    }
+
+    // point = 1..3; all these lie on a straight line between the centers of the two bodies.
+    // Calculate the distances of each body from their mutual barycenter.
+    // r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
+    // r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
+    val r1 = -R * (minorMass / (majorMass + minorMass))
+    val r2 = +R * (majorMass / (majorMass + minorMass))
+
+    // Calculate the square of the angular orbital speed in [rad^2 / day^2].
+    val omega2 = (majorMass + minorMass) / (R2*R)
+
+    // Use Newton's Method to numerically solve for the location where
+    // outward centrifugal acceleration in the rotating frame of reference
+    // is equal to net inward gravitational acceleration.
+    // First derive a good initial guess based on approximate analysis.
+    var scale: Double
+    var numer1: Double
+    var numer2: Double
+
+    if (point == 1 || point == 2) {
+        scale = (majorMass / (majorMass + minorMass)) * cbrt(minorMass / (3.0 * majorMass))
+        numer1 = -majorMass    // The major mass is to the left of L1 and L2
+        if (point == 1) {
+            scale = 1.0 - scale
+            numer2 = +minorMass    // The minor mass is to the right of L1.
+        } else {
+            scale = 1.0 + scale
+            numer2 = -minorMass    // The minor mass is to the left of L2.
+        }
+    } else { // point == 3
+        scale = ((7.0/12.0)*minorMass - majorMass) / (minorMass + majorMass)
+        numer1 = +majorMass    // major mass is to the right of L3.
+        numer2 = +minorMass    // minor mass is to the right of L3.
+    }
+
+    // Iterate Newton's Method until it converges.
+    var x = R*scale - r1
+    var deltax: Double
+    do {
+        val dr1 = x - r1
+        val dr2 = x - r2
+        val accel = omega2*x + numer1/(dr1*dr1) + numer2/(dr2*dr2)
+        val deriv = omega2 - 2*numer1/(dr1*dr1*dr1) - 2*numer2/(dr2*dr2*dr2)
+        deltax = accel/deriv
+        x -= deltax
+    } while (abs(deltax/R) > 1.0e-14)
+    scale = (x - r1) / R
+
+    return StateVector(
+        scale * dx,
+        scale * dy,
+        scale * dz,
+        scale * vx,
+        scale * vy,
+        scale * vz,
+        majorState.t
+    )
 }
 
 

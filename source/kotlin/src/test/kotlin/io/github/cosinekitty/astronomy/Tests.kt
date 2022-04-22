@@ -2037,4 +2037,34 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Lagrange Points`() {
+        // Test Sun/EMB Lagrange points.
+        verifyStateLagrange(Body.Sun, Body.EMB, 1, "lagrange/semb_L1.txt",   1.33e-5, 6.13e-5)
+        verifyStateLagrange(Body.Sun, Body.EMB, 2, "lagrange/semb_L2.txt",   1.33e-5, 6.13e-5)
+        verifyStateLagrange(Body.Sun, Body.EMB, 4, "lagrange/semb_L4.txt",   3.75e-5, 5.28e-5)
+        verifyStateLagrange(Body.Sun, Body.EMB, 5, "lagrange/semb_L5.txt",   3.75e-5, 5.28e-5)
+
+        // Test Earth/Moon Lagrange points.
+        verifyStateLagrange(Body.Earth, Body.Moon, 1, "lagrange/em_L1.txt",  3.79e-5, 5.06e-5)
+        verifyStateLagrange(Body.Earth, Body.Moon, 2, "lagrange/em_L2.txt",  3.79e-5, 5.06e-5)
+        verifyStateLagrange(Body.Earth, Body.Moon, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3)
+        verifyStateLagrange(Body.Earth, Body.Moon, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3)
+    }
+
+    private fun verifyStateLagrange(
+        majorBody: Body,
+        minorBody: Body,
+        point: Int,
+        relativeFileName: String,
+        rThresh: Double,
+        vThresh: Double
+    ) {
+        verifyStateBody(relativeFileName, rThresh, vThresh) { time ->
+            lagrangePoint(point, time, majorBody, minorBody)
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
 }
