@@ -5753,6 +5753,7 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
     astro_libration_t lib;
     double diff_elon, diff_elat, diff_distance, diff_diam;
     double max_diff_elon = 0.0, max_diff_elat = 0.0, max_diff_distance = 0.0, max_diff_diam = 0.0;
+    double max_eclip_lon = -900.0;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -5802,6 +5803,9 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
             if (diff_diam > max_diff_diam)
                 max_diff_diam = diff_diam;
 
+            if (lib.mlon > max_eclip_lon)
+                max_eclip_lon = lib.mlon;
+
             if (diff_elon > 0.1304)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_elon = %0.4lf arcmin\n", filename, lnum, diff_elon);
 
@@ -5811,6 +5815,9 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
             if (diff_distance > 54.377)
                 FAIL("C Libration(%s line %d): EXCESSIVE diff_distance = %0.3lf km\n", filename, lnum, diff_distance);
 
+            if (diff_diam > 0.00009)
+                FAIL("C Libration(%s line %d): EXCESSIVE diff_diam = %0.3le degrees\n", filename, lnum, diff_diam);
+
             /* Update sum-of-squared-errors. */
             *var_lon += diff_elon * diff_elon;
             *var_lat += diff_elat * diff_elat;
@@ -5818,6 +5825,9 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
             ++count;
         }
     }
+
+    if (max_eclip_lon < 359.0 || max_eclip_lon > 360.0)
+        FAIL("C Libration(%s): INVALID max ecliptic longitude %0.3lf degrees.\n", filename, max_eclip_lon);
 
     printf("C Libration(%s): PASS (%d test cases, max_diff_elon = %0.4lf arcmin, max_diff_elat = %0.4lf arcmin, max_diff_distance = %0.3lf km, max_diff_diam = %0.12lf deg)\n",
         filename, count, max_diff_elon, max_diff_elat, max_diff_distance, max_diff_diam);

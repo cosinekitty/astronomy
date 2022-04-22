@@ -3915,8 +3915,8 @@ The following integer constants may be useful for indexing into the `moon` array
 | ---- | ------ | ----------- |
 | `double` | `elat` |  Sub-Earth libration ecliptic latitude angle, in degrees.  |
 | `double` | `elon` |  Sub-Earth libration ecliptic longitude angle, in degrees.  |
-| `double` | `mlat` |  Moon's geocentric ecliptic latitude.  |
-| `double` | `mlon` |  Moon's geocentric ecliptic longitude.  |
+| `double` | `mlat` |  Moon's geocentric ecliptic latitude, in degrees.  |
+| `double` | `mlon` |  Moon's geocentric ecliptic longitude, in degrees.  |
 | `double` | `dist_km` |  Distance between the centers of the Earth and Moon in kilometers.  |
 | `double` | `diam_deg` |  The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.  |
 

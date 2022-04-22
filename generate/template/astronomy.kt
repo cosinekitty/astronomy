@@ -76,6 +76,8 @@ fun Double.degreesToRadians() = this * DEG2RAD
 internal fun dsin(degrees: Double) = sin(degrees.degreesToRadians())
 internal fun dcos(degrees: Double) = cos(degrees.degreesToRadians())
 internal fun dtan(degrees: Double) = tan(degrees.degreesToRadians())
+internal fun datan(slope: Double) = atan(slope).radiansToDegrees()
+internal fun datan2(y: Double, x: Double) = atan2(y, x).radiansToDegrees()
 
 /**
  * The factor to convert radians to degrees = 180/pi.
@@ -783,8 +785,8 @@ data class Vector(
             lon = 0.0
             lat = if (z < 0.0) -90.0 else +90.0
         } else {
-            lon = atan2(y, x).radiansToDegrees().withMinDegreeValue(0.0)
-            lat = atan2(z, sqrt(xyproj)).radiansToDegrees()
+            lon = datan2(y, x).withMinDegreeValue(0.0)
+            lat = datan2(z, sqrt(xyproj))
         }
         return Spherical(lat, lon, dist)
     }
@@ -2325,12 +2327,12 @@ internal fun geoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
         latitude = if (proj == 0.0) (
             if (pz > 0.0) +90.0 else -90.0
         ) else (
-            atan(pz / proj).radiansToDegrees()
+            datan(pz / proj)
         )
 
         // Adjust longitude for Earth's rotation at the given time.
         val gast = siderealTime(shadow.time)
-        longitude = ((atan2(py,px).radiansToDegrees() - (15.0 * gast)) % 360.0).withMaxDegreeValue(180.0)
+        longitude = ((datan2(py,px) - (15.0 * gast)) % 360.0).withMaxDegreeValue(180.0)
 
         // We want to determine whether the observer sees a total eclipse or an annular eclipse.
         // We need to perform a series of vector calculations.
@@ -4895,7 +4897,7 @@ fun horizon(
         if (projHor > 0.0) (
             // If the body is not exactly straight up/down, it has an azimuth.
             // Invert the angle to produce degrees eastward from north.
-            (-atan2(pw, pn)).radiansToDegrees().withMinDegreeValue(0.0)
+            (-datan2(pw, pn)).withMinDegreeValue(0.0)
         ) else (
             // The body is straight up/down, so it does not have an azimuth.
             // Report an arbitrary but reasonable value.
@@ -4904,7 +4906,7 @@ fun horizon(
     )
 
     // zd = the angle of the body away from the observer's zenith, in degrees.
-    var zd = atan2(projHor, pz).radiansToDegrees()
+    var zd = datan2(projHor, pz)
     var horRa = ra
     var horDec = dec
 
@@ -4928,11 +4930,11 @@ fun horizon(
 
             horRa =
                 if (projEqu > 0.0)
-                    atan2(pry, prx).radiansToDegrees().withMinDegreeValue(0.0) / 15.0
+                    datan2(pry, prx).withMinDegreeValue(0.0) / 15.0
                 else
                     0.0
 
-            horDec = atan2(prz, projEqu).radiansToDegrees()
+            horDec = datan2(prz, projEqu)
         }
     }
 
@@ -5410,10 +5412,10 @@ private fun rotateEquatorialToEcliptic(pos: Vector, obliqRadians: Double): Eclip
     val xyproj = hypot(ex, ey)
     val elon =
         if (xyproj > 0.0)
-            atan2(ey, ex).radiansToDegrees().withMinDegreeValue(0.0)
+            datan2(ey, ex).withMinDegreeValue(0.0)
         else
             0.0
-    val elat = atan2(ez, xyproj).radiansToDegrees()
+    val elat = datan2(ez, xyproj)
     val vec = Vector(ex, ey, ez, pos.t)
     return Ecliptic(vec, elat, elon)
 }
@@ -6826,6 +6828,131 @@ fun lagrangePointFast(
         scale * vz,
         majorState.t
     )
+}
+
+
+/**
+ * Calculates the Moon's libration angles at a given moment in time.
+ *
+ * Libration is an observed back-and-forth wobble of the portion of the
+ * Moon visible from the Earth. It is caused by the imperfect tidal locking
+ * of the Moon's fixed rotation rate, compared to its variable angular speed
+ * of orbit around the Earth.
+ *
+ * This function calculates a pair of perpendicular libration angles,
+ * one representing rotation of the Moon in eclitpic longitude `elon`, the other
+ * in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
+ *
+ * This function also returns the geocentric position of the Moon
+ * expressed in ecliptic longitude `mlon`, ecliptic latitude `mlat`, the
+ * distance `dist_km` between the centers of the Earth and Moon expressed in kilometers,
+ * and the apparent angular diameter of the Moon `diam_deg`.
+ *
+ * @param time
+ *      The date and time for which to calculate lunar libration.
+ *
+ * @return
+ * The Moon's ecliptic position and libration angles as seen from the Earth.
+ */
+fun libration(time: Time): LibrationInfo {
+    val t = time.julianCenturies()
+    val t2 = t * t
+    val t3 = t2 * t
+    val t4 = t2 * t2
+
+    val moon = eclipticGeoMoon(time)
+
+    val mlon = moon.lon.degreesToRadians()
+    val mlat = moon.lat.degreesToRadians()
+    val distKm = moon.dist * KM_PER_AU
+    val diamDeg = 2.0 * datan(MOON_MEAN_RADIUS_KM / sqrt(distKm*distKm - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM))
+
+    // Inclination angle in radians = 0.026930430358272504
+    val cosIncl = 0.99963739787586170
+    val sinIncl = 0.02692717526916351
+
+    // Moon's argument of latitude in radians.
+    val f = normalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000).degreesToRadians()
+
+    // Moon's ascending node's mean longitude in radians.
+    val omega = normalizeLongitude(125.0445479 - 1934.1362891*t + 0.0020754*t2 + t3/467441 - t4/60616000).degreesToRadians()
+
+    // Sun's mean anomaly in radians.
+    val m = normalizeLongitude(357.5291092 + 35999.0502909*t - 0.0001536*t2 + t3/24490000).degreesToRadians()
+
+    // Moon's mean anomaly in radians.
+    val mdash = normalizeLongitude(134.9633964 + 477198.8675055*t + 0.0087414*t2 + t3/69699 - t4/14712000).degreesToRadians()
+
+    // Moon's mean elongation in radians.
+    val d = normalizeLongitude(297.8501921 + 445267.1114034*t - 0.0018819*t2 + t3/545868 - t4/113065000).degreesToRadians()
+
+    // Eccentricity of the Earth's orbit.
+    val e = 1.0 - 0.002516*t - 0.0000074*t2
+
+    // Optical librations
+    val w = mlon - omega;
+    val a = atan2(sin(w)*cos(mlat)*cosIncl - sin(mlat)*sinIncl, cos(w)*cos(mlat))
+    val ldash = longitudeOffset((a - f).radiansToDegrees())
+    val bdash = asin(-sin(w)*cos(mlat)*sinIncl - sin(mlat)*cosIncl)
+
+    // Physical librations
+    val k1 = (119.75 + 131.849*t).degreesToRadians()
+    val k2 = (72.56 + 20.186*t).degreesToRadians()
+
+    val rho = (
+        -0.02752*cos(mdash) +
+        -0.02245*sin(f) +
+        +0.00684*cos(mdash - 2*f) +
+        -0.00293*cos(2*f) +
+        -0.00085*cos(2*f - 2*d) +
+        -0.00054*cos(mdash - 2*d) +
+        -0.00020*sin(mdash + f) +
+        -0.00020*cos(mdash + 2*f) +
+        -0.00020*cos(mdash - f) +
+        +0.00014*cos(mdash + 2*f - 2*d)
+    )
+
+    val sigma = (
+        -0.02816*sin(mdash) +
+        +0.02244*cos(f) +
+        -0.00682*sin(mdash - 2*f) +
+        -0.00279*sin(2*f) +
+        -0.00083*sin(2*f - 2*d) +
+        +0.00069*sin(mdash - 2*d) +
+        +0.00040*cos(mdash + f) +
+        -0.00025*sin(2*mdash) +
+        -0.00023*sin(mdash + 2*f) +
+        +0.00020*cos(mdash - f) +
+        +0.00019*sin(mdash - f) +
+        +0.00013*sin(mdash + 2*f - 2*d) +
+        -0.00010*cos(mdash - 3*f)
+    )
+
+    val tau = (
+        +0.02520*e*sin(m) +
+        +0.00473*sin(2*mdash - 2*f) +
+        -0.00467*sin(mdash) +
+        +0.00396*sin(k1) +
+        +0.00276*sin(2*mdash - 2*d) +
+        +0.00196*sin(omega) +
+        -0.00183*cos(mdash - f) +
+        +0.00115*sin(mdash - 2*d) +
+        -0.00096*sin(mdash - d) +
+        +0.00046*sin(2*f - 2*d) +
+        -0.00039*sin(mdash - f) +
+        -0.00032*sin(mdash - m - d) +
+        +0.00027*sin(2*mdash - m - 2*d) +
+        +0.00023*sin(k2) +
+        -0.00014*sin(2*d) +
+        +0.00014*cos(2*mdash - 2*f) +
+        -0.00012*sin(mdash - 2*f) +
+        -0.00012*sin(2*mdash) +
+        +0.00011*sin(2*mdash - 2*m - 2*d)
+    )
+
+    val elon = ldash - tau + (rho*cos(a) + sigma*sin(a))*tan(bdash)
+    val elat = bdash.radiansToDegrees() + sigma*cos(a) - rho*sin(a)
+    return LibrationInfo(elat, elon, moon.lon, moon.lat, distKm, diamDeg)
 }
 
 

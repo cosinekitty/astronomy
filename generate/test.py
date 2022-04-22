@@ -2201,6 +2201,7 @@ def LibrationFile(filename):
     max_diff_elat = 0.0
     max_diff_distance = 0.0
     max_diff_diam = 0.0
+    max_eclip_lon = -900.0
     count = 0
     with open(filename, 'rt') as infile:
         lnum = 0
@@ -2247,6 +2248,9 @@ def LibrationFile(filename):
                 if diff_diam > max_diff_diam:
                     max_diff_diam = diff_diam
 
+                if lib.mlon > max_eclip_lon:
+                    max_eclip_lon = lib.mlon
+
                 if diff_elon > 0.1304:
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_elon = {}'.format(filename, lnum, diff_elon))
                     return 1
@@ -2259,9 +2263,17 @@ def LibrationFile(filename):
                     print('PY LibrationFile({} line {}): EXCESSIVE diff_distance = {}'.format(filename, lnum, diff_distance))
                     return 1
 
+                if diff_diam > 0.00009:
+                    print('PY LibrationFile({} line {}): EXCESSIVE diff_diam = {}'.format(filename, lnum, diff_diam))
+                    return 1
+
                 count += 1
 
-    print('PY Libration({}): PASS ({} test cases, max_diff_elon = {} arcmin, max_diff_elat = {} arcmin, max_diff_distance = {} km, max_diff_diam = {} deg)'.format(
+    if not (359.0 < max_eclip_lon < 360.0):
+        print('PY LibrationFile({}): INVALID max ecliptic longitude = {:0.3f}'.format(filename, max_eclip_lon))
+        return 1
+
+    print('PY LibrationFile({}): PASS ({} test cases, max_diff_elon = {} arcmin, max_diff_elat = {} arcmin, max_diff_distance = {} km, max_diff_diam = {} deg)'.format(
         filename, count, max_diff_elon, max_diff_elat, max_diff_distance, max_diff_diam
     ))
     return 0
@@ -2270,8 +2282,7 @@ def Libration():
     return (
         LibrationFile('libration/mooninfo_2020.txt') or
         LibrationFile('libration/mooninfo_2021.txt') or
-        LibrationFile('libration/mooninfo_2022.txt') or
-        0
+        LibrationFile('libration/mooninfo_2022.txt')
     )
 
 #-----------------------------------------------------------------------------------------------------------

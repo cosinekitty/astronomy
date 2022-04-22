@@ -3217,6 +3217,7 @@ namespace csharp_test
             double max_diff_elat = 0.0;
             double max_diff_distance = 0.0;
             double max_diff_diam = 0.0;
+            double max_eclip_lon = -900.0;
             string line;
             while (null != (line = infile.ReadLine()))
             {
@@ -3294,8 +3295,18 @@ namespace csharp_test
                         Console.WriteLine($"C# Libration({filename} line {lnum}): EXCESSIVE diff_distance = {diff_distance} km");
                         return 1;
                     }
+
+                    if (lib.mlon > max_eclip_lon)
+                        max_eclip_lon = lib.mlon;
+
                     ++count;
                 }
+            }
+
+            if (max_eclip_lon < 359.0 || max_eclip_lon > 360.0)
+            {
+                Console.WriteLine($"C# Libration({filename}): INVALID max ecliptic longitude {max_eclip_lon:F3} degrees.");
+                return 1;
             }
 
             Console.WriteLine($"C# Libration({filename}): PASS ({count} test cases, max_diff_elon = {max_diff_elon} arcmin, max_diff_elat = {max_diff_elat} arcmin, max_diff_distance = {max_diff_distance} km, max_diff_diam = {max_diff_diam} deg)");

@@ -247,8 +247,8 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 | --- | --- | --- |
 | elat | <code>number</code> | Sub-Earth libration ecliptic latitude angle, in degrees. |
 | elon | <code>number</code> | Sub-Earth libration ecliptic longitude angle, in degrees. |
-| mlat | <code>number</code> | Moon's geocentric ecliptic latitude. |
-| mlon | <code>number</code> | Moon's geocentric ecliptic longitude. |
+| mlat | <code>number</code> | Moon's geocentric ecliptic latitude, in degrees. |
+| mlon | <code>number</code> | Moon's geocentric ecliptic longitude, in degrees. |
 | dist_km | <code>number</code> | Distance between the centers of the Earth and Moon in kilometers. |
 | diam_deg | <code>number</code> | The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth. |
 

@@ -1016,10 +1016,10 @@ namespace CosineKitty
         /// <summary>Sub-Earth libration ecliptic longitude angle, in degrees.</summary>
         public double elon;
 
-        /// <summary>Moon's geocentric ecliptic latitude.</summary>
+        /// <summary>Moon's geocentric ecliptic latitude in degrees.</summary>
         public double mlat;
 
-        /// <summary>Moon's geocentric ecliptic longitude.</summary>
+        /// <summary>Moon's geocentric ecliptic longitude in degrees.</summary>
         public double mlon;
 
         /// <summary>Distance between the centers of the Earth and Moon in kilometers.</summary>
@@ -4911,8 +4911,8 @@ namespace CosineKitty
             MoonResult moon = context.CalcMoon();
 
             LibrationInfo lib;
-            lib.mlon = moon.geo_eclip_lon;
-            lib.mlat = moon.geo_eclip_lat;
+            lib.mlon = RAD2DEG * moon.geo_eclip_lon;
+            lib.mlat = RAD2DEG * moon.geo_eclip_lat;
             lib.dist_km = moon.distance_au * KM_PER_AU;
             lib.diam_deg = (2.0 * RAD2DEG) * Math.Atan(MOON_MEAN_RADIUS_KM / Math.Sqrt(lib.dist_km*lib.dist_km - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM));
 
@@ -4938,10 +4938,10 @@ namespace CosineKitty
             double e = 1.0 - 0.002516*t - 0.0000074*t2;
 
             // Optical librations
-            double w = lib.mlon - omega;
-            double a = Math.Atan2(Math.Sin(w)*Math.Cos(lib.mlat)*Math.Cos(I) - Math.Sin(lib.mlat)*Math.Sin(I), Math.Cos(w)*Math.Cos(lib.mlat));
+            double w = moon.geo_eclip_lon - omega;
+            double a = Math.Atan2(Math.Sin(w)*Math.Cos(moon.geo_eclip_lat)*Math.Cos(I) - Math.Sin(moon.geo_eclip_lat)*Math.Sin(I), Math.Cos(w)*Math.Cos(moon.geo_eclip_lat));
             double ldash = LongitudeOffset(RAD2DEG * (a - f));
-            double bdash = Math.Asin(-Math.Sin(w)*Math.Cos(lib.mlat)*Math.Sin(I) - Math.Sin(lib.mlat)*Math.Cos(I));
+            double bdash = Math.Asin(-Math.Sin(w)*Math.Cos(moon.geo_eclip_lat)*Math.Sin(I) - Math.Sin(moon.geo_eclip_lat)*Math.Cos(I));
 
             // Physical librations
             double k1 = DEG2RAD*(119.75 + 131.849*t);

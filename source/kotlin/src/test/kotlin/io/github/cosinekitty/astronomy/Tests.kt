@@ -2067,4 +2067,50 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Lunar libration`() {
+        for (year in 2020..2022) {
+            verifyLibration(year)
+        }
+    }
+
+    private fun verifyLibration(fileYear: Int) {
+        val filename = dataRootDir + "libration/mooninfo_$fileYear.txt"
+        var infile = File(filename)
+        var lnum = 0
+        for (line in infile.readLines()) {
+            ++lnum
+            if (lnum == 1) {
+                assertTrue(line == "   Date       Time    Phase    Age    Diam    Dist     RA        Dec      Slon      Slat     Elon     Elat   AxisA")
+            } else {
+                //  0   1   2    3    4    5       6      7       8        9         10       11         12      13       14      15
+                // 01 Jan 2020 00:00 UT  29.95   5.783  1774.5  403898  23.2609  -10.0824   114.557   -0.045   0.773    6.360  336.353
+                val token = tokenize(line, 16, filename, lnum)
+                val day = token[0].toInt()
+                val month = monthNumber(token[1])
+                val year = token[2].toInt()
+                assertTrue(token[3].length == 5 && token[3][2] == ':', "$filename line $lnum: invalid time string '${token[3]}'")
+                val hour = token[3].substring(0, 2).toInt()
+                val minute = token[3].substring(3).toInt()
+                val time = Time(year, month, day, hour, minute, 0.0)
+                val diam = token[7].toDouble() / 3600.0
+                val dist = token[8].toDouble()
+                val elon = token[13].toDouble()
+                val elat = token[14].toDouble()
+                val lib: LibrationInfo = libration(time)
+                val diffElon = 60.0 * abs(lib.elon - elon)
+                val diffElat = 60.0 * abs(lib.elat - elat)
+                val diffDistance = abs(lib.distKm - dist)
+                val diffDiam = abs(lib.diamDeg - diam)
+
+                assertTrue(diffElon < 0.1304, "$filename line $lnum: excessive libration longitude error = $diffElon arcmin.")
+                assertTrue(diffElat < 1.6476, "$filename line $lnum: excessive libration latitude error = $diffElat arcmin.")
+                assertTrue(diffDistance < 54.377, "$filename line $lnum: excessive distance error = $diffDistance km.")
+                assertTrue(diffDiam < 0.00009, "$filename line $lnum: excessive angular diameter error = $diffDiam degrees.")
+            }
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
 }
