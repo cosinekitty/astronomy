@@ -13,11 +13,10 @@ Indicates whether a crossing through the ecliptic plane is ascending or descendi
 |---|---|
 | [Descending](-descending/index.md) | [jvm]<br>[Descending](-descending/index.md)()<br>The body passes through the ecliptic plane from north to south. |
 | [Ascending](-ascending/index.md) | [jvm]<br>[Ascending](-ascending/index.md)()<br>The body passes through the ecliptic plane from south to north. |
-| [Invalid](-invalid/index.md) | [jvm]<br>[Invalid](-invalid/index.md)()<br>Placeholder value for a missing or invalid node. |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [name](-invalid/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](-invalid/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [ordinal](-invalid/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](-invalid/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [name](-ascending/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](-ascending/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [ordinal](-ascending/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](-ascending/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

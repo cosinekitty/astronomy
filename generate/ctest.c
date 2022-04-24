@@ -6229,7 +6229,7 @@ static int MoonNodes(void)
         if (node.status != ASTRO_SUCCESS)
             FAIL("C MoonNodes(%s line %d): error %d returned by node search\n", filename, lnum, node.status);
 
-        /* Verify the ecliptic longitude is very close to zero at the alleged node. */
+        /* Verify the ecliptic latitude is very close to zero at the alleged node. */
         ecl = Astronomy_EclipticGeoMoon(node.time);
         CHECK_STATUS(ecl);
         diff_lat = 60.0 * ABS(ecl.lat);

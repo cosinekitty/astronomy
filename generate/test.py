@@ -2385,7 +2385,7 @@ def MoonNodes():
                 # Use the previous node to find the next node.
                 node = astronomy.NextMoonNode(node)
 
-            # Verify the ecliptic longitude is very close to zero at the alleged node.
+            # Verify the ecliptic latitude is very close to zero at the alleged node.
             ecl = astronomy.EclipticGeoMoon(node.time)
             diff_lat = 60.0 * abs(ecl.lat)
             if diff_lat > 8.1e-4:

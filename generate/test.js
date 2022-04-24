@@ -2662,7 +2662,7 @@ function MoonNodes() {
             node = Astronomy.NextMoonNode(node);
         }
 
-        // Verify the ecliptic longitude is very close to zero at the alleged node.
+        // Verify the ecliptic latitude is very close to zero at the alleged node.
         const ecl = Astronomy.EclipticGeoMoon(node.time);
         const diff_lat = 60 * abs(ecl.lat);
         if (diff_lat > 8.1e-4) {

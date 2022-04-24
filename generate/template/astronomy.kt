@@ -2640,11 +2640,6 @@ class AxisInfo(
  */
 enum class NodeEventKind {
     /**
-     * Placeholder value for a missing or invalid node.
-     */
-    Invalid,
-
-    /**
      * The body passes through the ecliptic plane from south to north.
      */
     Ascending,
@@ -6953,6 +6948,70 @@ fun libration(time: Time): LibrationInfo {
     val elon = ldash - tau + (rho*cos(a) + sigma*sin(a))*tan(bdash)
     val elat = bdash.radiansToDegrees() + sigma*cos(a) - rho*sin(a)
     return LibrationInfo(elat, elon, moon.lon, moon.lat, distKm, diamDeg)
+}
+
+private const val moonNodeStepDays = 10.0     // a safe number of days to step without missing a Moon node
+
+/**
+ * Searches for a time when the Moon's center crosses through the ecliptic plane.
+ *
+ * Searches for the first ascending or descending node of the Moon after `startTime`.
+ * An ascending node is when the Moon's center passes through the ecliptic plane
+ * (the plane of the Earth's orbit around the Sun) from south to north.
+ * A descending node is when the Moon's center passes through the ecliptic plane
+ * from north to south. Nodes indicate possible times of solar or lunar eclipses,
+ * if the Moon also happens to be in the correct phase (new or full, respectively).
+ * Call `searchMoonNode` to find the first of a series of nodes.
+ * Then call [nextMoonNode] to find as many more consecutive nodes as desired.
+ *
+ * @param startTime
+ *      The date and time for starting the search for an ascending or descending node of the Moon.
+ */
+fun searchMoonNode(startTime: Time): NodeEventInfo {
+    // Start at the given moment in time and sample the Moon's ecliptic latitude.
+    // Step 10 days at a time, searching for an interval where that latitude crosses zero.
+    var time1 = startTime
+    var eclip1 = eclipticGeoMoon(time1)
+    while (true) {
+        val time2 = time1.addDays(moonNodeStepDays)
+        val eclip2 = eclipticGeoMoon(time2)
+        if (eclip1.lat * eclip2.lat <= 0.0) {
+            // There is a node somewhere in this closed time interval.
+            // Figure out whether it is an ascending node or a descending node.
+            var kind: NodeEventKind
+            var direction: Double
+            if (eclip2.lat > eclip1.lat) {
+                direction = +1.0
+                kind = NodeEventKind.Ascending
+            } else {
+                direction = -1.0
+                kind = NodeEventKind.Descending
+            }
+            val nodeTime = search(time1, time2, 1.0) {
+                time -> direction * eclipticGeoMoon(time).lat
+            } ?: throw InternalError("Could not find Moon node.")
+            return NodeEventInfo(nodeTime, kind)
+        }
+        time1 = time2
+        eclip1 = eclip2
+    }
+}
+
+/**
+ * Searches for the next time when the Moon's center crosses through the ecliptic plane.
+ *
+ * Call [searchMoonNode] to find the first of a series of nodes.
+ * Then call `nextMoonNode` to find as many more consecutive nodes as desired.
+ *
+ * @param prevNode
+ *      The previous node found from calling [searchMoonNode] or `nextMoonNode`.
+ */
+fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
+    val time = prevNode.time.addDays(moonNodeStepDays)
+    val node = searchMoonNode(time)
+    if (node.kind == prevNode.kind)
+        throw InternalError("Invalid repeated moon node kind: ${node.kind}")
+    return node
 }
 
 

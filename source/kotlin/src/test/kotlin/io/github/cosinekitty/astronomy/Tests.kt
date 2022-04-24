@@ -155,7 +155,7 @@ class Tests {
     }
 
     @Test
-    fun `TerseVector methods should work as expected`() {
+    fun `TerseVector methods`() {
         val ones = TerseVector(1.0, 1.0, 1.0)
         assertEquals(ones, ones + TerseVector.zero())
         assertEquals(ones, ones + TerseVector.zero())
@@ -2109,6 +2109,70 @@ class Tests {
                 assertTrue(diffDistance < 54.377, "$filename line $lnum: excessive distance error = $diffDistance km.")
                 assertTrue(diffDiam < 0.00009, "$filename line $lnum: excessive angular diameter error = $diffDiam degrees.")
             }
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Moon ascending and descending nodes`() {
+        val filename = dataRootDir + "moon_nodes/moon_nodes.txt"
+        val infile = File(filename)
+        var lnum = 0
+        var prevKind = "?"
+        var node: NodeEventInfo? = null
+
+        for (line in infile.readLines()) {
+            ++lnum
+            // Parse the line from the test data file.
+            // A 2001-01-09T13:53Z    7.1233   22.5350
+            // D 2001-01-22T22:22Z   19.1250  -21.4683
+            val token = tokenize(line, 4, filename, lnum)
+            val kind: NodeEventKind = when (token[0]) {
+                "A" -> NodeEventKind.Ascending
+                "D" -> NodeEventKind.Descending
+                else -> fail("$filename line $lnum: invalid moon node kind '${token[0]}'")
+            }
+            assertTrue(token[0] != prevKind, "$filename line $lnum: duplicate ascending/descending node")
+            val time = parseDate(token[1])
+            val ra = token[2].toDouble()
+            val dec = token[3].toDouble()
+            val sphere = Spherical(dec, 15.0 * ra, 1.0)
+            val vecTest = sphere.toVector(time)
+
+            // Calculate EQD coordinates of the Moon. Verify against input file.
+            val vecEqj = geoMoon(time)
+            val rot = rotationEqjEqd(time)
+            val vecEqd = rot.rotate(vecEqj)
+            val angle = vecTest.angleWith(vecEqd)
+            val diffAngle = 60.0 * abs(angle)
+            assertTrue(diffAngle < 1.54, "$filename line $lnum: EXCESSIVE equatorial error = $diffAngle arcmin.")
+
+            // Test the Astronomy Engine node searcher.
+            if (lnum == 1) {
+                // The very first time, so search for the first node in the series.
+                // Back up a few days to make sure we really are finding it ourselves.
+                val earlier = time.addDays(-6.5472)    // back up by a weird amount of time
+                node = searchMoonNode(earlier)
+            } else {
+                // Use the previous node to find the next node.
+                assertTrue(node != null)
+                node = nextMoonNode(node)
+            }
+
+            // Verify the ecliptic latitude is very close to zero at the allged node.
+            val ecl = eclipticGeoMoon(node.time)
+            val diffLat = 60.0 * abs(ecl.lat)
+            assertTrue(diffLat < 8.1e-4, "$filename line $lnum: found node has excessive latitude error = $diffLat arcmin.")
+
+            // Verify the time agrees with Espenak's time to within a few minutes.
+            val diffMinutes = MINUTES_PER_DAY * abs(node.time.tt - time.tt)
+            assertTrue(diffMinutes < 3.681, "$filename line $lnum: excessive time error = $diffMinutes minutes.")
+
+            // Verify the kind of node matches what Espenak says (ascending or descending).
+            assertTrue(kind == node.kind, "$filename line $lnum: expected $kind node, found ${node.kind}")
+
+            prevKind = token[0]
         }
     }
 

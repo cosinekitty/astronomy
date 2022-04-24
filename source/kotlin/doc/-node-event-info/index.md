@@ -7,7 +7,7 @@ class [NodeEventInfo](index.md)(time: [Time](../-time/index.md), kind: [NodeEven
 
 Information about an ascending or descending node of a body.
 
-This object is returned by searchMoonNode and nextMoonNode to report information about the center of the Moon passing through the ecliptic plane.
+This object is returned by [searchMoonNode](../search-moon-node.md) and [nextMoonNode](../next-moon-node.md) to report information about the center of the Moon passing through the ecliptic plane.
 
 ## Constructors
 

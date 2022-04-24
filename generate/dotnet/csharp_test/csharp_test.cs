@@ -584,7 +584,7 @@ namespace csharp_test
                         node = Astronomy.NextMoonNode(node);
                     }
 
-                    // Verify the ecliptic longitude is very close to zero at the alleged node.
+                    // Verify the ecliptic latitude is very close to zero at the alleged node.
                     Spherical ecl = Astronomy.EclipticGeoMoon(node.time);
                     double diff_lat = 60.0 * abs(ecl.lat);
                     if (diff_lat > 8.1e-4)

@@ -11,5 +11,5 @@ The body passes through the ecliptic plane from north to south.
 
 | Name | Summary |
 |---|---|
-| [name](../-invalid/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](../-invalid/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [ordinal](../-invalid/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](../-invalid/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [name](../-ascending/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](../-ascending/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [ordinal](../-ascending/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](../-ascending/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
