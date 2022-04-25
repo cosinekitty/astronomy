@@ -2,7 +2,6 @@
 
 # minute
 
-[jvm]\
 val [minute](minute.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)
 
 The minute value 0..59.

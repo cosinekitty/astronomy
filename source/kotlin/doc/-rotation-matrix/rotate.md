@@ -2,7 +2,6 @@
 
 # rotate
 
-[jvm]\
 fun [rotate](rotate.md)(vec: [Vector](../-vector/index.md)): [Vector](../-vector/index.md)
 
 Applies a rotation to a vector, yielding a rotated vector.
@@ -17,7 +16,6 @@ jvm
 |---|---|
 | vec | The vector whose orientation is to be changed. |
 
-[jvm]\
 fun [rotate](rotate.md)(state: [StateVector](../-state-vector/index.md)): [StateVector](../-state-vector/index.md)
 
 Applies a rotation to a state vector, yielding a rotated state vector.

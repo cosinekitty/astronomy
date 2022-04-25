@@ -2,7 +2,6 @@
 
 # moonPhase
 
-[jvm]\
 fun [moonPhase](moon-phase.md)(time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Returns the Moon's phase as an angle from 0 to 360 degrees.

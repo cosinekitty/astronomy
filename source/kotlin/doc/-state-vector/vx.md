@@ -2,7 +2,6 @@
 
 # vx
 
-[jvm]\
 val [vx](vx.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 A Cartesian velocity x-component expressed in AU/day.

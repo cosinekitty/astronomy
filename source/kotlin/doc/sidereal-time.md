@@ -2,7 +2,6 @@
 
 # siderealTime
 
-[jvm]\
 fun [siderealTime](sidereal-time.md)(time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Calculates Greenwich Apparent Sidereal Time (GAST).

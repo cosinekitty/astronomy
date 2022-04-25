@@ -2,7 +2,6 @@
 
 # toObserver
 
-[jvm]\
 fun [toObserver](to-observer.md)(equator: [EquatorEpoch](../-equator-epoch/index.md)): [Observer](../-observer/index.md)
 
 Calculates the geographic location corresponding to a geocentric equatorial vector.

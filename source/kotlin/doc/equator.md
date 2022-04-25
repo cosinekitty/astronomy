@@ -2,7 +2,6 @@
 
 # equator
 
-[jvm]\
 fun [equator](equator.md)(body: [Body](-body/index.md), time: [Time](-time/index.md), observer: [Observer](-observer/index.md), equdate: [EquatorEpoch](-equator-epoch/index.md), aberration: [Aberration](-aberration/index.md)): [Equatorial](-equatorial/index.md)
 
 Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.

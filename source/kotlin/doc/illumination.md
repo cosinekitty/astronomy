@@ -2,7 +2,6 @@
 
 # illumination
 
-[jvm]\
 fun [illumination](illumination.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [IlluminationInfo](-illumination-info/index.md)
 
 Finds visual magnitude, phase angle, and other illumination information about a celestial body.

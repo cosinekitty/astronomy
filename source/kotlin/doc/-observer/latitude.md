@@ -2,7 +2,6 @@
 
 # latitude
 
-[jvm]\
 val [latitude](latitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Geographic latitude in degrees north (positive) or south (negative) of the equator.

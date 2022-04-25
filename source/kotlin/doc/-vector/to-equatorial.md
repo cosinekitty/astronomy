@@ -2,7 +2,6 @@
 
 # toEquatorial
 
-[jvm]\
 fun [toEquatorial](to-equatorial.md)(): [Equatorial](../-equatorial/index.md)
 
 Given an equatorial vector, calculates equatorial angular coordinates.

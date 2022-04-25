@@ -2,7 +2,6 @@
 
 # horizon
 
-[jvm]\
 fun [horizon](horizon.md)(time: [Time](-time/index.md), observer: [Observer](-observer/index.md), ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), refraction: [Refraction](-refraction/index.md)): [Topocentric](-topocentric/index.md)
 
 Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.

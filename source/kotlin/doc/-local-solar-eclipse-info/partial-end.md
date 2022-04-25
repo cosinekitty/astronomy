@@ -2,7 +2,6 @@
 
 # partialEnd
 
-[jvm]\
 val [partialEnd](partial-end.md): [EclipseEvent](../-eclipse-event/index.md)
 
 The time and Sun altitude at the end of the eclipse.

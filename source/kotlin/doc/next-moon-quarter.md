@@ -2,7 +2,6 @@
 
 # nextMoonQuarter
 
-[jvm]\
 fun [nextMoonQuarter](next-moon-quarter.md)(mq: [MoonQuarterInfo](-moon-quarter-info/index.md)): [MoonQuarterInfo](-moon-quarter-info/index.md)
 
 Continues searching for lunar quarters from a previous search.

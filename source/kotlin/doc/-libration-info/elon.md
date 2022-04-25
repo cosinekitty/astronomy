@@ -2,7 +2,6 @@
 
 # elon
 
-[jvm]\
 val [elon](elon.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Sub-Earth libration ecliptic longitude angle, in degrees.

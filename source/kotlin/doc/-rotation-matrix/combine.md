@@ -2,7 +2,6 @@
 
 # combine
 
-[jvm]\
 infix fun [combine](combine.md)(other: [RotationMatrix](index.md)): [RotationMatrix](index.md)
 
 Creates a rotation based on applying one rotation followed by another.

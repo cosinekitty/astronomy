@@ -2,7 +2,6 @@
 
 # rotationHorEcl
 
-[jvm]\
 fun [rotationHorEcl](rotation-hor-ecl.md)(time: [Time](-time/index.md), observer: [Observer](-observer/index.md)): [RotationMatrix](-rotation-matrix/index.md)
 
 Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).

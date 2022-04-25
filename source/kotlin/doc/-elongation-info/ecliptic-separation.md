@@ -2,7 +2,6 @@
 
 # eclipticSeparation
 
-[jvm]\
 val [eclipticSeparation](ecliptic-separation.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.

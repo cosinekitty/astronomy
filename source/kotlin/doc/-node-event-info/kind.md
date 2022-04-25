@@ -2,7 +2,6 @@
 
 # kind
 
-[jvm]\
 val [kind](kind.md): [NodeEventKind](../-node-event-kind/index.md)
 
 Whether the node is ascending or descending.

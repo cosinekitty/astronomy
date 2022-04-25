@@ -2,7 +2,6 @@
 
 # toVector
 
-[jvm]\
 fun [toVector](to-vector.md)(time: [Time](../-time/index.md), equator: [EquatorEpoch](../-equator-epoch/index.md)): [Vector](../-vector/index.md)
 
 Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.

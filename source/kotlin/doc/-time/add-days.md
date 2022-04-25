@@ -2,7 +2,6 @@
 
 # addDays
 
-[jvm]\
 fun [addDays](add-days.md)(days: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Time](index.md)
 
 Calculates the sum or difference of an [Time](index.md) with a specified floating point number of days.

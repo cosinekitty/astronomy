@@ -2,7 +2,6 @@
 
 # septemberEquinox
 
-[jvm]\
 val [septemberEquinox](september-equinox.md): [Time](../-time/index.md)
 
 The date and time of the September equinox for the specified year.

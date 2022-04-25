@@ -2,7 +2,6 @@
 
 # position
 
-[jvm]\
 fun [position](position.md)(): [Vector](../-vector/index.md)
 
 Returns the position vector associated with this state vector.

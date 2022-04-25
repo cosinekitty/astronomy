@@ -2,7 +2,6 @@
 
 # sdPenum
 
-[jvm]\
 val [sdPenum](sd-penum.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 The semi-duration of the penumbral phase in minutes.

@@ -2,7 +2,6 @@
 
 # EclipseEvent
 
-[jvm]\
 class [EclipseEvent](index.md)(time: [Time](../-time/index.md), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 Holds a time and the observed altitude of the Sun at that time.
@@ -15,11 +14,11 @@ If altitude is negative, the event is theoretical only; it would be visible if t
 
 | | |
 |---|---|
-| [EclipseEvent](-eclipse-event.md) | [jvm]<br>fun [EclipseEvent](-eclipse-event.md)(time: [Time](../-time/index.md), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
+| [EclipseEvent](-eclipse-event.md)<br>fun [EclipseEvent](-eclipse-event.md)(time: [Time](../-time/index.md), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [altitude](altitude.md) | [jvm]<br>val [altitude](altitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The angular altitude of the center of the Sun above/below the horizon, at time, corrected for atmospheric refraction and expressed in degrees. |
-| [time](time.md) | [jvm]<br>val [time](time.md): [Time](../-time/index.md)<br>The date and time of the event. |
+| [altitude](altitude.md)<br>val [altitude](altitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The angular altitude of the center of the Sun above/below the horizon, at time, corrected for atmospheric refraction and expressed in degrees. |
+| [time](time.md)<br>val [time](time.md): [Time](../-time/index.md)<br>The date and time of the event. |

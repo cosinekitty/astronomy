@@ -2,7 +2,6 @@
 
 # seasons
 
-[jvm]\
 fun [seasons](seasons.md)(year: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)): [SeasonsInfo](-seasons-info/index.md)
 
 Finds both equinoxes and both solstices for a given calendar year.

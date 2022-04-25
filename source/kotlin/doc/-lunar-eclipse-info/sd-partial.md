@@ -2,7 +2,6 @@
 
 # sdPartial
 
-[jvm]\
 val [sdPartial](sd-partial.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 The semi-duration of the partial phase in minutes, or 0.0 if none.

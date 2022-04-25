@@ -2,7 +2,6 @@
 
 # Aberration
 
-[jvm]\
 enum [Aberration](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[Aberration](index.md)&gt; 
 
 Aberration calculation options.
@@ -17,12 +16,6 @@ Aberration correction is useful to improve accuracy of coordinates of apparent l
 
 | | |
 |---|---|
-| [None](-none/index.md) | [jvm]<br>[None](-none/index.md)()<br>Do not correct for aberration. |
-| [Corrected](-corrected/index.md) | [jvm]<br>[Corrected](-corrected/index.md)()<br>Request correction for aberration. |
+| [None](-none/index.md)<br>[None](-none/index.md)()<br>Do not correct for aberration. |
+| [Corrected](-corrected/index.md)<br>[Corrected](-corrected/index.md)()<br>Request correction for aberration. |
 
-## Properties
-
-| Name | Summary |
-|---|---|
-| [name](../-node-event-kind/-ascending/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](../-node-event-kind/-ascending/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [ordinal](../-node-event-kind/-ascending/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](../-node-event-kind/-ascending/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

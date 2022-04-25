@@ -2,7 +2,6 @@
 
 # t
 
-[jvm]\
 val [t](t.md): [Time](../-time/index.md)
 
 The date and time at which this vector is valid.

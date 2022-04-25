@@ -2,7 +2,6 @@
 
 # EquatorEpoch
 
-[jvm]\
 enum [EquatorEpoch](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[EquatorEpoch](index.md)&gt; 
 
 Selects the date for which the Earth's equator is to be used for representing equatorial coordinates.
@@ -17,12 +16,6 @@ For some other purposes, it is more helpful to represent coordinates using the E
 
 | | |
 |---|---|
-| [OfDate](-of-date/index.md) | [jvm]<br>[OfDate](-of-date/index.md)()<br>Represent equatorial coordinates using the Earth's equator at the given date and time. |
-| [J2000](-j2000/index.md) | [jvm]<br>[J2000](-j2000/index.md)()<br>Represent equatorial coordinates in the J2000 epoch. |
+| [OfDate](-of-date/index.md)<br>[OfDate](-of-date/index.md)()<br>Represent equatorial coordinates using the Earth's equator at the given date and time. |
+| [J2000](-j2000/index.md)<br>[J2000](-j2000/index.md)()<br>Represent equatorial coordinates in the J2000 epoch. |
 
-## Properties
-
-| Name | Summary |
-|---|---|
-| [name](../-node-event-kind/-ascending/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](../-node-event-kind/-ascending/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [ordinal](../-node-event-kind/-ascending/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](../-node-event-kind/-ascending/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

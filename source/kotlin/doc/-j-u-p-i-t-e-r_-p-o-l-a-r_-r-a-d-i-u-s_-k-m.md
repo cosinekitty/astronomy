@@ -2,7 +2,6 @@
 
 # JUPITER_POLAR_RADIUS_KM
 
-[jvm]\
 const val [JUPITER_POLAR_RADIUS_KM](-j-u-p-i-t-e-r_-p-o-l-a-r_-r-a-d-i-u-s_-k-m.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html) = 66854.0
 
 The polar radius of Jupiter, expressed in kilometers.

@@ -2,7 +2,6 @@
 
 # rotationEqjEcl
 
-[jvm]\
 fun [rotationEqjEcl](rotation-eqj-ecl.md)(): [RotationMatrix](-rotation-matrix/index.md)
 
 Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).

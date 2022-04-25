@@ -2,7 +2,6 @@
 
 # plus
 
-[jvm]\
 operator fun [plus](plus.md)(other: [Vector](index.md)): [Vector](index.md)
 
 Adds two vectors. Both operands must have identical times.

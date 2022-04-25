@@ -2,5 +2,4 @@
 
 # NodeEventInfo
 
-[jvm]\
 fun [NodeEventInfo](-node-event-info.md)(time: [Time](../-time/index.md), kind: [NodeEventKind](../-node-event-kind/index.md))

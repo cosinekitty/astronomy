@@ -2,7 +2,6 @@
 
 # elat
 
-[jvm]\
 val [elat](elat.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Latitude in degrees north (positive) or south (negative) of the ecliptic plane.

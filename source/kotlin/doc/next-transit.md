@@ -2,7 +2,6 @@
 
 # nextTransit
 
-[jvm]\
 fun [nextTransit](next-transit.md)(body: [Body](-body/index.md), prevTransitTime: [Time](-time/index.md)): [TransitInfo](-transit-info/index.md)
 
 Searches for another transit of Mercury or Venus.

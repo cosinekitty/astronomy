@@ -2,7 +2,6 @@
 
 # toHorizontal
 
-[jvm]\
 fun [toHorizontal](to-horizontal.md)(refraction: [Refraction](../-refraction/index.md)): [Spherical](../-spherical/index.md)
 
 Converts Cartesian coordinates to horizontal coordinates.

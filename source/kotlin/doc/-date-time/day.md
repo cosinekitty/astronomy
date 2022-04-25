@@ -2,7 +2,6 @@
 
 # day
 
-[jvm]\
 val [day](day.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)
 
 The day of the month, 1..31.

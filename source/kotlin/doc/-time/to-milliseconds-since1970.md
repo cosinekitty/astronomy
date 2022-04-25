@@ -2,7 +2,6 @@
 
 # toMillisecondsSince1970
 
-[jvm]\
 fun [toMillisecondsSince1970](to-milliseconds-since1970.md)(): [Long](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)
 
 Converts this Time to the integer number of millseconds since 1970.

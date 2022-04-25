@@ -2,7 +2,6 @@
 
 # rotationGalEqj
 
-[jvm]\
 fun [rotationGalEqj](rotation-gal-eqj.md)(): [RotationMatrix](-rotation-matrix/index.md)
 
 Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).

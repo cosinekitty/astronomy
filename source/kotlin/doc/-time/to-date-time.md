@@ -2,7 +2,6 @@
 
 # toDateTime
 
-[jvm]\
 fun [toDateTime](to-date-time.md)(): [DateTime](../-date-time/index.md)
 
 Resolves this Time into year, month, day, hour, minute, second.

@@ -2,7 +2,6 @@
 
 # rotationAxis
 
-[jvm]\
 fun [rotationAxis](rotation-axis.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [AxisInfo](-axis-info/index.md)
 
 Calculates information about a body's rotation axis at a given time.

@@ -2,7 +2,6 @@
 
 # baryState
 
-[jvm]\
 fun [baryState](bary-state.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [StateVector](-state-vector/index.md)
 
 Calculates barycentric position and velocity vectors for the given body.

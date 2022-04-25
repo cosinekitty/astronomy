@@ -2,7 +2,6 @@
 
 # inverse
 
-[jvm]\
 fun [inverse](inverse.md)(): [RotationMatrix](index.md)
 
 Calculates the inverse of a rotation matrix.

@@ -2,7 +2,6 @@
 
 # search
 
-[jvm]\
 fun [search](search.md)(time1: [Time](-time/index.md), time2: [Time](-time/index.md), toleranceSeconds: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), func: [SearchContext](-search-context/index.md)): [Time](-time/index.md)?
 
 Searches for a time at which a function's value increases through zero.

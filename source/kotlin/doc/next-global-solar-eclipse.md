@@ -2,7 +2,6 @@
 
 # nextGlobalSolarEclipse
 
-[jvm]\
 fun [nextGlobalSolarEclipse](next-global-solar-eclipse.md)(prevEclipseTime: [Time](-time/index.md)): [GlobalSolarEclipseInfo](-global-solar-eclipse-info/index.md)
 
 Searches for the next global solar eclipse in a series.

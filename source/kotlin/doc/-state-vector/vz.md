@@ -2,7 +2,6 @@
 
 # vz
 
-[jvm]\
 val [vz](vz.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 A Cartesian velocity z-component expressed in AU/day.

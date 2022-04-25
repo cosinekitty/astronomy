@@ -2,7 +2,6 @@
 
 # rotationEclEqd
 
-[jvm]\
 fun [rotationEclEqd](rotation-ecl-eqd.md)(time: [Time](-time/index.md)): [RotationMatrix](-rotation-matrix/index.md)
 
 Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).

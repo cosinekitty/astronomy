@@ -2,7 +2,6 @@
 
 # time
 
-[jvm]\
 val [time](time.md): [Time](../-time/index.md)
 
 The time of the body's node.

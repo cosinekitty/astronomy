@@ -2,7 +2,6 @@
 
 # JupiterMoonsInfo
 
-[jvm]\
 class [JupiterMoonsInfo](index.md)(moon: [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;)
 
 Holds the positions and velocities of Jupiter's major 4 moons.
@@ -13,10 +12,10 @@ The [jupiterMoons](../jupiter-moons.md) function returns an object of this type 
 
 | | |
 |---|---|
-| [JupiterMoonsInfo](-jupiter-moons-info.md) | [jvm]<br>fun [JupiterMoonsInfo](-jupiter-moons-info.md)(moon: [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;) |
+| [JupiterMoonsInfo](-jupiter-moons-info.md)<br>fun [JupiterMoonsInfo](-jupiter-moons-info.md)(moon: [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [moon](moon.md) | [jvm]<br>val [moon](moon.md): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;<br>An array of state vectors for each of the 4 moons, in the following order: 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto. |
+| [moon](moon.md)<br>val [moon](moon.md): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;<br>An array of state vectors for each of the 4 moons, in the following order: 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto. |

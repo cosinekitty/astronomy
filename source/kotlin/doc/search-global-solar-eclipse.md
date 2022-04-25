@@ -2,7 +2,6 @@
 
 # searchGlobalSolarEclipse
 
-[jvm]\
 fun [searchGlobalSolarEclipse](search-global-solar-eclipse.md)(startTime: [Time](-time/index.md)): [GlobalSolarEclipseInfo](-global-solar-eclipse-info/index.md)
 
 Searches for a solar eclipse visible anywhere on the Earth's surface.

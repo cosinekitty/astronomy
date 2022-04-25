@@ -2,7 +2,6 @@
 
 # toSpherical
 
-[jvm]\
 fun [toSpherical](to-spherical.md)(): [Spherical](../-spherical/index.md)
 
 Converts Cartesian coordinates to spherical coordinates.

@@ -2,7 +2,6 @@
 
 # eclipticGeoMoon
 
-[jvm]\
 fun [eclipticGeoMoon](ecliptic-geo-moon.md)(time: [Time](-time/index.md)): [Spherical](-spherical/index.md)
 
 Calculates spherical ecliptic geocentric position of the Moon.

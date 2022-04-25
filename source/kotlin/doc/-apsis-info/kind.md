@@ -2,7 +2,6 @@
 
 # kind
 
-[jvm]\
 val [kind](kind.md): [ApsisKind](../-apsis-kind/index.md)
 
 Whether this is a pericenter or apocenter event.

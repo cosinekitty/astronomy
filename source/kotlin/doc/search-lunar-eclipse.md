@@ -2,7 +2,6 @@
 
 # searchLunarEclipse
 
-[jvm]\
 fun [searchLunarEclipse](search-lunar-eclipse.md)(startTime: [Time](-time/index.md)): [LunarEclipseInfo](-lunar-eclipse-info/index.md)
 
 Searches for a lunar eclipse.

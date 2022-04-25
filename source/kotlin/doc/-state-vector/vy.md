@@ -2,7 +2,6 @@
 
 # vy
 
-[jvm]\
 val [vy](vy.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 A Cartesian velocity y-component expressed in AU/day.

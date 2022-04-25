@@ -2,5 +2,4 @@
 
 # EarthNotAllowedException
 
-[jvm]\
 fun [EarthNotAllowedException](-earth-not-allowed-exception.md)()

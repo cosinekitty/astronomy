@@ -2,7 +2,6 @@
 
 # peak
 
-[jvm]\
 val [peak](peak.md): [Time](../-time/index.md)
 
 Date and time of the peak of the transit.

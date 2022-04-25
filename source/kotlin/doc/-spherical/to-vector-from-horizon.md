@@ -2,7 +2,6 @@
 
 # toVectorFromHorizon
 
-[jvm]\
 fun [toVectorFromHorizon](to-vector-from-horizon.md)(time: [Time](../-time/index.md), refraction: [Refraction](../-refraction/index.md)): [Vector](../-vector/index.md)
 
 Given apparent angular horizontal coordinates, calculate the unrefracted horizontal vector.

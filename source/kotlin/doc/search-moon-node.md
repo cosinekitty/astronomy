@@ -2,7 +2,6 @@
 
 # searchMoonNode
 
-[jvm]\
 fun [searchMoonNode](search-moon-node.md)(startTime: [Time](-time/index.md)): [NodeEventInfo](-node-event-info/index.md)
 
 Searches for a time when the Moon's center crosses through the ecliptic plane.

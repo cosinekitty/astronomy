@@ -2,7 +2,6 @@
 
 # libration
 
-[jvm]\
 fun [libration](libration.md)(time: [Time](-time/index.md)): [LibrationInfo](-libration-info/index.md)
 
 Calculates the Moon's libration angles at a given moment in time.

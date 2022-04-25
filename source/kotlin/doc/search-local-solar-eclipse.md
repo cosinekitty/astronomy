@@ -2,7 +2,6 @@
 
 # searchLocalSolarEclipse
 
-[jvm]\
 fun [searchLocalSolarEclipse](search-local-solar-eclipse.md)(startTime: [Time](-time/index.md), observer: [Observer](-observer/index.md)): [LocalSolarEclipseInfo](-local-solar-eclipse-info/index.md)
 
 Searches for a solar eclipse visible at a specific location on the Earth's surface.

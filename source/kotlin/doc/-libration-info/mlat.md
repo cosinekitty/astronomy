@@ -2,7 +2,6 @@
 
 # mlat
 
-[jvm]\
 val [mlat](mlat.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Moon's geocentric ecliptic latitude.

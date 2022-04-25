@@ -2,7 +2,6 @@
 
 # eclipticLongitude
 
-[jvm]\
 fun [eclipticLongitude](ecliptic-longitude.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.

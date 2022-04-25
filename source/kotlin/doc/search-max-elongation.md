@@ -2,7 +2,6 @@
 
 # searchMaxElongation
 
-[jvm]\
 fun [searchMaxElongation](search-max-elongation.md)(body: [Body](-body/index.md), startTime: [Time](-time/index.md)): [ElongationInfo](-elongation-info/index.md)
 
 Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.

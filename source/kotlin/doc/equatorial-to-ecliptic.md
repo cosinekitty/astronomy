@@ -2,7 +2,6 @@
 
 # equatorialToEcliptic
 
-[jvm]\
 fun [equatorialToEcliptic](equatorial-to-ecliptic.md)(equ: [Vector](-vector/index.md)): [Ecliptic](-ecliptic/index.md)
 
 Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.

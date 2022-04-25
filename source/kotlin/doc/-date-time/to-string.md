@@ -2,7 +2,6 @@
 
 # toString
 
-[jvm]\
 open override fun [toString](to-string.md)(): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)
 
 Converts this DateTime to ISO 8601 format, expressed in UTC with millisecond resolution.

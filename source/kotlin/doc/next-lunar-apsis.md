@@ -2,7 +2,6 @@
 
 # nextLunarApsis
 
-[jvm]\
 fun [nextLunarApsis](next-lunar-apsis.md)(apsis: [ApsisInfo](-apsis-info/index.md)): [ApsisInfo](-apsis-info/index.md)
 
 Finds the next lunar perigee or apogee event in a series.

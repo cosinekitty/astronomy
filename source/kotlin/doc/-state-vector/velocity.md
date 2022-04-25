@@ -2,7 +2,6 @@
 
 # velocity
 
-[jvm]\
 fun [velocity](velocity.md)(): [Vector](../-vector/index.md)
 
 Returns the velocity vector associated with this state vector.

@@ -2,5 +2,4 @@
 
 # JupiterMoonsInfo
 
-[jvm]\
 fun [JupiterMoonsInfo](-jupiter-moons-info.md)(moon: [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;)

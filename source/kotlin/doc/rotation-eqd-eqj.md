@@ -2,7 +2,6 @@
 
 # rotationEqdEqj
 
-[jvm]\
 fun [rotationEqdEqj](rotation-eqd-eqj.md)(time: [Time](-time/index.md)): [RotationMatrix](-rotation-matrix/index.md)
 
 Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).

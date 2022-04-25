@@ -2,7 +2,6 @@
 
 # rotationHorEqd
 
-[jvm]\
 fun [rotationHorEqd](rotation-hor-eqd.md)(time: [Time](-time/index.md), observer: [Observer](-observer/index.md)): [RotationMatrix](-rotation-matrix/index.md)
 
 Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).

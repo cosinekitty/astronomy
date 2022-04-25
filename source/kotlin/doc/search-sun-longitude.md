@@ -2,7 +2,6 @@
 
 # searchSunLongitude
 
-[jvm]\
 fun [searchSunLongitude](search-sun-longitude.md)(targetLon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), startTime: [Time](-time/index.md), limitDays: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Time](-time/index.md)?
 
 Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.

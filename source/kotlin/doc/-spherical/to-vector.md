@@ -2,7 +2,6 @@
 
 # toVector
 
-[jvm]\
 fun [toVector](to-vector.md)(time: [Time](../-time/index.md)): [Vector](../-vector/index.md)
 
 Converts spherical coordinates to Cartesian coordinates.

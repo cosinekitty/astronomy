@@ -2,14 +2,7 @@
 
 # Jupiter
 
-[jvm]\
 [Jupiter](index.md)(JUPITER_GM, 4332.589, VsopModel(vsopLonJupiter, vsopLatJupiter, vsopRadJupiter))
 
 The planet Jupiter.
 
-## Properties
-
-| Name | Summary |
-|---|---|
-| [name](../../-node-event-kind/-ascending/index.md#-372974862%2FProperties%2F-1216412040) | [jvm]<br>val [name](../../-node-event-kind/-ascending/index.md#-372974862%2FProperties%2F-1216412040): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
-| [ordinal](../../-node-event-kind/-ascending/index.md#-739389684%2FProperties%2F-1216412040) | [jvm]<br>val [ordinal](../../-node-event-kind/-ascending/index.md#-739389684%2FProperties%2F-1216412040): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |

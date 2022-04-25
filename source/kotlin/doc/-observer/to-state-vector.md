@@ -2,7 +2,6 @@
 
 # toStateVector
 
-[jvm]\
 fun [toStateVector](to-state-vector.md)(time: [Time](../-time/index.md), equator: [EquatorEpoch](../-equator-epoch/index.md)): [StateVector](../-state-vector/index.md)
 
 Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.

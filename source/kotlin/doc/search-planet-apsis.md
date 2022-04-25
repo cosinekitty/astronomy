@@ -2,7 +2,6 @@
 
 # searchPlanetApsis
 
-[jvm]\
 fun [searchPlanetApsis](search-planet-apsis.md)(body: [Body](-body/index.md), startTime: [Time](-time/index.md)): [ApsisInfo](-apsis-info/index.md)
 
 Finds the first aphelion or perihelion for a planet after a given time.

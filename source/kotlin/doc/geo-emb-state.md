@@ -2,7 +2,6 @@
 
 # geoEmbState
 
-[jvm]\
 fun [geoEmbState](geo-emb-state.md)(time: [Time](-time/index.md)): [StateVector](-state-vector/index.md)
 
 Calculates the geocentric position and velocity of the Earth/Moon barycenter.

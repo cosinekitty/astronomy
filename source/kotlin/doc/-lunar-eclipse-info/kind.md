@@ -2,7 +2,6 @@
 
 # kind
 
-[jvm]\
 val [kind](kind.md): [EclipseKind](../-eclipse-kind/index.md)
 
 The type of lunar eclipse found.

@@ -2,7 +2,6 @@
 
 # x
 
-[jvm]\
 val [x](x.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 A Cartesian position x-coordinate expressed in AU.

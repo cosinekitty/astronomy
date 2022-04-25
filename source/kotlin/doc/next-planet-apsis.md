@@ -2,7 +2,6 @@
 
 # nextPlanetApsis
 
-[jvm]\
 fun [nextPlanetApsis](next-planet-apsis.md)(body: [Body](-body/index.md), apsis: [ApsisInfo](-apsis-info/index.md)): [ApsisInfo](-apsis-info/index.md)
 
 Finds the next planetary perihelion or aphelion event in a series.

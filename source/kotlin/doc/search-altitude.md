@@ -2,7 +2,6 @@
 
 # searchAltitude
 
-[jvm]\
 fun [searchAltitude](search-altitude.md)(body: [Body](-body/index.md), observer: [Observer](-observer/index.md), direction: [Direction](-direction/index.md), startTime: [Time](-time/index.md), limitDays: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Time](-time/index.md)?
 
 Finds the next time a body reaches a given altitude.

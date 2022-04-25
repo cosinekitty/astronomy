@@ -2,7 +2,6 @@
 
 # searchTransit
 
-[jvm]\
 fun [searchTransit](search-transit.md)(body: [Body](-body/index.md), startTime: [Time](-time/index.md)): [TransitInfo](-transit-info/index.md)
 
 Searches for the first transit of Mercury or Venus after a given date.

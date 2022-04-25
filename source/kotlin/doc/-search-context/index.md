@@ -2,7 +2,6 @@
 
 # SearchContext
 
-[jvm]\
 fun interface [SearchContext](index.md)
 
 Represents a function whose ascending root is to be found.
@@ -13,4 +12,4 @@ This interface must be implemented for callers of [search](../search.md) in orde
 
 | Name | Summary |
 |---|---|
-| [eval](eval.md) | [jvm]<br>abstract fun [eval](eval.md)(time: [Time](../-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Evaluates a scalar function at a given time. |
+| [eval](eval.md)<br>abstract fun [eval](eval.md)(time: [Time](../-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Evaluates a scalar function at a given time. |

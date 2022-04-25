@@ -2,7 +2,6 @@
 
 # elongation
 
-[jvm]\
 fun [elongation](elongation.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [ElongationInfo](-elongation-info/index.md)
 
 Determines visibility of a celestial body relative to the Sun, as seen from the Earth.

@@ -2,7 +2,6 @@
 
 # sunPosition
 
-[jvm]\
 fun [sunPosition](sun-position.md)(time: [Time](-time/index.md)): [Ecliptic](-ecliptic/index.md)
 
 Calculates geocentric ecliptic coordinates for the Sun.

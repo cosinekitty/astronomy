@@ -2,7 +2,6 @@
 
 # searchPeakMagnitude
 
-[jvm]\
 fun [searchPeakMagnitude](search-peak-magnitude.md)(body: [Body](-body/index.md), startTime: [Time](-time/index.md)): [IlluminationInfo](-illumination-info/index.md)
 
 Searches for the date and time Venus will next appear brightest as seen from the Earth.

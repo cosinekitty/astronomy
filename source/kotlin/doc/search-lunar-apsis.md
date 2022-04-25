@@ -2,7 +2,6 @@
 
 # searchLunarApsis
 
-[jvm]\
 fun [searchLunarApsis](search-lunar-apsis.md)(startTime: [Time](-time/index.md)): [ApsisInfo](-apsis-info/index.md)
 
 Finds the date and time of the Moon's perigee or apogee.

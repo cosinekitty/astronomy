@@ -2,7 +2,6 @@
 
 # nextMoonNode
 
-[jvm]\
 fun [nextMoonNode](next-moon-node.md)(prevNode: [NodeEventInfo](-node-event-info/index.md)): [NodeEventInfo](-node-event-info/index.md)
 
 Searches for the next time when the Moon's center crosses through the ecliptic plane.

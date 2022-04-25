@@ -2,7 +2,6 @@
 
 # nextLunarEclipse
 
-[jvm]\
 fun [nextLunarEclipse](next-lunar-eclipse.md)(prevEclipseTime: [Time](-time/index.md)): [LunarEclipseInfo](-lunar-eclipse-info/index.md)
 
 Searches for the next lunar eclipse in a series.

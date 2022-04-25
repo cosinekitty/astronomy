@@ -2,7 +2,6 @@
 
 # nextLocalSolarEclipse
 
-[jvm]\
 fun [nextLocalSolarEclipse](next-local-solar-eclipse.md)(prevEclipseTime: [Time](-time/index.md), observer: [Observer](-observer/index.md)): [LocalSolarEclipseInfo](-local-solar-eclipse-info/index.md)
 
 Searches for the next local solar eclipse in a series.

@@ -2,7 +2,6 @@
 
 # geoVector
 
-[jvm]\
 fun [geoVector](geo-vector.md)(body: [Body](-body/index.md), time: [Time](-time/index.md), aberration: [Aberration](-aberration/index.md)): [Vector](-vector/index.md)
 
 Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
