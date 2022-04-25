@@ -25,7 +25,9 @@ SymbolsWithUnwantedArgs = [
     'Saturn',
     'Uranus',
     'Neptune',
-    'Pluto'
+    'Pluto',
+    'Rise',
+    'Set'
 ]
 
 
@@ -47,11 +49,22 @@ def RemoveEnumProperties(text):
     prefix = '## Properties'
     sectionIndex = text.find(prefix)
     if sectionIndex >= 0:
-        tail = text[sectionIndex + len(prefix):]
+        rowsIndex = sectionIndex + len(prefix)
+        tail = text[rowsIndex:]
         nameSet = set(re.findall(r'\n\|\s+\[(\S+)\]', tail))
         if nameSet == set(['name', 'ordinal']):
             # Truncate the markdown text right before '## Properties'
             return text[:sectionIndex]
+
+        # If there are other properties besides 'name' and 'ordinal',
+        # keep the other properties but get rid of 'name' and 'ordinal'.
+        if ('name' in nameSet) and ('ordinal' in nameSet):
+            rows = tail.split('\n')
+            fix = text[:rowsIndex]
+            for r in rows:
+                if (not r.startswith('| [name]')) and (not r.startswith('| [ordinal]')):
+                    fix += r + '\n'
+            return fix
     # Return the entire text, unmodified.
     return text
 
