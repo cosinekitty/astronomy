@@ -90,10 +90,36 @@ def RemovePrivateConstructors(text):
     return fix
 
 
+def ReverseEnumEntries(text):
+    # Enumeration entries are listed in backwards order.
+    # I reported this as:
+    # https://github.com/Kotlin/dokka/issues/2466
+    # Work around this issue for now...
+    fix = text
+    prefix = '## Entries\n\n| | |\n|---|---|\n'
+    middleIndex = fix.find(prefix)
+    if middleIndex >= 0:
+        middleIndex += len(prefix)
+        front = fix[:middleIndex]
+        middle = fix[middleIndex:]
+        backIndex = middle.find('\n## ')
+        if backIndex > 0:
+            backIndex += 1
+            back = middle[backIndex:]
+            middle = middle[:backIndex]
+        else:
+            back = ''
+        rows = middle.strip().split('\n')
+        rows.reverse()
+        fix = front + '\n'.join(rows) + '\n\n' + back
+    return fix
+
+
 def FixMarkdown(text):
     fix = RemoveEnumProperties(text)
     fix = RemoveJvmTags(fix)
     fix = RemovePrivateConstructors(fix)
+    fix = ReverseEnumEntries(fix)
     return fix
 
 

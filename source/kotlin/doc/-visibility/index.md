@@ -10,6 +10,6 @@ Indicates whether a body (especially Mercury or Venus) is best seen in the morni
 
 | | |
 |---|---|
-| [Evening](-evening/index.md)<br>[Evening](-evening/index.md)()<br>The body is best visible in the evening, after sunset. |
 | [Morning](-morning/index.md)<br>[Morning](-morning/index.md)()<br>The body is best visible in the morning, before sunrise. |
+| [Evening](-evening/index.md)<br>[Evening](-evening/index.md)()<br>The body is best visible in the evening, after sunset. |
 

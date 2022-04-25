@@ -16,6 +16,6 @@ Aberration correction is useful to improve accuracy of coordinates of apparent l
 
 | | |
 |---|---|
-| [None](-none/index.md)<br>[None](-none/index.md)()<br>Do not correct for aberration. |
 | [Corrected](-corrected/index.md)<br>[Corrected](-corrected/index.md)()<br>Request correction for aberration. |
+| [None](-none/index.md)<br>[None](-none/index.md)()<br>Do not correct for aberration. |
 

@@ -16,6 +16,6 @@ For some other purposes, it is more helpful to represent coordinates using the E
 
 | | |
 |---|---|
-| [OfDate](-of-date/index.md)<br>[OfDate](-of-date/index.md)()<br>Represent equatorial coordinates using the Earth's equator at the given date and time. |
 | [J2000](-j2000/index.md)<br>[J2000](-j2000/index.md)()<br>Represent equatorial coordinates in the J2000 epoch. |
+| [OfDate](-of-date/index.md)<br>[OfDate](-of-date/index.md)()<br>Represent equatorial coordinates using the Earth's equator at the given date and time. |
 

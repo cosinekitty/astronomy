@@ -10,8 +10,8 @@ Selects whether to search for a rising event or a setting event for a celestial 
 
 | | |
 |---|---|
-| [Set](-set/index.md)<br>[Set](-set/index.md)(-1)<br>Indicates a setting event: a celestial body is observed to sink below the horizon by an observer on the Earth. |
 | [Rise](-rise/index.md)<br>[Rise](-rise/index.md)(+1)<br>Indicates a rising event: a celestial body is observed to rise above the horizon by an observer on the Earth. |
+| [Set](-set/index.md)<br>[Set](-set/index.md)(-1)<br>Indicates a setting event: a celestial body is observed to sink below the horizon by an observer on the Earth. |
 
 ## Properties
 

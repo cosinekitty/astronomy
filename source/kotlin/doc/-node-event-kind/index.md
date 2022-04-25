@@ -10,6 +10,6 @@ Indicates whether a crossing through the ecliptic plane is ascending or descendi
 
 | | |
 |---|---|
-| [Descending](-descending/index.md)<br>[Descending](-descending/index.md)()<br>The body passes through the ecliptic plane from north to south. |
 | [Ascending](-ascending/index.md)<br>[Ascending](-ascending/index.md)()<br>The body passes through the ecliptic plane from south to north. |
+| [Descending](-descending/index.md)<br>[Descending](-descending/index.md)()<br>The body passes through the ecliptic plane from north to south. |
 

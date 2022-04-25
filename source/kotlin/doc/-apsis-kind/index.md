@@ -10,6 +10,6 @@ The type of apsis: pericenter (closest approach) or apocenter (farthest distance
 
 | | |
 |---|---|
-| [Apocenter](-apocenter/index.md)<br>[Apocenter](-apocenter/index.md)()<br>The body is at its farthest distance from the object it orbits. |
 | [Pericenter](-pericenter/index.md)<br>[Pericenter](-pericenter/index.md)()<br>The body is at its closest approach to the object it orbits. |
+| [Apocenter](-apocenter/index.md)<br>[Apocenter](-apocenter/index.md)()<br>The body is at its farthest distance from the object it orbits. |
 

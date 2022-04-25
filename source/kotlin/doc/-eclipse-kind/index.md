@@ -10,9 +10,9 @@ The different kinds of lunar/solar eclipses.
 
 | | |
 |---|---|
-| [Total](-total/index.md)<br>[Total](-total/index.md)()<br>A total lunar/solar eclipse. |
-| [Annular](-annular/index.md)<br>[Annular](-annular/index.md)()<br>An annular solar eclipse. (Never used for a lunar eclipse.) |
-| [Partial](-partial/index.md)<br>[Partial](-partial/index.md)()<br>A partial lunar/solar eclipse. |
-| [Penumbral](-penumbral/index.md)<br>[Penumbral](-penumbral/index.md)()<br>A penumbral lunar eclipse. (Never used for a solar eclipse.) |
 | [None](-none/index.md)<br>[None](-none/index.md)()<br>No eclipse found. |
+| [Penumbral](-penumbral/index.md)<br>[Penumbral](-penumbral/index.md)()<br>A penumbral lunar eclipse. (Never used for a solar eclipse.) |
+| [Partial](-partial/index.md)<br>[Partial](-partial/index.md)()<br>A partial lunar/solar eclipse. |
+| [Annular](-annular/index.md)<br>[Annular](-annular/index.md)()<br>An annular solar eclipse. (Never used for a lunar eclipse.) |
+| [Total](-total/index.md)<br>[Total](-total/index.md)()<br>A total lunar/solar eclipse. |
 
