@@ -22,15 +22,8 @@ if ! diff test/worldmap{,_correct}.txt; then
     echo "run_worldmap: FAIL - incorrect zenith location output."
     exit 1
 fi
+
 ls -l sun_moon_map.png || exit $?
-
-if type sha256sum > /dev/null 2>&1; then
-    sha256sum -c worldmap.sha256 || exit $?
-else
-    # Some platforms (Mac OS) do not have sha256sum installed.
-    echo "run_worldmap: skipped image verification."
-fi
-
+../../generate/checksum.py sha256 worldmap.sha256 || exit $?
 echo "run_worldmap: PASS"
-
 exit 0

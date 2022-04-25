@@ -319,7 +319,7 @@ REM     A special download process helps keep the repo size reasonable for most 
     )
 
     :verify_eph
-    echo.Using checksum.bat to test integrity of downloaded !EPHFILE!
+    echo.Verifying integrity of file: !EPHFILE!
     py checksum.py sha256 !SHAFILE!
     if errorlevel 1 (
         echo.Corrupt file !EPHFILE! detected.
