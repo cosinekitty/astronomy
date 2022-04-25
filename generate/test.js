@@ -751,8 +751,8 @@ function PlanetApsis() {
             const diff_days = abs(expected_time.tt - apsis.time.tt);
             max_diff_days = max(max_diff_days, diff_days);
             const diff_degrees = (diff_days / period) * 360;
-            const degree_threshold = (body === 'Pluto') ? 0.262 : 0.1;
-            if (diff_degrees > degree_threshold) {
+            const degree_threshold = 0.1;
+            if (diff_degrees > 0.1) {
                 throw `APSIS FAIL: ${body} exceeded angular threshold (${diff_degrees} vs ${degree_threshold} degrees).`;
             }
             const diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance;

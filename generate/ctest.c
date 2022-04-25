@@ -2156,7 +2156,7 @@ static int PlanetApsis(void)
     double expected_distance;
     double period;
     double diff_days, diff_degrees, max_degrees=0.0, diff_dist_ratio;
-    double degree_threshold;
+    const double degree_threshold = 0.1;
     double max_diff_days, max_dist_ratio;
 
     start_time = Astronomy_MakeTime(1700, 1, 1, 0, 0, 0.0);
@@ -2199,7 +2199,6 @@ static int PlanetApsis(void)
             if (diff_degrees > max_degrees)
                 max_degrees = diff_degrees;
 
-            degree_threshold = (body == BODY_PLUTO) ? 0.262 : 0.1;
             if (diff_degrees > degree_threshold)
                 FAIL("C PlanetApsis: FAIL - %s exceeded angular threshold (%lg versus %lg degrees)\n", Astronomy_BodyName(body), max_degrees, degree_threshold);
 

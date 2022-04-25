@@ -1195,10 +1195,7 @@ def PlanetApsis():
                 diff_days = vabs(expected_time.tt - apsis.time.tt)
                 max_diff_days = vmax(max_diff_days, diff_days)
                 diff_degrees = (diff_days / period) * 360
-                if body == astronomy.Body.Pluto:
-                    degree_threshold = 0.262
-                else:
-                    degree_threshold = 0.1
+                degree_threshold = 0.1
                 if diff_degrees > degree_threshold:
                     print('PY PlanetApsis: FAIL - {} exceeded angular threshold ({} vs {} degrees)'.format(body.name, diff_degrees, degree_threshold))
                     return 1

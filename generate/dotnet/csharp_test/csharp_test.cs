@@ -1060,6 +1060,7 @@ namespace csharp_test
 
         static int PlanetApsisTest()
         {
+            const double degree_threshold = 0.1;
             const string testDataPath = "../../apsides";
             var start_time = new AstroTime(1700, 1, 1, 0, 0, 0);
             for (Body body = Body.Mercury; body <= Body.Pluto; ++body)
@@ -1099,7 +1100,6 @@ namespace csharp_test
                         double diff_days = abs(expected_time.tt - apsis.time.tt);
                         max_diff_days = max(max_diff_days, diff_days);
                         double diff_degrees = (diff_days / period) * 360.0;
-                        double degree_threshold = (body == Body.Pluto) ? 0.262 : 0.1;
                         if (diff_degrees > degree_threshold)
                         {
                             Console.WriteLine("C# PlanetApsis: FAIL - {0} exceeded angular threshold ({1} vs {2} degrees)", body, diff_degrees, degree_threshold);

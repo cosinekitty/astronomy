@@ -1731,12 +1731,12 @@ class Tests {
                 else -> fail("$filename line $lnum: invalid apsis kind symbol '${token[0]}'")
             }
             val correctTime = parseDate(token[1])
-            val distKm = token[2].toDouble()
+            val distanceKm = token[2].toDouble()
 
             assertEquals(kind, apsis.kind, "$filename line $lnum: wrong apsis kind.")
             val diffMinutes = MINUTES_PER_DAY * abs(apsis.time.ut - correctTime.ut)
             assertTrue(diffMinutes < 35.0, "$filename line $lnum: excessive time error = $diffMinutes minutes.")
-            val diffKm = abs(apsis.distKm - distKm)
+            val diffKm = abs(apsis.distanceKm - distanceKm)
             assertTrue(diffKm < 25.0, "$filename line $lnum: excessive distance error = $diffKm km.")
 
             apsis = nextLunarApsis(apsis)
@@ -2101,7 +2101,7 @@ class Tests {
                 val lib: LibrationInfo = libration(time)
                 val diffElon = 60.0 * abs(lib.elon - elon)
                 val diffElat = 60.0 * abs(lib.elat - elat)
-                val diffDistance = abs(lib.distKm - dist)
+                val diffDistance = abs(lib.distanceKm - dist)
                 val diffDiam = abs(lib.diamDeg - diam)
 
                 assertTrue(diffElon < 0.1304, "$filename line $lnum: excessive libration longitude error = $diffElon arcmin.")
@@ -2173,6 +2173,59 @@ class Tests {
             assertTrue(kind == node.kind, "$filename line $lnum: expected $kind node, found ${node.kind}")
 
             prevKind = token[0]
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    private fun planetOrbitalPeriod(body: Body): Double =
+        when (body) {
+            Body.Mercury  ->     87.969
+            Body.Venus    ->    224.701
+            Body.Earth    ->    365.256
+            Body.Mars     ->    686.980
+            Body.Jupiter  ->   4332.589
+            Body.Saturn   ->  10759.22
+            Body.Uranus   ->  30685.4
+            Body.Neptune  ->  60189.0
+            Body.Pluto    ->  90560.0
+            else -> fail("Invalid body $body")
+        }
+
+
+    @Test
+    fun `Search planetary apsides`() {
+        val startTime = Time(1700, 1, 1, 0, 0, 0.0)
+        val planetList = arrayOf(
+            Body.Mercury, Body.Venus, Body.Earth, Body.Mars, Body.Jupiter,
+            Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto
+        )
+        var planetIndex = 0
+        for (body in planetList) {
+            val period = planetOrbitalPeriod(body)
+            var apsis: ApsisInfo = searchPlanetApsis(body, startTime)
+            val filename = dataRootDir + "apsides/apsis_${planetIndex}.txt"
+            val infile = File(filename)
+            var lnum = 0
+            for (line in infile.readLines()) {
+                ++lnum
+                val token = tokenize(line, 3, filename, lnum)
+                val expectedKind: ApsisKind = when(token[0]) {
+                    "0" -> ApsisKind.Pericenter
+                    "1" -> ApsisKind.Apocenter
+                    else -> fail("$filename line $lnum: invalid apsis kind '${token[0]}'")
+                }
+                val expectedTime = parseDate(token[1])
+                val expectedDistance = token[2].toDouble()
+                assertTrue(expectedKind == apsis.kind, "$filename line $lnum: incorrect apsis kind ${apsis.kind} - expected $expectedKind")
+                val diffDays = abs(expectedTime.tt - apsis.time.tt)
+                val diffDegrees = (diffDays / period) * 360.0
+                assertTrue(diffDegrees < 0.1, "$filename line $lnum: excessive angular error $diffDegrees degrees.")
+                val diffDistRatio = abs(expectedDistance - apsis.distanceAu) / expectedDistance
+                assertTrue(diffDistRatio < 1.05e-4, "$filename line $lnum: excessive distance error ratio $diffDistRatio")
+                apsis = nextPlanetApsis(body, apsis)
+            }
+            ++planetIndex
         }
     }
 

@@ -1607,7 +1607,7 @@ data class LibrationInfo(
     /**
      * Distance between the centers of the Earth and Moon in kilometers.
      */
-    val distKm: Double,
+    val distanceKm: Double,
 
     /**
      * The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.
@@ -1720,13 +1720,13 @@ class ApsisInfo(
     /**
      * The distance between the centers of the bodies in astronomical units.
      */
-    val distAu: Double,
-
+    val distanceAu: Double,
+) {
     /**
      * The distance between the centers of the bodies in kilometers.
      */
-    val distKm: Double
-)
+    val distanceKm = distanceAu * KM_PER_AU
+}
 
 
 /**
@@ -6029,8 +6029,8 @@ fun searchLunarApsis(startTime: Time): ApsisInfo {
             apsisTime = search(t1, t2, 1.0) { time -> direction * moonRadialSpeed(time) } ?:
                 throw InternalError("Failed to find slope transition in lunar apsis search.")
 
-            val distAu = moonDistance(apsisTime)
-            return ApsisInfo(apsisTime, kind, distAu, distAu * KM_PER_AU)
+            val distanceAu = moonDistance(apsisTime)
+            return ApsisInfo(apsisTime, kind, distanceAu)
         }
         // We have not yet found a slope polarity change. Keep searching.
         t1 = t2
@@ -6859,8 +6859,8 @@ fun libration(time: Time): LibrationInfo {
 
     val mlon = moon.lon.degreesToRadians()
     val mlat = moon.lat.degreesToRadians()
-    val distKm = moon.dist * KM_PER_AU
-    val diamDeg = 2.0 * datan(MOON_MEAN_RADIUS_KM / sqrt(distKm*distKm - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM))
+    val distanceKm = moon.dist * KM_PER_AU
+    val diamDeg = 2.0 * datan(MOON_MEAN_RADIUS_KM / sqrt(distanceKm*distanceKm - MOON_MEAN_RADIUS_KM*MOON_MEAN_RADIUS_KM))
 
     // Inclination angle in radians = 0.026930430358272504
     val cosIncl = 0.99963739787586170
@@ -6947,7 +6947,7 @@ fun libration(time: Time): LibrationInfo {
 
     val elon = ldash - tau + (rho*cos(a) + sigma*sin(a))*tan(bdash)
     val elat = bdash.radiansToDegrees() + sigma*cos(a) - rho*sin(a)
-    return LibrationInfo(elat, elon, moon.lon, moon.lat, distKm, diamDeg)
+    return LibrationInfo(elat, elon, moon.lon, moon.lat, distanceKm, diamDeg)
 }
 
 private const val moonNodeStepDays = 10.0     // a safe number of days to step without missing a Moon node
@@ -7012,6 +7012,230 @@ fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
     if (node.kind == prevNode.kind)
         throw InternalError("Invalid repeated moon node kind: ${node.kind}")
     return node
+}
+
+
+/**
+ * Finds the first aphelion or perihelion for a planet after a given time.
+ *
+ * Given a date and time to start the search in `startTime`, this function finds the
+ * next date and time that the center of the specified planet reaches the closest or farthest point
+ * in its orbit with respect to the center of the Sun, whichever comes first,
+ * after `startTime`.
+ *
+ * The closest point is called *perihelion* and the farthest point is called *aphelion*.
+ * The word *apsis* refers to either event.
+ *
+ * To iterate through consecutive alternating perihelion and aphelion events,
+ * call `searchPlanetApsis` once, then use the return value to call
+ * [nextPlanetApsis]. After that, keep feeding the previous return value
+ * from `nextPlanetApsis` into another call of `nextPlanetApsis`
+ * as many times as desired.
+ *
+ * @param body
+ *      The planet for which to find the next perihelion/aphelion event.
+ *      Not allowed to be `Body.Sun` or `Body.Moon`.
+ *
+ * @param startTime
+ *      The date and time at which to start searching for the next perihelion or aphelion.
+ */
+fun searchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
+    // Neptune and Pluto have "wavy" orbits for which a brute force search is needed.
+    // Their orbits have multiple heliocentric distance maxima/minima clustered near each other!
+    if (body == Body.Neptune || body == Body.Pluto)
+        return bruteSearchPlanetApsis(body, startTime)
+
+    // All the other planets have singular local maxima/minima per orbit.
+    // Therefore we can use a more efficient calculus-based search.
+    val orbitPeriodDays = planetOrbitalPeriod(body)
+    val increment = orbitPeriodDays / 6.0
+    var t1 = startTime
+    var iter = 0
+    var m1 = helioDistanceSlope(body, t1)
+    while (iter * increment < 2.0 * orbitPeriodDays) {
+        val t2 = t1.addDays(increment)
+        val m2 = helioDistanceSlope(body, t2)
+        if (m1 * m2 <= 0.0) {
+            // There is a change of slope polarity within the time range [t1, t2].
+            // Therefore this time range contains an apsis.
+            // Figure out whether it is perihelion or aphelion.
+            var kind: ApsisKind
+            var direction: Double
+            if (m1 < 0.0 || m2 > 0.0) {
+                // We found a minimum-distance event: perihelion.
+                // Search the time range for the time when the slope goes from negative to positive.
+                direction = +1.0
+                kind = ApsisKind.Pericenter
+            } else if (m1 > 0.0 || m2 < 0.0) {
+                // We found a maximum-distance event: aphelion.
+                // Search the time range for the time when the slope goes from positive to negative.
+                direction = -1.0
+                kind = ApsisKind.Apocenter
+            } else {
+                // This should never happen. It should not be possible for both slopes to be zero.
+                throw InternalError("Both slopes were zero in searchPlanetApsis.")
+            }
+
+            val apsisTime = search(t1, t2, 1.0) { time ->
+                direction * helioDistanceSlope(body, time)
+            } ?: throw InternalError("Failed to find slope transition in planetary apsis search.")
+
+            val distance = helioDistance(body, apsisTime)
+            return ApsisInfo(apsisTime, kind, distance)
+        }
+        // We have not yet found a slope polarity change. Keep searching.
+        t1 = t2
+        m1 = m2
+        ++iter
+    }
+    // It should not be possible to fail to find an apsis within 2 planetary orbits.
+    throw InternalError("Should have found planetary apsis within 2 orbital periods.")
+}
+
+
+/**
+ * Finds the next planetary perihelion or aphelion event in a series.
+ *
+ * This function requires an [ApsisInfo] value obtained from a call
+ * to [searchPlanetApsis] or `nextPlanetApsis`.
+ * Given an aphelion event, this function finds the next perihelion event, and vice versa.
+ * See [searchPlanetApsis] for more details.
+ *
+ * @param body
+ *      The planet for which to find the next perihelion/aphelion event.
+ *      Not allowed to be `Body.Sun` or `Body.Moon`.
+ *      Must match the body passed into the call that produced the `apsis` parameter.
+ *
+ * @param apsis
+ *      An apsis event obtained from a call to [searchPlanetApsis] or `nextPlanetApsis`.
+ */
+fun nextPlanetApsis(body: Body, apsis: ApsisInfo): ApsisInfo {
+    // Skip 1/4 of an orbit before starting search again.
+    val time = apsis.time.addDays(planetOrbitalPeriod(body) / 4.0)
+    val next = searchPlanetApsis(body, time)
+    // Verify that we found the opposite kind of apsis from the previous one.
+    if (next.kind == apsis.kind)
+        throw InternalError("Found ${next.kind} twice in a row.")
+    return next
+}
+
+
+internal fun planetOrbitalPeriod(body: Body): Double =
+    body.orbitalPeriod ?: throw InvalidBodyException(body)
+
+
+internal fun helioDistanceSlope(body: Body, time: Time): Double {
+    val dt = 0.001
+    val t1 = time.addDays(-dt / 2.0)
+    val t2 = time.addDays(+dt / 2.0)
+    val r1 = helioDistance(body, t1)
+    val r2 = helioDistance(body, t2)
+    return (r2 - r1) / dt
+}
+
+
+internal fun bruteSearchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
+    // Neptune is a special case for two reasons:
+    // 1. Its orbit is nearly circular (low orbital eccentricity).
+    // 2. It is so distant from the Sun that the orbital period is very long.
+    // Put together, this causes wobbling of the Sun around the Solar System Barycenter (SSB)
+    // to be so significant that there are 3 local minima in the distance-vs-time curve
+    // near each apsis. Therefore, unlike for other planets, we can't use an optimized
+    // algorithm for finding dr/dt = 0.
+    // Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
+    // heliocentric distance.
+    //
+    // There is a similar problem in the TOP2013 model for Pluto:
+    // Its position vector has high-frequency oscillations that confuse the
+    // slope-based determination of apsides.
+    //
+    // Rewind approximately 30 degrees in the orbit,
+    // then search forward for 270 degrees.
+    // This is a very cautious way to prevent missing an apsis.
+    // Typically we will find two apsides, and we pick whichever
+    // apsis is ealier, but after startTime.
+    // Sample points around this orbital arc and find when the distance
+    // is greatest and smallest.
+
+    val npoints = 100
+    val period = planetOrbitalPeriod(body)
+    var t1 = startTime.addDays(period * ( -30.0 / 360.0))
+    var t2 = startTime.addDays(period * (+270.0 / 360.0))
+    var tMin = t1
+    var tMax = t1
+    val interval = (t2.ut - t1.ut) / (npoints - 1.0)
+    var maxDist = -1.0
+    var minDist = -1.0
+    for (i in 0 until npoints) {
+        val time = t1.addDays(i * interval)
+        val dist = helioDistance(body, time)
+        if (i == 0) {
+            maxDist = dist
+            minDist = dist
+        } else {
+            if (dist > maxDist) {
+                maxDist = dist
+                tMax = time
+            }
+            if (dist < minDist) {
+                minDist = dist
+                tMin = time
+            }
+        }
+    }
+
+    t1 = tMin.addDays(-2.0 * interval)
+    val perihelion = planetExtreme(body, ApsisKind.Pericenter, t1, 4.0 * interval)
+
+    t1 = tMax.addDays(-2.0 * interval)
+    val aphelion = planetExtreme(body, ApsisKind.Apocenter, t1, 4.0 * interval)
+
+    if (perihelion.time.tt >= startTime.tt) {
+        if (aphelion.time.tt >= startTime.tt) {
+            // Perihelion and aphelion are both valid. Pick the one that comes first.
+            if (aphelion.time.tt < perihelion.time.tt)
+                return aphelion
+        }
+        return perihelion
+    }
+
+    if (aphelion.time.tt >= startTime.tt)
+        return aphelion
+
+    throw InternalError("Failed to find apsis for $body.")
+}
+
+
+internal fun planetExtreme(body: Body, kind: ApsisKind, startTime: Time, initDaySpan: Double): ApsisInfo {
+    val direction = when (kind) {
+        ApsisKind.Apocenter  -> +1.0
+        ApsisKind.Pericenter -> -1.0
+    }
+    val npoints = 10
+    var searchTime = startTime
+    var daySpan = initDaySpan
+    while (true) {
+        val interval = daySpan / (npoints - 1)
+        if (interval < 1.0 / 1440.0) {      // iterate until uncertainty is less than one minute
+            val apsisTime = searchTime.addDays(interval / 2.0)
+            val distance = helioDistance(body, apsisTime)
+            return ApsisInfo(apsisTime, kind, distance)
+        }
+        var bestI = -1
+        var bestDistance = 0.0
+        for (i in 0 until npoints) {
+            val time = searchTime.addDays(i * interval)
+            val distance = direction * helioDistance(body, time)
+            if (i==0 || distance > bestDistance) {
+                bestI = i
+                bestDistance = distance
+            }
+        }
+
+        // Narrow in on the extreme point.
+        searchTime = searchTime.addDays((bestI - 1) * interval)
+        daySpan = 2.0 * interval
+    }
 }
 
 
