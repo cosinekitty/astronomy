@@ -12,6 +12,23 @@ import re
 import shutil
 
 
+SymbolsWithUnwantedArgs = [
+    'SSB',
+    'EMB',
+    'Moon',
+    'Sun',
+    'Mercury',
+    'Venus',
+    'Earth',
+    'Mars',
+    'Jupiter',
+    'Saturn',
+    'Uranus',
+    'Neptune',
+    'Pluto'
+]
+
+
 def RemoveJvmTags(text):
     fix = text.replace(' | [jvm]', '')
     fix = fix.replace('[jvm]\\\n', '')
@@ -39,9 +56,44 @@ def RemoveEnumProperties(text):
     return text
 
 
+def RemovePrivateConstructors(text):
+    # enum class Body contains a private constructor where members
+    # can initialize their internal properties.
+    # This is leaking into the dokkaGfm output.
+    # I submitted the following issue about this:
+    # https://github.com/Kotlin/dokka/issues/2468
+    # Example:
+    # | [Saturn](-saturn/index.md) | [jvm]<br>[Saturn](-saturn/index.md)(SATURN_GM, 10759.22, VsopModel(vsopLonSaturn, vsopLatSaturn, vsopRadSaturn))<br>The planet Saturn. |
+    # should be converted to:
+    # | [Saturn](-saturn/index.md) | [jvm]<br>The planet Saturn. |
+    fix = text
+    for sym in SymbolsWithUnwantedArgs:
+        prefix = '<br>[' + sym + ']'
+        front = fix.find(prefix)
+        if front >= 0:
+            # Chop out the entire section that contains the unwanted constructor call.
+            back = fix.find('<br>', front + len(prefix))
+            if back > front:
+                fix = fix[:front] + fix[back:]
+
+        # Another case: the individual enum member has its own index.md file.
+        # This has an unwanted constructor call.
+        if ('# ' + sym + '\n') in fix:
+            prefix = '\n[' + sym + '](index.md)('
+            front = fix.find(prefix)
+            if front >= 0:
+                suffix = '\n'
+                back = fix.find(suffix, front + len(prefix))
+                if back > front:
+                    fix = fix[:front] + fix[back + len(suffix):]
+
+    return fix
+
+
 def FixMarkdown(text):
     fix = RemoveEnumProperties(text)
     fix = RemoveJvmTags(fix)
+    fix = RemovePrivateConstructors(fix)
     return fix
 
 

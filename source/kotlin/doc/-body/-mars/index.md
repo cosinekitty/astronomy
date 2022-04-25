@@ -2,7 +2,5 @@
 
 # Mars
 
-[Mars](index.md)(MARS_GM, 686.98, VsopModel(vsopLonMars, vsopLatMars, vsopRadMars))
-
 The planet Mars.
 

@@ -2,7 +2,5 @@
 
 # Neptune
 
-[Neptune](index.md)(NEPTUNE_GM, NEPTUNE_ORBITAL_PERIOD, VsopModel(vsopLonNeptune, vsopLatNeptune, vsopRadNeptune))
-
 The planet Neptune.
 

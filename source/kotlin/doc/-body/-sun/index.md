@@ -2,7 +2,5 @@
 
 # Sun
 
-[Sun](index.md)(SUN_GM, null, null)
-
 The Sun.
 

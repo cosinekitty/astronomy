@@ -2,7 +2,5 @@
 
 # Saturn
 
-[Saturn](index.md)(SATURN_GM, 10759.22, VsopModel(vsopLonSaturn, vsopLatSaturn, vsopRadSaturn))
-
 The planet Saturn.
 

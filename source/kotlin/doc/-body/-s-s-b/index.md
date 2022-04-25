@@ -2,7 +2,5 @@
 
 # SSB
 
-[SSB](index.md)(null, null, null)
-
 The Solar System Barycenter.
 
