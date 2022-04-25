@@ -320,12 +320,9 @@ REM     A special download process helps keep the repo size reasonable for most 
 
     :verify_eph
     echo.Using checksum.bat to test integrity of downloaded !EPHFILE!
-    call checksum.bat sha256 !SHAFILE!
-    if errorlevel 2 (
-        echo.Error verifying checksum for !EPHFILE!.
-        exit /b 1
-    ) else if errorlevel 1 (
-        echo.Corrupt ephemeris file !EPHFILE! detected.
+    py checksum.py sha256 !SHAFILE!
+    if errorlevel 1 (
+        echo.Corrupt file !EPHFILE! detected.
         if exist !EPHFILE! (del !EPHFILE!)
         exit /b 1
     )
