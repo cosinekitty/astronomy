@@ -16,8 +16,6 @@ A date and time that is conceptually equal to time + days.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | days | A floating point number of days by which to adjust time. May be negative, 0, or positive. |

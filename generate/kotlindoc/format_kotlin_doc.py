@@ -34,6 +34,7 @@ SymbolsWithUnwantedArgs = [
 def RemoveJvmTags(text):
     fix = text.replace(' | [jvm]', '')
     fix = fix.replace('[jvm]\\\n', '')
+    fix = fix.replace('\njvm\n', '')
     return fix
 
 

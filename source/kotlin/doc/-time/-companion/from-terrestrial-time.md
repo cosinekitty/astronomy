@@ -13,8 +13,6 @@ This function can be used in rare cases where a time must be based on Terrestria
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | tt | The number of days after the J2000 epoch. |

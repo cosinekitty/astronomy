@@ -18,8 +18,6 @@ Information about the first solar eclipse visible at the specified observer loca
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | startTime | The date and time for starting the search for a solar eclipse. |

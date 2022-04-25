@@ -20,8 +20,6 @@ A vector from the center of the Earth to this geographic location.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time for which to calculate the observer's position vector. |

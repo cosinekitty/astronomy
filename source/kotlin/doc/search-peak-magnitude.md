@@ -10,8 +10,6 @@ This function searches for the date and time Venus appears brightest as seen fro
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | Currently only `Body.Venus` is allowed. Any other value causes an exception. |

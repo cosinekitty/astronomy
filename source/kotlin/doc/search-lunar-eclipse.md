@@ -14,8 +14,6 @@ Information about the first lunar eclipse that occurs after startTime.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | startTime | The date and time for starting the search for a lunar eclipse. |

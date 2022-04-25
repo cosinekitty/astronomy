@@ -14,8 +14,6 @@ A structure that contains the 3-letter abbreviation and full name of the constel
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | ra | The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ). |

@@ -10,8 +10,6 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time at which the Earth's equator defines the source orientation. |

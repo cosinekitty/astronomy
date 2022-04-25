@@ -10,8 +10,6 @@ Given an altitude angle and a refraction option, calculates the amount of "lift"
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | refraction | The option selecting which refraction correction to use.     If `Refraction.Normal`, uses a well-behaved refraction model that works well for     all valid values (-90 to +90) of `altitude`.     If `Refraction.JplHor`, this function returns a compatible value with the JPL Horizons tool.     If any other value, including `Refraction.None`, this function returns 0. |

@@ -8,8 +8,6 @@ Combines a position vector and a velocity vector into a single state vector.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | pos | A position vector. |

@@ -18,8 +18,6 @@ The ecliptic coordinates of the Sun using the Earth's true equator of date.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time for which to calculate the Sun's position. |

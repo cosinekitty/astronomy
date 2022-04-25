@@ -14,8 +14,6 @@ A [MoonQuarterInfo](-moon-quarter-info/index.md) object reporting the next quart
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | startTime | The date and time at which to start the search. |

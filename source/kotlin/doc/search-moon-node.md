@@ -10,8 +10,6 @@ Searches for the first ascending or descending node of the Moon after startTime.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | startTime | The date and time for starting the search for an ascending or descending node of the Moon. |

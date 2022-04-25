@@ -14,8 +14,6 @@ A rotation matrix that converts HOR to EQD at time and for observer.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time at which the Earth's equator applies. |

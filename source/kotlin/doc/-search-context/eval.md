@@ -12,8 +12,6 @@ The floating point value of the scalar function at the given time.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The time at which to evaluate the function. |

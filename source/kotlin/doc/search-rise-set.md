@@ -18,8 +18,6 @@ On success, returns the date and time of the rise or set time as requested. If t
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The Sun, Moon, or any planet other than the Earth. |

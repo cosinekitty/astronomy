@@ -18,8 +18,6 @@ The heliocentric position vector of the center of the given body.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | A body for which to calculate a heliocentric position:     the Sun, Moon, EMB, SSB, or any of the planets. |

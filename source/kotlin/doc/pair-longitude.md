@@ -20,8 +20,6 @@ An angle in the range [0, 360), expressed in degrees.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body1 | The first body, whose longitude is to be found relative to the second body. |

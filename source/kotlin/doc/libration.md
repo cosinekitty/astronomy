@@ -18,8 +18,6 @@ The Moon's ecliptic position and libration angles as seen from the Earth.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time for which to calculate lunar libration. |

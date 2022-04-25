@@ -10,8 +10,6 @@ Finds the first transit of Mercury or Venus after a specified date. A transit is
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |

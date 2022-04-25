@@ -14,8 +14,6 @@ The effective gravitational acceleration expressed in meters per second squared.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | latitude | The latitude of the observer in degrees north or south of the equator.     By formula symmetry, positive latitudes give the same answer as negative     latitudes, so the sign does not matter. |

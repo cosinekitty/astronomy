@@ -14,8 +14,6 @@ The angle in degrees between the Sun and the specified body as seen from the cen
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The celestial body whose angle from the Sun is to be measured.     Not allowed to be `Body.Earth`. |

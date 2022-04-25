@@ -14,8 +14,6 @@ A state vector that contains heliocentric position and velocity vectors. The pos
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The celestial body whose heliocentric state vector is to be calculated. Supported values are Body.Sun, Body.Moon, Body.EMB, Body.SSB, and all planets: Body.Mercury, Body.Venus, Body.Earth, Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto. |

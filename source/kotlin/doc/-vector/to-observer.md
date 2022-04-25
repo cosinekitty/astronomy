@@ -14,8 +14,6 @@ The geographic coordinates corresponding to the vector.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | equator | Selects the date of the Earth's equator in which this vector is expressed.     The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator     at noon UTC on January 1, 2000, in which case this function corrects for precession     and nutation of the Earth as it was at the moment specified by the time `this.t`.     Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `this.t`     as the orientation. |

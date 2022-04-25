@@ -10,8 +10,6 @@ After calling [searchTransit](search-transit.md) to find a transit of Mercury or
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |

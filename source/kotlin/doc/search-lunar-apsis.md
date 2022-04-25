@@ -14,8 +14,6 @@ To iterate through consecutive alternating perigee and apogee events, call searc
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | startTime | The date and time at which to start searching for the next perigee or apogee. |

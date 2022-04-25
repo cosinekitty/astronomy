@@ -14,8 +14,6 @@ Information about the next lunar eclipse in a series.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | prevEclipseTime | A time near a full moon. Lunar eclipse search will start at the next full moon. |

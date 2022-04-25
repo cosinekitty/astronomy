@@ -18,8 +18,6 @@ If successful, returns the date and time the moon reaches the phase specified by
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | targetLon | The difference in geocentric longitude between the Sun and Moon     that specifies the lunar phase being sought. This can be any value     in the range [0, 360).  Certain values have conventional names:     0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter. |

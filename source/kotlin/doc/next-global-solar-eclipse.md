@@ -14,8 +14,6 @@ Information about the next consecutive solar eclipse.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | prevEclipseTime | A date and time near a new moon. Solar eclipse search will start at the next new moon. |

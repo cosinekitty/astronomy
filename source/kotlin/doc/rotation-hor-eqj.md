@@ -12,8 +12,6 @@ A rotation matrix that converts HOR to EQJ at time and for observer.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time of the observation. |

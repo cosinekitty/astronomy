@@ -10,8 +10,6 @@ Creates a Time object from a UTC year, month, day, hour, minute and second.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | year | The UTC year value. |

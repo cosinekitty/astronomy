@@ -28,8 +28,6 @@ If successful, returns an [Time](-time/index.md) value indicating a date and tim
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | func | The function for which to find the time of an ascending root.     See remarks above for more details. |

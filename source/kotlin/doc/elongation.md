@@ -17,8 +17,6 @@ This function returns an [ElongationInfo](-elongation-info/index.md) object, whi
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The celestial body whose visibility is to be calculated. |

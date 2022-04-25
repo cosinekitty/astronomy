@@ -20,8 +20,6 @@ The position and velocity of this observer with respect to the Earth's center.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time for which to calculate the observer's position vector. |

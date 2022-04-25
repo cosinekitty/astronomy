@@ -14,8 +14,6 @@ A rotation matrix that converts ECL to EQD.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time of the desired equator. |

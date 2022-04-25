@@ -14,8 +14,6 @@ The moon quarter that occurs next in time after the one passed in mq.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | The | previous moon quarter found by a call to [searchMoonQuarter](search-moon-quarter.md) or nextMoonQuarter. |

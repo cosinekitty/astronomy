@@ -10,8 +10,6 @@ This function transforms a vector in one orientation to a vector in another orie
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | vec | The vector whose orientation is to be changed. |
@@ -23,8 +21,6 @@ Applies a rotation to a state vector, yielding a rotated state vector.
 This function transforms a state vector in one orientation to a state vector in another orientation. The resulting state vector has both position and velocity reoriented.
 
 ## Parameters
-
-jvm
 
 | | |
 |---|---|

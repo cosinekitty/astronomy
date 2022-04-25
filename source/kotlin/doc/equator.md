@@ -20,8 +20,6 @@ Topocentric equatorial coordinates of the celestial body.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The celestial body to be observed. Not allowed to be `Body.Earth`. |

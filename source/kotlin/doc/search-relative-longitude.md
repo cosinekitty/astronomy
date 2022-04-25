@@ -21,8 +21,6 @@ Certain astronomical events are defined in terms of relative longitude between t
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | A planet other than the Earth. Any other body will cause an exception. |

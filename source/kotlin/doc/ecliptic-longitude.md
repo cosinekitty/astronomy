@@ -14,8 +14,6 @@ The ecliptic longitude in degrees of the given body at the given time.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | A body other than the Sun. |

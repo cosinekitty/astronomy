@@ -14,8 +14,6 @@ To iterate through consecutive alternating perihelion and aphelion events, call 
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The planet for which to find the next perihelion/aphelion event.     Not allowed to be `Body.Sun` or `Body.Moon`. |

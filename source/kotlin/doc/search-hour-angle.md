@@ -20,8 +20,6 @@ The time when the body reaches the hour angle, and the horizontal coordinates of
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The celestial body, which can the Sun, the Moon, or any planet other than the Earth. |

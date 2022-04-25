@@ -14,8 +14,6 @@ The heliocentric distance in AU.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | A body for which to calculate a heliocentric distance:     the Sun, Moon, EMB, SSB, or any of the planets. |

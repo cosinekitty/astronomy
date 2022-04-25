@@ -14,8 +14,6 @@ The EMB's position and velocity vectors in geocentric J2000 equatorial coordinat
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time for which to calculate the EMB vectors. |

@@ -14,8 +14,6 @@ A rotation matrix that converts HOR to ECL.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time of the horizontal observation. |

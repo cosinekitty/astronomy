@@ -10,8 +10,6 @@ Call [searchMoonNode](search-moon-node.md) to find the first of a series of node
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | prevNode | The previous node found from calling [searchMoonNode] or `nextMoonNode`. |

@@ -10,8 +10,6 @@ Given a date and time, this function calculates the rotation of the Earth, repre
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time for which to find GAST.     As an optimization, this function caches the sideral time value in `time`,     unless it has already been cached, in which case the cached value is reused. |

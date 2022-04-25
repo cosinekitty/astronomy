@@ -12,8 +12,6 @@ This function solves for those times, reporting the next maximum elongation even
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception.     To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)     use [searchRelativeLongitude] to find the next opposition event. |

@@ -20,8 +20,6 @@ North pole orientation and body spin angle.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | One of the following values:     `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,     `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |

@@ -14,8 +14,6 @@ The mass product of the given body in au^3/day^2.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The body for which to find the GM product.     Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.     Any other value will cause an exception to be thrown. |

@@ -12,8 +12,6 @@ For example, if you have rotation matrix that converts ecliptic coordinates (ECL
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | axis | An integer that selects which coordinate axis to rotate around:     0 = x, 1 = y, 2 = z. Any other value will cause an exception. |

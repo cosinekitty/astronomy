@@ -14,8 +14,6 @@ A rotation matrix that converts ECL to HOR at time and for observer. The compone
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time of the desired horizontal orientation. |

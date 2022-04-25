@@ -18,8 +18,6 @@ The body's apparent horizontal coordinates and equatorial coordinates, both opti
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time of the observation. |

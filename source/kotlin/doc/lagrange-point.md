@@ -22,8 +22,6 @@ The position and velocity of the selected Lagrange point with respect to the maj
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | point | An integer 1..5 that selects which of the Lagrange points to calculate. |

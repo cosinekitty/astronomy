@@ -22,8 +22,6 @@ The date and time of the altitude event, or null if no such event occurs within 
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The Sun, Moon, or any planet other than the Earth. |

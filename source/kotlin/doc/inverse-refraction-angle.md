@@ -10,8 +10,6 @@ Given an observed altitude angle that includes atmospheric refraction, calculate
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | refraction | The option selecting which refraction correction to use. |

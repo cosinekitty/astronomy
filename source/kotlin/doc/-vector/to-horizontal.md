@@ -21,8 +21,6 @@ The distance to the observed object is stored in dist, and is expressed in astro
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | refraction | `Refraction.None`: no atmospheric refraction correction is performed.     `Refraction.Normal`: correct altitude for atmospheric refraction.     `Refraction.JplHor`: for JPL Horizons compatibility testing only; not recommended for normal use. |

@@ -10,8 +10,6 @@ Given spherical coordinates and a time at which they are valid, returns a vector
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The time that should be included in the return value. |

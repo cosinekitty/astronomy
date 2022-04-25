@@ -23,8 +23,6 @@ The angle as described above, a value in the range 0..360 degrees.
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time of the observation. |

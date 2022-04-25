@@ -14,8 +14,6 @@ A vector in the horizontal system: x = north, y = west, and z = zenith (up).
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | time | The date and time of the observation. This is needed because the returned     [Vector] requires a valid time value when passed to certain other functions. |

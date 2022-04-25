@@ -14,8 +14,6 @@ When the body is Saturn, the returned structure contains a field ringTilt that h
 
 ## Parameters
 
-jvm
-
 | | |
 |---|---|
 | body | The Sun, Moon, or any planet other than the Earth. |
