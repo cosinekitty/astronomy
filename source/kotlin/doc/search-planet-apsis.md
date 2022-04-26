@@ -16,5 +16,5 @@ To iterate through consecutive alternating perihelion and aphelion events, call 
 
 | | |
 |---|---|
-| body | The planet for which to find the next perihelion/aphelion event.     Not allowed to be `Body.Sun` or `Body.Moon`. |
+| body | The planet for which to find the next perihelion/aphelion event.     Not allowed to be [Body.Sun] or [Body.Moon]. |
 | startTime | The date and time at which to start searching for the next perihelion or aphelion. |

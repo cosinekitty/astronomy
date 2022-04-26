@@ -12,7 +12,7 @@ The enumeration of celestial bodies supported by Astronomy Engine.
 |---|---|
 | [Mercury](-mercury/index.md)<br>The planet Mercury. |
 | [Venus](-venus/index.md)<br>The planet Venus. |
-| [Earth](-earth/index.md)<br>The planet Earth. Some functions that accept a Body parameter will fail if passed this value because they assume that an observation is being made from the Earth, and therefore the Earth is not a target of observation. |
+| [Earth](-earth/index.md)<br>The planet Earth. |
 | [Mars](-mars/index.md)<br>The planet Mars. |
 | [Jupiter](-jupiter/index.md)<br>The planet Jupiter. |
 | [Saturn](-saturn/index.md)<br>The planet Saturn. |

@@ -262,6 +262,7 @@ enum class Body(
 
     /**
      * The planet Earth.
+     *
      * Some functions that accept a `Body` parameter will fail if passed this value
      * because they assume that an observation is being made from the Earth,
      * and therefore the Earth is not a target of observation.
@@ -346,6 +347,11 @@ enum class Body(
 
     /**
      * The Earth/Moon Barycenter.
+     *
+     * This is the common center of gravity between the Earth and Moon,
+     * and is the point that both bodies co-orbit. The EMB is located about 4670 km
+     * away from the center of the Earth in the direction toward the Moon's center.
+     * Thus the EMB is always inside the Earth.
      */
     EMB(
         EARTH_GM + MOON_GM,
@@ -355,6 +361,13 @@ enum class Body(
 
     /**
      * The Solar System Barycenter.
+     *
+     * This is the Solar System's center of gravity, about which the Sun
+     * and all the planets revolve. The SSB is sometimes inside the Sun,
+     * sometimes outside the Sun, depending mainly on the relative positions
+     * of the four most massive planets: Jupiter, Saturn, Uranus, and Neptune.
+     * The SSB serves as an inertial reference point that is ideal for
+     * simulating the movement of objects in the Solar System.
      */
     SSB(
         null,
@@ -4132,8 +4145,8 @@ private fun earthRotationAxis(time: Time): AxisInfo {
  *
  * @param body
  *      One of the following values:
- *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`,
- *      `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *      [Body.Sun], [Body.Moon], [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars],
+ *      [Body.Jupiter], [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
  *
  * @param time
  *      The time at which to calculate the body's rotation axis.
@@ -4554,10 +4567,10 @@ fun helioDistance(body: Body, time: Time): Double =
  * of reference, consider using [baryState] instead.
  *
  * @param body
- * The celestial body whose heliocentric state vector is to be calculated.
- * Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
- * `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
- * `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *      The celestial body whose heliocentric state vector is to be calculated.
+ *      Supported values are [Body.Sun], [Body.Moon], [Body.EMB], [Body.SSB], and all planets:
+ *      [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars], [Body.Jupiter],
+ *      [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
  *
  * @param time
  *      The date and time for which to calculate position and velocity.
@@ -4589,9 +4602,9 @@ fun helioState(body: Body, time: Time): StateVector =
  *
  * @param body
  *      The celestial body whose barycentric state vector is to be calculated.
- *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
- *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
- *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *      Supported values are [Body.Sun], [Body.Moon], [Body.EMB], [Body.SSB], and all planets:
+ *      [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars], [Body.Jupiter],
+ *      [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
  *
  * @param time
  *      The date and time for which to calculate position and velocity.
@@ -4748,7 +4761,7 @@ fun geoVector(body: Body, time: Time, aberration: Aberration): Vector {
  * Correction for aberration is optional, using the `aberration` parameter.
  *
  * @param body
- *      The celestial body to be observed. Not allowed to be `Body.Earth`.
+ *      The celestial body to be observed. Not allowed to be [Body.Earth].
  *
  * @param time
  *      The date and time at which the observation takes place.
@@ -5076,7 +5089,7 @@ fun searchRelativeLongitude(body: Body, targetRelativeLongitude: Double, startTi
  * To continue the search, pass the `finish` time in the returned object to [nextTransit].
  *
  * @param body
- *      The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
+ *      The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
  *
  * @param startTime
  *      The date and time for starting the search for a transit.
@@ -5136,7 +5149,7 @@ fun searchTransit(body: Body, startTime: Time): TransitInfo {
  * Keep calling this function as many times as you want to keep finding more transits.
  *
  * @param body
- *      The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
+ *      The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
  *
  * @param prevTransitTime
  *      A date and time near the previous transit.
@@ -5156,7 +5169,7 @@ fun nextTransit(body: Body, prevTransitTime: Time) =
  * velocity components are in AU/day.
  *
  * To convert to heliocentric position vectors, call [helioVector]
- * with `Body.Jupiter` to get Jupiter's heliocentric position, then
+ * with [Body.Jupiter] to get Jupiter's heliocentric position, then
  * add the jovicentric positions. Likewise, you can call [geoVector]
  * to convert to geocentric positions; however, you will have to manually
  * correct for light travel time from the Jupiter system to Earth to
@@ -5521,7 +5534,7 @@ private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int)
  * When the angle is 180 degrees, it means the two bodies appear on opposite sides
  * of the sky for an Earthly observer.
  *
- * Neither `body1` nor `body2` is allowed to be `Body.Earth`.
+ * Neither `body1` nor `body2` is allowed to be [Body.Earth].
  * If this happens, the function throws an exception.
  *
  * @param body1 The first body, whose longitude is to be found relative to the second body.
@@ -5942,7 +5955,7 @@ fun searchAltitude(
  *
  * @param body
  *      The celestial body whose angle from the Sun is to be measured.
- *      Not allowed to be `Body.Earth`.
+ *      Not allowed to be [Body.Earth].
  *
  * @param time
  *      The time at which the observation is made.
@@ -6122,7 +6135,7 @@ private fun negativeElongationSlope(body: Body, time: Time): Double {
  * observed in the morning or evening. See [elongation] for more details about the returned structure.
  *
  * @param body
- *      Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception.
+ *      Either [Body.Mercury] or [Body.Venus]. Any other value will result in an exception.
  *      To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)
  *      use [searchRelativeLongitude] to find the next opposition event.
  *
@@ -6432,7 +6445,7 @@ internal fun magnitudeSlope(body: Body, time: Time): Double {
  * However, the difference is minor and has little practical value.
  *
  * @param body
- *      Currently only `Body.Venus` is allowed. Any other value causes an exception.
+ *      Currently only [Body.Venus] is allowed. Any other value causes an exception.
  *
  * @param startTime
  *      The date and time to start searching for the next peak magnitude event.
@@ -6577,11 +6590,11 @@ fun observerGravity(latitude: Double, height: Double): Double {
  * in equatorial J2000 coordinates (EQJ), with respect to the center of the
  * major body.
  *
- * To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `majorBody`
- * and `Body.EMB` (Earth/Moon barycenter) for `minorBody`.
+ * To calculate Sun/Earth Lagrange points, pass in [Body.Sun] for `majorBody`
+ * and [Body.EMB] (Earth/Moon barycenter) for `minorBody`.
  * For Lagrange points of the Sun and any other planet, pass in just that planet
- * (e.g. `Body.Jupiter`) for `minorBody`.
- * To calculate Earth/Moon Lagrange points, pass in `Body.Earth` and `Body.Moon`
+ * (e.g. [Body.Jupiter]) for `minorBody`.
+ * To calculate Earth/Moon Lagrange points, pass in [Body.Earth] and [Body.Moon]
  * for the major and minor bodies respectively.
  *
  * In some cases, it may be more efficient to call [lagrangePointFast],
@@ -6595,7 +6608,7 @@ fun observerGravity(latitude: Double, height: Double): Double {
  *      The time for which the Lagrange point is to be calculated.
  *
  * @param majorBody
- *      The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`.
+ *      The more massive of the co-orbiting bodies: [Body.Sun] or [Body.Earth].
  *
  * @param minorBody
  *      The less massive of the co-orbiting bodies. See main remarks.
@@ -7034,7 +7047,7 @@ fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
  *
  * @param body
  *      The planet for which to find the next perihelion/aphelion event.
- *      Not allowed to be `Body.Sun` or `Body.Moon`.
+ *      Not allowed to be [Body.Sun] or [Body.Moon].
  *
  * @param startTime
  *      The date and time at which to start searching for the next perihelion or aphelion.
@@ -7103,7 +7116,7 @@ fun searchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
  *
  * @param body
  *      The planet for which to find the next perihelion/aphelion event.
- *      Not allowed to be `Body.Sun` or `Body.Moon`.
+ *      Not allowed to be [Body.Sun] or [Body.Moon].
  *      Must match the body passed into the call that produced the `apsis` parameter.
  *
  * @param apsis

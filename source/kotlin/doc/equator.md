@@ -22,7 +22,7 @@ Topocentric equatorial coordinates of the celestial body.
 
 | | |
 |---|---|
-| body | The celestial body to be observed. Not allowed to be `Body.Earth`. |
+| body | The celestial body to be observed. Not allowed to be [Body.Earth]. |
 | time | The date and time at which the observation takes place. |
 | observer | A location on or near the surface of the Earth. |
 | equdate | Selects the date of the Earth's equator in which to express the equatorial coordinates. |

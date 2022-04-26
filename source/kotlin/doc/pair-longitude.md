@@ -12,7 +12,7 @@ The angle is 0 when the two bodies are at the same ecliptic longitude as seen fr
 
 When the angle is 180 degrees, it means the two bodies appear on opposite sides of the sky for an Earthly observer.
 
-Neither body1 nor body2 is allowed to be Body.Earth. If this happens, the function throws an exception.
+Neither body1 nor body2 is allowed to be [Body.Earth](-body/-earth/index.md). If this happens, the function throws an exception.
 
 #### Return
 

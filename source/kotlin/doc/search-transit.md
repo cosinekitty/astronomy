@@ -12,5 +12,5 @@ Finds the first transit of Mercury or Venus after a specified date. A transit is
 
 | | |
 |---|---|
-| body | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
+| body | The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus]. |
 | startTime | The date and time for starting the search for a transit. |
