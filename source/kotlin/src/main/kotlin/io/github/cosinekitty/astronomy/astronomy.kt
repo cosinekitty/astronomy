@@ -3235,7 +3235,7 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
     val segIndex = clampIndex((tt - plutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1)
     return synchronized(plutoCache) {
         plutoCache.getOrPut(segIndex) {
-            val seg = ArrayList<BodyGravCalc>()
+            val seg = mutableListOf<BodyGravCalc>()
 
             // The first endpoint is exact.
             var sim = gravFromState(plutoStateTable[segIndex])
@@ -3254,18 +3254,18 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
             seg.add(sim.grav)
 
             // Simulate backwards from the upper time bound.
-            val backward = ArrayList<BodyGravCalc>()
-            backward.add(sim.grav)
+            val reverse = buildList {
+                add(sim.grav)
 
-            steptt = sim.grav.tt
-            for (i in (PLUTO_NSTEPS-2) downTo 1) {
-                steptt -= PLUTO_DT
-                sim = simulateGravity(steptt, sim.grav)
-                backward.add(sim.grav)
-            }
+                steptt = sim.grav.tt
+                for (i in (PLUTO_NSTEPS-2) downTo 1) {
+                    steptt -= PLUTO_DT
+                    sim = simulateGravity(steptt, sim.grav)
+                    add(sim.grav)
+                }
 
-            backward.add(seg[0])
-            val reverse = backward.reversed()
+                add(seg[0])
+            }.reversed()
 
             // Fade-mix the two series so that there are no discontinuities.
             for (i in (PLUTO_NSTEPS-2) downTo 1) {
@@ -8625,7 +8625,7 @@ private val plutoStateTable: Array<BodyState> = arrayOf(
 ,   BodyState(  700800.0, TerseVector(-15.576200701394,  34.399412961275,  15.466033737854), TerseVector(-2.0098814612884e-03, -1.7191109825989e-03,  7.0414782780416e-05))
 ,   BodyState(  730000.0, TerseVector(  4.243252837090, -30.118201690825, -10.707441231349), TerseVector( 3.1725847067411e-03,  1.6098461202270e-04, -9.0672150593868e-04))
 )
-private val plutoCache = HashMap<Int, List<BodyGravCalc>>()
+private val plutoCache = mutableMapOf<Int, List<BodyGravCalc>>()
 
 //---------------------------------------------------------------------------------------
 // Models for Jupiter's four largest moons.

@@ -3235,7 +3235,7 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
     val segIndex = clampIndex((tt - plutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1)
     return synchronized(plutoCache) {
         plutoCache.getOrPut(segIndex) {
-            val seg = ArrayList<BodyGravCalc>()
+            val seg = mutableListOf<BodyGravCalc>()
 
             // The first endpoint is exact.
             var sim = gravFromState(plutoStateTable[segIndex])
@@ -3254,18 +3254,18 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
             seg.add(sim.grav)
 
             // Simulate backwards from the upper time bound.
-            val backward = ArrayList<BodyGravCalc>()
-            backward.add(sim.grav)
+            val reverse = buildList {
+                add(sim.grav)
 
-            steptt = sim.grav.tt
-            for (i in (PLUTO_NSTEPS-2) downTo 1) {
-                steptt -= PLUTO_DT
-                sim = simulateGravity(steptt, sim.grav)
-                backward.add(sim.grav)
-            }
+                steptt = sim.grav.tt
+                for (i in (PLUTO_NSTEPS-2) downTo 1) {
+                    steptt -= PLUTO_DT
+                    sim = simulateGravity(steptt, sim.grav)
+                    add(sim.grav)
+                }
 
-            backward.add(seg[0])
-            val reverse = backward.reversed()
+                add(seg[0])
+            }.reversed()
 
             // Fade-mix the two series so that there are no discontinuities.
             for (i in (PLUTO_NSTEPS-2) downTo 1) {
@@ -7635,7 +7635,7 @@ private fun addSolarTerms(context: MoonContext) {$ASTRO_ADDSOL()}
 // Pluto state table
 
 $ASTRO_PLUTO_TABLE()
-private val plutoCache = HashMap<Int, List<BodyGravCalc>>()
+private val plutoCache = mutableMapOf<Int, List<BodyGravCalc>>()
 
 //---------------------------------------------------------------------------------------
 // Models for Jupiter's four largest moons.
