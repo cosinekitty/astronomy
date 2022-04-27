@@ -26,5 +26,5 @@ The position and velocity of the selected Lagrange point with respect to the maj
 |---|---|
 | point | An integer 1..5 that selects which of the Lagrange points to calculate. |
 | time | The time for which the Lagrange point is to be calculated. |
-| majorBody | The more massive of the co-orbiting bodies: [Body.Sun] or [Body.Earth]. |
+| majorBody | The more massive of the co-orbiting bodies: [Body.Sun](-body/-sun/index.md) or [Body.Earth](-body/-earth/index.md). |
 | minorBody | The less massive of the co-orbiting bodies. See main remarks. |

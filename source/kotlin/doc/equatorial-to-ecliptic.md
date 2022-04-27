@@ -16,4 +16,4 @@ Ecliptic coordinates in the J2000 frame of reference (ECL).
 
 | | |
 |---|---|
-| equ | Equatorial coordinates in the J2000 frame of reference.     You can call [geoVector] to obtain suitable equatorial coordinates. |
+| equ | Equatorial coordinates in the J2000 frame of reference. You can call [geoVector](geo-vector.md) to obtain suitable equatorial coordinates. |

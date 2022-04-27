@@ -24,4 +24,4 @@ The body's apparent horizontal coordinates and equatorial coordinates, both opti
 | observer | The geographic location of the observer. |
 | ra | The right ascension of the body in sidereal hours. See remarks above for more details. |
 | dec | The declination of the body in degrees. See remarks above for more details. |
-| refraction | Selects whether to correct for atmospheric refraction, and if so, which model to use.     The recommended value for most uses is `Refraction.Normal`.     See remarks above for more details. |
+| refraction | Selects whether to correct for atmospheric refraction, and if so, which model to use. The recommended value for most uses is Refraction.Normal. See remarks above for more details. |

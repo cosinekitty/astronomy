@@ -16,5 +16,5 @@ The effective gravitational acceleration expressed in meters per second squared.
 
 | | |
 |---|---|
-| latitude | The latitude of the observer in degrees north or south of the equator.     By formula symmetry, positive latitudes give the same answer as negative     latitudes, so the sign does not matter. |
-| height | The height above the sea level geoid in meters.     No range checking is done; however, accuracy is only valid in the     range 0 to 100000 meters. |
+| latitude | The latitude of the observer in degrees north or south of the equator. By formula symmetry, positive latitudes give the same answer as negative latitudes, so the sign does not matter. |
+| height | The height above the sea level geoid in meters. No range checking is done; however, accuracy is only valid in the range 0 to 100000 meters. |

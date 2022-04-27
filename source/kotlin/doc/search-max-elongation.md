@@ -14,5 +14,5 @@ This function solves for those times, reporting the next maximum elongation even
 
 | | |
 |---|---|
-| body | Either [Body.Mercury] or [Body.Venus]. Any other value will result in an exception.     To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)     use [searchRelativeLongitude] to find the next opposition event. |
-| startTime | The date and time at which to begin the search. The maximum elongation event found will always     be the first one that occurs after this date and time. |
+| body | Either [Body.Mercury](-body/-mercury/index.md) or [Body.Venus](-body/-venus/index.md). Any other value will result in an exception. To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto) use [searchRelativeLongitude](search-relative-longitude.md) to find the next opposition event. |
+| startTime | The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. |

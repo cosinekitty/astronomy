@@ -16,5 +16,5 @@ A vector in the horizontal system: x = north, y = west, and z = zenith (up).
 
 | | |
 |---|---|
-| time | The date and time of the observation. This is needed because the returned     [Vector] requires a valid time value when passed to certain other functions. |
-| refraction | The refraction option used to model atmospheric lensing. See [refractionAngle].     This specifies how refraction is to be removed from the altitude stored in `this.lat`. |
+| time | The date and time of the observation. This is needed because the returned [Vector](../-vector/index.md) requires a valid time value when passed to certain other functions. |
+| refraction | The refraction option used to model atmospheric lensing. See [refractionAngle](../refraction-angle.md). This specifies how refraction is to be removed from the altitude stored in this.lat. |

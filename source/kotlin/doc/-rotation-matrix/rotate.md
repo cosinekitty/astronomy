@@ -24,4 +24,4 @@ This function transforms a state vector in one orientation to a state vector in 
 
 | | |
 |---|---|
-| state | The state vector whose orientation is to be changed.     The value of `state` is not changed; the return value is a new state vector object. |
+| state | The state vector whose orientation is to be changed. The value of state is not changed; the return value is a new state vector object. |

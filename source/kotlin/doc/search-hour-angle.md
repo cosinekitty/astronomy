@@ -24,5 +24,5 @@ The time when the body reaches the hour angle, and the horizontal coordinates of
 |---|---|
 | body | The celestial body, which can the Sun, the Moon, or any planet other than the Earth. |
 | observer | A location on or near the surface of the Earth where the observer is located. |
-| hourAngle | An hour angle value in the range [0, 24) indicating the number of sidereal hours after the     body's most recent culmination. |
+| hourAngle | An hour angle value in the range [0, 24) indicating the number of sidereal hours after the body's most recent culmination. |
 | startTime | The date and time at which to start the search. |

@@ -12,4 +12,4 @@ Finds the next consecutive time the Moon is closest or farthest from the Earth i
 
 | | |
 |---|---|
-| apsis | An [ApsisInfo] value obtained from a call     to [searchLunarApsis] or `nextLunarApsis`. |
+| apsis | An [ApsisInfo](-apsis-info/index.md) value obtained from a call to [searchLunarApsis](search-lunar-apsis.md) or [nextLunarApsis](next-lunar-apsis.md). |

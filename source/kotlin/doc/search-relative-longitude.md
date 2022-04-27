@@ -19,6 +19,10 @@ Certain astronomical events are defined in terms of relative longitude between t
 - 
    When the relative longitude is 180 degrees, it means the other planet is on the opposite side of the Sun from the Earth. This is called *superior conjunction*. Like inferior conjunction, the planet is very difficult to see from the Earth. Superior conjunction is possible for any planet other than the Earth.
 
+#### Return
+
+The time of the first relative longitude event that occurs after startTime.
+
 ## Parameters
 
 | | |

@@ -22,6 +22,6 @@ On success, returns the date and time of the rise or set time as requested. If t
 |---|---|
 | body | The Sun, Moon, or any planet other than the Earth. |
 | observer | The location where observation takes place. |
-| direction | Either [Direction.Rise] to find a rise time or [Direction.Set] to find a set time. |
+| direction | Either [Direction.Rise](-direction/-rise/index.md) to find a rise time or [Direction.Set](-direction/-set/index.md) to find a set time. |
 | startTime | The date and time at which to start the search. |
-| limitDays | Limits how many days to search for a rise or set time.     To limit a rise or set time to the same day, you can use a value of 1 day.     In cases where you want to find the next rise or set time no matter how far     in the future (for example, for an observer near the south pole), you can     pass in a larger value like 365. |
+| limitDays | Limits how many days to search for a rise or set time. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |

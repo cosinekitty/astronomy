@@ -63,7 +63,7 @@ private fun parseDate(text: String): Time {
     val hour   = (m.groups[4] ?: fail("Cannot parse hour from string: '$text'")).value.toInt()
     val minute = (m.groups[5] ?: fail("Cannot parse minute from string: '$text'")).value.toInt()
     val secondText = m.groups[7]?.value
-    var second = (
+    val second = (
         if (secondText != null && secondText != "")
             secondText.toDouble()
         else
@@ -342,7 +342,7 @@ class Tests {
 
                 // Convert the reference angles to a reference north pole vector.
                 // tricky: `ra` is in degrees, not sidereal hours; so don't multiply by 15.
-                val sphere = Spherical(dec, ra, 1.0);
+                val sphere = Spherical(dec, ra, 1.0)
                 val north = sphere.toVector(time)
 
                 // Find angle between two versions of the north pole. Use that as the measure of error.
@@ -364,7 +364,7 @@ class Tests {
         val eclSphere = eclipticGeoMoon(time)
         val dlat = eclSphere.lat  - (-4.851798346972171)
         val dlon = eclSphere.lon  - (+354.5951298193645)
-        var drad = eclSphere.dist - 0.0026968810499258147
+        val drad = eclSphere.dist - 0.0026968810499258147
         assertTrue(abs(dlat) < 1.0e-15, "eclipticGeoMoon: excessive latitude error $dlat")
         assertTrue(abs(dlon) < 1.0e-15, "eclipticGeoMoon: excessive longitude error $dlon")
         assertTrue(abs(drad) < 1.0e-17, "eclipticGeoMoon: excessive distance error $drad")
@@ -553,10 +553,10 @@ class Tests {
         // - generate/test.py
         // - generate/dotnet/csharp_test/csharp_test.cs
         val filename = dataRootDir + "temp/k_check.txt"
-        File(filename).printWriter().use { outfile -> AstroCheck(outfile) }
+        File(filename).printWriter().use { outfile -> astroCheck(outfile) }
     }
 
-    private fun AstroCheck(outfile: PrintWriter) {
+    private fun astroCheck(outfile: PrintWriter) {
         val bodylist = arrayOf (
             Body.Sun, Body.Mercury, Body.Venus, Body.Earth, Body.Mars,
             Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto,
@@ -781,7 +781,7 @@ class Tests {
             val constel = constellation(ra, dec)
             assertTrue(constel.symbol == symbol, "$filename line $lnum: expected constellation $symbol, but found id=$id, symbol=${constel.symbol}")
 
-            ++lnum;
+            ++lnum
         }
     }
 
@@ -898,7 +898,7 @@ class Tests {
 
     @Test
     fun `Moon phase search`() {
-        var thresholdSeconds = 90.0
+        val thresholdSeconds = 90.0
         val filename = dataRootDir + "moonphase/moonphases.txt"
         val infile = File(filename)
         var lnum = 0
@@ -909,7 +909,7 @@ class Tests {
         // 1 1800-02-01T20:40:00.000Z
         // 2 1800-02-09T17:26:00.000Z
         // 3 1800-02-16T15:49:00.000Z
-        var re = Regex("""^([0-3])\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)\.000Z$""")
+        val re = Regex("""^([0-3])\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)\.000Z$""")
         for (line in infile.readLines()) {
             ++lnum
             val m = re.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
@@ -965,7 +965,7 @@ class Tests {
         var lnum = 0
         // Moon  103 -61 1944-01-02T17:08Z s
         // Moon  103 -61 1944-01-03T05:47Z r
-        var re = Regex("""^([A-Za-z]+)\s+([\-\+]?\d+\.?\d*)\s+([\-\+]?\d+\.?\d*)\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([rs])\s*$""")
+        val re = Regex("""^([A-Za-z]+)\s+([\-\+]?\d+\.?\d*)\s+([\-\+]?\d+\.?\d*)\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+([rs])\s*$""")
         var currentBody: Body? = null
         var observer: Observer? = null
         var rSearchDate: Time? = null
@@ -979,7 +979,7 @@ class Tests {
         val nudgeDays = 0.01
         for (line in infile.readLines()) {
             ++lnum
-            var m: MatchResult = re.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
+            val m: MatchResult = re.matchEntire(line) ?: fail("$filename line $lnum: syntax error")
             val body = groupBody(m, 1, filename, lnum)
             val longitude = groupDouble(m, 2, filename, lnum)
             val latitude = groupDouble(m, 3, filename, lnum)
@@ -1126,7 +1126,7 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
-    private fun VerifyGeoid(observer: Observer, time: Time, equator: EquatorEpoch) {
+    private fun verifyGeoid(observer: Observer, time: Time, equator: EquatorEpoch) {
         val degreeTolerance = 1.0e-12
         val meterTolerance = 1.0e-8
         val vector = observer.toVector(time, equator)
@@ -1151,8 +1151,8 @@ class Tests {
                 var height = -5000.0
                 while (height <= +5000.0) {
                     val observer = Observer(latitude, longitude, height)
-                    VerifyGeoid(observer, time, EquatorEpoch.OfDate)
-                    VerifyGeoid(observer, time, EquatorEpoch.J2000)
+                    verifyGeoid(observer, time, EquatorEpoch.OfDate)
+                    verifyGeoid(observer, time, EquatorEpoch.J2000)
                     height += 1000.0
                 }
                 longitude += 5.0
@@ -1166,14 +1166,14 @@ class Tests {
     @Test
     fun `Angle between body and Sun`() {
         val time = Time(8135.494708473634)     // 2022-04-10T23:52:22.812Z
-        VerifyAngleFromSun(time, Body.Sun,       0.0)
-        VerifyAngleFromSun(time, Body.Moon,    108.91126797125484)
-        VerifyAngleFromSun(time, Body.Venus,    45.2998026289299)
-        VerifyAngleFromSun(time, Body.Mars,     54.22257479675931)
-        VerifyAngleFromSun(time, Body.Jupiter,  27.49401812548837)
+        verifyAngleFromSun(time, Body.Sun,       0.0)
+        verifyAngleFromSun(time, Body.Moon,    108.91126797125484)
+        verifyAngleFromSun(time, Body.Venus,    45.2998026289299)
+        verifyAngleFromSun(time, Body.Mars,     54.22257479675931)
+        verifyAngleFromSun(time, Body.Jupiter,  27.49401812548837)
     }
 
-    private fun VerifyAngleFromSun(time: Time, body: Body, correctAngle: Double) {
+    private fun verifyAngleFromSun(time: Time, body: Body, correctAngle: Double) {
         val angle = angleFromSun(body, time)
         val diff = abs(correctAngle - angle)
         assertTrue(diff < 1.0e-13, "Excessive angle error $diff for $body at $time")
@@ -1343,7 +1343,7 @@ class Tests {
         for (rawLine in infile.readLines()) {
             ++lnum
             val line = stripLine(rawLine)
-            if (line.length == 0)
+            if (line.isEmpty())
                 continue
             val token = tokenize(line, 13, filename, lnum)
             val latitude = token[0].toDouble()
@@ -1383,7 +1383,7 @@ class Tests {
                 assertTrue(eclipse.totalBegin == null, "$filename line $lnum: eclipse.totalBegin was supposed to be null.")
                 assertTrue(eclipse.totalEnd == null, "$filename line $lnum: eclipse.totalEnd was supposed to be null.")
             }
-            ++verifyCount;
+            ++verifyCount
         }
         assertEquals(6, verifyCount)
     }
@@ -1446,7 +1446,7 @@ class Tests {
         var time: Time? = null
         val pos = arrayOf(0.0, 0.0, 0.0)
         val vel = arrayOf(0.0, 0.0, 0.0)
-        var list = ArrayList<JplStateRecord>()
+        val list = ArrayList<JplStateRecord>()
         var match: MatchResult?
         val regexPos = Regex("""\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)""")
         val regexVel = Regex("""\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)""")
@@ -1513,7 +1513,7 @@ class Tests {
         vThresh: Double,
         func: (Time) -> StateVector
     ) {
-        var filename = dataRootDir + relativeFileName
+        val filename = dataRootDir + relativeFileName
         for (rec in jplHorizonsStateVectors(filename)) {
             val state = func(rec.state.t)
             val rdiff = stateVectorDiff(rThresh > 0.0, rec.state.position(), state.position())
@@ -1718,7 +1718,7 @@ class Tests {
         val filename = dataRootDir + "apsides/moon.txt"
         val infile = File(filename)
         var lnum = 0
-        var startTime = Time(2001, 1, 1, 0, 0, 0.0)
+        val startTime = Time(2001, 1, 1, 0, 0, 0.0)
         var apsis = searchLunarApsis(startTime)
         for (line in infile.readLines()) {
             ++lnum
@@ -1897,7 +1897,7 @@ class Tests {
         val rest: String
     )
 
-    val jplRegex = Regex("""^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s+(\d{2}):(\d{2})\s+(.*)""")
+    private val jplRegex = Regex("""^\s*(\d{4})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})\s+(\d{2}):(\d{2})\s+(.*)""")
 
     private fun monthNumber(mtext: String): Int = when(mtext) {
         "Jan" ->  1
@@ -1916,9 +1916,7 @@ class Tests {
     }
 
     private fun parseJplHorizonsDateTime(line: String, filename: String, lnum: Int): JplDateTime? {
-        val m = jplRegex.matchEntire(line)
-        if (m == null)
-            return null
+        val m = jplRegex.matchEntire(line) ?: return null
         val year = groupInt(m, 1, filename, lnum)
         val month = monthNumber(groupString(m, 2, filename, lnum))
         val day = groupInt(m, 3, filename, lnum)
@@ -1937,11 +1935,9 @@ class Tests {
         var count = 0
         for (line in infile.readLines()) {
             ++lnum
-            val jpl = parseJplHorizonsDateTime(line, filename, lnum)
-            if (jpl == null)
-                continue
+            val jpl = parseJplHorizonsDateTime(line, filename, lnum) ?: continue
             val token = tokenize(jpl.rest)
-            if (token.size > 0 && token[0] == "n.a.")
+            if (token.isNotEmpty() && token[0] == "n.a.")
                 continue
             assertEquals(7, token.size, "$filename line $lnum: invalid data format")
             val mag = token[0].toDouble()
@@ -2077,7 +2073,7 @@ class Tests {
 
     private fun verifyLibration(fileYear: Int) {
         val filename = dataRootDir + "libration/mooninfo_$fileYear.txt"
-        var infile = File(filename)
+        val infile = File(filename)
         var lnum = 0
         for (line in infile.readLines()) {
             ++lnum

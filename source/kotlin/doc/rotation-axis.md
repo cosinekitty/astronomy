@@ -22,5 +22,5 @@ North pole orientation and body spin angle.
 
 | | |
 |---|---|
-| body | One of the following values:     [Body.Sun], [Body.Moon], [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars],     [Body.Jupiter], [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto]. |
+| body | One of the following values: [Body.Sun](-body/-sun/index.md), [Body.Moon](-body/-moon/index.md), [Body.Mercury](-body/-mercury/index.md), [Body.Venus](-body/-venus/index.md), [Body.Earth](-body/-earth/index.md), [Body.Mars](-body/-mars/index.md), [Body.Jupiter](-body/-jupiter/index.md), [Body.Saturn](-body/-saturn/index.md), [Body.Uranus](-body/-uranus/index.md), [Body.Neptune](-body/-neptune/index.md), [Body.Pluto](-body/-pluto/index.md). |
 | time | The time at which to calculate the body's rotation axis. |

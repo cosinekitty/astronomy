@@ -24,4 +24,4 @@ A geocentric position vector of the center of the given body.
 |---|---|
 | body | A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets. |
 | time | The date and time for which to calculate the position. |
-| aberration | `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected. |
+| aberration | [Aberration.Corrected](-aberration/-corrected/index.md) to correct for aberration, or [Aberration.None](-aberration/-none/index.md) to leave uncorrected. |

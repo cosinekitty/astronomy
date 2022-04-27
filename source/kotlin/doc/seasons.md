@@ -20,4 +20,4 @@ A [SeasonsInfo](-seasons-info/index.md) object that contains four [Time](-time/i
 
 | | |
 |---|---|
-| year | The calendar year number for which to calculate equinoxes and solstices.     The value may be any integer, but only the years 1800 through 2100 have been     validated for accuracy: unit testing against data from the     United States Naval Observatory confirms that all equinoxes and solstices     for that range of years are within 2 minutes of the correct time. |
+| year | The calendar year number for which to calculate equinoxes and solstices. The value may be any integer, but only the years 1800 through 2100 have been validated for accuracy: unit testing against data from the United States Naval Observatory confirms that all equinoxes and solstices for that range of years are within 2 minutes of the correct time. |

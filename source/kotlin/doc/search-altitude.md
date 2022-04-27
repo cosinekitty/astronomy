@@ -26,7 +26,7 @@ The date and time of the altitude event, or null if no such event occurs within 
 |---|---|
 | body | The Sun, Moon, or any planet other than the Earth. |
 | observer | The location where observation takes place. |
-| direction | Either Direction.Rise to find an ascending altitude event or Direction.Set to find a descending altitude event. |
+| direction | Either [Direction.Rise](-direction/-rise/index.md) to find an ascending altitude event or [Direction.Set](-direction/-set/index.md) to find a descending altitude event. |
 | startTime | The date and time at which to start the search. |
 | limitDays | The fractional number of days after dateStart that limits when the altitude event is to be found. Must be a positive number. |
 | altitude | The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range -90, +90. |

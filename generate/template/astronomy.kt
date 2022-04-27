@@ -43,7 +43,6 @@ import kotlin.math.min
 import kotlin.math.PI
 import kotlin.math.pow
 import kotlin.math.round
-import kotlin.math.roundToLong
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
@@ -153,7 +152,6 @@ private const val DAYS_PER_MILLENNIUM = 365250.0
 private const val ASEC360 = 1296000.0
 private const val ASEC2RAD = 4.848136811095359935899141e-6
 private const val PI2 = 2.0 * PI
-private const val ARC = 3600.0 * 180.0 / PI       // arcseconds per radian
 private const val SUN_RADIUS_KM  = 695700.0
 private const val SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU
 private const val EARTH_FLATTENING = 0.996647180302104
@@ -390,8 +388,7 @@ private fun universalTimeDays(year: Int, month: Int, day: Int, hour: Int, minute
     )
 
     val y2000 = jd12h - 2451545L
-    val ut = y2000.toDouble() - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0))
-    return ut
+    return y2000.toDouble() - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0))
 }
 
 
@@ -788,8 +785,8 @@ data class Vector(
     fun toSpherical(): Spherical {
         val xyproj = x*x + y*y
         val dist = sqrt(xyproj + z*z)
-        var lat: Double
-        var lon: Double
+        val lat: Double
+        val lon: Double
         if (xyproj == 0.0) {
             if (z == 0.0) {
                 // Indeterminate coordinates; pos vector has zero length.
@@ -834,9 +831,9 @@ data class Vector(
      * and is expressed in astronomical units (AU).
      *
      * @param refraction
-     *      `Refraction.None`: no atmospheric refraction correction is performed.
-     *      `Refraction.Normal`: correct altitude for atmospheric refraction.
-     *      `Refraction.JplHor`: for JPL Horizons compatibility testing only; not recommended for normal use.
+     * [Refraction.None]: no atmospheric refraction correction is performed.
+     * [Refraction.Normal]: correct altitude for atmospheric refraction.
+     * [Refraction.JplHor]: for JPL Horizons compatibility testing only; not recommended for normal use.
      */
     fun toHorizontal(refraction: Refraction): Spherical {
         val sphere = toSpherical()
@@ -856,12 +853,12 @@ data class Vector(
      * the geographic latitude, longitude, and elevation for that observer.
      *
      * @param equator
-     *      Selects the date of the Earth's equator in which this vector is expressed.
-     *      The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
-     *      at noon UTC on January 1, 2000, in which case this function corrects for precession
-     *      and nutation of the Earth as it was at the moment specified by the time `this.t`.
-     *      Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `this.t`
-     *      as the orientation.
+     * Selects the date of the Earth's equator in which this vector is expressed.
+     * The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
+     * at noon UTC on January 1, 2000, in which case this function corrects for precession
+     * and nutation of the Earth as it was at the moment specified by the time `this.t`.
+     * Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `this.t`
+     * as the orientation.
      *
      * @return The geographic coordinates corresponding to the vector.
      */
@@ -1059,7 +1056,7 @@ class RotationMatrix(
      * in another orientation.
      *
      * @param vec
-     *      The vector whose orientation is to be changed.
+     * The vector whose orientation is to be changed.
      */
     fun rotate(vec: Vector) = Vector(
         rot[0][0]*vec.x + rot[1][0]*vec.y + rot[2][0]*vec.z,
@@ -1075,8 +1072,8 @@ class RotationMatrix(
      * The resulting state vector has both position and velocity reoriented.
      *
      * @param state
-     *      The state vector whose orientation is to be changed.
-     *      The value of `state` is not changed; the return value is a new state vector object.
+     * The state vector whose orientation is to be changed.
+     * The value of `state` is not changed; the return value is a new state vector object.
      */
     fun rotate(state: StateVector) = StateVector(
         rotate(state.position()),
@@ -1117,15 +1114,15 @@ class RotationMatrix(
      * reorient ECL coordinates to the orientation of your telescope camera.
      *
      * @param axis
-     *      An integer that selects which coordinate axis to rotate around:
-     *      0 = x, 1 = y, 2 = z. Any other value will cause an exception.
+     * An integer that selects which coordinate axis to rotate around:
+     * 0 = x, 1 = y, 2 = z. Any other value will cause an exception.
      *
      * @param angle
-     *      An angle in degrees indicating the amount of rotation around the specified axis.
-     *      Positive angles indicate rotation counterclockwise as seen from the positive
-     *      direction along that axis, looking towards the origin point of the orientation system.
-     *      Any finite number of degrees is allowed, but best precision will result from keeping
-     *      `angle` in the range [-360, +360].
+     * An angle in degrees indicating the amount of rotation around the specified axis.
+     * Positive angles indicate rotation counterclockwise as seen from the positive
+     * direction along that axis, looking towards the origin point of the orientation system.
+     * Any finite number of degrees is allowed, but best precision will result from keeping
+     * `angle` in the range [-360, +360].
      */
     fun pivot(axis: Int, angle: Double): RotationMatrix {
         if (axis < 0 || axis > 2)
@@ -1206,7 +1203,7 @@ data class Spherical(
      * includes the time, as required by the type [Vector].
      *
      * @param time
-     *      The time that should be included in the return value.
+     * The time that should be included in the return value.
      */
     fun toVector(time: Time): Vector {
         val radlat = lat.degreesToRadians()
@@ -1229,12 +1226,12 @@ data class Spherical(
      * and `dist` holds the distance from the observer to the object in AU.
      *
      * @param time
-     *      The date and time of the observation. This is needed because the returned
-     *      [Vector] requires a valid time value when passed to certain other functions.
+     * The date and time of the observation. This is needed because the returned
+     * [Vector] requires a valid time value when passed to certain other functions.
      *
      * @param refraction
-     *      The refraction option used to model atmospheric lensing. See [refractionAngle].
-     *      This specifies how refraction is to be removed from the altitude stored in `this.lat`.
+     * The refraction option used to model atmospheric lensing. See [refractionAngle].
+     * This specifies how refraction is to be removed from the altitude stored in `this.lat`.
      *
      * @return A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
      */
@@ -1287,15 +1284,15 @@ data class Observer(
      * The inverse of this function is also available: [Vector.toObserver].
      *
      * @param time
-     *      The date and time for which to calculate the observer's position vector.
+     * The date and time for which to calculate the observer's position vector.
      *
      * @param equator
-     *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
-     *      The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
-     *      at noon UTC on January 1, 2000, in which case this function corrects for precession
-     *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
-     *      Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `time`
-     *      as the orientation.
+     * Selects the date of the Earth's equator in which to express the equatorial coordinates.
+     * The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
+     * at noon UTC on January 1, 2000, in which case this function corrects for precession
+     * and nutation of the Earth as it was at the moment specified by the `time` parameter.
+     * Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `time`
+     * as the orientation.
      *
      * @return A vector from the center of the Earth to this geographic location.
      */
@@ -1320,15 +1317,15 @@ data class Observer(
      * The returned velocity vector is measured in AU/day.
      *
      * @param time
-     *      The date and time for which to calculate the observer's position vector.
+     * The date and time for which to calculate the observer's position vector.
      *
      * @param equator
-     *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
-     *      The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
-     *      at noon UTC on January 1, 2000, in which case this function corrects for precession
-     *      and nutation of the Earth as it was at the moment specified by the `time` parameter.
-     *      Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `time`
-     *      as the orientation.
+     * Selects the date of the Earth's equator in which to express the equatorial coordinates.
+     * The caller may select [EquatorEpoch.J2000] to use the orientation of the Earth's equator
+     * at noon UTC on January 1, 2000, in which case this function corrects for precession
+     * and nutation of the Earth as it was at the moment specified by the `time` parameter.
+     * Or the caller may select [EquatorEpoch.OfDate] to use the Earth's equator at `time`
+     * as the orientation.
      *
      * @return The position and velocity of this observer with respect to the Earth's center.
      */
@@ -1747,11 +1744,6 @@ class ApsisInfo(
  */
 enum class EclipseKind {
     /**
-     * No eclipse found.
-     */
-    None,
-
-    /**
      * A penumbral lunar eclipse. (Never used for a solar eclipse.)
      */
     Penumbral,
@@ -2008,12 +2000,6 @@ internal class ShadowInfo(
     val time: Time,
 
     /**
-     * Dot product of (heliocentric earth) and (geocentric moon).
-     * Defines the shadow plane where the Moon is.
-     */
-    val u: Double,
-
-    /**
      * km distance between center of Moon and the line passing through the centers of the Sun and Earth.
      */
     val r: Double,
@@ -2052,7 +2038,7 @@ internal fun calcShadow(
     val r = KM_PER_AU * sqrt(dx*dx + dy*dy + dz*dz)
     val k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - bodyRadiusKm)
     val p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + bodyRadiusKm)
-    return ShadowInfo(time, u, r, k, p, target, dir)
+    return ShadowInfo(time, r, k, p, target, dir)
 }
 
 internal fun earthShadow(time: Time): ShadowInfo {
@@ -2211,7 +2197,7 @@ internal fun planetTransitBoundary(body: Body, planetRadiusKm: Double, t1: Time,
  * passing in the `center` value returned from the previous call.
  *
  * @param startTime
- *      The date and time for starting the search for a lunar eclipse.
+ * The date and time for starting the search for a lunar eclipse.
  *
  * @return Information about the first lunar eclipse that occurs after `startTime`.
  */
@@ -2221,7 +2207,7 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
     // Iterate through consecutive full moons until we find any kind of lunar eclipse.
     var fmtime = startTime
     for (fmcount in 0..11) {
-        var fullmoon = searchMoonPhase(180.0, fmtime, 40.0) ?:
+        val fullmoon = searchMoonPhase(180.0, fmtime, 40.0) ?:
             throw InternalError("Failed to find the next full moon.")
 
         // Pruning: if the full Moon's ecliptic latitude is too large,
@@ -2273,7 +2259,7 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
  * to find the next lunar eclipse.
  *
  * @param prevEclipseTime
- *      A time near a full moon. Lunar eclipse search will start at the next full moon.
+ * A time near a full moon. Lunar eclipse search will start at the next full moon.
  *
  * @return
  * Information about the next lunar eclipse in a series.
@@ -2360,7 +2346,7 @@ internal fun geoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
         val luna = inv.rotate(obs) + shadow.target
 
         // Calculate the shadow using a vector from the Moon's center toward the observer.
-        var surface = calcShadow(MOON_POLAR_RADIUS_KM, shadow.time, luna, shadow.dir)
+        val surface = calcShadow(MOON_POLAR_RADIUS_KM, shadow.time, luna, shadow.dir)
 
         // If we did everything right, the shadow distance should be very close to zero.
         // That's because we already determined the observer is on the shadow axis!
@@ -2385,7 +2371,7 @@ internal fun geoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
  * passing in the `peak` value returned from the previous call.
  *
  * @param startTime
- *      The date and time for starting the search for a solar eclipse.
+ * The date and time for starting the search for a solar eclipse.
  *
  * @return Information about the first solar eclipse after `startTime`.
  */
@@ -2427,7 +2413,7 @@ fun searchGlobalSolarEclipse(startTime: Time): GlobalSolarEclipseInfo {
  * to find the next solar eclipse.
  *
  * @param prevEclipseTime
- *      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+ * A date and time near a new moon. Solar eclipse search will start at the next new moon.
  *
  * @return Information about the next consecutive solar eclipse.
  */
@@ -2451,10 +2437,10 @@ fun nextGlobalSolarEclipse(prevEclipseTime: Time) =
  * See [LocalSolarEclipseInfo] for more information about this topic.
  *
  * @param startTime
- *      The date and time for starting the search for a solar eclipse.
+ * The date and time for starting the search for a solar eclipse.
  *
  * @param observer
- *      The geographic location of the observer.
+ * The geographic location of the observer.
  *
  * @return Information about the first solar eclipse visible at the specified observer location.
  */
@@ -2502,7 +2488,7 @@ internal fun localEclipse(shadow: ShadowInfo, observer: Observer): LocalSolarEcl
     val partialEnd   = localEclipseTransition(observer, -1.0, shadow.time, t2p) { it.p - it.r }
     var totalBegin: EclipseEvent? = null
     var totalEnd: EclipseEvent? = null
-    var kind: EclipseKind
+    val kind: EclipseKind
     if (shadow.r < abs(shadow.k)) {     // take absolute value of `k` to handle annular eclipses too.
         val t1t = shadow.time.addDays(-TOTAL_WINDOW)
         val t2t = shadow.time.addDays(+TOTAL_WINDOW)
@@ -2547,10 +2533,10 @@ internal fun calcEvent(observer: Observer, time: Time): EclipseEvent {
  * to find the next solar eclipse.
  *
  * @param prevEclipseTime
- *      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+ * A date and time near a new moon. Solar eclipse search will start at the next new moon.
  *
  * @param observer
- *      The geographic location of the observer.
+ * The geographic location of the observer.
  *
  * @return Information about the next solar eclipse visible at the specified observer location.
  */
@@ -2696,7 +2682,7 @@ fun interface SearchContext {
      * Evaluates a scalar function at a given time.
      *
      * @param time
-     *      The time at which to evaluate the function.
+     * The time at which to evaluate the function.
      *
      * @return The floating point value of the scalar function at the given time.
      */
@@ -2827,8 +2813,7 @@ private fun vsopDerivCalc(formula: VsopFormula, t: Double): Double {
     var tpower = 1.0        // t^s
     var dpower = 0.0        // t^(s-1)
     var deriv = 0.0
-    var s: Int = 0
-    for (series in formula.series) {
+    for ((s, series) in formula.series.withIndex()) {
         var sinSum = 0.0
         var cosSum = 0.0
         for (term in series.term) {
@@ -2840,7 +2825,6 @@ private fun vsopDerivCalc(formula: VsopFormula, t: Double): Double {
         deriv += (s * dpower * cosSum) - (tpower * sinSum)
         dpower = tpower
         tpower *= t
-        ++s
     }
     return deriv
 }
@@ -2938,11 +2922,11 @@ private fun vsopHelioVector(body: Body, time: Time) =
  */
 private class PascalArray2(
     val xmin: Int,
-    val xmax: Int,
+    xmax: Int,
     val ymin: Int,
-    val ymax: Int
+    ymax: Int
 ) {
-    private val array = Array<DoubleArray>((xmax- xmin) + 1) { _ -> DoubleArray((ymax - ymin) + 1) }
+    private val array = Array<DoubleArray>((xmax- xmin) + 1) { DoubleArray((ymax - ymin) + 1) }
     operator fun get(x: Int, y: Int) = array[x - xmin][y - ymin]
     operator fun set(x: Int, y: Int, v: Double) { array[x - xmin][y - ymin] = v }
 }
@@ -3072,7 +3056,7 @@ private class MoonContext(time: Time) {
         yTerm = s1*c2 + c1*s2
     }
 
-    internal fun addSol(
+    fun addSol(
         coeffl: Double,
         coeffs: Double,
         coeffg: Double,
@@ -3089,7 +3073,7 @@ private class MoonContext(time: Time) {
         SINPI += coeffp * xTerm
     }
 
-    internal fun addn(coeffn: Double, p: Int, q: Int, r: Int, s: Int) {
+    fun addn(coeffn: Double, p: Int, q: Int, r: Int, s: Int) {
         term(p, q, r, s)
         N += (coeffn * yTerm)
     }
@@ -3119,7 +3103,7 @@ private class MoonContext(time: Time) {
         )
     }
 
-    internal fun calcMoon(): Spherical {
+    fun calcMoon(): Spherical {
         addSolarTerms(this)
         solarN()
         planetary()
@@ -3329,7 +3313,7 @@ private fun calcPlutoOneWay(
 
 private fun calcPluto(time: Time, helio: Boolean): StateVector {
     val seg = getPlutoSegment(time.tt)
-    var calc: BodyGravCalc
+    val calc: BodyGravCalc
     var bary: MajorBodies? = null
     if (seg == null) {
         // The target time is outside the year range 0000..4000.
@@ -3483,7 +3467,7 @@ private fun calcJupiterMoon(time: Time, m: JupiterMoon): StateVector {
     var elem4 = 0.0
     var elem5 = 0.0
     for (term in m.zeta) {
-        var arg = term.phase + (t * term.frequency)
+        val arg = term.phase + (t * term.frequency)
         elem4 += term.amplitude * cos(arg)
         elem5 += term.amplitude * sin(arg)
     }
@@ -3625,14 +3609,14 @@ internal fun universalTime(tt: Double): Double {
  * due to the lensing of the Earth's atmosphere.
  *
  * @param refraction
- *      The option selecting which refraction correction to use.
- *      If `Refraction.Normal`, uses a well-behaved refraction model that works well for
- *      all valid values (-90 to +90) of `altitude`.
- *      If `Refraction.JplHor`, this function returns a compatible value with the JPL Horizons tool.
- *      If any other value, including `Refraction.None`, this function returns 0.
+ * The option selecting which refraction correction to use.
+ * If `Refraction.Normal`, uses a well-behaved refraction model that works well for
+ * all valid values (-90 to +90) of `altitude`.
+ * If `Refraction.JplHor`, this function returns a compatible value with the JPL Horizons tool.
+ * If any other value, including `Refraction.None`, this function returns 0.
  *
  * @param altitude
- *      An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
+ * An altitude angle in a horizontal coordinate system. Must be a value between -90 and +90.
  */
 fun refractionAngle(refraction: Refraction, altitude: Double): Double {
     if (altitude < -90.0 || altitude > +90.0)
@@ -3675,15 +3659,15 @@ fun refractionAngle(refraction: Refraction, altitude: Double): Double {
  * but refraction first must be removed from the observed position.
  *
  * @param refraction
- *      The option selecting which refraction correction to use.
+ * The option selecting which refraction correction to use.
  *
  * @param bentAltitude
- *      The apparent altitude that includes atmospheric refraction.
+ * The apparent altitude that includes atmospheric refraction.
  *
- * @param
- *      The angular adjustment in degrees to be added to the
- *      altitude angle to remove atmospheric lensing.
- *      This will be less than or equal to zero.
+ * @return
+ * The angular adjustment in degrees to be added to the
+ * altitude angle to remove atmospheric lensing.
+ * This will be less than or equal to zero.
  */
 fun inverseRefractionAngle(refraction: Refraction, bentAltitude: Double): Double {
     if (bentAltitude < -90.0 || bentAltitude > +90.0)
@@ -3693,7 +3677,7 @@ fun inverseRefractionAngle(refraction: Refraction, bentAltitude: Double): Double
     var altitude = bentAltitude - refractionAngle(refraction, bentAltitude)
     while (true) {
         // See how close we got.
-        var diff = (altitude + refractionAngle(refraction, altitude)) - bentAltitude
+        val diff = (altitude + refractionAngle(refraction, altitude)) - bentAltitude
         if (diff.absoluteValue < 1.0e-14)
             return altitude - bentAltitude
         altitude -= diff
@@ -3712,9 +3696,9 @@ fun inverseRefractionAngle(refraction: Refraction, bentAltitude: Double): Double
  * [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
  *
  * @param body
- *      The body for which to find the GM product.
- *      Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
- *      Any other value will cause an exception to be thrown.
+ * The body for which to find the GM product.
+ * Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
+ * Any other value will cause an exception to be thrown.
  *
  * @return The mass product of the given body in au^3/day^2.
  */
@@ -3793,9 +3777,7 @@ private fun precessionPosVel(state: StateVector, dir: PrecessDirection) =
     precessionRot(state.t, dir).rotate(state)
 
 private class EarthTilt(
-    val tt: Double,
     val dpsi: Double,
-    val deps: Double,
     val ee: Double,
     val mobl: Double,
     val tobl: Double
@@ -3848,7 +3830,7 @@ private fun earthTilt(time: Time): EarthTilt {
     val mobl = meanObliquity(time)
     val tobl = mobl + (time.eps / 3600)
     val ee = time.psi * dcos(mobl) / 15.0
-    return EarthTilt(time.tt, time.psi, time.eps, ee, mobl, tobl)
+    return EarthTilt(time.psi, ee, mobl, tobl)
 }
 
 private fun earthRotationAngle(time: Time): Double {
@@ -3877,9 +3859,9 @@ private fun earthRotationAngle(time: Time): Double {
  * To convert to degrees, multiply the return value by 15.
  *
  * @param time
- *      The date and time for which to find GAST.
- *      As an optimization, this function caches the sideral time value in `time`,
- *      unless it has already been cached, in which case the cached value is reused.
+ * The date and time for which to find GAST.
+ * As an optimization, this function caches the sideral time value in `time`,
+ * unless it has already been cached, in which case the cached value is reused.
  */
 fun siderealTime(time: Time): Double {
     if (time.st.isNaN()) {
@@ -3906,10 +3888,10 @@ fun siderealTime(time: Time): Double {
  * The state vector is expressed in the equator-of-date system (EQD).
  *
  * @param observer
- *      The latitude, longitude, and elevation of the observer.
+ * The latitude, longitude, and elevation of the observer.
  *
  * @param time
- *      The time of the observation.
+ * The time of the observation.
  *
  * @return
  * An EQD state vector that holds the geocentric position and velocity
@@ -3951,16 +3933,16 @@ private fun terra(observer: Observer, time: Time): StateVector {
  * This function is intended for positions known to be on or near the Earth's surface.
  *
  * @param ovec
- *      A geocentric position on or near the Earth's surface, in EQD coordinates.
+ * A geocentric position on or near the Earth's surface, in EQD coordinates.
  *
  * @return
  * The location on or near the Earth's surface corresponding to
  * the given position vector and time.
  */
 private fun inverseTerra(ovec: Vector): Observer {
-    var lonDeg: Double
-    var latDeg: Double
-    var heightKm: Double
+    val lonDeg: Double
+    val latDeg: Double
+    val heightKm: Double
 
     // Convert from AU to kilometers.
     val x = ovec.x * KM_PER_AU
@@ -4144,12 +4126,12 @@ private fun earthRotationAxis(time: Time): AxisInfo {
  * See [AxisInfo] for more detailed information.
  *
  * @param body
- *      One of the following values:
- *      [Body.Sun], [Body.Moon], [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars],
- *      [Body.Jupiter], [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
+ * One of the following values:
+ * [Body.Sun], [Body.Moon], [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars],
+ * [Body.Jupiter], [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
  *
  * @param time
- *      The time at which to calculate the body's rotation axis.
+ * The time at which to calculate the body's rotation axis.
  *
  * @return North pole orientation and body spin angle.
  */
@@ -4374,7 +4356,7 @@ fun eclipticGeoMoon(time: Time) = MoonContext(time).calcMoon()
  * In Astronomy Engine, this orientation is called EQJ.
  *
  * @param time
- *      The date and time for which to calculate the Moon's position.
+ * The date and time for which to calculate the Moon's position.
  *
  * @return The Moon's position vector in J2000 equatorial coordinates (EQJ).
  */
@@ -4398,7 +4380,7 @@ fun geoMoon(time: Time): Vector {
  * it is much more efficient to use [geoMoon] instead.
  *
  * @param time
- *      The date and time for which to calculate the Moon's position and velocity.
+ * The date and time for which to calculate the Moon's position and velocity.
  *
  * @return The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
  */
@@ -4435,7 +4417,7 @@ fun geoMoonState(time: Time): StateVector {
  * The velocity (vx, vy, vz) components are expressed in AU/day.
  *
  * @param time
- *      The date and time for which to calculate the EMB vectors.
+ * The date and time for which to calculate the EMB vectors.
  *
  * @return The EMB's position and velocity vectors in geocentric J2000 equatorial coordinates.
  */
@@ -4454,8 +4436,8 @@ private fun barycenterPosContrib(time: Time, body: Body, planetGm: Double) =
 private fun solarSystemBarycenterPos(time: Time): Vector {
     val j = barycenterPosContrib(time, Body.Jupiter, JUPITER_GM)
     val s = barycenterPosContrib(time, Body.Saturn,  SATURN_GM)
-    var u = barycenterPosContrib(time, Body.Uranus,  URANUS_GM)
-    var n = barycenterPosContrib(time, Body.Neptune, NEPTUNE_GM)
+    val u = barycenterPosContrib(time, Body.Uranus,  URANUS_GM)
+    val n = barycenterPosContrib(time, Body.Neptune, NEPTUNE_GM)
     return Vector(
         j.x + s.x + u.x + n.x,
         j.y + s.y + u.y + n.y,
@@ -4481,8 +4463,8 @@ private fun barycenterStateContrib(time: Time, body: Body, planetGm: Double): St
 private fun solarSystemBarycenterState(time: Time): StateVector {
     val j = barycenterStateContrib(time, Body.Jupiter, JUPITER_GM)
     val s = barycenterStateContrib(time, Body.Saturn,  SATURN_GM)
-    var u = barycenterStateContrib(time, Body.Uranus,  URANUS_GM)
-    var n = barycenterStateContrib(time, Body.Neptune, NEPTUNE_GM)
+    val u = barycenterStateContrib(time, Body.Uranus,  URANUS_GM)
+    val n = barycenterStateContrib(time, Body.Neptune, NEPTUNE_GM)
     return StateVector(
         j.x + s.x + u.x + n.x,
         j.y + s.y + u.y + n.y,
@@ -4508,11 +4490,11 @@ private fun solarSystemBarycenterState(time: Time): StateVector {
  * If given an invalid value for `body`, this function will throw an [InvalidBodyException].
  *
  * @param body
- *      A body for which to calculate a heliocentric position:
- *      the Sun, Moon, EMB, SSB, or any of the planets.
+ * A body for which to calculate a heliocentric position:
+ * the Sun, Moon, EMB, SSB, or any of the planets.
  *
  * @param time
- *      The date and time for which to calculate the position.
+ * The date and time for which to calculate the position.
  *
  * @return The heliocentric position vector of the center of the given body.
  */
@@ -4538,11 +4520,11 @@ fun helioVector(body: Body, time: Time): Vector =
  * of the resulting vector.
  *
  * @param body
- *      A body for which to calculate a heliocentric distance:
- *      the Sun, Moon, EMB, SSB, or any of the planets.
+ * A body for which to calculate a heliocentric distance:
+ * the Sun, Moon, EMB, SSB, or any of the planets.
  *
  * @param time
- *      The date and time for which to calculate the distance.
+ * The date and time for which to calculate the distance.
  *
  * @return The heliocentric distance in AU.
  */
@@ -4567,13 +4549,13 @@ fun helioDistance(body: Body, time: Time): Double =
  * of reference, consider using [baryState] instead.
  *
  * @param body
- *      The celestial body whose heliocentric state vector is to be calculated.
- *      Supported values are [Body.Sun], [Body.Moon], [Body.EMB], [Body.SSB], and all planets:
- *      [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars], [Body.Jupiter],
- *      [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
+ * The celestial body whose heliocentric state vector is to be calculated.
+ * Supported values are [Body.Sun], [Body.Moon], [Body.EMB], [Body.SSB], and all planets:
+ * [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars], [Body.Jupiter],
+ * [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
  *
  * @param time
- *      The date and time for which to calculate position and velocity.
+ * The date and time for which to calculate position and velocity.
  *
  * @return
  * A state vector that contains heliocentric position and velocity vectors.
@@ -4601,13 +4583,13 @@ fun helioState(body: Body, time: Time): StateVector =
  * The vectors are expressed in equatorial J2000 coordinates (EQJ).
  *
  * @param body
- *      The celestial body whose barycentric state vector is to be calculated.
- *      Supported values are [Body.Sun], [Body.Moon], [Body.EMB], [Body.SSB], and all planets:
- *      [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars], [Body.Jupiter],
- *      [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
+ * The celestial body whose barycentric state vector is to be calculated.
+ * Supported values are [Body.Sun], [Body.Moon], [Body.EMB], [Body.SSB], and all planets:
+ * [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars], [Body.Jupiter],
+ * [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
  *
  * @param time
- *      The date and time for which to calculate position and velocity.
+ * The date and time for which to calculate position and velocity.
  *
  * @return The barycentric position and velocity vectors of the body.
  */
@@ -4669,13 +4651,13 @@ fun baryState(body: Body, time: Time): StateVector {
  * movement of the Earth with respect to the rays of light coming from that body.
  *
  * @param body
- *      A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
+ * A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
  *
  * @param time
- *      The date and time for which to calculate the position.
+ * The date and time for which to calculate the position.
  *
  * @param aberration
- *      `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.
+ * [Aberration.Corrected] to correct for aberration, or [Aberration.None] to leave uncorrected.
  *
  * @return A geocentric position vector of the center of the given body.
  */
@@ -4715,7 +4697,7 @@ fun geoVector(body: Body, time: Time, aberration: Aberration): Vector {
         // it will get angry that we are using mismatching times!
         // It is intentional here that the calculation time was backdated,
         // but the observation time is not.
-        var geopos = Vector(
+        val geopos = Vector(
             helio.x - earth.x,
             helio.y - earth.y,
             helio.z - earth.z,
@@ -4761,19 +4743,19 @@ fun geoVector(body: Body, time: Time, aberration: Aberration): Vector {
  * Correction for aberration is optional, using the `aberration` parameter.
  *
  * @param body
- *      The celestial body to be observed. Not allowed to be [Body.Earth].
+ * The celestial body to be observed. Not allowed to be [Body.Earth].
  *
  * @param time
- *      The date and time at which the observation takes place.
+ * The date and time at which the observation takes place.
  *
  * @param observer
- *      A location on or near the surface of the Earth.
+ * A location on or near the surface of the Earth.
  *
  * @param equdate
- *      Selects the date of the Earth's equator in which to express the equatorial coordinates.
+ * Selects the date of the Earth's equator in which to express the equatorial coordinates.
  *
  * @param aberration
- *      Selects whether or not to correct for aberration.
+ * Selects whether or not to correct for aberration.
  *
  * @return Topocentric equatorial coordinates of the celestial body.
  */
@@ -4821,23 +4803,24 @@ fun equator(
  * to the respective `ra` and `dec` values passed in.
  *
  * @param time
- *      The date and time of the observation.
+ * The date and time of the observation.
  *
  * @param observer
- *      The geographic location of the observer.
+ * The geographic location of the observer.
  *
  * @param ra
- *      The right ascension of the body in sidereal hours. See remarks above for more details.
+ * The right ascension of the body in sidereal hours. See remarks above for more details.
  *
  * @param dec
- *      The declination of the body in degrees. See remarks above for more details.
+ * The declination of the body in degrees. See remarks above for more details.
  *
  * @param refraction
- *      Selects whether to correct for atmospheric refraction, and if so, which model to use.
- *      The recommended value for most uses is `Refraction.Normal`.
- *      See remarks above for more details.
+ * Selects whether to correct for atmospheric refraction, and if so, which model to use.
+ * The recommended value for most uses is `Refraction.Normal`.
+ * See remarks above for more details.
  *
- * @return The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
+ * @return
+ * The body's apparent horizontal coordinates and equatorial coordinates, both optionally corrected for refraction.
  */
 fun horizon(
     time: Time,
@@ -4959,12 +4942,13 @@ fun horizon(
  * in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
  *
  * @param body
- *      A body other than the Sun.
+ * A body other than the Sun.
  *
  * @param time
- *      The date and time at which the body's ecliptic longitude is to be calculated.
+ * The date and time at which the body's ecliptic longitude is to be calculated.
  *
- * @return The ecliptic longitude in degrees of the given body at the given time.
+ * @return
+ * The ecliptic longitude in degrees of the given body at the given time.
  */
 fun eclipticLongitude(body: Body, time: Time): Double {
     if (body == Body.Sun)
@@ -5022,15 +5006,16 @@ internal fun synodicPeriod(body: Body): Double {
  *   very difficult to see from the Earth. Superior conjunction is possible for any planet other than the Earth.
  *
  * @param body
- *      A planet other than the Earth. Any other body will cause an exception.
+ * A planet other than the Earth. Any other body will cause an exception.
  *
  * @param targetRelativeLongitude
- *      The desired relative longitude, expressed in degrees. Must be in the range [0, 360).
+ * The desired relative longitude, expressed in degrees. Must be in the range [0, 360).
  *
  * @param startTime
- *      The date and time at which to begin the search.
+ * The date and time at which to begin the search.
  *
- * @returns The time of the first relative longitude event that occurs after `startTime`.
+ * @return
+ * The time of the first relative longitude event that occurs after `startTime`.
  */
 fun searchRelativeLongitude(body: Body, targetRelativeLongitude: Double, startTime: Time): Time {
     val direction: Int = when (body) {
@@ -5089,10 +5074,10 @@ fun searchRelativeLongitude(body: Body, targetRelativeLongitude: Double, startTi
  * To continue the search, pass the `finish` time in the returned object to [nextTransit].
  *
  * @param body
- *      The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
+ * The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
  *
  * @param startTime
- *      The date and time for starting the search for a transit.
+ * The date and time for starting the search for a transit.
  */
 fun searchTransit(body: Body, startTime: Time): TransitInfo {
     val thresholdAngle = 0.4    // maximum angular separation to attempt transit calculations
@@ -5149,10 +5134,10 @@ fun searchTransit(body: Body, startTime: Time): TransitInfo {
  * Keep calling this function as many times as you want to keep finding more transits.
  *
  * @param body
- *      The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
+ * The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
  *
  * @param prevTransitTime
- *      A date and time near the previous transit.
+ * A date and time near the previous transit.
  */
 fun nextTransit(body: Body, prevTransitTime: Time) =
     searchTransit(body, prevTransitTime.addDays(100.0))
@@ -5227,20 +5212,20 @@ fun jupiterMoons(time: Time) =
  * If the search does not converge within 20 iterations, it will throw an exception.
  *
  * @param func
- *      The function for which to find the time of an ascending root.
- *      See remarks above for more details.
+ * The function for which to find the time of an ascending root.
+ * See remarks above for more details.
  *
  * @param time1
- *      The lower time bound of the search window.
- *      See remarks above for more details.
+ * The lower time bound of the search window.
+ * See remarks above for more details.
  *
  * @param time2
- *      The upper time bound of the search window.
- *      See remarks above for more details.
+ * The upper time bound of the search window.
+ * See remarks above for more details.
  *
  * @param toleranceSeconds
- *      Specifies an amount of time in seconds within which a bounded ascending root
- *      is considered accurate enough to stop. A typical value is 1 second.
+ * Specifies an amount of time in seconds within which a bounded ascending root
+ * is considered accurate enough to stop. A typical value is 1 second.
  *
  * @return
  * If successful, returns an [Time] value indicating a date and time
@@ -5390,7 +5375,7 @@ fun search(
  * In fact, the function [seasons] does use this function for that purpose.
  *
  * @param time
- *      The date and time for which to calculate the Sun's position.
+ * The date and time for which to calculate the Sun's position.
  *
  * @return The ecliptic coordinates of the Sun using the Earth's true equator of date.
  */
@@ -5436,8 +5421,8 @@ private fun rotateEquatorialToEcliptic(pos: Vector, obliqRadians: Double): Eclip
  * which are relative to the plane of the Earth's orbit around the Sun.
  *
  * @param equ
- *      Equatorial coordinates in the J2000 frame of reference.
- *      You can call [geoVector] to obtain suitable equatorial coordinates.
+ * Equatorial coordinates in the J2000 frame of reference.
+ * You can call [geoVector] to obtain suitable equatorial coordinates.
  *
  * @return Ecliptic coordinates in the J2000 frame of reference (ECL).
  */
@@ -5493,11 +5478,11 @@ fun searchSunLongitude(targetLon: Double, startTime: Time, limitDays: Double): T
  * of winter in the southern hemisphere.
  *
  * @param year
- *      The calendar year number for which to calculate equinoxes and solstices.
- *      The value may be any integer, but only the years 1800 through 2100 have been
- *      validated for accuracy: unit testing against data from the
- *      United States Naval Observatory confirms that all equinoxes and solstices
- *      for that range of years are within 2 minutes of the correct time.
+ * The calendar year number for which to calculate equinoxes and solstices.
+ * The value may be any integer, but only the years 1800 through 2100 have been
+ * validated for accuracy: unit testing against data from the
+ * United States Naval Observatory confirms that all equinoxes and solstices
+ * for that range of years are within 2 minutes of the correct time.
  *
  * @return
  * A [SeasonsInfo] object that contains four [Time] values:
@@ -5512,7 +5497,7 @@ fun seasons(year: Int) =
     )
 
 private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int): Time {
-    var startTime = Time(year, month, day, 0, 0, 0.0)
+    val startTime = Time(year, month, day, 0, 0, 0.0)
     return searchSunLongitude(targetLon, startTime, 20.0) ?:
         throw InternalError("Cannot find solution for Sun longitude $targetLon for year $year")
 }
@@ -5537,10 +5522,17 @@ private fun findSeasonChange(targetLon: Double, year: Int, month: Int, day: Int)
  * Neither `body1` nor `body2` is allowed to be [Body.Earth].
  * If this happens, the function throws an exception.
  *
- * @param body1 The first body, whose longitude is to be found relative to the second body.
- * @param body2 The second body, relative to which the longitude of the first body is to be found.
- * @param time  The date and time of the observation.
- * @return An angle in the range [0, 360), expressed in degrees.
+ * @param body1
+ * The first body, whose longitude is to be found relative to the second body.
+ *
+ * @param body2
+ * The second body, relative to which the longitude of the first body is to be found.
+ *
+ * @param time
+ * The date and time of the observation.
+ *
+ * @return
+ * An angle in the range [0, 360), expressed in degrees.
  */
 fun pairLongitude(body1: Body, body2: Body, time: Time): Double {
     if (body1 == Body.Earth || body2 == Body.Earth)
@@ -5567,8 +5559,11 @@ fun pairLongitude(body1: Body, body2: Body, time: Time): Double {
  * - 180 = full moon
  * - 270 = third quarter
  *
- * @param time  The date and time of the observation.
- * @return The angle as described above, a value in the range 0..360 degrees.
+ * @param time
+ * The date and time of the observation.
+ *
+ * @return
+ * The angle as described above, a value in the range 0..360 degrees.
  */
 fun moonPhase(time: Time): Double =
     pairLongitude(Body.Moon, Body.Sun, time)
@@ -5589,16 +5584,16 @@ fun moonPhase(time: Time): Double =
  * This function is useful for finding general phase angles outside those four quarters.
  *
  * @param targetLon
- *      The difference in geocentric longitude between the Sun and Moon
- *      that specifies the lunar phase being sought. This can be any value
- *      in the range [0, 360).  Certain values have conventional names:
- *      0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter.
+ * The difference in geocentric longitude between the Sun and Moon
+ * that specifies the lunar phase being sought. This can be any value
+ * in the range [0, 360).  Certain values have conventional names:
+ * 0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter.
  *
  * @param startTime
- *      The beginning of the time window in which to search for the Moon reaching the specified phase.
+ * The beginning of the time window in which to search for the Moon reaching the specified phase.
  *
  * @param limitDays
- *      The number of days after `startTime` that limits the time window for the search.
+ * The number of days after `startTime` that limits the time window for the search.
  *
  * @return
  * If successful, returns the date and time the moon reaches the phase specified by
@@ -5639,8 +5634,11 @@ fun searchMoonPhase(targetLon: Double, startTime: Time, limitDays: Double): Time
  * To continue iterating through consecutive lunar quarters, call this function once,
  * followed by calls to #NextMoonQuarter as many times as desired.
  *
- * @param startTime The date and time at which to start the search.
- * @return A [MoonQuarterInfo] object reporting the next quarter phase and the time it will occur.
+ * @param startTime
+ * The date and time at which to start the search.
+ *
+ * @return
+ * A [MoonQuarterInfo] object reporting the next quarter phase and the time it will occur.
  */
 fun searchMoonQuarter(startTime: Time): MoonQuarterInfo {
     val currentPhaseAngle = moonPhase(startTime)
@@ -5658,8 +5656,11 @@ fun searchMoonQuarter(startTime: Time): MoonQuarterInfo {
  * This function finds the next consecutive moon quarter event after
  * the one passed in as the parameter `mq`.
  *
- * @param The previous moon quarter found by a call to [searchMoonQuarter] or `nextMoonQuarter`.
- * @return The moon quarter that occurs next in time after the one passed in `mq`.
+ * @param mq
+ * The previous moon quarter found by a call to [searchMoonQuarter] or `nextMoonQuarter`.
+ *
+ * @return
+ * The moon quarter that occurs next in time after the one passed in `mq`.
  */
 fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
     // Skip 6 days past the previous found moon quarter to find the next one.
@@ -5699,15 +5700,20 @@ fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
  * of the body at that time, as seen by the given observer.
  *
  * @param body
- *      The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+ * The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+ *
  * @param observer
- *      A location on or near the surface of the Earth where the observer is located.
+ * A location on or near the surface of the Earth where the observer is located.
+ *
  * @param hourAngle
- *      An hour angle value in the range [0, 24) indicating the number of sidereal hours after the
- *      body's most recent culmination.
+ * An hour angle value in the range [0, 24) indicating the number of sidereal hours after the
+ * body's most recent culmination.
+ *
  * @param startTime
- *      The date and time at which to start the search.
- * @return The time when the body reaches the hour angle, and the horizontal coordinates of the body at that time.
+ * The date and time at which to start the search.
+ *
+ * @return
+ * The time when the body reaches the hour angle, and the horizontal coordinates of the body at that time.
  */
 fun searchHourAngle(
     body: Body,
@@ -5851,23 +5857,23 @@ private fun internalSearchAltitude(
  * Therefore callers must not assume that the function will always succeed.
  *
  * @param body
- *      The Sun, Moon, or any planet other than the Earth.
+ * The Sun, Moon, or any planet other than the Earth.
  *
  * @param observer
- *      The location where observation takes place.
+ * The location where observation takes place.
  *
  * @param direction
- *      Either [Direction.Rise] to find a rise time or [Direction.Set] to find a set time.
+ * Either [Direction.Rise] to find a rise time or [Direction.Set] to find a set time.
  *
  * @param startTime
- *      The date and time at which to start the search.
+ * The date and time at which to start the search.
  *
  * @param limitDays
- *      Limits how many days to search for a rise or set time.
- *      To limit a rise or set time to the same day, you can use a value of 1 day.
- *      In cases where you want to find the next rise or set time no matter how far
- *      in the future (for example, for an observer near the south pole), you can
- *      pass in a larger value like 365.
+ * Limits how many days to search for a rise or set time.
+ * To limit a rise or set time to the same day, you can use a value of 1 day.
+ * In cases where you want to find the next rise or set time no matter how far
+ * in the future (for example, for an observer near the south pole), you can
+ * pass in a larger value like 365.
  *
  * @return
  * On success, returns the date and time of the rise or set time as requested.
@@ -5922,13 +5928,27 @@ fun searchRiseSet(
  *
  * Astronomical twilight uses -18 degrees as the `altitude` value.
  *
- * @param body The Sun, Moon, or any planet other than the Earth.
- * @param observer The location where observation takes place.
- * @param direction Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event.
- * @param startTime The date and time at which to start the search.
- * @param limitDays The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number.
- * @param altitude The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90].
- * @return The date and time of the altitude event, or `null` if no such event occurs within the specified time window.
+ * @param body
+ * The Sun, Moon, or any planet other than the Earth.
+ *
+ * @param observer
+ * The location where observation takes place.
+ *
+ * @param direction
+ * Either [Direction.Rise] to find an ascending altitude event or [Direction.Set] to find a descending altitude event.
+ *
+ * @param startTime
+ * The date and time at which to start the search.
+ *
+ * @param limitDays
+ * The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number.
+ *
+ * @param altitude
+ * The desired altitude angle of the body's center above (positive) or below (negative)
+ * the observer's local horizon, expressed in degrees. Must be in the range [-90, +90].
+ *
+ * @return
+ * The date and time of the altitude event, or `null` if no such event occurs within the specified time window.
  */
 fun searchAltitude(
     body: Body,
@@ -5954,13 +5974,14 @@ fun searchAltitude(
  * easy it is to see the body away from the glare of the Sun.
  *
  * @param body
- *      The celestial body whose angle from the Sun is to be measured.
- *      Not allowed to be [Body.Earth].
+ * The celestial body whose angle from the Sun is to be measured.
+ * Not allowed to be [Body.Earth].
  *
  * @param time
- *      The time at which the observation is made.
+ * The time at which the observation is made.
  *
- * @return The angle in degrees between the Sun and the specified body as seen from the center of the Earth.
+ * @return
+ * The angle in degrees between the Sun and the specified body as seen from the center of the Earth.
  */
 fun angleFromSun(body: Body, time: Time): Double {
     if (body == Body.Earth)
@@ -6000,7 +6021,7 @@ internal fun moonRadialSpeed(time: Time): Double {
  * call of `Astronomy.NextLunarApsis` as many times as desired.
  *
  * @param startTime
- *      The date and time at which to start searching for the next perigee or apogee.
+ * The date and time at which to start searching for the next perigee or apogee.
  */
 fun searchLunarApsis(startTime: Time): ApsisInfo {
     val increment = 0.5     // number of days to skip in each iteration
@@ -6022,9 +6043,9 @@ fun searchLunarApsis(startTime: Time): ApsisInfo {
             // There is a change of slope polarity within the time range [t1, t2].
             // Therefore this time range contains an apsis.
             // Figure out whether it is perigee or apogee.
-            var apsisTime: Time
-            var kind: ApsisKind
-            var direction: Int
+            val apsisTime: Time
+            val kind: ApsisKind
+            val direction: Int
             if (m1 < 0.0 || m2 > 0.0) {
                 // We found a minimum distance event: perigee.
                 // Search the time range for the time when the slope goes from negative to positive.
@@ -6064,8 +6085,7 @@ fun searchLunarApsis(startTime: Time): ApsisInfo {
  * See [searchLunarApsis] for more details.
  *
  * @param apsis
- *      An [ApsisInfo] value obtained from a call
- *      to [searchLunarApsis] or `nextLunarApsis`.
+ * An [ApsisInfo] value obtained from a call to [searchLunarApsis] or [nextLunarApsis].
  */
 fun nextLunarApsis(apsis: ApsisInfo): ApsisInfo {
     val time = apsis.time.addDays(11.0)
@@ -6096,10 +6116,10 @@ fun nextLunarApsis(apsis: ApsisInfo): ApsisInfo {
  *   The ecliptic separation is measured in degrees and is always in the range [0, 180].
  *
  * @param body
- *      The celestial body whose visibility is to be calculated.
+ * The celestial body whose visibility is to be calculated.
  *
  * @param time
- *      The date and time of the observation.
+ * The date and time of the observation.
  */
 fun elongation(body: Body, time: Time): ElongationInfo {
     val relativeLongitude = pairLongitude(body, Body.Sun, time)
@@ -6135,17 +6155,17 @@ private fun negativeElongationSlope(body: Body, time: Time): Double {
  * observed in the morning or evening. See [elongation] for more details about the returned structure.
  *
  * @param body
- *      Either [Body.Mercury] or [Body.Venus]. Any other value will result in an exception.
- *      To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)
- *      use [searchRelativeLongitude] to find the next opposition event.
+ * Either [Body.Mercury] or [Body.Venus]. Any other value will result in an exception.
+ * To find the best viewing opportunites for planets farther from the Sun than the Earth is (Mars through Pluto)
+ * use [searchRelativeLongitude] to find the next opposition event.
  *
  * @param startTime
- *      The date and time at which to begin the search. The maximum elongation event found will always
- *      be the first one that occurs after this date and time.
+ * The date and time at which to begin the search. The maximum elongation event found will always
+ * be the first one that occurs after this date and time.
  */
 fun searchMaxElongation(body: Body, startTime: Time): ElongationInfo {
-    var s1: Double
-    var s2: Double
+    val s1: Double
+    val s2: Double
     when (body) {
         Body.Mercury -> {
             s1 = 50.0
@@ -6178,7 +6198,7 @@ fun searchMaxElongation(body: Body, startTime: Time): ElongationInfo {
             // Search forward for the time t1 when rel lon = +s1.
             rlonLo = +s1
             // Search forward for the time t2 when rel lon = +s2.
-            rlonHi = +s2;
+            rlonHi = +s2
         } else if (rlon > +s2 || rlon < -s2) {
             // Seek to the next search window at [-s2, -s1].
             adjustDays = 0.0
@@ -6255,10 +6275,10 @@ fun searchMaxElongation(body: Body, startTime: Time): ElongationInfo {
  * 0 for all bodies other than Saturn.
  *
  * @param body
- *      The Sun, Moon, or any planet other than the Earth.
+ * The Sun, Moon, or any planet other than the Earth.
  *
  * @param time
- *      The date and time of the observation.
+ * The date and time of the observation.
  */
 fun illumination(body: Body, time: Time): IlluminationInfo {
     if (body == Body.Earth)
@@ -6266,9 +6286,9 @@ fun illumination(body: Body, time: Time): IlluminationInfo {
 
     val earth = helioEarthPos(time)
 
-    var gc: Vector
-    var hc: Vector
-    var phaseAngle: Double
+    val gc: Vector
+    val hc: Vector
+    val phaseAngle: Double
 
     if (body == Body.Sun) {
         gc = -earth
@@ -6291,8 +6311,8 @@ fun illumination(body: Body, time: Time): IlluminationInfo {
 
     val geoDist = gc.length()
     val helioDist = hc.length()
-    var mag: Double
-    var ringTilt: Double
+    val mag: Double
+    val ringTilt: Double
 
     if (body == Body.Saturn) {
         val saturn = saturnMagnitude(phaseAngle, helioDist, geoDist, gc, time)
@@ -6367,7 +6387,7 @@ internal fun visualMagnitude(
     geoDist: Double
 ): Double {
     // For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
-    var c0: Double
+    val c0: Double
     var c1 = 0.0
     var c2 = 0.0
     var c3 = 0.0
@@ -6445,10 +6465,10 @@ internal fun magnitudeSlope(body: Body, time: Time): Double {
  * However, the difference is minor and has little practical value.
  *
  * @param body
- *      Currently only [Body.Venus] is allowed. Any other value causes an exception.
+ * Currently only [Body.Venus] is allowed. Any other value causes an exception.
  *
  * @param startTime
- *      The date and time to start searching for the next peak magnitude event.
+ * The date and time to start searching for the next peak magnitude event.
  */
 fun searchPeakMagnitude(body: Body, startTime: Time): IlluminationInfo {
     if (body != Body.Venus)
@@ -6552,14 +6572,14 @@ fun searchPeakMagnitude(body: Body, startTime: Time): IlluminationInfo {
  * on the Earth.
  *
  * @param latitude
- *      The latitude of the observer in degrees north or south of the equator.
- *      By formula symmetry, positive latitudes give the same answer as negative
- *      latitudes, so the sign does not matter.
+ * The latitude of the observer in degrees north or south of the equator.
+ * By formula symmetry, positive latitudes give the same answer as negative
+ * latitudes, so the sign does not matter.
  *
  * @param height
- *      The height above the sea level geoid in meters.
- *      No range checking is done; however, accuracy is only valid in the
- *      range 0 to 100000 meters.
+ * The height above the sea level geoid in meters.
+ * No range checking is done; however, accuracy is only valid in the
+ * range 0 to 100000 meters.
  *
  * @return
  * The effective gravitational acceleration expressed in meters per second squared.
@@ -6602,16 +6622,16 @@ fun observerGravity(latitude: Double, height: Double): Double {
  * for some other purpose.
  *
  * @param point
- *      An integer 1..5 that selects which of the Lagrange points to calculate.
+ * An integer 1..5 that selects which of the Lagrange points to calculate.
  *
  * @param time
- *      The time for which the Lagrange point is to be calculated.
+ * The time for which the Lagrange point is to be calculated.
  *
  * @param majorBody
- *      The more massive of the co-orbiting bodies: [Body.Sun] or [Body.Earth].
+ * The more massive of the co-orbiting bodies: [Body.Sun] or [Body.Earth].
  *
  * @param minorBody
- *      The less massive of the co-orbiting bodies. See main remarks.
+ * The less massive of the co-orbiting bodies. See main remarks.
  *
  * @return
  * The position and velocity of the selected Lagrange point with respect to the major body's center.
@@ -6619,8 +6639,8 @@ fun observerGravity(latitude: Double, height: Double): Double {
 fun lagrangePoint(point: Int, time: Time, majorBody: Body, minorBody: Body): StateVector {
     val majorMass = massProduct(majorBody)
     val minorMass = massProduct(minorBody)
-    var majorState: StateVector
-    var minorState: StateVector
+    val majorState: StateVector
+    val minorState: StateVector
 
     // Calculate the state vectors for the major and minor bodies.
     if (majorBody == Body.Earth && minorBody == Body.Moon) {
@@ -6670,19 +6690,19 @@ fun lagrangePoint(point: Int, time: Time, majorBody: Body, minorBody: Body): Sta
  * Consider calling [lagrangePoint], instead of this function, for simpler usage in most cases.
  *
  * @param point
- *      An integer 1..5 that selects which of the Lagrange points to calculate.
+ * An integer 1..5 that selects which of the Lagrange points to calculate.
  *
  * @param majorState
- *      The state vector of the major (more massive) of the pair of bodies.
+ * The state vector of the major (more massive) of the pair of bodies.
  *
  * @param majorMass
- *      The mass product GM of the major body.
+ * The mass product GM of the major body.
  *
  * @param minorState
- *      The state vector of the minor (less massive) of the pair of bodies.
+ * The state vector of the minor (less massive) of the pair of bodies.
  *
  * @param minorMass
- *      The mass product GM of the minor body.
+ * The mass product GM of the minor body.
  *
  * @return
  * The position and velocity of the selected Lagrange point with respect to the major body's center.
@@ -6795,8 +6815,8 @@ fun lagrangePointFast(
     // is equal to net inward gravitational acceleration.
     // First derive a good initial guess based on approximate analysis.
     var scale: Double
-    var numer1: Double
-    var numer2: Double
+    val numer1: Double
+    val numer2: Double
 
     if (point == 1 || point == 2) {
         scale = (majorMass / (majorMass + minorMass)) * cbrt(minorMass / (3.0 * majorMass))
@@ -6857,7 +6877,7 @@ fun lagrangePointFast(
  * and the apparent angular diameter of the Moon `diam_deg`.
  *
  * @param time
- *      The date and time for which to calculate lunar libration.
+ * The date and time for which to calculate lunar libration.
  *
  * @return
  * The Moon's ecliptic position and libration angles as seen from the Earth.
@@ -6898,7 +6918,7 @@ fun libration(time: Time): LibrationInfo {
     val e = 1.0 - 0.002516*t - 0.0000074*t2
 
     // Optical librations
-    val w = mlon - omega;
+    val w = mlon - omega
     val a = atan2(sin(w)*cos(mlat)*cosIncl - sin(mlat)*sinIncl, cos(w)*cos(mlat))
     val ldash = longitudeOffset((a - f).radiansToDegrees())
     val bdash = asin(-sin(w)*cos(mlat)*sinIncl - sin(mlat)*cosIncl)
@@ -6978,7 +6998,7 @@ private const val moonNodeStepDays = 10.0     // a safe number of days to step w
  * Then call [nextMoonNode] to find as many more consecutive nodes as desired.
  *
  * @param startTime
- *      The date and time for starting the search for an ascending or descending node of the Moon.
+ * The date and time for starting the search for an ascending or descending node of the Moon.
  */
 fun searchMoonNode(startTime: Time): NodeEventInfo {
     // Start at the given moment in time and sample the Moon's ecliptic latitude.
@@ -6991,8 +7011,8 @@ fun searchMoonNode(startTime: Time): NodeEventInfo {
         if (eclip1.lat * eclip2.lat <= 0.0) {
             // There is a node somewhere in this closed time interval.
             // Figure out whether it is an ascending node or a descending node.
-            var kind: NodeEventKind
-            var direction: Double
+            val kind: NodeEventKind
+            val direction: Double
             if (eclip2.lat > eclip1.lat) {
                 direction = +1.0
                 kind = NodeEventKind.Ascending
@@ -7017,7 +7037,7 @@ fun searchMoonNode(startTime: Time): NodeEventInfo {
  * Then call `nextMoonNode` to find as many more consecutive nodes as desired.
  *
  * @param prevNode
- *      The previous node found from calling [searchMoonNode] or `nextMoonNode`.
+ * The previous node found from calling [searchMoonNode] or `nextMoonNode`.
  */
 fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
     val time = prevNode.time.addDays(moonNodeStepDays)
@@ -7046,11 +7066,11 @@ fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
  * as many times as desired.
  *
  * @param body
- *      The planet for which to find the next perihelion/aphelion event.
- *      Not allowed to be [Body.Sun] or [Body.Moon].
+ * The planet for which to find the next perihelion/aphelion event.
+ * Not allowed to be [Body.Sun] or [Body.Moon].
  *
  * @param startTime
- *      The date and time at which to start searching for the next perihelion or aphelion.
+ * The date and time at which to start searching for the next perihelion or aphelion.
  */
 fun searchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
     // Neptune and Pluto have "wavy" orbits for which a brute force search is needed.
@@ -7072,8 +7092,8 @@ fun searchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
             // There is a change of slope polarity within the time range [t1, t2].
             // Therefore this time range contains an apsis.
             // Figure out whether it is perihelion or aphelion.
-            var kind: ApsisKind
-            var direction: Double
+            val kind: ApsisKind
+            val direction: Double
             if (m1 < 0.0 || m2 > 0.0) {
                 // We found a minimum-distance event: perihelion.
                 // Search the time range for the time when the slope goes from negative to positive.
@@ -7115,12 +7135,12 @@ fun searchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
  * See [searchPlanetApsis] for more details.
  *
  * @param body
- *      The planet for which to find the next perihelion/aphelion event.
- *      Not allowed to be [Body.Sun] or [Body.Moon].
- *      Must match the body passed into the call that produced the `apsis` parameter.
+ * The planet for which to find the next perihelion/aphelion event.
+ * Not allowed to be [Body.Sun] or [Body.Moon].
+ * Must match the body passed into the call that produced the `apsis` parameter.
  *
  * @param apsis
- *      An apsis event obtained from a call to [searchPlanetApsis] or `nextPlanetApsis`.
+ * An apsis event obtained from a call to [searchPlanetApsis] or `nextPlanetApsis`.
  */
 fun nextPlanetApsis(body: Body, apsis: ApsisInfo): ApsisInfo {
     // Skip 1/4 of an orbit before starting search again.
@@ -7172,8 +7192,8 @@ internal fun bruteSearchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
 
     val npoints = 100
     val period = planetOrbitalPeriod(body)
-    var t1 = startTime.addDays(period * ( -30.0 / 360.0))
-    var t2 = startTime.addDays(period * (+270.0 / 360.0))
+    val t1 = startTime.addDays(period * ( -30.0 / 360.0))
+    val t2 = startTime.addDays(period * (+270.0 / 360.0))
     var tMin = t1
     var tMax = t1
     val interval = (t2.ut - t1.ut) / (npoints - 1.0)
@@ -7197,11 +7217,8 @@ internal fun bruteSearchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
         }
     }
 
-    t1 = tMin.addDays(-2.0 * interval)
-    val perihelion = planetExtreme(body, ApsisKind.Pericenter, t1, 4.0 * interval)
-
-    t1 = tMax.addDays(-2.0 * interval)
-    val aphelion = planetExtreme(body, ApsisKind.Apocenter, t1, 4.0 * interval)
+    val perihelion = planetExtreme(body, ApsisKind.Pericenter, tMin.addDays(-2.0 * interval), 4.0 * interval)
+    val aphelion   = planetExtreme(body, ApsisKind.Apocenter,  tMax.addDays(-2.0 * interval), 4.0 * interval)
 
     if (perihelion.time.tt >= startTime.tt) {
         if (aphelion.time.tt >= startTime.tt) {
@@ -7299,7 +7316,7 @@ fun rotationEclEqj(): RotationMatrix {
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
  * @param time
- *      The date and time at which the Earth's equator defines the target orientation.
+ * The date and time at which the Earth's equator defines the target orientation.
  */
 fun rotationEqjEqd(time: Time): RotationMatrix =
     precessionRot(time, PrecessDirection.From2000) combine
@@ -7314,7 +7331,7 @@ fun rotationEqjEqd(time: Time): RotationMatrix =
  * Target: EQJ = equatorial system, using equator at J2000 epoch.
  *
  * @param time
- *      The date and time at which the Earth's equator defines the source orientation.
+ * The date and time at which the Earth's equator defines the source orientation.
  */
 fun rotationEqdEqj(time: Time): RotationMatrix =
     nutationRot(time, PrecessDirection.Into2000) combine
@@ -7329,10 +7346,10 @@ fun rotationEqdEqj(time: Time): RotationMatrix =
  * Target: HOR = horizontal system.
  *
  * @param time
- *      The date and time at which the Earth's equator applies.
+ * The date and time at which the Earth's equator applies.
  *
  * @param observer
- *      A location near the Earth's mean sea level that defines the observer's horizon.
+ * A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
  * A rotation matrix that converts EQD to HOR at `time` and for `observer`.
@@ -7377,10 +7394,10 @@ fun rotationEqdHor(time: Time, observer: Observer): RotationMatrix {
  * Target: EQD = equatorial system, using equator of the specified date/time.
  *
  * @param time
- *      The date and time at which the Earth's equator applies.
+ * The date and time at which the Earth's equator applies.
  *
  * @param observer
- *      A location near the Earth's mean sea level that defines the observer's horizon.
+ * A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return A rotation matrix that converts HOR to EQD at `time` and for `observer`.
  */
@@ -7395,10 +7412,10 @@ fun rotationHorEqd(time: Time, observer: Observer): RotationMatrix =
  * Target: EQJ = equatorial system, using equator at the J2000 epoch.
  *
  * @param time
- *      The date and time of the observation.
+ * The date and time of the observation.
  *
  * @param observer
- *      A location near the Earth's mean sea level that defines the observer's horizon.
+ * A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
  */
@@ -7415,10 +7432,10 @@ fun rotationHorEqj(time: Time, observer: Observer): RotationMatrix =
  * Target: HOR = horizontal system.
  *
  * @param time
- *      The date and time of the observation.
+ * The date and time of the observation.
  *
  * @param observer
- *      A location near the Earth's mean sea level that defines the observer's horizon.
+ * A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
  * A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
@@ -7439,7 +7456,7 @@ fun rotationEqjHor(time: Time, observer: Observer): RotationMatrix =
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
  * @param time
- *      The date and time of the source equator.
+ * The date and time of the source equator.
  *
  * @return A rotation matrix that converts EQD to ECL.
  */
@@ -7456,7 +7473,7 @@ fun rotationEqdEcl(time: Time): RotationMatrix =
  * Target: EQD = equatorial system, using equator of date.
  *
  * @param time
- *      The date and time of the desired equator.
+ * The date and time of the desired equator.
  *
  * @return A rotation matrix that converts ECL to EQD.
  */
@@ -7472,10 +7489,10 @@ fun rotationEclEqd(time: Time): RotationMatrix =
  * Target: HOR = horizontal system.
  *
  * @param time
- *      The date and time of the desired horizontal orientation.
+ * The date and time of the desired horizontal orientation.
  *
  * @param observer
- *      A location near the Earth's mean sea level that defines the observer's horizon.
+ * A location near the Earth's mean sea level that defines the observer's horizon.
  *
  * @return
  * A rotation matrix that converts ECL to HOR at `time` and for `observer`.
@@ -7497,12 +7514,13 @@ fun rotationEclHor(time: Time, observer: Observer): RotationMatrix =
  * Target: ECL = ecliptic system, using equator at J2000 epoch.
  *
  * @param time
- *      The date and time of the horizontal observation.
+ * The date and time of the horizontal observation.
  *
  * @param observer
- *      The location of the horizontal observer.
+ * The location of the horizontal observer.
  *
- * @return A rotation matrix that converts HOR to ECL.
+ * @return
+ * A rotation matrix that converts HOR to ECL.
  */
 fun rotationHorEcl(time: Time, observer: Observer): RotationMatrix =
     rotationEclHor(time, observer).inverse()
@@ -7515,7 +7533,8 @@ fun rotationHorEcl(time: Time, observer: Observer): RotationMatrix =
  * Source: GAL = galactic system (IAU 1958 definition).
  * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
  *
- * @return A rotation matrix that converts GAL to EQJ.
+ * @return
+ * A rotation matrix that converts GAL to EQJ.
  */
 fun rotationEqjGal() =
     // This rotation matrix was calculated by the following script:
@@ -7534,7 +7553,8 @@ fun rotationEqjGal() =
  * Source: GAL = galactic system (IAU 1958 definition).
  * Target: EQJ = equatorial system, using the equator at the J2000 epoch.
  *
- * @return A rotation matrix that converts GAL to EQJ.
+ * @return
+ * A rotation matrix that converts GAL to EQJ.
  */
 fun rotationGalEqj() =
     // This rotation matrix was calculated by the following script:
@@ -7552,10 +7572,10 @@ fun rotationGalEqj() =
  * constellation that contains that point.
  *
  * @param ra
- *      The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ).
+ * The right ascension (RA) of a point in the sky, using the J2000 equatorial system (EQJ).
  *
  * @param dec
- *      The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
+ * The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ).
  *
  * @return
  * A structure that contains the 3-letter abbreviation and full name
@@ -7570,7 +7590,7 @@ fun constellation(ra: Double, dec: Double): ConstellationInfo {
     val raDeg = (ra * 15.0).withMinDegreeValue(0.0)
 
     // Convert coordinates from J2000 to B1875.
-    var sph2000 = Spherical(dec, raDeg, 1.0)
+    val sph2000 = Spherical(dec, raDeg, 1.0)
     val vec2000 = sph2000.toVector(epoch2000)
     val vec1875 = constelRot.rotate(vec2000)
     val equ1875 = vec1875.toEquatorial()

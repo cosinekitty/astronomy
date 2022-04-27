@@ -12,4 +12,4 @@ Call [searchMoonNode](search-moon-node.md) to find the first of a series of node
 
 | | |
 |---|---|
-| prevNode | The previous node found from calling [searchMoonNode] or `nextMoonNode`. |
+| prevNode | The previous node found from calling [searchMoonNode](search-moon-node.md) or nextMoonNode. |

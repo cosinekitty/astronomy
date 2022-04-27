@@ -12,5 +12,5 @@ This function searches for the date and time Venus appears brightest as seen fro
 
 | | |
 |---|---|
-| body | Currently only [Body.Venus] is allowed. Any other value causes an exception. |
+| body | Currently only [Body.Venus](-body/-venus/index.md) is allowed. Any other value causes an exception. |
 | startTime | The date and time to start searching for the next peak magnitude event. |

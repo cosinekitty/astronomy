@@ -14,5 +14,5 @@ For example, if you have rotation matrix that converts ecliptic coordinates (ECL
 
 | | |
 |---|---|
-| axis | An integer that selects which coordinate axis to rotate around:     0 = x, 1 = y, 2 = z. Any other value will cause an exception. |
-| angle | An angle in degrees indicating the amount of rotation around the specified axis.     Positive angles indicate rotation counterclockwise as seen from the positive     direction along that axis, looking towards the origin point of the orientation system.     Any finite number of degrees is allowed, but best precision will result from keeping     `angle` in the range [-360, +360]. |
+| axis | An integer that selects which coordinate axis to rotate around: 0 = x, 1 = y, 2 = z. Any other value will cause an exception. |
+| angle | An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping angle in the range -360, +360. |

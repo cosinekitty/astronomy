@@ -16,5 +16,5 @@ The angle in degrees between the Sun and the specified body as seen from the cen
 
 | | |
 |---|---|
-| body | The celestial body whose angle from the Sun is to be measured.     Not allowed to be [Body.Earth]. |
+| body | The celestial body whose angle from the Sun is to be measured. Not allowed to be [Body.Earth](-body/-earth/index.md). |
 | time | The time at which the observation is made. |

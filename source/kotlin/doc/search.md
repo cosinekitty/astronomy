@@ -30,7 +30,7 @@ If successful, returns an [Time](-time/index.md) value indicating a date and tim
 
 | | |
 |---|---|
-| func | The function for which to find the time of an ascending root.     See remarks above for more details. |
-| time1 | The lower time bound of the search window.     See remarks above for more details. |
-| time2 | The upper time bound of the search window.     See remarks above for more details. |
-| toleranceSeconds | Specifies an amount of time in seconds within which a bounded ascending root     is considered accurate enough to stop. A typical value is 1 second. |
+| func | The function for which to find the time of an ascending root. See remarks above for more details. |
+| time1 | The lower time bound of the search window. See remarks above for more details. |
+| time2 | The upper time bound of the search window. See remarks above for more details. |
+| toleranceSeconds | Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. |
