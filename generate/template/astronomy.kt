@@ -2747,9 +2747,7 @@ private fun vsopFormulaCalc(formula: VsopFormula, t: Double, clampAngle: Boolean
     var coord = 0.0
     var tpower = 1.0
     for (series in formula.series) {
-        var sum = 0.0
-        for (term in series.term)
-            sum += term.amplitude * cos(term.phase + (t * term.frequency))
+        val sum = series.term.sumOf { it.amplitude * cos(it.phase + (t * it.frequency)) }
         coord +=
             if (clampAngle)
                 (tpower * sum) % PI2    // improve precision: longitude angles can be hundreds of radians
@@ -2799,7 +2797,7 @@ private fun vsopDerivCalc(formula: VsopFormula, t: Double): Double {
     var tpower = 1.0        // t^s
     var dpower = 0.0        // t^(s-1)
     var deriv = 0.0
-    for ((s, series) in formula.series.withIndex()) {
+    formula.series.forEachIndexed { s, series ->
         var sinSum = 0.0
         var cosSum = 0.0
         for (term in series.term) {
@@ -3427,13 +3425,10 @@ private fun calcJupiterMoon(time: Time, m: JupiterMoon): StateVector {
     val t = time.tt + 18262.5     // number of days since 1950-01-01T00:00:00Z
 
     // Calculate 6 orbital elements at the given time t.
-    var elem0 = 0.0
-    for (term in m.a)
-        elem0 += term.amplitude * cos(term.phase + (t * term.frequency))
+    val elem0 = m.a.sumOf { term -> term.amplitude * cos(term.phase + (t * term.frequency)) }
 
     var elem1 = m.al0 + (t * m.al1)
-    for (term in m.l)
-        elem1 += term.amplitude * sin(term.phase + (t * term.frequency))
+    elem1 += m.l.sumOf { term -> term.amplitude * sin(term.phase + (t * term.frequency)) }
 
     elem1 %= PI2
     if (elem1 < 0)
