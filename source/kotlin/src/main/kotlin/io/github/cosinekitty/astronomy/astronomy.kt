@@ -3247,9 +3247,8 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
         return null     // Don't bother calculating a segment. Let the caller crawl backward/forward to this time
 
     val segIndex = clampIndex((tt - plutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1)
-    synchronized (plutoCache) {
-        var list = plutoCache.get(segIndex)
-        if (list == null) {
+    return synchronized(plutoCache) {
+        plutoCache.getOrPut(segIndex) {
             val seg = ArrayList<BodyGravCalc>()
 
             // The first endpoint is exact.
@@ -3290,10 +3289,8 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
                 seg[i].a.mix(ramp, reverse[i].a)
             }
 
-            list = seg.toList()
-            plutoCache.set(segIndex, list)
+            seg
         }
-        return list
     }
 }
 
