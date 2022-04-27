@@ -451,22 +451,8 @@ class DateTime(
         val millis: Double = 1000.0 * (second - wholeSeconds)
         val wholeMillis: Int = millis.toInt()
 
-        return (
-            "%04d".format(year) +
-            "-" +
-            "%02d".format(month) +
-            "-" +
-            "%02d".format(day) +
-            "T" +
-            "%02d".format(hour) +
-            ":" +
-            "%02d".format(minute) +
-            ":" +
-            "%02d".format(wholeSeconds) +
-            "." +
-            "%03d".format(wholeMillis) +
-            "Z"
-        )
+        return "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ"
+            .format(year, month, day, hour, minute, wholeSeconds, wholeMillis)
     }
 }
 
@@ -6477,8 +6463,7 @@ fun searchPeakMagnitude(body: Body, startTime: Time): IlluminationInfo {
 
     var iter = 0
     var searchTime = startTime
-    while (++iter <= 2)
-    {
+    while (++iter <= 2) {
         // Find current heliocentric relative longitude between the
         // inferior planet and the Earth.
         val plon = eclipticLongitude(body, searchTime)
@@ -7253,7 +7238,7 @@ internal fun planetExtreme(body: Body, kind: ApsisKind, startTime: Time, initDay
         for (i in 0 until npoints) {
             val time = searchTime.addDays(i * interval)
             val distance = direction * helioDistance(body, time)
-            if (i==0 || distance > bestDistance) {
+            if (i == 0 || distance > bestDistance) {
                 bestI = i
                 bestDistance = distance
             }
