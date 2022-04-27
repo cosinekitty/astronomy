@@ -3880,7 +3880,7 @@ private fun terra(observer: Observer, time: Time): StateVector {
     val phi = observer.latitude.degreesToRadians()
     val sinphi = sin(phi)
     val cosphi = cos(phi)
-    val c = 1.0 / hypot(cosphi,  EARTH_FLATTENING * sinphi)
+    val c = 1.0 / hypot(cosphi, EARTH_FLATTENING * sinphi)
     val s = c * EARTH_FLATTENING_SQUARED
     val heightKm = observer.height / 1000.0
     val ach = (EARTH_EQUATORIAL_RADIUS_KM * c) + heightKm
@@ -4747,11 +4747,10 @@ fun equator(
     val gcObserver = geoPos(time, observer)
     val gc = geoVector(body, time, aberration)
     val j2000 = gc - gcObserver
-    val vector = when (equdate) {
+    return when (equdate) {
         EquatorEpoch.OfDate -> gyration(j2000, PrecessDirection.From2000)
         EquatorEpoch.J2000  -> j2000
-    }
-    return vector.toEquatorial()
+    }.toEquatorial()
 }
 
 /**
@@ -5140,12 +5139,7 @@ fun nextTransit(body: Body, prevTransitTime: Time) =
  * of how Jupiter and its moons look from Earth.
  */
 fun jupiterMoons(time: Time) =
-    JupiterMoonsInfo(arrayOf(
-        calcJupiterMoon(time, jupiterMoonModel[0]),
-        calcJupiterMoon(time, jupiterMoonModel[1]),
-        calcJupiterMoon(time, jupiterMoonModel[2]),
-        calcJupiterMoon(time, jupiterMoonModel[3])
-    ))
+    JupiterMoonsInfo(jupiterMoonModel.map { calcJupiterMoon(time, it) }.toTypedArray())
 
 /**
  * Searches for a time at which a function's value increases through zero.
