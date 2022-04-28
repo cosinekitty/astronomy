@@ -7629,7 +7629,7 @@ private fun addSolarTerms(context: MoonContext) {$ASTRO_ADDSOL()}
 // Pluto state table
 
 $ASTRO_PLUTO_TABLE()
-private val plutoCache = mutableMapOf<Int, List<BodyGravCalc>>()
+private val plutoCache = hashMapOf<Int, List<BodyGravCalc>>()
 
 //---------------------------------------------------------------------------------------
 // Models for Jupiter's four largest moons.

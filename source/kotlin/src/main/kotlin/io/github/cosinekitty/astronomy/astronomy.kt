@@ -8619,7 +8619,7 @@ private val plutoStateTable: Array<BodyState> = arrayOf(
 ,   BodyState(  700800.0, TerseVector(-15.576200701394,  34.399412961275,  15.466033737854), TerseVector(-2.0098814612884e-03, -1.7191109825989e-03,  7.0414782780416e-05))
 ,   BodyState(  730000.0, TerseVector(  4.243252837090, -30.118201690825, -10.707441231349), TerseVector( 3.1725847067411e-03,  1.6098461202270e-04, -9.0672150593868e-04))
 )
-private val plutoCache = mutableMapOf<Int, List<BodyGravCalc>>()
+private val plutoCache = hashMapOf<Int, List<BodyGravCalc>>()
 
 //---------------------------------------------------------------------------------------
 // Models for Jupiter's four largest moons.
