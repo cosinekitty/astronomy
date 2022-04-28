@@ -5144,7 +5144,14 @@ fun nextTransit(body: Body, prevTransitTime: Time) =
  * of how Jupiter and its moons look from Earth.
  */
 fun jupiterMoons(time: Time) =
-    JupiterMoonsInfo(jupiterMoonModel.map { calcJupiterMoon(time, it) }.toTypedArray())
+    JupiterMoonsInfo(
+        arrayOf(
+            calcJupiterMoon(time, jupiterMoonModel[0]),
+            calcJupiterMoon(time, jupiterMoonModel[1]),
+            calcJupiterMoon(time, jupiterMoonModel[2]),
+            calcJupiterMoon(time, jupiterMoonModel[3])
+        )
+    )
 
 /**
  * Searches for a time at which a function's value increases through zero.
