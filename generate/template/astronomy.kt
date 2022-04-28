@@ -5144,7 +5144,14 @@ fun nextTransit(body: Body, prevTransitTime: Time) =
  * of how Jupiter and its moons look from Earth.
  */
 fun jupiterMoons(time: Time) =
-    JupiterMoonsInfo(jupiterMoonModel.map { calcJupiterMoon(time, it) }.toTypedArray())
+    JupiterMoonsInfo(
+        arrayOf(
+            calcJupiterMoon(time, jupiterMoonModel[0]),
+            calcJupiterMoon(time, jupiterMoonModel[1]),
+            calcJupiterMoon(time, jupiterMoonModel[2]),
+            calcJupiterMoon(time, jupiterMoonModel[3])
+        )
+    )
 
 /**
  * Searches for a time at which a function's value increases through zero.
@@ -7629,7 +7636,7 @@ private fun addSolarTerms(context: MoonContext) {$ASTRO_ADDSOL()}
 // Pluto state table
 
 $ASTRO_PLUTO_TABLE()
-private val plutoCache = mutableMapOf<Int, List<BodyGravCalc>>()
+private val plutoCache = hashMapOf<Int, List<BodyGravCalc>>()
 
 //---------------------------------------------------------------------------------------
 // Models for Jupiter's four largest moons.
