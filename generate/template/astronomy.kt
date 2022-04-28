@@ -451,22 +451,8 @@ class DateTime(
         val millis: Double = 1000.0 * (second - wholeSeconds)
         val wholeMillis: Int = millis.toInt()
 
-        return (
-            "%04d".format(year) +
-            "-" +
-            "%02d".format(month) +
-            "-" +
-            "%02d".format(day) +
-            "T" +
-            "%02d".format(hour) +
-            ":" +
-            "%02d".format(minute) +
-            ":" +
-            "%02d".format(wholeSeconds) +
-            "." +
-            "%03d".format(wholeMillis) +
-            "Z"
-        )
+        return "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ"
+            .format(year, month, day, hour, minute, wholeSeconds, wholeMillis)
     }
 }
 
@@ -2813,7 +2799,7 @@ private fun vsopDerivCalc(formula: VsopFormula, t: Double): Double {
     var tpower = 1.0        // t^s
     var dpower = 0.0        // t^(s-1)
     var deriv = 0.0
-    for ((s, series) in formula.series.withIndex()) {
+    formula.series.forEachIndexed { s, series ->
         var sinSum = 0.0
         var cosSum = 0.0
         for (term in series.term) {
@@ -3247,10 +3233,9 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
         return null     // Don't bother calculating a segment. Let the caller crawl backward/forward to this time
 
     val segIndex = clampIndex((tt - plutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1)
-    synchronized (plutoCache) {
-        var list = plutoCache.get(segIndex)
-        if (list == null) {
-            val seg = ArrayList<BodyGravCalc>()
+    return synchronized(plutoCache) {
+        plutoCache.getOrPut(segIndex) {
+            val seg = mutableListOf<BodyGravCalc>()
 
             // The first endpoint is exact.
             var sim = gravFromState(plutoStateTable[segIndex])
@@ -3269,18 +3254,18 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
             seg.add(sim.grav)
 
             // Simulate backwards from the upper time bound.
-            val backward = ArrayList<BodyGravCalc>()
-            backward.add(sim.grav)
+            val reverse = buildList {
+                add(sim.grav)
 
-            steptt = sim.grav.tt
-            for (i in (PLUTO_NSTEPS-2) downTo 1) {
-                steptt -= PLUTO_DT
-                sim = simulateGravity(steptt, sim.grav)
-                backward.add(sim.grav)
-            }
+                steptt = sim.grav.tt
+                for (i in (PLUTO_NSTEPS-2) downTo 1) {
+                    steptt -= PLUTO_DT
+                    sim = simulateGravity(steptt, sim.grav)
+                    add(sim.grav)
+                }
 
-            backward.add(seg[0])
-            val reverse = backward.reversed()
+                add(seg[0])
+            }.reversed()
 
             // Fade-mix the two series so that there are no discontinuities.
             for (i in (PLUTO_NSTEPS-2) downTo 1) {
@@ -3290,10 +3275,8 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
                 seg[i].a.mix(ramp, reverse[i].a)
             }
 
-            list = seg.toList()
-            plutoCache.set(segIndex, list)
+            seg
         }
-        return list
     }
 }
 
@@ -3902,7 +3885,7 @@ private fun terra(observer: Observer, time: Time): StateVector {
     val phi = observer.latitude.degreesToRadians()
     val sinphi = sin(phi)
     val cosphi = cos(phi)
-    val c = 1.0 / hypot(cosphi,  EARTH_FLATTENING * sinphi)
+    val c = 1.0 / hypot(cosphi, EARTH_FLATTENING * sinphi)
     val s = c * EARTH_FLATTENING_SQUARED
     val heightKm = observer.height / 1000.0
     val ach = (EARTH_EQUATORIAL_RADIUS_KM * c) + heightKm
@@ -4769,11 +4752,10 @@ fun equator(
     val gcObserver = geoPos(time, observer)
     val gc = geoVector(body, time, aberration)
     val j2000 = gc - gcObserver
-    val vector = when (equdate) {
+    return when (equdate) {
         EquatorEpoch.OfDate -> gyration(j2000, PrecessDirection.From2000)
         EquatorEpoch.J2000  -> j2000
-    }
-    return vector.toEquatorial()
+    }.toEquatorial()
 }
 
 /**
@@ -5162,12 +5144,7 @@ fun nextTransit(body: Body, prevTransitTime: Time) =
  * of how Jupiter and its moons look from Earth.
  */
 fun jupiterMoons(time: Time) =
-    JupiterMoonsInfo(arrayOf(
-        calcJupiterMoon(time, jupiterMoonModel[0]),
-        calcJupiterMoon(time, jupiterMoonModel[1]),
-        calcJupiterMoon(time, jupiterMoonModel[2]),
-        calcJupiterMoon(time, jupiterMoonModel[3])
-    ))
+    JupiterMoonsInfo(jupiterMoonModel.map { calcJupiterMoon(time, it) }.toTypedArray())
 
 /**
  * Searches for a time at which a function's value increases through zero.
@@ -6480,8 +6457,7 @@ fun searchPeakMagnitude(body: Body, startTime: Time): IlluminationInfo {
 
     var iter = 0
     var searchTime = startTime
-    while (++iter <= 2)
-    {
+    while (++iter <= 2) {
         // Find current heliocentric relative longitude between the
         // inferior planet and the Earth.
         val plon = eclipticLongitude(body, searchTime)
@@ -7256,7 +7232,7 @@ internal fun planetExtreme(body: Body, kind: ApsisKind, startTime: Time, initDay
         for (i in 0 until npoints) {
             val time = searchTime.addDays(i * interval)
             val distance = direction * helioDistance(body, time)
-            if (i==0 || distance > bestDistance) {
+            if (i == 0 || distance > bestDistance) {
                 bestI = i
                 bestDistance = distance
             }
@@ -7653,7 +7629,7 @@ private fun addSolarTerms(context: MoonContext) {$ASTRO_ADDSOL()}
 // Pluto state table
 
 $ASTRO_PLUTO_TABLE()
-private val plutoCache = HashMap<Int, List<BodyGravCalc>>()
+private val plutoCache = mutableMapOf<Int, List<BodyGravCalc>>()
 
 //---------------------------------------------------------------------------------------
 // Models for Jupiter's four largest moons.
