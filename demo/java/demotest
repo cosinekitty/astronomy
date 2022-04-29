@@ -7,15 +7,19 @@ Fail()
 
 RunDemo()
 {
-    java -jar build/libs/astronomy-demo-0.0.1.jar $*
+    java -jar build/libs/astronomy-demo-1.0.0.jar $*
 }
 
+rm -rf build test
+mkdir -p test
 ./gradlew jar || Fail "Cannot build jar file."
 echo ""
 echo "Java demos: starting"
 echo ""
 
 RunDemo now || Fail "Error running test: now"
+RunDemo moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running test: moonphase"
+diff {test,correct}/moonphase.txt || Fail "Incorrect output: moonphase"
 
 echo ""
 echo "Java demos: PASS"

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.github.cosinekitty.astronomy.demo"
-version = "0.0.1"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
