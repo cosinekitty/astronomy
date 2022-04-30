@@ -12,7 +12,10 @@ RunDemo()
 
 rm -rf build test
 mkdir -p test
-./gradlew jar || Fail "Cannot build jar file."
+if ! ./gradlew jar test; then
+    cat build/test-results/test/TEST-io.github.cosinekitty.astronomy.demo.MainTests.xml
+    exit 1
+fi
 echo ""
 echo "Java demos: starting"
 echo ""

@@ -10,7 +10,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MainTests {
     @Test
     void main() {
-        String time = "2022-01-01T12:00:00.000Z";
-        assertEquals(time, Time.fromMillisecondsSince1970(Instant.parse(time).toEpochMilli()).toString());
+        timeTest();
+    }
+
+    private void timeTest() {
+        String text = "2022-04-29T12:34:45.321Z";
+        long millis = Instant.parse(text).toEpochMilli();
+        String check = Time.fromMillisecondsSince1970(millis).toString();
+        assertEquals(text, check);
     }
 }
