@@ -6,7 +6,7 @@ import java.time.format.DateTimeParseException;
 import io.github.cosinekitty.astronomy.*;
 
 public class Main {
-    private static String UsageText = String.join(System.getProperty("line.separator"),
+    private static String usageText = String.join(System.getProperty("line.separator"),
         "Command line arguments:",
         "",
         "    moonphase [yyyy-mm-ddThh:mm:ssZ]",
@@ -21,47 +21,63 @@ public class Main {
     );
 
     private static Time parseTime(String args[], int index) {
-        if (index >= args.length) {
-            return Time.fromMillisecondsSince1970(System.currentTimeMillis());
-        }
-        try {
-            Instant instant = Instant.parse(args[index]);
-            return Time.fromMillisecondsSince1970(instant.toEpochMilli());
-        } catch (DateTimeParseException e) {
-            System.out.print("FATAL: Invalid date/time syntax: ");
-            System.out.println(args[index]);
-            return null;
-        }
+        long millis =
+            (index >= 0 && index < args.length)
+            ? Instant.parse(args[index]).toEpochMilli()
+            : System.currentTimeMillis();
+
+        return Time.fromMillisecondsSince1970(millis);
     }
 
     public static void main(String[] args) {
         int rc = 1;
         if (args.length == 0) {
-            System.out.println(UsageText);
+            System.out.println(usageText);
         } else {
-            switch (args[0]) {
-                case "moonphase":
-                    if (args.length <= 2) {
-                        Time time = parseTime(args, 1);
-                        if (time != null) {
-                            rc = MoonPhase.run(time);
+            try {
+                String verb = args[0];
+                for (int i = 0; i < demoList.length; ++i) {
+                    Demo demo = demoList[i];
+                    if (demo.name.equals(verb)) {
+                        if (args.length >= demo.minArgs && args.length <= demo.maxArgs) {
+                            rc = demo.runner.run(args);
+                        } else {
+                            System.out.println(usageText);
                         }
-                    } else {
-                        System.out.println(UsageText);
+                        break;
                     }
-                    break;
-
-                case "now":
-                    Time time = parseTime(args, 1);
-                    System.out.println(time);
-                    rc = 0;
-                    break;
-
-                default:
-                    System.out.println("ERROR: Unknown command line argument");
-                    break;
+                }
+            } catch (DateTimeParseException e) {
+                System.out.println("FATAL: Invalid date/time syntax.");
+                rc = 1;
             }
         }
         System.exit(rc);
     }
+
+    private static interface DemoRunner {
+        public int run(String[] args);
+    }
+
+    private static class Demo {
+        public final String name;
+        public final int minArgs;
+        public final int maxArgs;
+        public final DemoRunner runner;
+
+        public Demo(String name, int minArgs, int maxArgs, DemoRunner runner) {
+            this.name = name;
+            this.minArgs = minArgs;
+            this.maxArgs = maxArgs;
+            this.runner = runner;
+        }
+    }
+
+    private static Demo[] demoList = new Demo[] {
+        new Demo("moonphase", 1, 2, args -> MoonPhase.run(parseTime(args, 1))),
+        new Demo("now", 1, 2, args -> {
+            System.out.println(parseTime(args, 1));
+            return 0;
+        })
+    };
 }
