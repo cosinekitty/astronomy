@@ -8,9 +8,10 @@ if exist build ( rd /s/q build )
 if exist test ( rd /s/q test )
 md test
 
-call gradlew.bat jar
+call gradlew.bat jar test
 if errorlevel 1 (
-    echo Cannot build jar file.
+    echo Cannot build/test jar file.
+    type build\test-results\test\TEST-io.github.cosinekitty.astronomy.demo.MainTests.xml
     exit /b 1
 )
 

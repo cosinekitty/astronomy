@@ -32,7 +32,7 @@ public class MoonPhase {
     }
 
     private static String quarterName(int quarter) {
-        switch(quarter) {
+        switch (quarter) {
             case 0: return "New Moon";
             case 1: return "First Quarter";
             case 2: return "Full Moon";

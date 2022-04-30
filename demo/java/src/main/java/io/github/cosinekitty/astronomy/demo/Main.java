@@ -1,8 +1,9 @@
 package io.github.cosinekitty.astronomy.demo;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
+
 import io.github.cosinekitty.astronomy.*;
 
 public class Main {
@@ -25,27 +26,14 @@ public class Main {
             Date now = new Date();
             return Time.fromMillisecondsSince1970(now.getTime());
         }
-        Pattern pattern = Pattern.compile("^(\\d{4})-(\\d{2})-(\\d{2})(T(\\d{2}):(\\d{2})(:(\\d{2}(\\.\\d+)?))?Z)$");
-        Matcher matcher = pattern.matcher(args[index]);
-        if (matcher.find()) {
-            int year = Integer.parseInt(matcher.group(1));
-            int month = Integer.parseInt(matcher.group(2));
-            int day = Integer.parseInt(matcher.group(3));
-            int hour = 0;
-            int minute = 0;
-            double second = 0.0;
-            if (!matcher.group(4).isEmpty()) {
-                hour = Integer.parseInt(matcher.group(5));
-                minute = Integer.parseInt(matcher.group(6));
-                if (!matcher.group(7).isEmpty()) {
-                    second = Double.parseDouble((matcher.group(8)));
-                }
-            }
-            return new Time(year, month, day, hour, minute, second);
+        try {
+            Instant instant = Instant.parse(args[index]);
+            return Time.fromMillisecondsSince1970(instant.toEpochMilli());
+        } catch (DateTimeParseException e) {
+            System.out.print("FATAL: Invalid date/time syntax: ");
+            System.out.println(args[index]);
+            return null;
         }
-        System.out.print("FATAL: Invalid date/time syntax: ");
-        System.out.println(args[index]);
-        return null;
     }
 
     public static void main(String[] args) {
@@ -66,8 +54,7 @@ public class Main {
                     break;
 
                 case "now":
-                    Date now = new Date();
-                    Time time = Time.fromMillisecondsSince1970(now.getTime());
+                    Time time = Time.fromMillisecondsSince1970(System.currentTimeMillis());
                     System.out.println(time);
                     rc = 0;
                     break;
