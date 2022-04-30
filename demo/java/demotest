@@ -5,11 +5,6 @@ Fail()
     exit 1
 }
 
-RunDemo()
-{
-    java -jar build/libs/astronomy-demo-1.0.0.jar $*
-}
-
 rm -rf build test
 mkdir -p test
 if ! ./gradlew jar test; then
@@ -20,8 +15,8 @@ echo ""
 echo "Java demos: starting"
 echo ""
 
-RunDemo now || Fail "Error running test: now"
-RunDemo moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running test: moonphase"
+./rundemo now || Fail "Error running test: now"
+./rundemo moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running test: moonphase"
 diff {test,correct}/moonphase.txt || Fail "Incorrect output: moonphase"
 
 echo ""

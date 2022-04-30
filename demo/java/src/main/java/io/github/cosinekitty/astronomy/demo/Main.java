@@ -36,9 +36,11 @@ public class Main {
         } else {
             try {
                 String verb = args[0];
+                boolean found = false;
                 for (int i = 0; i < demoList.length; ++i) {
                     Demo demo = demoList[i];
                     if (demo.name.equals(verb)) {
+                        found = true;
                         if (args.length >= demo.minArgs && args.length <= demo.maxArgs) {
                             rc = demo.runner.run(args);
                         } else {
@@ -46,6 +48,9 @@ public class Main {
                         }
                         break;
                     }
+                }
+                if (!found) {
+                    System.out.printf("ERROR: Unknown command '%s'.%n", verb);
                 }
             } catch (DateTimeParseException e) {
                 System.out.println("FATAL: Invalid date/time syntax.");
