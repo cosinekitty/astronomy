@@ -2,7 +2,6 @@ package io.github.cosinekitty.astronomy.demo;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.Date;
 
 import io.github.cosinekitty.astronomy.*;
 
@@ -16,15 +15,14 @@ public class Main {
         "       time if none is given on the command line.",
         "       Also finds the dates and times of the subsequent 10 quarter phases.",
         "",
-        "    now",
-        "       Display current date and time.",
+        "    now [yyyy-mm-ddThh:mm:ssZ]",
+        "       Display current date and time, or the time supplied on the command line.",
         ""
     );
 
     private static Time parseTime(String args[], int index) {
         if (index >= args.length) {
-            Date now = new Date();
-            return Time.fromMillisecondsSince1970(now.getTime());
+            return Time.fromMillisecondsSince1970(System.currentTimeMillis());
         }
         try {
             Instant instant = Instant.parse(args[index]);
@@ -54,7 +52,7 @@ public class Main {
                     break;
 
                 case "now":
-                    Time time = Time.fromMillisecondsSince1970(System.currentTimeMillis());
+                    Time time = parseTime(args, 1);
                     System.out.println(time);
                     rc = 0;
                     break;
