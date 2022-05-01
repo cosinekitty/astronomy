@@ -1,6 +1,13 @@
 import io.github.cosinekitty.astronomy.*
 
-internal fun demoMoonPhase(time: Time): Int {
+/**
+ * Displays Moon phase information and predicts the next 10 quarter phases.
+ *
+ * @param time
+ * The date and time for which to display Moon phase information,
+ * and when to initiate a search for the subsequent quarter phases.
+ */
+internal fun `Moon Phase demo`(time: Time): Int {
     // Calculate the Moon's ecliptic phase angle,
     // which ranges from 0 to 360 degrees.
     //   0 degrees = new mooon,

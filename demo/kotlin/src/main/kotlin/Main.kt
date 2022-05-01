@@ -64,6 +64,6 @@ internal fun parseTime(args: Array<String>, index: Int): Time {
 }
 
 internal val demoList = arrayOf(
-    Demo("moonphase", 1, 2) { args -> demoMoonPhase(parseTime(args, 1)) },
-    Demo("seasons", 2, 2)  { args -> demoSeasons(args[1].toInt()) }
+    Demo("moonphase", 1, 2) { args -> `Moon Phase demo`(parseTime(args, 1)) },
+    Demo("seasons", 2, 2)  { args -> `Seasons demo`(args[1].toInt()) }
 )
