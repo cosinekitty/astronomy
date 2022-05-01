@@ -17,6 +17,9 @@ public class Main {
         "",
         "    now [yyyy-mm-ddThh:mm:ssZ]",
         "       Display current date and time, or the time supplied on the command line.",
+        "",
+        "    seasons year",
+        "       Given an integer year number, display the solstices and equinoxes for that year.",
         ""
     );
 
@@ -78,11 +81,14 @@ public class Main {
         }
     }
 
+    private static int printCurrentTime(String[] args) {
+        System.out.println(parseTime(args, 1));
+        return 0;
+    }
+
     private static Demo[] demoList = new Demo[] {
         new Demo("moonphase", 1, 2, args -> MoonPhase.run(parseTime(args, 1))),
-        new Demo("now", 1, 2, args -> {
-            System.out.println(parseTime(args, 1));
-            return 0;
-        })
+        new Demo("now", 1, 2, args -> printCurrentTime(args)),
+        new Demo("seasons", 2, 2, args -> Seasons.run(args[1]))
     };
 }

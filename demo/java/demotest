@@ -16,8 +16,12 @@ echo "Java demos: starting"
 echo ""
 
 ./rundemo now || Fail "Error running test: now"
+
 ./rundemo moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running test: moonphase"
 diff {test,correct}/moonphase.txt || Fail "Incorrect output: moonphase"
+
+./rundemo seasons 2019 > test/seasons.txt || Fail "Error running test: seasons"
+diff {test,correct}/seasons.txt || Fail "Incorrect output: seasons"
 
 echo ""
 echo "Java demos: PASS"
