@@ -1,0 +1,22 @@
+#!/bin/bash
+Fail()
+{
+    echo "FATAL($0): $1"
+    exit 1
+}
+
+echo "Kotlin demos: starting"
+rm -rf build test
+mkdir -p test
+./gradlew jar || Fail "Error building Kotlin demo application."
+
+echo "Testing: moonphase"
+./rundemo moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running test: moonphase"
+diff {test,correct}/moonphase.txt || Fail "Incorrect output: moonphase"
+
+echo "Testing: seasons"
+./rundemo seasons 2019 > test/seasons.txt || Fail "Error running test: seasons"
+diff {test,correct}/seasons.txt || Fail "Incorrect output: seasons"
+
+echo "Kotlin demos: PASS"
+exit 0
