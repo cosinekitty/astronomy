@@ -6,5 +6,6 @@ Fail()
 }
 
 cp ../../../source/js/astronomy.ts . || Fail "Error copying astronomy TypeScript code."
+rm -f test/*.txt
 npm test || Fail "Error in unit test."
 exit 0
