@@ -81,14 +81,14 @@ public class Main {
         }
     }
 
-    private static int printCurrentTime(String[] args) {
+    private static int printTime(String[] args) {
         System.out.println(parseTime(args, 1));
         return 0;
     }
 
     private static Demo[] demoList = new Demo[] {
         new Demo("moonphase", 1, 2, args -> MoonPhase.run(parseTime(args, 1))),
-        new Demo("now", 1, 2, args -> printCurrentTime(args)),
+        new Demo("now", 1, 2, args -> printTime(args)),
         new Demo("seasons", 2, 2, args -> Seasons.run(args[1]))
     };
 }
