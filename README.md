@@ -53,7 +53,6 @@
             <div style="text-align: center;">Examples</div>
             <ul>
                 <li><a href="demo/kotlin/">Kotlin</a></li>
-                <li><a href="demo/android/">Android</a></li>
                 <li><a href="demo/java/">Java</a></li>
             </ul>
         </td>
