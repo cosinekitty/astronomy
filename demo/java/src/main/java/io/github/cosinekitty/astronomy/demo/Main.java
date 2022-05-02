@@ -2,11 +2,14 @@ package io.github.cosinekitty.astronomy.demo;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import io.github.cosinekitty.astronomy.*;
 
 public class Main {
-    private static String usageText = String.join(System.getProperty("line.separator"),
+    private static final String usageText = String.join(System.getProperty("line.separator"),
         "Command line arguments:",
         "",
         "    jupiter_moons [yyyy-mm-ddThh:mm:ssZ]",
@@ -35,6 +38,11 @@ public class Main {
         ""
     );
 
+    private static int printUsage() {
+        System.out.println(usageText);
+        return 1;
+    }
+
     private static class DemoException extends Exception {
         public DemoException(String message) {
             super(message);
@@ -42,40 +50,36 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        int rc = 1;
-        if (args.length == 0) {
-            System.out.println(usageText);
-        } else {
-            try {
-                String verb = args[0];
-                boolean found = false;
-                for (int i = 0; i < demoList.length; ++i) {
-                    Demo demo = demoList[i];
-                    if (demo.name.equals(verb)) {
-                        found = true;
-                        if (args.length >= demo.minArgs && args.length <= demo.maxArgs) {
-                            rc = demo.runner.run(args);
-                        } else {
-                            System.out.println(usageText);
-                        }
-                        break;
-                    }
-                }
-                if (!found) {
-                    System.out.printf("ERROR: Unknown command '%s'.%n", verb);
-                }
-            } catch (DateTimeParseException e) {
-                System.out.println("ERROR: Invalid date/time format on command line.");
-                rc = 1;
-            } catch (DemoException e) {
-                System.out.printf("ERROR: %s%n", e.getMessage());
-                rc = 1;
-            }
-        }
-        System.exit(rc);
+        System.exit(runDemos(args));
     }
 
-    private static Time parseTime(String args[], int index) {
+    private static int runDemos(String[] args) {
+        if (args.length == 0) return printUsage();
+        String verb = args[0];
+        Optional<Demo> foundDemo = demoList.stream()
+                .filter(demo -> demo.name.equals(verb))
+                .findFirst();
+        if (foundDemo.isEmpty()) {
+            System.out.printf("ERROR: Unknown command '%s'.%n", verb);
+            return 1;
+        }
+        Demo demo = foundDemo.get();
+        if (args.length < demo.minArgs || args.length > demo.maxArgs) {
+            System.out.println("ERROR: Incorrect number of command-line arguments.");
+            return 1;
+        }
+        try {
+            return demo.runner.run(args);
+        } catch (DateTimeParseException e) {
+            System.out.println("ERROR: Invalid date/time format on command line.");
+            return 1;
+        } catch (DemoException e) {
+            System.out.printf("ERROR: %s%n", e.getMessage());
+            return 1;
+        }
+    }
+
+    private static Time parseTime(String[] args, int index) {
         long millis =
             (index >= 0 && index < args.length)
             ? Instant.parse(args[index]).toEpochMilli()
@@ -114,8 +118,8 @@ public class Main {
         return new Observer(latitude, longitude, 0.0);
     }
 
-    private static interface DemoRunner {
-        public int run(String[] args) throws DemoException;
+    private interface DemoRunner {
+        int run(String[] args) throws DemoException;
     }
 
     private static class Demo {
@@ -132,7 +136,7 @@ public class Main {
         }
     }
 
-    private static Demo[] demoList = new Demo[] {
+    private static final List<Demo> demoList = Arrays.asList(
         new Demo("jupiter_moons", 1, 2, args ->
             JupiterMoons.run(
                 parseTime(args, 1)
@@ -154,5 +158,5 @@ public class Main {
                 parseYear(args[1])
             )
         )
-    };
+    );
 }

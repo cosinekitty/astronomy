@@ -1,8 +1,9 @@
 import java.time.Instant
 import java.time.format.DateTimeParseException
 import io.github.cosinekitty.astronomy.*
+import kotlin.system.exitProcess
 
-private val usageText = """
+private const val usageText = """
 Command line arguments:
 
     jupiter_moons [yyyy-mm-ddThh:mm:ssZ]
@@ -31,7 +32,7 @@ Command line arguments:
 
 """
 
-internal fun printUsage(): Int {
+private fun printUsage(): Int {
     println(usageText)
     return 1
 }
@@ -44,33 +45,32 @@ internal class Demo(
 )
 
 fun main(args: Array<String>) {
-    System.exit(runDemo(args))
+    exitProcess(runDemo(args))
 }
 
 class DemoException(message:String): Exception(message)
 
-internal fun runDemo(args: Array<String>): Int {
-    if (args.size > 0) {
-        val verb = args[0];
-        for (demo in demoList) {
-            if (demo.name == verb) {
-                if (args.size < demo.minArgs || args.size > demo.maxArgs) {
-                    println("ERROR: Incorrect number of command-line arguments.")
-                    return 1
-                }
-                try {
-                    return demo.func(args)
-                } catch (_: DateTimeParseException) {
-                    println("ERROR: Invalid date/time format on command line.")
-                    return 1
-                } catch (e: DemoException) {
-                    println("ERROR: ${e.message}")
-                    return 1
-                }
-            }
-        }
+private fun runDemo(args: Array<String>): Int {
+    if (args.isEmpty()) return printUsage()
+    val verb = args[0]
+    val demo = demoList.firstOrNull { it.name == verb }
+    if (demo == null) {
+        println("ERROR: Unknown command '$verb'.")
+        return 1
     }
-    return printUsage()
+    if (args.size < demo.minArgs || args.size > demo.maxArgs) {
+        println("ERROR: Incorrect number of command-line arguments.")
+        return 1
+    }
+    return try {
+        demo.func(args)
+    } catch (_: DateTimeParseException) {
+        println("ERROR: Invalid date/time format on command line.")
+        1
+    } catch (e: DemoException) {
+        println("ERROR: ${e.message}")
+        1
+    }
 }
 
 internal fun parseTime(args: Array<String>, index: Int): Time {
@@ -113,7 +113,7 @@ internal fun parseObserver(args: Array<String>, index: Int): Observer {
     return Observer(latitude, longitude, 0.0)
 }
 
-internal val demoList = arrayOf(
+internal val demoList = listOf(
     Demo("jupiter_moons", 1, 2) { args ->
         `Jupiter moons demo`(
             parseTime(args, 1)
