@@ -23,9 +23,16 @@ public class Main {
         "        current date and time.",
         "",
         "    seasons year",
-        "       Given an integer year number, display the solstices and equinoxes for that year.",
+        "       Given an integer year number, displays the solstices and equinoxes for that year.",
+        "       The year must be in the range 0000..9999.",
         ""
     );
+
+    private static class DemoException extends Exception {
+        public DemoException(String message) {
+            super(message);
+        }
+    }
 
     public static void main(String[] args) {
         int rc = 1;
@@ -51,7 +58,10 @@ public class Main {
                     System.out.printf("ERROR: Unknown command '%s'.%n", verb);
                 }
             } catch (DateTimeParseException e) {
-                System.out.println("FATAL: Invalid date/time syntax.");
+                System.out.println("ERROR: Invalid date/time format on command line.");
+                rc = 1;
+            } catch (DemoException e) {
+                System.out.printf("ERROR: %s%n", e.getMessage());
                 rc = 1;
             }
         }
@@ -67,44 +77,38 @@ public class Main {
         return Time.fromMillisecondsSince1970(millis);
     }
 
-    private static double parseNumber(String name, String text, double minValue, double maxValue) {
-        double value = Double.NaN;
+    private static double parseNumber(String name, String text, double minValue, double maxValue) throws DemoException {
         try {
-            value = Double.parseDouble(text);
-            if (value < minValue || value > maxValue) {
-                System.out.printf("ERROR: Value is out of range for %s.%n", name);
-                System.exit(1);
+            double value = Double.parseDouble(text);
+            if (!Double.isFinite(value) || value < minValue || value > maxValue) {
+                throw new DemoException(String.format("Value is out of range for %s.", name));
             }
+            return value;
         } catch (NumberFormatException e) {
-            System.out.printf("ERROR: Invalid numeric format '%s' for %s.%n", text, name);
-            System.exit(1);
+            throw new DemoException(String.format("Invalid numeric format '%s' for %s.%n", text, name));
         }
-        return value;
     }
 
-    private static int parseYear(String text) {
-        int year = -1;
+    private static int parseYear(String text) throws DemoException {
         try {
-            year = Integer.parseInt(text);
+            int year = Integer.parseInt(text);
             if (year < 0 || year > 9999) {
-                System.out.println("ERROR: Year must be in the range 0000..9999.");
-                System.exit(1);
+                throw new DemoException("Year must be in the range 0000..9999.");
             }
+            return year;
         } catch (NumberFormatException e) {
-            System.out.printf("ERROR: Invalid numeric format '%s' for year.%n", text);
-            System.exit(1);
+            throw new DemoException(String.format("Invalid numeric format '%s' for year.", text));
         }
-        return year;
     }
 
-    private static Observer parseObserver(String[] args, int index) {
+    private static Observer parseObserver(String[] args, int index) throws DemoException {
         double latitude = parseNumber("latitude", args[index], -90.0, +90.0);
         double longitude = parseNumber("longitude", args[index+1], -180.0, +180.0);
         return new Observer(latitude, longitude, 0.0);
     }
 
     private static interface DemoRunner {
-        public int run(String[] args);
+        public int run(String[] args) throws DemoException;
     }
 
     private static class Demo {
@@ -122,8 +126,21 @@ public class Main {
     }
 
     private static Demo[] demoList = new Demo[] {
-        new Demo("moonphase", 1, 2, args -> MoonPhase.run(parseTime(args, 1))),
-        new Demo("positions", 3, 4, args -> Positions.run(parseObserver(args, 1), parseTime(args, 3))),
-        new Demo("seasons", 2, 2, args -> Seasons.run(parseYear(args[1])))
+        new Demo("moonphase", 1, 2, args ->
+            MoonPhase.run(
+                parseTime(args, 1)
+            )
+        ),
+        new Demo("positions", 3, 4, args ->
+            Positions.run(
+                parseObserver(args, 1),
+                parseTime(args, 3)
+            )
+        ),
+        new Demo("seasons", 2, 2, args ->
+            Seasons.run(
+                parseYear(args[1])
+            )
+        )
     };
 }

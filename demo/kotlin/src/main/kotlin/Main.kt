@@ -11,8 +11,16 @@ Command line arguments:
         time if none is given on the command line.
         Also finds the dates and times of the subsequent 10 quarter phases.
 
+    positions latitude longitude [yyyy-mm-ddThh:mm:ssZ]
+        Displays the equatorial and horizontal coordinates of
+        the Sun, Moon, and planets, as seen from a given
+        geographic location. Uses the date and time specified on
+        the command line, if present. Otherwise, uses the computer's
+        current date and time.
+
     seasons year
-        Given an integer year number, display the solstices and equinoxes for that year.
+        Given an integer year number, displays the solstices and equinoxes for that year.
+        The year must be in the range 0000..9999.
 
 """
 
@@ -32,6 +40,8 @@ fun main(args: Array<String>) {
     System.exit(runDemo(args))
 }
 
+class DemoException(message:String): Exception(message)
+
 internal fun runDemo(args: Array<String>): Int {
     if (args.size > 0) {
         val verb = args[0];
@@ -43,8 +53,11 @@ internal fun runDemo(args: Array<String>): Int {
                 }
                 try {
                     return demo.func(args)
-                } catch (e: DateTimeParseException) {
+                } catch (_: DateTimeParseException) {
                     println("ERROR: Invalid date/time format on command line.")
+                    return 1
+                } catch (e: DemoException) {
+                    println("ERROR: ${e.message}")
                     return 1
                 }
             }
@@ -63,7 +76,51 @@ internal fun parseTime(args: Array<String>, index: Int): Time {
     return Time.fromMillisecondsSince1970(millis)
 }
 
+internal fun parseNumber(name: String, text: String, minValue: Double, maxValue: Double): Double {
+    try {
+        val value = text.toDouble()
+        if (!value.isFinite() || value < minValue || value > maxValue) {
+            throw DemoException("Value for $name is out of range.")
+        }
+        return value
+    } catch (_: NumberFormatException) {
+        throw DemoException("Invalid numeric format '$text' for $name.")
+    }
+}
+
+internal fun parseYear(text: String): Int {
+    try {
+        val year = text.toInt()
+        if (year < 0 || year > 9999) {
+            throw DemoException("Year must be in the range 0000..9999.")
+        }
+        return year
+    } catch (_: NumberFormatException) {
+        throw DemoException("Invalid numeric format '$text' for year.")
+    }
+}
+
+internal fun parseObserver(args: Array<String>, index: Int): Observer {
+    val latitude = parseNumber("latitude", args[index], -90.0, +90.0)
+    val longitude = parseNumber("longitude", args[index+1], -180.0, +180.0)
+    return Observer(latitude, longitude, 0.0)
+}
+
 internal val demoList = arrayOf(
-    Demo("moonphase", 1, 2) { args -> `Moon Phase demo`(parseTime(args, 1)) },
-    Demo("seasons", 2, 2)  { args -> `Seasons demo`(args[1].toInt()) }
+    Demo("moonphase", 1, 2) { args ->
+        `Moon Phase demo`(
+            parseTime(args, 1)
+        )
+    },
+    Demo("positions", 3, 4) { args ->
+        `Celestial body positions demo`(
+            parseObserver(args, 1),
+            parseTime(args, 3)
+        )
+    },
+    Demo("seasons", 2, 2)  { args ->
+        `Seasons demo`(
+            parseYear(args[1])
+        )
+    }
 )
