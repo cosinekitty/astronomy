@@ -7,7 +7,7 @@ Fail()
 
 TestDemo()
 {
-    echo "Testing: $1"
+    echo "Testing Java demo: $1"
     ./rundemo $* > test/$1.txt || Fail "Error running demo: $1"
     diff {correct,test}/$1.txt || Fail "Incorrect output: $1"
 }
@@ -18,12 +18,10 @@ if ! ./gradlew jar test; then
     cat build/test-results/test/TEST-io.github.cosinekitty.astronomy.demo.MainTests.xml
     exit 1
 fi
-echo ""
-echo "Java demos: starting"
 
 TestDemo moonphase 2019-06-15T09:15:32.987Z
 TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z
 TestDemo seasons 2019
 
-echo "Java demos: PASS"
+echo "PASS: Java demos"
 exit 0

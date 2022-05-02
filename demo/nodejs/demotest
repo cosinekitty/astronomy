@@ -5,62 +5,37 @@ Fail()
     exit 1
 }
 
+TestDemo()
+{
+    echo "Testing Node.js demo: $1"
+    node $* > test/$1.txt || Fail "Error running $1.js."
+    diff {correct,test}/$1.txt || Fail "Incorrect output from $1.js."
+}
+
 rm -f test/*.txt
 mkdir -p test
 
-echo "Testing example: equatorial.js"
-node equatorial.js 38.1256 -89.5544 215.7 23.5 2021-03-27T18:45:00Z > test/equatorial.txt || Fail "Error testing equatorial.js."
-diff {correct,test}/equatorial.txt || Fail "Error comparing equatorial.js output."
+TestDemo equatorial 38.1256 -89.5544 215.7 23.5 2021-03-27T18:45:00Z
+TestDemo equator_of_date a 12 45 2021-07-06T00:00:00Z
+TestDemo camera 29 -81 2021-03-22T02:45:00Z
+TestDemo moonphase 2019-06-15T09:15:32.987Z
+TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z
+TestDemo riseset +45.6 -90.7 2018-11-30T17:55:07.234Z
+TestDemo seasons 2019 > test/seasons.txt
+TestDemo culminate +30 -90 2015-02-28T00:00Z
+TestDemo horizon +25.5 -85.3 2016-12-25T12:30:45Z
+TestDemo lunar_eclipse 1988-01-01
+TestDemo triangulate 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12
 
-echo "Testing example: equator_of_date.js"
-node equator_of_date.js a 12 45 2021-07-06T00:00:00Z > test/equator_of_date.txt || Fail "Error testing equator_of_date.js"
-diff {correct,test}/equator_of_date.txt || Fail "Error comparing equator_of_date.js output."
-
-echo "Testing example: camera.js"
-node camera.js 29 -81 2021-03-22T02:45:00Z > test/camera.txt || Fail "Error testing camera.js."
-diff {correct,test}/camera.txt || Fail "Error comparing camera.js output."
-
-echo "Testing example: moonphase.js"
-node moonphase.js 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running moonphase.js."
-diff {correct,test}/moonphase.txt || Fail "Error comparing moonphase.js output."
-
-echo "Testing example: positions.js"
-node positions.js +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running positions.js."
-diff {correct,test}/positions.txt || Fail "Error comparing positions.js output."
-
-echo "Testing example: riseset.js"
-node riseset.js +45.6 -90.7 2018-11-30T17:55:07.234Z > test/riseset.txt || Fail "Error running riseset.js."
-diff {correct,test}/riseset.txt || Fail "Error comparing riseset.js output."
-
-echo "Testing example: seasons.js"
-node seasons.js 2019 > test/seasons.txt || Fail "Error running seasons.js."
-diff {correct,test}/seasons.txt || Fail "Error comparing seasons.js output."
-
-echo "Testing example: culminate.js"
-node culminate +30 -90 2015-02-28T00:00Z > test/culminate.txt || Fail "Error running culminate.js."
-diff {correct,test}/culminate.txt || Fail "Error comparing culminate.js output."
-
-echo "Testing example: horizon.js"
-node horizon +25.5 -85.3 2016-12-25T12:30:45Z > test/horizon.txt || Fail "Error running horizon.js."
-diff {correct,test}/horizon.txt || Fail "Error comparing horizon.js output."
-
-echo "Testing example: lunar_eclipse.js"
-node lunar_eclipse.js 1988-01-01 > test/lunar_eclipse.txt || Fail "Error running lunar_eclipse.js."
-diff {correct,test}/lunar_eclipse.txt || Fail "Error comparing lunar_eclipse.js output."
-
-echo "Testing example: triangulate.js"
-node triangulate.js 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12 > test/triangulate.txt || Fail "Error running triangulate.js."
-diff {correct,test}/triangulate.txt || Fail "Error comparing triangulate.js output."
-
-echo "Testing example: gravity.js"
+echo "Testing Node.js demo: gravity"
 for latitude in {0..90}; do
-    node gravity.js ${latitude} 0 >> test/gravity.txt || Fail "Error running gravity.js."
+    node gravity ${latitude} 0 >> test/gravity.txt || Fail "Error running gravity.js."
 done
-diff {correct,test}/gravity.txt || Fail "Error comparing gravity.js output."
+diff {correct,test}/gravity.txt || Fail "Incorrect output from gravity.js."
 
 cd calendar || Fail "Cannot change to calendar directory."
 ./run || exit 1
 cd ..
 
-echo "PASS: nodejs examples"
+echo "PASS: Node.js demos"
 exit 0

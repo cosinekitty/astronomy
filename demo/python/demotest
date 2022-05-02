@@ -5,70 +5,38 @@ Fail()
     exit 1
 }
 
+TestDemo()
+{
+    local name=$1
+    shift
+    echo "Testing Python demo: $name"
+    ./$name.py $* > test/$name.txt || Fail "Error testing $name.py."
+    diff {correct,test}/$name.txt || Fail "Incorrect output from $name.py."
+}
+
 rm -f test/*.txt
 mkdir -p test
 
-echo "Testing example: jupiter_moons.py"
-./jupiter_moons.py 2021-04-16T00:26:18Z > test/jupiter_moons.txt || Fail "Error testing jupiter_moons.py."
-diff {correct,test}/jupiter_moons.txt || Fail "Error comparing jupiter_moons.py output."
+TestDemo jupiter_moons 2021-04-16T00:26:18Z
+TestDemo camera 29 -81 2021-03-22T02:45:00Z
+TestDemo constellation 2021-06-01T00:00:00Z
+TestDemo moonphase 2019-06-15T09:15:32.987Z
+TestDemo riseset +45.6 -90.7 2018-11-30T17:55:07.234Z
+TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z
+TestDemo seasons 2019
+TestDemo culminate +30 -90 2015-02-28T00:00:00Z
+TestDemo horizon +25.5 -85.3 2016-12-25T12:30:45Z
+TestDemo lunar_eclipse 1988-01-01
+TestDemo lunar_angles 2021-05-15
+TestDemo galactic 38.92056 -77.0658 22.793498 197.070510 2025-04-06T00:00:00Z
+TestDemo triangulate 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12
+TestDemo stars_near_moon 30 -80 2021-11-08T23:00:00Z
 
-echo "Testing example: camera.py"
-./camera.py 29 -81 2021-03-22T02:45:00Z > test/camera.txt || Fail "Error testing camera.py."
-diff {correct,test}/camera.txt || Fail "Error comparing camera.py output."
-
-echo "Testing example: constellation.py"
-./constellation.py 2021-06-01T00:00:00Z > test/constellation.txt || Fail "Error testing constellation.py."
-diff {correct,test}/constellation.txt || Fail "Error comparing constellation.py output."
-
-echo "Testing example: moonphase.py"
-./moonphase.py 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running moonphase.py."
-diff {correct,test}/moonphase.txt || Fail "Error comparing moonphase.py output."
-
-echo "Testing example: riseset.py"
-./riseset.py +45.6 -90.7 2018-11-30T17:55:07.234Z > test/riseset.txt || Fail "Error running riseset.py."
-diff {correct,test}/riseset.txt || Fail "Error comparing riseset.py output."
-
-echo "Testing example: positions.py"
-./positions.py +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running positions.py."
-diff {correct,test}/positions.txt || Fail "Error comparing positions.py output."
-
-echo "Testing example: seasons.py"
-./seasons.py 2019 > test/seasons.txt || Fail "Error running seasons.py."
-diff {correct,test}/seasons.txt || Fail "Error comparing seasons.py output."
-
-echo "Testing example: culminate.py"
-./culminate.py +30 -90 2015-02-28T00:00:00Z > test/culminate.txt || Fail "Error running culminate.py."
-diff {correct,test}/culminate.txt || Fail "Error comparing culminate.py output."
-
-echo "Testing example: horizon.py"
-./horizon.py +25.5 -85.3 2016-12-25T12:30:45Z > test/horizon.txt || Fail "Error running horizon.py."
-diff {correct,test}/horizon.txt || Fail "Error comparing horizon.py output."
-
-echo "Testing example: lunar_eclipse.py"
-./lunar_eclipse.py 1988-01-01 > test/lunar_eclipse.txt || Fail "Error running lunar_eclipse.py."
-diff {correct,test}/lunar_eclipse.txt || Fail "Error comparing lunar_eclipse.py output."
-
-echo "Testing example: lunar_angles.py"
-./lunar_angles.py 2021-05-15 > test/lunar_angles.txt || Fail "Error running lunar_angles.py."
-diff {correct,test}/lunar_angles.txt || Fail "Error comparing lunar_angles.py output."
-
-echo "Testing example: galactic.py"
-./galactic.py 38.92056 -77.0658 22.793498 197.070510 2025-04-06T00:00:00Z > test/galactic.txt || Fail "Error running galactic.py."
-diff {correct,test}/galactic.txt || Fail "Error comparing galactic.py output."
-
-echo "Testing example: triangulate.py"
-./triangulate.py 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12 > test/triangulate.txt || Fail "Error running triangulate.py."
-diff {correct,test}/triangulate.txt || Fail "Error comparing triangulate.py output."
-
-echo "Testing example: gravity.py"
+echo "Testing Python demo: gravity"
 for latitude in {0..90}; do
     ./gravity.py ${latitude} 0 >> test/gravity.txt || Fail "Error running gravity.py."
 done
-diff {correct,test}/gravity.txt || Fail "Error comparing gravity.py output."
+diff {correct,test}/gravity.txt || Fail "Incorrect output from gravity.py."
 
-echo "Testing example: stars_near_moon.py"
-./stars_near_moon.py 30 -80 2021-11-08T23:00:00Z > test/stars_near_moon.txt || Fail "Error running stars_near_moon.py"
-diff {correct,test}/stars_near_moon.txt || Fail "Error comparing stars_near_moon output."
-
-echo "PASS: Python examples"
+echo "PASS: Python demos"
 exit 0
