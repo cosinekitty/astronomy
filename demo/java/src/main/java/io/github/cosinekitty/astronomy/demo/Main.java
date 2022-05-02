@@ -18,6 +18,13 @@ public class Main {
         "    now [yyyy-mm-ddThh:mm:ssZ]",
         "       Display current date and time, or the time supplied on the command line.",
         "",
+        "    positions latitude longitude [yyyy-mm-ddThh:mm:ssZ]",
+        "        Displays the equatorial and horizontal coordinates of",
+        "        the Sun, Moon, and planets, as seen from a given",
+        "        geographic location. Uses the date and time specified on",
+        "        the command line, if present. Otherwise, uses the computer's",
+        "        current date and time.",
+        "",
         "    seasons year",
         "       Given an integer year number, display the solstices and equinoxes for that year.",
         ""
@@ -30,6 +37,27 @@ public class Main {
             : System.currentTimeMillis();
 
         return Time.fromMillisecondsSince1970(millis);
+    }
+
+    private static double parseNumber(String name, String text, double minValue, double maxValue) {
+        double value = Double.NaN;
+        try {
+            value = Double.parseDouble(text);
+            if (value < minValue || value > maxValue) {
+                System.out.printf("ERROR: Value is out of range for %s.%n", name);
+                System.exit(1);
+            }
+        } catch (NumberFormatException e) {
+            System.out.printf("ERROR: Invalid numeric format '%s' for %s.%n", text, name);
+            System.exit(1);
+        }
+        return value;
+    }
+
+    private static Observer parseObserver(String[] args, int index) {
+        double latitude = parseNumber("latitude", args[index], -90.0, +90.0);
+        double longitude = parseNumber("longitude", args[index+1], -180.0, +180.0);
+        return new Observer(latitude, longitude, 0.0);
     }
 
     public static void main(String[] args) {
@@ -89,6 +117,7 @@ public class Main {
     private static Demo[] demoList = new Demo[] {
         new Demo("moonphase", 1, 2, args -> MoonPhase.run(parseTime(args, 1))),
         new Demo("now", 1, 2, args -> printTime(args)),
+        new Demo("positions", 3, 4, args -> Positions.run(parseObserver(args, 1), parseTime(args, 3))),
         new Demo("seasons", 2, 2, args -> Seasons.run(args[1]))
     };
 }

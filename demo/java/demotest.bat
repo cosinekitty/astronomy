@@ -41,6 +41,20 @@ if errorlevel 1 (
 )
 
 REM ----------------------------------------------------------------------------------
+REM Positions
+
+!RunDemo! positions +45.6 -90.7 2018-11-30T17:55:07.234Z > test\positions.txt
+if errorlevel 1 (
+    echo Error running Java demo: positions
+    exit /b 1
+)
+fc correct\positions.txt test\positions.txt
+if errorlevel 1 (
+    echo Incorrect output for Java demo: positions
+    exit /b 1
+)
+
+REM ----------------------------------------------------------------------------------
 REM Seasons
 
 !RunDemo! seasons 2019 > test\seasons.txt

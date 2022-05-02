@@ -36,5 +36,10 @@ As an example, to run the MoonPhase demo, try this:
 This example shows how to determine the Moon's current phase,
 and how to predict when the next 10 quarter phases will occur.
 
+### [Positions.java](src/main/java/io/github/cosinekitty/astronomy/demo/Positions.java)
+Given an observer's geographic latitude and longitude,
+and an optional date and time, this demo displays the
+equatorial and horizontal coordinates of the Sun, Moon, and planets.
+
 ### [Seasons.java](src/main/java/io/github/cosinekitty/astronomy/demo/Seasons.java)
 Calculates the equinoxes and solstices for a given calendar year.

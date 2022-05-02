@@ -13,16 +13,21 @@ if ! ./gradlew jar test; then
 fi
 echo ""
 echo "Java demos: starting"
-echo ""
 
+echo "Testing: now"
 ./rundemo now || Fail "Error running test: now"
 
-./rundemo moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running test: moonphase"
+echo "Testing: moonphase"
+./rundemo moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running demo: moonphase"
 diff {test,correct}/moonphase.txt || Fail "Incorrect output: moonphase"
 
-./rundemo seasons 2019 > test/seasons.txt || Fail "Error running test: seasons"
+echo "Testing: positions"
+./rundemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z > test/positions.txt || Fail "Error running demo: positions"
+diff {test,correct}/positions.txt || Fail "Incorrect output: positions"
+
+echo "Testing: seasons"
+./rundemo seasons 2019 > test/seasons.txt || Fail "Error running demo: seasons"
 diff {test,correct}/seasons.txt || Fail "Incorrect output: seasons"
 
-echo ""
 echo "Java demos: PASS"
 exit 0
