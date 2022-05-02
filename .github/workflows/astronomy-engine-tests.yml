@@ -35,18 +35,12 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Install Kotlin Native compiler Linux
-      if: startsWith(matrix.os, 'ubuntu')
-      run: generate/install_kotlin_native 'https://github.com/JetBrains/kotlin/releases/download/v1.6.20/kotlin-native-linux-x86_64-1.6.20.tar.gz'
     - uses: gradle/wrapper-validation-action@v1
+
     - name: Test Astronomy Engine Linux
       if: startsWith(matrix.os, 'ubuntu')
       run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
 
-    - name: Install Kotlin Native compiler macOs
-      if: startsWith(matrix.os, 'macOS')
-      run: generate/install_kotlin_native 'https://github.com/JetBrains/kotlin/releases/download/v1.6.20/kotlin-native-macos-x86_64-1.6.20.tar.gz'
-    - uses: gradle/wrapper-validation-action@v1
     - name: Test Astronomy Engine macOs
       if: startsWith(matrix.os, 'macOS')
       run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
