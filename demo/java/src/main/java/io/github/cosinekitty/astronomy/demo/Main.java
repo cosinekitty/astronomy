@@ -6,7 +6,7 @@ import java.time.format.DateTimeParseException;
 import io.github.cosinekitty.astronomy.*;
 
 public class Main {
-    private static String usageText = String.join(System.getProperty("line.separator"),
+    private static final String usageText = String.join(System.getProperty("line.separator"),
         "Command line arguments:",
         "",
         "    jupiter_moons [yyyy-mm-ddThh:mm:ssZ]",
@@ -49,8 +49,7 @@ public class Main {
             try {
                 String verb = args[0];
                 boolean found = false;
-                for (int i = 0; i < demoList.length; ++i) {
-                    Demo demo = demoList[i];
+                for (Demo demo : demoList) {
                     if (demo.name.equals(verb)) {
                         found = true;
                         if (args.length >= demo.minArgs && args.length <= demo.maxArgs) {
@@ -75,7 +74,7 @@ public class Main {
         System.exit(rc);
     }
 
-    private static Time parseTime(String args[], int index) {
+    private static Time parseTime(String[] args, int index) {
         long millis =
             (index >= 0 && index < args.length)
             ? Instant.parse(args[index]).toEpochMilli()
@@ -114,8 +113,8 @@ public class Main {
         return new Observer(latitude, longitude, 0.0);
     }
 
-    private static interface DemoRunner {
-        public int run(String[] args) throws DemoException;
+    private interface DemoRunner {
+        int run(String[] args) throws DemoException;
     }
 
     private static class Demo {
@@ -132,7 +131,7 @@ public class Main {
         }
     }
 
-    private static Demo[] demoList = new Demo[] {
+    private static final Demo[] demoList = new Demo[] {
         new Demo("jupiter_moons", 1, 2, args ->
             JupiterMoons.run(
                 parseTime(args, 1)
