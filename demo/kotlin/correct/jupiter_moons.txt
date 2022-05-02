@@ -1,0 +1,10 @@
+Calculations for: 2021-04-16T00:26:18.000Z
+
+It took light 45.61 minutes to reach the Earth from Jupiter.
+
+Jupiter    RA  21.880180   DEC -13.606457    5.484363 AU
+Io         RA  21.882006   DEC -13.595692    5.484937 AU
+Europa     RA  21.883169   DEC -13.588544    5.484757 AU
+Ganymede   RA  21.880320   DEC -13.605789    5.477195 AU
+Callisto   RA  21.888368   DEC -13.558804    5.486620 AU
+

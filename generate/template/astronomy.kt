@@ -145,6 +145,21 @@ fun Double.radiansToDegrees() = this * RAD2DEG
  */
 const val KM_PER_AU = 1.4959787069098932e+8
 
+/**
+ * The number of minutes in a day.
+ */
+const val MINUTES_PER_DAY = 60.0 * 24.0
+
+/**
+ * The number of seconds in a day.
+ */
+const val SECONDS_PER_DAY = 60.0 * MINUTES_PER_DAY
+
+/**
+ * The number of milliseconds in a day.
+ */
+const val MILLISECONDS_PER_DAY = 1000.0 * SECONDS_PER_DAY
+
 
 private const val DAYS_PER_TROPICAL_YEAR = 365.24217
 private const val DAYS_PER_MILLENNIUM = 365250.0
@@ -167,9 +182,6 @@ private const val MOON_MEAN_RADIUS_KM       = 1737.4
 private const val MOON_POLAR_RADIUS_KM      = 1736.0
 private const val MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 private const val ANGVEL = 7.2921150e-5
-private const val MINUTES_PER_DAY = 60.0 * 24.0
-private const val SECONDS_PER_DAY = 60.0 * MINUTES_PER_DAY
-private const val MILLISECONDS_PER_DAY = 1000.0 * SECONDS_PER_DAY
 private const val SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
 private const val MEAN_SYNODIC_MONTH = 29.530588     // average number of days for Moon to return to the same phase
 private const val EARTH_ORBITAL_PERIOD = 365.256
@@ -855,6 +867,26 @@ data class Vector(
         }
         return inverseTerra(vector)
     }
+
+    /**
+     * Creates a new vector with the same coordinates but a different time.
+     *
+     * Usually it is a mistake to add or subtract vectors corresponding
+     * to different times. The overloaded operators for adding and subtracting
+     * vectors will throw an exception if the times do not match.
+     * However, occasionally it is helpful to adjust the time associated
+     * with a vector to get around this safety check. For example,
+     * the time an event occurs may be different from the time it is observed.
+     * The `geoVector` function stores the observation time in the returned vector,
+     * while `helioVector` stores the event time.
+     *
+     * @param time
+     * A time to include in a new vector with the same coordinates as this one.
+     *
+     * @return
+     * A cloned vector that has the same coordinates as this one, but at a different time.
+     */
+    fun withTime(time: Time) = Vector(x, y, z, time)
 }
 
 /**

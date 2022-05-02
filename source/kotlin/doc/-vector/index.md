@@ -27,6 +27,7 @@ A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).
 | [toObserver](to-observer.md)<br>fun [toObserver](to-observer.md)(equator: [EquatorEpoch](../-equator-epoch/index.md)): [Observer](../-observer/index.md)<br>Calculates the geographic location corresponding to a geocentric equatorial vector. |
 | [toSpherical](to-spherical.md)<br>fun [toSpherical](to-spherical.md)(): [Spherical](../-spherical/index.md)<br>Converts Cartesian coordinates to spherical coordinates. |
 | [unaryMinus](unary-minus.md)<br>operator fun [unaryMinus](unary-minus.md)(): [Vector](index.md)<br>Negates a vector; the same as multiplying the vector by the scalar -1. |
+| [withTime](with-time.md)<br>fun [withTime](with-time.md)(time: [Time](../-time/index.md)): [Vector](index.md)<br>Creates a new vector with the same coordinates but a different time. |
 
 ## Properties
 

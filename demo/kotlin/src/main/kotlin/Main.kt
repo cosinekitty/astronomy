@@ -5,6 +5,13 @@ import io.github.cosinekitty.astronomy.*
 private val usageText = """
 Command line arguments:
 
+    jupiter_moons [yyyy-mm-ddThh:mm:ssZ]
+        Calculates the coordinates of Jupiter and its four major moons
+        (Io, Europa, Ganymede, and Callisto) as seen from the Earth
+        at a given date and time. This demo illustrates how to correct
+        for the delay caused by the time it takes for light to reach
+        the Earth from the Jupiter system.
+
     moonphase [yyyy-mm-ddThh:mm:ssZ]
         Calculates the Moon's ecliptic phase and illumination percentage
         for a given date and time, or for the computer's current date and
@@ -107,6 +114,11 @@ internal fun parseObserver(args: Array<String>, index: Int): Observer {
 }
 
 internal val demoList = arrayOf(
+    Demo("jupiter_moons", 1, 2) { args ->
+        `Jupiter moons demo`(
+            parseTime(args, 1)
+        )
+    },
     Demo("moonphase", 1, 2) { args ->
         `Moon Phase demo`(
             parseTime(args, 1)
