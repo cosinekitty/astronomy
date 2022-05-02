@@ -2,14 +2,7 @@ package io.github.cosinekitty.astronomy.demo;
 import io.github.cosinekitty.astronomy.*;
 
 public class Seasons {
-    public static int run(String yearText) {
-        int year;
-        try {
-            year = Integer.parseInt(yearText);
-        } catch (NumberFormatException e) {
-            System.out.printf("ERROR: Invalid year number '%s'.%n", yearText);
-            return 1;
-        }
+    public static int run(int year) {
         SeasonsInfo seasons = Astronomy.seasons(year);
         System.out.printf("March equinox     : %s%n", seasons.getMarchEquinox());
         System.out.printf("June solstice     : %s%n", seasons.getJuneSolstice());

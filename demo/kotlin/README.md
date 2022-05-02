@@ -36,5 +36,10 @@ As an example, to run the MoonPhase demo, try this:
 This example shows how to determine the Moon's current phase,
 and how to predict when the next 10 quarter phases will occur.
 
+### [Positions.kt](src/main/kotlin/Positions.kt)
+Given an observer's geographic latitude and longitude,
+and an optional date and time, this demo displays the
+equatorial and horizontal coordinates of the Sun, Moon, and planets.
+
 ### [Seasons.kt](src/main/kotlin/Seasons.kt)
 Calculates the equinoxes and solstices for a given calendar year.

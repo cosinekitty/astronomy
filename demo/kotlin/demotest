@@ -5,18 +5,21 @@ Fail()
     exit 1
 }
 
+TestDemo()
+{
+    echo "Testing: $1"
+    ./rundemo $* > test/$1.txt || Fail "Error running demo: $1"
+    diff {correct,test}/$1.txt || Fail "Incorrect output: $1"
+}
+
 echo "Kotlin demos: starting"
 rm -rf build test
 mkdir -p test
 ./gradlew jar || Fail "Error building Kotlin demo application."
 
-echo "Testing: moonphase"
-./rundemo moonphase 2019-06-15T09:15:32.987Z > test/moonphase.txt || Fail "Error running test: moonphase"
-diff {test,correct}/moonphase.txt || Fail "Incorrect output: moonphase"
-
-echo "Testing: seasons"
-./rundemo seasons 2019 > test/seasons.txt || Fail "Error running test: seasons"
-diff {test,correct}/seasons.txt || Fail "Incorrect output: seasons"
+TestDemo moonphase 2019-06-15T09:15:32.987Z
+#TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z
+TestDemo seasons 2019
 
 echo "Kotlin demos: PASS"
 exit 0
