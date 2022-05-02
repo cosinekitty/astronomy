@@ -1026,7 +1026,27 @@ class JupiterMoonsInfo(
      * 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto.
      */
     val moon: Array<StateVector>
-)
+) {
+    /**
+     * The state vector for Io.
+     */
+    val io: StateVector get() = moon[0]
+
+    /**
+     * The state vector for Europa.
+     */
+    val europa: StateVector get() = moon[1]
+
+    /**
+     * The state vector for Ganymede.
+     */
+    val ganymede: StateVector get() = moon[2]
+
+    /**
+     * The state vector for Callisto.
+     */
+    val callisto: StateVector get() = moon[3]
+}
 
 
 /**

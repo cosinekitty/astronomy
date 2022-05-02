@@ -32,6 +32,13 @@ As an example, to run the MoonPhase demo, try this:
 
 ---
 
+### [JupiterMoons.java](src/main/java/io/github/cosinekitty/astronomy/demo/JupiterMoons.java)
+Calculates the coordinates of Jupiter and its four major moons
+(Io, Europa, Ganymede, and Callisto) as seen from the Earth
+at a given date and time. This demo illustrates how to correct
+for the delay caused by the time it takes for light to reach
+the Earth from the Jupiter system.
+
 ### [MoonPhase.java](src/main/java/io/github/cosinekitty/astronomy/demo/MoonPhase.java)
 This example shows how to determine the Moon's current phase,
 and how to predict when the next 10 quarter phases will occur.

@@ -9,11 +9,18 @@ public class Main {
     private static String usageText = String.join(System.getProperty("line.separator"),
         "Command line arguments:",
         "",
+        "    jupiter_moons [yyyy-mm-ddThh:mm:ssZ]",
+        "        Calculates the coordinates of Jupiter and its four major moons",
+        "        (Io, Europa, Ganymede, and Callisto) as seen from the Earth",
+        "        at a given date and time. This demo illustrates how to correct",
+        "        for the delay caused by the time it takes for light to reach",
+        "        the Earth from the Jupiter system.",
+        "",
         "    moonphase [yyyy-mm-ddThh:mm:ssZ]",
-        "       Calculates the Moon's ecliptic phase and illumination percentage",
-        "       for a given date and time, or for the computer's current date and",
-        "       time if none is given on the command line.",
-        "       Also finds the dates and times of the subsequent 10 quarter phases.",
+        "        Calculates the Moon's ecliptic phase and illumination percentage",
+        "        for a given date and time, or for the computer's current date and",
+        "        time if none is given on the command line.",
+        "        Also finds the dates and times of the subsequent 10 quarter phases.",
         "",
         "    positions latitude longitude [yyyy-mm-ddThh:mm:ssZ]",
         "        Displays the equatorial and horizontal coordinates of",
@@ -23,8 +30,8 @@ public class Main {
         "        current date and time.",
         "",
         "    seasons year",
-        "       Given an integer year number, displays the solstices and equinoxes for that year.",
-        "       The year must be in the range 0000..9999.",
+        "        Given an integer year number, displays the solstices and equinoxes for that year.",
+        "        The year must be in the range 0000..9999.",
         ""
     );
 
@@ -126,6 +133,11 @@ public class Main {
     }
 
     private static Demo[] demoList = new Demo[] {
+        new Demo("jupiter_moons", 1, 2, args ->
+            JupiterMoons.run(
+                parseTime(args, 1)
+            )
+        ),
         new Demo("moonphase", 1, 2, args ->
             MoonPhase.run(
                 parseTime(args, 1)

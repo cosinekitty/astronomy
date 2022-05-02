@@ -32,6 +32,13 @@ As an example, to run the MoonPhase demo, try this:
 
 ---
 
+### [JupiterMoons.kt](src/main/kotlin/JupiterMoons.kt)
+Calculates the coordinates of Jupiter and its four major moons
+(Io, Europa, Ganymede, and Callisto) as seen from the Earth
+at a given date and time. This demo illustrates how to correct
+for the delay caused by the time it takes for light to reach
+the Earth from the Jupiter system.
+
 ### [MoonPhase.kt](src/main/kotlin/MoonPhase.kt)
 This example shows how to determine the Moon's current phase,
 and how to predict when the next 10 quarter phases will occur.

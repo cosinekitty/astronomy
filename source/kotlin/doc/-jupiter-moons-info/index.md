@@ -18,4 +18,8 @@ The [jupiterMoons](../jupiter-moons.md) function returns an object of this type 
 
 | Name | Summary |
 |---|---|
+| [callisto](callisto.md)<br>val [callisto](callisto.md): [StateVector](../-state-vector/index.md)<br>The state vector for Callisto. |
+| [europa](europa.md)<br>val [europa](europa.md): [StateVector](../-state-vector/index.md)<br>The state vector for Europa. |
+| [ganymede](ganymede.md)<br>val [ganymede](ganymede.md): [StateVector](../-state-vector/index.md)<br>The state vector for Ganymede. |
+| [io](io.md)<br>val [io](io.md): [StateVector](../-state-vector/index.md)<br>The state vector for Io. |
 | [moon](moon.md)<br>val [moon](moon.md): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;<br>An array of state vectors for each of the 4 moons, in the following order: 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto. |
