@@ -8,7 +8,7 @@ public class Positions {
     };
 
     /**
-     * Display equatorial and horizontal coordinates of solar system bodies.
+     * Print a table of solar system body positions in equatorial and horizontal coordinates.
      *
      * @param observer
      * The geographic location for which to calculate positions.

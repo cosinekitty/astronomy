@@ -2,6 +2,13 @@ package io.github.cosinekitty.astronomy.demo;
 import io.github.cosinekitty.astronomy.*;
 
 public class MoonPhase {
+    /**
+     * Display Moon phase information and the next 10 quarter phases.
+     *
+     * @param time
+     * The date and time for which to display Moon phase information,
+     * and when to initiate a search for the subsequent quarter phases.
+     */
     public static int run(Time time) {
         // Calculate the Moon's ecliptic phase angle,
         // which ranges from 0 to 360 degrees.

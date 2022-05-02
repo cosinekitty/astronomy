@@ -1,7 +1,7 @@
 import io.github.cosinekitty.astronomy.*
 
 /**
- * Displays Moon phase information and predicts the next 10 quarter phases.
+ * Display Moon phase information and the next 10 quarter phases.
  *
  * @param time
  * The date and time for which to display Moon phase information,

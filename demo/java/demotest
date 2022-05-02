@@ -23,5 +23,5 @@ TestDemo moonphase 2019-06-15T09:15:32.987Z
 TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z
 TestDemo seasons 2019
 
-echo "PASS: Java demos"
+echo "Java demos: PASS"
 exit 0

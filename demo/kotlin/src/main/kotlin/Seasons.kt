@@ -1,7 +1,7 @@
 import io.github.cosinekitty.astronomy.*
 
 /**
- * Demonstration of calculating the equinoxes and solstices for calendar year.
+ * Print the times of the equinoxes and solstices for a calendar year.
  *
  * @param year
  * The calendar year value for which to find equinoxes and solstices.

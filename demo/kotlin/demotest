@@ -7,7 +7,7 @@ Fail()
 
 TestDemo()
 {
-    echo "Testing: $1"
+    echo "Testing Kotlin demo: $1"
     ./rundemo $* > test/$1.txt || Fail "Error running demo: $1"
     diff {correct,test}/$1.txt || Fail "Incorrect output: $1"
 }
