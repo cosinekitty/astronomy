@@ -6,6 +6,12 @@ plugins {
 group = "io.github.cosinekitty.astronomy.demo"
 version = "1.0.0"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 repositories {
     mavenCentral()
     // maven("https://jitpack.io")

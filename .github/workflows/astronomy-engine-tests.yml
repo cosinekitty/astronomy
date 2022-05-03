@@ -24,25 +24,21 @@ jobs:
     - name: Install documentation tools Linux
       if: startsWith(matrix.os, 'ubuntu')
       run: sudo apt install -y doxygen xsltproc
-    - name: Install documentation tools macOs
+    - name: Install documentation tools macOS
       if: startsWith(matrix.os, 'macOS')
       run: HOMEBREW_NO_AUTO_UPDATE=1 brew install doxygen
     - name: Init Node.js 14.x
       uses: actions/setup-node@v2
       with:
         node-version: 14.x
-    - name: set up JDK 1.8
+    - name: set up JDK 11
       uses: actions/setup-java@v1
       with:
-        java-version: 1.8
+        java-version: 11
     - uses: gradle/wrapper-validation-action@v1
 
-    - name: Test Astronomy Engine Linux
-      if: startsWith(matrix.os, 'ubuntu')
-      run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
-
-    - name: Test Astronomy Engine macOs
-      if: startsWith(matrix.os, 'macOS')
+    - name: Test Astronomy Engine Unix
+      if: startsWith(matrix.os, 'windows') == false
       run: cd generate && rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt && ./run && ./verify_clean
 
     - name: Test Astronomy Engine Windows
