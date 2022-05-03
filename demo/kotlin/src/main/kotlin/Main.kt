@@ -4,7 +4,17 @@ import io.github.cosinekitty.astronomy.*
 import kotlin.system.exitProcess
 
 private const val usageText = """
+In all demos that include [yyyy-mm-ddThh:mm:ssZ]
+on the command line, that pattern indicates an optional date/time.
+If the date/time is specified, it is used for the calculation.
+If absent, the computer's current date and time is used.
+
 Command line arguments:
+
+    constellation [yyyy-mm-ddThh:mm:ssZ]
+        Finds what constellation the Moon is in at a given time.
+        Then it finds the Moon's constellation changes over the
+        subsequent 30 days.
 
     jupiter_moons [yyyy-mm-ddThh:mm:ssZ]
         Calculates the coordinates of Jupiter and its four major moons
@@ -15,20 +25,17 @@ Command line arguments:
 
     moonphase [yyyy-mm-ddThh:mm:ssZ]
         Calculates the Moon's ecliptic phase and illumination percentage
-        for a given date and time, or for the computer's current date and
-        time if none is given on the command line.
-        Also finds the dates and times of the subsequent 10 quarter phases.
+        for a given date and time. Also finds the dates and times of
+        the subsequent 10 quarter phases of the Moon.
 
     positions latitude longitude [yyyy-mm-ddThh:mm:ssZ]
         Displays the equatorial and horizontal coordinates of
         the Sun, Moon, and planets, as seen from a given
-        geographic location. Uses the date and time specified on
-        the command line, if present. Otherwise, uses the computer's
-        current date and time.
+        geographic location.
 
     seasons year
-        Given an integer year number, displays the solstices and equinoxes for that year.
-        The year must be in the range 0000..9999.
+        Given an integer year number, displays the solstices and
+        equinoxes for that year. The year must be in the range 0000..9999.
 
 """
 
@@ -114,6 +121,11 @@ internal fun parseObserver(args: Array<String>, index: Int): Observer {
 }
 
 internal val demoList = listOf(
+    Demo("constellation", 1, 2) { args ->
+        `Constellations demo`(
+            parseTime(args, 1)
+        )
+    },
     Demo("jupiter_moons", 1, 2) { args ->
         `Jupiter moons demo`(
             parseTime(args, 1)

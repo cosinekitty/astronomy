@@ -10,7 +10,18 @@ import io.github.cosinekitty.astronomy.*;
 
 public class Main {
     private static final String usageText = String.join(System.getProperty("line.separator"),
+        "",
+        "In all demos that include [yyyy-mm-ddThh:mm:ssZ]",
+        "on the command line, that pattern indicates an optional date/time.",
+        "If the date/time is specified, it is used for the calculation.",
+        "If absent, the computer's current date and time is used.",
+        "",
         "Command line arguments:",
+        "",
+        "    constellation [yyyy-mm-ddThh:mm:ssZ]",
+        "        Finds what constellation the Moon is in at a given time.",
+        "        Then it finds the Moon's constellation changes over the",
+        "        subsequent 30 days.",
         "",
         "    jupiter_moons [yyyy-mm-ddThh:mm:ssZ]",
         "        Calculates the coordinates of Jupiter and its four major moons",
@@ -21,9 +32,8 @@ public class Main {
         "",
         "    moonphase [yyyy-mm-ddThh:mm:ssZ]",
         "        Calculates the Moon's ecliptic phase and illumination percentage",
-        "        for a given date and time, or for the computer's current date and",
-        "        time if none is given on the command line.",
-        "        Also finds the dates and times of the subsequent 10 quarter phases.",
+        "        for a given date and time. Also finds the dates and times of",
+        "        the subsequent 10 quarter phases of the Moon.",
         "",
         "    positions latitude longitude [yyyy-mm-ddThh:mm:ssZ]",
         "        Displays the equatorial and horizontal coordinates of",
@@ -137,6 +147,11 @@ public class Main {
     }
 
     private static final List<Demo> demoList = Arrays.asList(
+        new Demo("constellation", 1, 2, args ->
+            Constellation.run(
+                parseTime(args, 1)
+            )
+        ),
         new Demo("jupiter_moons", 1, 2, args ->
             JupiterMoons.run(
                 parseTime(args, 1)

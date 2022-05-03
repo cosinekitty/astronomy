@@ -32,6 +32,11 @@ As an example, to run the MoonPhase demo, try this:
 
 ---
 
+### [Constellation.java](src/main/java/io/github/cosinekitty/astronomy/demo/Constellation.java)
+This demo finds what constellation the Moon is in at a given time.
+It also shows how to do a binary search to find the moment in time
+when the Moon moves across the border between constellations.
+
 ### [JupiterMoons.java](src/main/java/io/github/cosinekitty/astronomy/demo/JupiterMoons.java)
 Calculates the coordinates of Jupiter and its four major moons
 (Io, Europa, Ganymede, and Callisto) as seen from the Earth

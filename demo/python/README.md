@@ -13,9 +13,9 @@ toward the Moon's azimuth and tilts upward to its
 altitude angle above the horizon.
 
 ### [Constellation](constellation.py)
-This demo shows how to find what constellation a body
+This demo finds what constellation the Moon
 is in at a given time. It also shows how to do a binary
-search to find the moment in time when a body moves
+search to find the moment in time when the Moon moves
 across the border between constellations.
 
 ### [Culmination](culminate.py)
