@@ -59,7 +59,7 @@ public class Main {
         Optional<Demo> foundDemo = demoList.stream()
                 .filter(demo -> demo.name.equals(verb))
                 .findFirst();
-        if (foundDemo.isEmpty()) {
+        if (!foundDemo.isPresent()) {
             System.out.printf("ERROR: Unknown command '%s'.%n", verb);
             return 1;
         }
