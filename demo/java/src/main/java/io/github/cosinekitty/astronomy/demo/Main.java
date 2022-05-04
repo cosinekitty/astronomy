@@ -42,6 +42,16 @@ public class Main {
         "        the command line, if present. Otherwise, uses the computer's",
         "        current date and time.",
         "",
+        "    riseset latitude longitude [yyyy-mm-ddThh:mm:ssZ]",
+        "        Displays the times of the following 6 events:",
+        "        sunrise, sun culmination, sunset,",
+        "        moonrise, moon culmination, moonset.",
+        "        Culmination is when a body reaches the highest",
+        "        point in an observer's sky as it crosses the meridian.",
+        "        The specified time is the starting point of the search.",
+        "        The displayed events are those that occur first after that time.",
+        "        The events are displayed in chronological order.",
+        "",
         "    seasons year",
         "        Given an integer year number, displays the solstices and equinoxes for that year.",
         "        The year must be in the range 0000..9999.",
@@ -164,6 +174,12 @@ public class Main {
         ),
         new Demo("positions", 3, 4, args ->
             Positions.run(
+                parseObserver(args, 1),
+                parseTime(args, 3)
+            )
+        ),
+        new Demo("riseset", 3, 4, args ->
+            RiseSetCulm.run(
                 parseObserver(args, 1),
                 parseTime(args, 3)
             )

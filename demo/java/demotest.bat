@@ -15,6 +15,7 @@ call :TestDemo constellation 2021-06-01T00:00:00Z || exit /b 1
 call :TestDemo jupiter_moons 2021-04-16T00:26:18Z || exit /b 1
 call :TestDemo moonphase 2019-06-15T09:15:32.987Z || exit /b 1
 call :TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z || exit /b 1
+call :TestDemo riseset +45.6 -90.7 2018-11-30T17:55:07.234Z || exit /b 1
 call :TestDemo seasons 2019 || exit /b 1
 
 echo.

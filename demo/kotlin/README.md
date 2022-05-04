@@ -53,5 +53,10 @@ Given an observer's geographic latitude and longitude,
 and an optional date and time, this demo displays the
 equatorial and horizontal coordinates of the Sun, Moon, and planets.
 
+### [RiseSetCulm.kt](src/main/kotlin/RiseSetCulm.kt)
+Calculates rise, set, and culmination times of the Sun and Moon.
+Culmination is when a body reaches the highest
+point in an observer's sky as it crosses the meridian.
+
 ### [Seasons.kt](src/main/kotlin/Seasons.kt)
 Calculates the equinoxes and solstices for a given calendar year.

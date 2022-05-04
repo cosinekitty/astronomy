@@ -53,5 +53,10 @@ Given an observer's geographic latitude and longitude,
 and an optional date and time, this demo displays the
 equatorial and horizontal coordinates of the Sun, Moon, and planets.
 
+### [RiseSetCulm.java](src/main/java/io/github/cosinekitty/astronomy/demo/RiseSetCulm.java)
+Calculates rise, set, and culmination times of the Sun and Moon.
+Culmination is when a body reaches the highest
+point in an observer's sky as it crosses the meridian.
+
 ### [Seasons.java](src/main/java/io/github/cosinekitty/astronomy/demo/Seasons.java)
 Calculates the equinoxes and solstices for a given calendar year.
