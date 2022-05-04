@@ -44,6 +44,11 @@ at a given date and time. This demo illustrates how to correct
 for the delay caused by the time it takes for light to reach
 the Earth from the Jupiter system.
 
+### [LunarEclipse.kt](src/main/kotlin/LunarEclipse.kt)
+Searches for the first 10 lunar eclipses (partial or total)
+that occur after the specified time. Penumbral lunar eclipses
+are ignored, as these are difficult to observe in practice.
+
 ### [MoonPhase.kt](src/main/kotlin/MoonPhase.kt)
 This example shows how to determine the Moon's current phase,
 and how to predict when the next 10 quarter phases will occur.

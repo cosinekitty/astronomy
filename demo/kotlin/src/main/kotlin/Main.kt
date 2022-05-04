@@ -23,6 +23,11 @@ Command line arguments:
         for the delay caused by the time it takes for light to reach
         the Earth from the Jupiter system.
 
+    lunar_eclipse [yyyy-mm-ddThh:mm:ssZ]
+        Searches for the first 10 lunar eclipses (partial or total)
+        that occur after the specified time. Penumbral lunar eclipses
+        are ignored, as these are difficult to observe in practice.
+
     moonphase [yyyy-mm-ddThh:mm:ssZ]
         Calculates the Moon's ecliptic phase and illumination percentage
         for a given date and time. Also finds the dates and times of
@@ -138,6 +143,11 @@ internal val demoList = listOf(
     },
     Demo("jupiter_moons", 1, 2) { args ->
         `Jupiter moons demo`(
+            parseTime(args, 1)
+        )
+    },
+    Demo("lunar_eclipse", 1, 2) { args ->
+        `Lunar eclipse demo`(
             parseTime(args, 1)
         )
     },
