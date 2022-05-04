@@ -34,19 +34,13 @@ internal fun `Rise Set Culmination demo`(observer: Observer, startTime: Time): I
     )
 
     // Print the list in sorted order.
-    eventList.sorted().forEach {
-        it.display()
-    }
+    eventList.sorted().forEach(AstroEvent::display)
 
     return 0
 }
 
 
-private fun maybe(name: String, time: Time?): AstroEvent? =
-    if (time == null)
-        null
-    else
-        AstroEvent(name, time)
+private fun maybe(name: String, time: Time?): AstroEvent? = time?.let { AstroEvent(name, it) }
 
 
 private class AstroEvent(

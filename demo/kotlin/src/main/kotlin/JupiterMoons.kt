@@ -49,10 +49,10 @@ internal fun `Jupiter moons demo`(time: Time): Int {
     // a different time. This is a manual override to work around a safety check.
 
     printBody("Jupiter",  jv)
-    printBody("Io",       jv + jm.moon[0].position().withTime(jv.t))
-    printBody("Europa",   jv + jm.moon[1].position().withTime(jv.t))
-    printBody("Ganymede", jv + jm.moon[2].position().withTime(jv.t))
-    printBody("Callisto", jv + jm.moon[3].position().withTime(jv.t))
+    printBody("Io",       jv + jm.io.position().withTime(jv.t))
+    printBody("Europa",   jv + jm.europa.position().withTime(jv.t))
+    printBody("Ganymede", jv + jm.ganymede.position().withTime(jv.t))
+    printBody("Callisto", jv + jm.callisto.position().withTime(jv.t))
     println()
 
     return 0
