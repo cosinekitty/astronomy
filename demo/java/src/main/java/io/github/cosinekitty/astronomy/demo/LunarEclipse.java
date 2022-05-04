@@ -12,14 +12,14 @@ public class LunarEclipse {
     public static int run(Time startTime) {
         LunarEclipseInfo e = Astronomy.searchLunarEclipse(startTime);
         int count = 0;
-        while (count < 10) {
+        while (true) {
             if (e.getKind() != EclipseKind.Penumbral) {
-                ++count;
                 printEclipse(e);
+                if (++count == 10)
+                    return 0;
             }
             e = Astronomy.nextLunarEclipse(e.getPeak());
         }
-        return 0;
     }
 
     private static void printEclipse(LunarEclipseInfo e) {

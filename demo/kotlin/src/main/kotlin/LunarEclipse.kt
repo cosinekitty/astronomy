@@ -7,16 +7,16 @@ import io.github.cosinekitty.astronomy.*
  * The date and time after which to start searching for lunar eclipses.
  */
 internal fun `Lunar eclipse demo`(startTime: Time): Int {
-    var count = 0
     var e: LunarEclipseInfo = searchLunarEclipse(startTime)
-    while (count < 10) {
+    var count = 0
+    while (true) {
         if (e.kind != EclipseKind.Penumbral) {
-            ++count
             printEclipse(e)
+            if (++count == 10)
+                return 0
         }
         e = nextLunarEclipse(e.peak)
     }
-    return 0
 }
 
 private fun printEclipse(e: LunarEclipseInfo) {
