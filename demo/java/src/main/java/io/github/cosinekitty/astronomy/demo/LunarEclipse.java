@@ -1,5 +1,7 @@
 package io.github.cosinekitty.astronomy.demo;
 
+import java.util.stream.Stream;
+
 import io.github.cosinekitty.astronomy.*;
 
 public class LunarEclipse {
@@ -11,15 +13,11 @@ public class LunarEclipse {
      */
     public static int run(Time startTime) {
         LunarEclipseInfo e = Astronomy.searchLunarEclipse(startTime);
-        int count = 0;
-        while (true) {
-            if (e.getKind() != EclipseKind.Penumbral) {
-                printEclipse(e);
-                if (++count == 10)
-                    return 0;
-            }
-            e = Astronomy.nextLunarEclipse(e.getPeak());
-        }
+        Stream.iterate(e, x -> Astronomy.nextLunarEclipse(x.getPeak()))
+                .filter(x -> x.getKind() != EclipseKind.Penumbral)
+                .limit(10)
+                .forEach(LunarEclipse::printEclipse);
+        return 0;
     }
 
     private static void printEclipse(LunarEclipseInfo e) {
