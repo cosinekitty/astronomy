@@ -30,6 +30,11 @@ public class Main {
         "        for the delay caused by the time it takes for light to reach",
         "        the Earth from the Jupiter system.",
         "",
+        "    lunar_eclipse [yyyy-mm-ddThh:mm:ssZ]",
+        "        Searches for the first 10 lunar eclipses (partial or total)",
+        "        that occur after the specified time. Penumbral lunar eclipses",
+        "        are ignored, as these are difficult to observe in practice.",
+        "",
         "    moonphase [yyyy-mm-ddThh:mm:ssZ]",
         "        Calculates the Moon's ecliptic phase and illumination percentage",
         "        for a given date and time. Also finds the dates and times of",
@@ -164,6 +169,11 @@ public class Main {
         ),
         new Demo("jupiter_moons", 1, 2, args ->
             JupiterMoons.run(
+                parseTime(args, 1)
+            )
+        ),
+        new Demo("lunar_eclipse", 1, 2, args ->
+            LunarEclipse.run(
                 parseTime(args, 1)
             )
         ),

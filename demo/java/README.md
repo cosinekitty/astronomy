@@ -44,6 +44,11 @@ at a given date and time. This demo illustrates how to correct
 for the delay caused by the time it takes for light to reach
 the Earth from the Jupiter system.
 
+### [LunarEclipse.java](src/main/java/io/github/cosinekitty/astronomy/demo/LunarEclipse.java)
+Searches for the first 10 lunar eclipses (partial or total)
+that occur after the specified time. Penumbral lunar eclipses
+are ignored, as these are difficult to observe in practice.
+
 ### [MoonPhase.java](src/main/java/io/github/cosinekitty/astronomy/demo/MoonPhase.java)
 This example shows how to determine the Moon's current phase,
 and how to predict when the next 10 quarter phases will occur.
