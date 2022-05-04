@@ -33,6 +33,16 @@ Command line arguments:
         the Sun, Moon, and planets, as seen from a given
         geographic location.
 
+    riseset latitude longitude [yyyy-mm-ddThh:mm:ssZ]
+        Displays the times of the following 6 events:
+        sunrise, sun culmination, sunset,
+        moonrise, moon culmination, moonset.
+        Culmination is when a body reaches the highest
+        point in an observer's sky as it crosses the meridian.
+        The specified time is the starting point of the search.
+        The displayed events are those that occur first after that time.
+        The events are displayed in chronological order.
+
     seasons year
         Given an integer year number, displays the solstices and
         equinoxes for that year. The year must be in the range 0000..9999.
@@ -138,6 +148,12 @@ internal val demoList = listOf(
     },
     Demo("positions", 3, 4) { args ->
         `Celestial body positions demo`(
+            parseObserver(args, 1),
+            parseTime(args, 3)
+        )
+    },
+    Demo("riseset", 3, 4) { args ->
+        `Rise Set Culmination demo`(
             parseObserver(args, 1),
             parseTime(args, 3)
         )

@@ -21,7 +21,7 @@ internal fun `Constellations demo`(startTime: Time): Int {
     var c1 = bodyConstellation(Body.Moon, t1)
     println("$t1 : The Moon starts in ${c1.name}.")
 
-    while (t1.tt < stopTime.tt) {
+    while (t1 < stopTime) {     // note that Time objects can be compared chronologically
         val t2 = t1.addDays(dayIncrement)
         val c2 = bodyConstellation(Body.Moon, t2)
         if (c1.symbol == c2.symbol) {

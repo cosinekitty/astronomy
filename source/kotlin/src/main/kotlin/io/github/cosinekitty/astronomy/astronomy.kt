@@ -543,7 +543,7 @@ class Time private constructor(
      * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
      */
     val tt: Double
-) {
+): Comparable<Time> {
     /*
      * For internal use only. Used to optimize Earth tilt calculations.
      */
@@ -609,6 +609,14 @@ class Time private constructor(
 
     internal fun julianCenturies() = tt / 36525.0
     internal fun julianMillennia() = tt / DAYS_PER_MILLENNIUM
+
+    /**
+     * Compares the chronological order of two `Time` values.
+     *
+     * Two instances of `Time` can be compared for chronological order
+     * using the usual operators like `t1 < t2` or `t1 == t2`.
+     */
+    override operator fun compareTo(other: Time): Int = this.tt.compareTo(other.tt)
 
     companion object {
         /**
