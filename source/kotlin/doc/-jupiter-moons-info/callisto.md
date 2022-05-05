@@ -4,4 +4,4 @@
 
 val [callisto](callisto.md): [StateVector](../-state-vector/index.md)
 
-The state vector for Callisto.
+The position and velocity of Jupiter's moon Callisto.

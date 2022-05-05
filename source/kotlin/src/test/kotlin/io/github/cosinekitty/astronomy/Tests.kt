@@ -595,10 +595,8 @@ class Tests {
             outfile.println("s GM ${time.tt} ${time.ut} ${j2000.ra} ${j2000.dec} ${j2000.dist} ${hor.azimuth} ${hor.altitude}")
 
             val jm = jupiterMoons(time)
-            var mindex = 0
-            for (moon in jm.moon) {
+            for ((mindex, moon) in listOf(jm.io, jm.europa, jm.ganymede, jm.callisto).withIndex()) {
                 outfile.println("j ${mindex} ${time.tt} ${time.ut} ${moon.x} ${moon.y} ${moon.z} ${moon.vx} ${moon.vy} ${moon.vz}")
-                ++mindex
             }
 
             time = time.addDays(10.0 + PI/100.0)

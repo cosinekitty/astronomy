@@ -4,4 +4,4 @@
 
 val [io](io.md): [StateVector](../-state-vector/index.md)
 
-The state vector for Io.
+The position and velocity of Jupiter's moon Io.

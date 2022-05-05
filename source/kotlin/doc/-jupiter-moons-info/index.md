@@ -2,7 +2,7 @@
 
 # JupiterMoonsInfo
 
-class [JupiterMoonsInfo](index.md)(moon: [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;)
+class [JupiterMoonsInfo](index.md)(io: [StateVector](../-state-vector/index.md), europa: [StateVector](../-state-vector/index.md), ganymede: [StateVector](../-state-vector/index.md), callisto: [StateVector](../-state-vector/index.md))
 
 Holds the positions and velocities of Jupiter's major 4 moons.
 
@@ -12,14 +12,13 @@ The [jupiterMoons](../jupiter-moons.md) function returns an object of this type 
 
 | | |
 |---|---|
-| [JupiterMoonsInfo](-jupiter-moons-info.md)<br>fun [JupiterMoonsInfo](-jupiter-moons-info.md)(moon: [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;) |
+| [JupiterMoonsInfo](-jupiter-moons-info.md)<br>fun [JupiterMoonsInfo](-jupiter-moons-info.md)(io: [StateVector](../-state-vector/index.md), europa: [StateVector](../-state-vector/index.md), ganymede: [StateVector](../-state-vector/index.md), callisto: [StateVector](../-state-vector/index.md)) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [callisto](callisto.md)<br>val [callisto](callisto.md): [StateVector](../-state-vector/index.md)<br>The state vector for Callisto. |
-| [europa](europa.md)<br>val [europa](europa.md): [StateVector](../-state-vector/index.md)<br>The state vector for Europa. |
-| [ganymede](ganymede.md)<br>val [ganymede](ganymede.md): [StateVector](../-state-vector/index.md)<br>The state vector for Ganymede. |
-| [io](io.md)<br>val [io](io.md): [StateVector](../-state-vector/index.md)<br>The state vector for Io. |
-| [moon](moon.md)<br>val [moon](moon.md): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;<br>An array of state vectors for each of the 4 moons, in the following order: 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto. |
+| [callisto](callisto.md)<br>val [callisto](callisto.md): [StateVector](../-state-vector/index.md)<br>The position and velocity of Jupiter's moon Callisto. |
+| [europa](europa.md)<br>val [europa](europa.md): [StateVector](../-state-vector/index.md)<br>The position and velocity of Jupiter's moon Europa. |
+| [ganymede](ganymede.md)<br>val [ganymede](ganymede.md): [StateVector](../-state-vector/index.md)<br>The position and velocity of Jupiter's moon Ganymede. |
+| [io](io.md)<br>val [io](io.md): [StateVector](../-state-vector/index.md)<br>The position and velocity of Jupiter's moon Io. |

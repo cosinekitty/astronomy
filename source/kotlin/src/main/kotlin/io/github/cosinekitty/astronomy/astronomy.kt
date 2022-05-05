@@ -1030,32 +1030,25 @@ data class StateVector(
  */
 class JupiterMoonsInfo(
     /**
-     * An array of state vectors for each of the 4 moons, in the following order:
-     * 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto.
+     * The position and velocity of Jupiter's moon Io.
      */
-    val moon: Array<StateVector>
-) {
-    /**
-     * The state vector for Io.
-     */
-    val io: StateVector get() = moon[0]
+    val io: StateVector,
 
     /**
-     * The state vector for Europa.
+     * The position and velocity of Jupiter's moon Europa.
      */
-    val europa: StateVector get() = moon[1]
+    val europa: StateVector,
 
     /**
-     * The state vector for Ganymede.
+     * The position and velocity of Jupiter's moon Ganymede.
      */
-    val ganymede: StateVector get() = moon[2]
+    val ganymede: StateVector,
 
     /**
-     * The state vector for Callisto.
+     * The position and velocity of Jupiter's moon Callisto.
      */
-    val callisto: StateVector get() = moon[3]
-}
-
+    val callisto: StateVector
+)
 
 /**
  * A rotation matrix that can be used to transform one coordinate system to another.
@@ -5205,12 +5198,10 @@ fun nextTransit(body: Body, prevTransitTime: Time) =
  */
 fun jupiterMoons(time: Time) =
     JupiterMoonsInfo(
-        arrayOf(
-            calcJupiterMoon(time, jupiterMoonModel[0]),
-            calcJupiterMoon(time, jupiterMoonModel[1]),
-            calcJupiterMoon(time, jupiterMoonModel[2]),
-            calcJupiterMoon(time, jupiterMoonModel[3])
-        )
+        calcJupiterMoon(time, jupiterMoonModel[0]),
+        calcJupiterMoon(time, jupiterMoonModel[1]),
+        calcJupiterMoon(time, jupiterMoonModel[2]),
+        calcJupiterMoon(time, jupiterMoonModel[3])
     )
 
 /**

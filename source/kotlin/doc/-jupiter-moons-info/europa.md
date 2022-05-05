@@ -4,4 +4,4 @@
 
 val [europa](europa.md): [StateVector](../-state-vector/index.md)
 
-The state vector for Europa.
+The position and velocity of Jupiter's moon Europa.

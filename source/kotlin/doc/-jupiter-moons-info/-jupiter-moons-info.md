@@ -2,4 +2,4 @@
 
 # JupiterMoonsInfo
 
-fun [JupiterMoonsInfo](-jupiter-moons-info.md)(moon: [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;)
+fun [JupiterMoonsInfo](-jupiter-moons-info.md)(io: [StateVector](../-state-vector/index.md), europa: [StateVector](../-state-vector/index.md), ganymede: [StateVector](../-state-vector/index.md), callisto: [StateVector](../-state-vector/index.md))

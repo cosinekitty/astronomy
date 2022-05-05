@@ -4,4 +4,4 @@
 
 val [ganymede](ganymede.md): [StateVector](../-state-vector/index.md)
 
-The state vector for Ganymede.
+The position and velocity of Jupiter's moon Ganymede.
