@@ -243,6 +243,34 @@ static Imager::SolidObject* CreateSaturnRings()
 }
 
 
+static void AddMoonToScene(
+    Imager::Scene &scene,
+    astro_vector_t geo_planet,
+    astro_state_vector_t moon,
+    double radius_km,
+    const char *name)
+{
+    using namespace Imager;
+
+    if (moon.status != ASTRO_SUCCESS)
+    {
+        fprintf(stderr, "FATAL(main.cpp ! AddMoonToScene): moon status = %d\n", (int)moon.status);
+        exit(1);
+    }
+
+    Vector center(
+        geo_planet.x + moon.x,
+        geo_planet.y + moon.y,
+        geo_planet.z + moon.z
+    );
+
+    Sphere *sphere = new Sphere(center/AU_SCALE, radius_km/KM_SCALE);
+    scene.AddSolidObject(sphere);
+    sphere->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
+    sphere->SetTag(name);
+}
+
+
 static void AddJupiterMoons(
     Imager::Scene &scene,
     astro_vector_t geo_planet,
@@ -254,49 +282,10 @@ static void AddJupiterMoons(
     astro_jupiter_moons_t jm = Astronomy_JupiterMoons(depart);
 
     // Add Jupiter's moons to the scene.
-
-    // Io
-    Vector io_center(
-        jm.moon[JM_IO].x + geo_planet.x,
-        jm.moon[JM_IO].y + geo_planet.y,
-        jm.moon[JM_IO].z + geo_planet.z
-    );
-    Sphere *io = new Sphere(io_center/AU_SCALE, IO_RADIUS_KM/KM_SCALE);
-    scene.AddSolidObject(io);
-    io->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    io->SetTag("Io");
-
-    // Europa
-    Vector eu_center(
-        jm.moon[JM_EUROPA].x + geo_planet.x,
-        jm.moon[JM_EUROPA].y + geo_planet.y,
-        jm.moon[JM_EUROPA].z + geo_planet.z
-    );
-    Sphere *europa = new Sphere(eu_center/AU_SCALE, EUROPA_RADIUS_KM/KM_SCALE);
-    scene.AddSolidObject(europa);
-    europa->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    europa->SetTag("Europa");
-
-    // Ganymede
-    Vector gan_center(
-        jm.moon[JM_GANYMEDE].x + geo_planet.x,
-        jm.moon[JM_GANYMEDE].y + geo_planet.y,
-        jm.moon[JM_GANYMEDE].z + geo_planet.z
-    );
-    Sphere *ganymede = new Sphere(gan_center/AU_SCALE, GANYMEDE_RADIUS_KM/KM_SCALE);
-    scene.AddSolidObject(ganymede);
-    ganymede->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-
-    // Callisto
-    Vector cal_center(
-        jm.moon[JM_CALLISTO].x + geo_planet.x,
-        jm.moon[JM_CALLISTO].y + geo_planet.y,
-        jm.moon[JM_CALLISTO].z + geo_planet.z
-    );
-    Sphere *callisto = new Sphere(cal_center/AU_SCALE, CALLISTO_RADIUS_KM/KM_SCALE);
-    scene.AddSolidObject(callisto);
-    callisto->SetFullMatte(Color(1.0, 1.0, 1.0));     // ??? Actual moon colors ???
-    callisto->SetTag("Callisto");
+    AddMoonToScene(scene, geo_planet, jm.io,       IO_RADIUS_KM,       "Io"      );
+    AddMoonToScene(scene, geo_planet, jm.europa,   EUROPA_RADIUS_KM,   "Europa"  );
+    AddMoonToScene(scene, geo_planet, jm.ganymede, GANYMEDE_RADIUS_KM, "Ganymede");
+    AddMoonToScene(scene, geo_planet, jm.callisto, CALLISTO_RADIUS_KM, "Callisto");
 }
 
 
