@@ -74,7 +74,7 @@ function Demo() {
     let count = 0;
     let eclipse = Astronomy.SearchLunarEclipse(date);
     for(;;) {
-        if (eclipse.kind !== 'penumbral') {
+        if (eclipse.kind !== Astronomy.EclipseKind.Penumbral) {
             PrintEclipse(eclipse);
             if (++count === 10) {
                 break;

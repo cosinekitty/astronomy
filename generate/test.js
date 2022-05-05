@@ -305,7 +305,7 @@ function LunarEclipseIssue78() {
     const dt = (expected_peak - eclipse.peak.date) / 1000;
     if (abs(dt) > 40.0)
         throw `LunarEclipseIssue78: Excessive prediction error = ${dt} seconds.`;
-    if (eclipse.kind !== 'total')
+    if (eclipse.kind !== Astronomy.EclipseKind.Total)
         throw `Expected total eclipse; found: ${eclipse.kind}`;
     console.log(`JS LunarEclipseIssue78: PASS`);
     return 0;
@@ -341,15 +341,15 @@ function LunarEclipse() {
 
         let valid = false;
         switch (eclipse.kind) {
-        case 'penumbral':
+        case Astronomy.EclipseKind.Penumbral:
             valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial == 0.0) && (eclipse.sd_total == 0.0);
             break;
 
-        case 'partial':
+        case Astronomy.EclipseKind.Partial:
             valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total == 0.0);
             break;
 
-        case 'total':
+        case Astronomy.EclipseKind.Total:
             valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
             break;
 
@@ -470,10 +470,10 @@ function GlobalSolarEclipse() {
         const lat = float(token[3]);
         const lon = float(token[4]);
         const expected_kind = {
-            'P': 'partial',
-            'A': 'annular',
-            'T': 'total',
-            'H': 'total'
+            'P': Astronomy.EclipseKind.Partial,
+            'A': Astronomy.EclipseKind.Annular,
+            'T': Astronomy.EclipseKind.Total,
+            'H': Astronomy.EclipseKind.Total
         }[typeChar];
 
         let diff_days = eclipse.peak.tt - peak.tt;
@@ -502,7 +502,7 @@ function GlobalSolarEclipse() {
             return 1;
         }
 
-        if (eclipse.kind === 'total' || eclipse.kind === 'annular') {
+        if (eclipse.kind === Astronomy.EclipseKind.Total || eclipse.kind === Astronomy.EclipseKind.Annular) {
             // When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
             // it creates a glancing blow whose geographic coordinates are excessively sensitive to
             // slight changes in the ray. Therefore, it is unreasonable to count large errors there.
@@ -672,10 +672,10 @@ function LocalSolarEclipse2() {
         const observer = new Astronomy.Observer(latitude, longitude, 0);
         const typeChar = token[2];
         const expected_kind = {
-            'P': 'partial',
-            'A': 'annular',
-            'T': 'total',
-            'H': 'total'
+            'P': Astronomy.EclipseKind.Partial,
+            'A': Astronomy.EclipseKind.Annular,
+            'T': Astronomy.EclipseKind.Total,
+            'H': Astronomy.EclipseKind.Total
         }[typeChar];
         const p1    = ParseEvent(token[3],  token[4],   true);
         const t1    = ParseEvent(token[5],  token[6],   (typeChar !== 'P'));

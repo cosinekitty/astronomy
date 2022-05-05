@@ -35,7 +35,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.SiderealTime = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.MassProduct = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
 exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = void 0;
-exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = void 0;
+exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -7304,6 +7304,23 @@ function Constellation(ra, dec) {
 }
 exports.Constellation = Constellation;
 /**
+ * @brief The different kinds of lunar/solar eclipses..
+ *
+ * `Penumbral`: A lunar eclipse in which only the Earth's penumbra falls on the Moon. (Never used for a solar eclipse.)
+ * `Partial`: A partial lunar/solar eclipse.
+ * `Annular`: A solar eclipse in which the entire Moon is visible against the Sun, but the Sun appears as a ring around the Moon. (Never used for a lunar eclipse.)
+ * `Total`: A total lunar/solar eclipse.
+ *
+ * @enum {string}
+ */
+var EclipseKind;
+(function (EclipseKind) {
+    EclipseKind["Penumbral"] = "penumbral";
+    EclipseKind["Partial"] = "partial";
+    EclipseKind["Annular"] = "annular";
+    EclipseKind["Total"] = "total";
+})(EclipseKind = exports.EclipseKind || (exports.EclipseKind = {}));
+/**
  * @brief Returns information about a lunar eclipse.
  *
  * Returned by {@link SearchLunarEclipse} or {@link NextLunarEclipse}
@@ -7314,8 +7331,8 @@ exports.Constellation = Constellation;
  * Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
  * Total eclipses occur when the entire Moon passes into the Earth's umbra.
  *
- * The `kind` field thus holds one of the strings `"penumbral"`, `"partial"`,
- * or `"total"`, depending on the kind of lunar eclipse found.
+ * The `kind` field thus holds one of the enum values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
+ * or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
  *
  * Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
  *
@@ -7325,7 +7342,7 @@ exports.Constellation = Constellation;
  * By converting from minutes to days, and subtracting/adding with `peak`, the caller
  * may determine the date and time of the beginning/end of each eclipse phase.
  *
- * @property {string} kind
+ * @property {EclipseKind} kind
  *      The type of lunar eclipse found.
  *
  * @property {AstroTime} peak
@@ -7573,17 +7590,17 @@ function SearchLunarEclipse(date) {
             const shadow = PeakEarthShadow(fullmoon);
             if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM) {
                 /* This is at least a penumbral eclipse. We will return a result. */
-                let kind = 'penumbral';
+                let kind = EclipseKind.Penumbral;
                 let sd_total = 0.0;
                 let sd_partial = 0.0;
                 let sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0);
                 if (shadow.r < shadow.k + MOON_MEAN_RADIUS_KM) {
                     /* This is at least a partial eclipse. */
-                    kind = 'partial';
+                    kind = EclipseKind.Partial;
                     sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_MEAN_RADIUS_KM, sd_penum);
                     if (shadow.r + MOON_MEAN_RADIUS_KM < shadow.k) {
                         /* This is a total eclipse. */
-                        kind = 'total';
+                        kind = EclipseKind.Total;
                         sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, sd_partial);
                     }
                 }
@@ -7607,21 +7624,21 @@ exports.SearchLunarEclipse = SearchLunarEclipse;
  * maximum amount of the Sun's disc obscured, as seen at the peak location
  * on the surface of the Earth.
  *
- * The `kind` field thus holds one of the strings `"partial"`, `"annular"`, or `"total"`.
+ * The `kind` field thus holds one of the values `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
  * A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
  * An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
  * to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
  * A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
  * observes either a total or annular eclipse.
  *
- * If `kind` is `"total"` or `"annular"`, the `latitude` and `longitude`
+ * If `kind` is `EclipseKind.Total` or `EclipseKind.Annular`, the `latitude` and `longitude`
  * fields give the geographic coordinates of the center of the Moon's shadow projected
  * onto the daytime side of the Earth at the instant of the eclipse's peak.
  * If `kind` has any other value, `latitude` and `longitude` are undefined and should
  * not be used.
  *
- * @property {string} kind
- *     One of the following string values: `"partial"`, `"annular"`, `"total"`.
+ * @property {EclipseKind} kind
+ *     One of the following enumeration values: `EclipseKind.Partial`, `EclipseKind.Annular`, `EclipseKind.Total`.
  *
  * @property {AstroTime} peak
  *     The date and time when the solar eclipse is darkest.
@@ -7632,12 +7649,12 @@ exports.SearchLunarEclipse = SearchLunarEclipse;
  *     and the center of the Earth at the time indicated by `peak`.
  *
  * @property {number | undefined} latitude
- *     If `kind` holds `"total"`, the geographic latitude in degrees
+ *     If `kind` holds `EclipseKind.Total`, the geographic latitude in degrees
  *     where the center of the Moon's shadow falls on the Earth at the
  *     time indicated by `peak`; otherwise, `latitude` holds `undefined`.
  *
  * @property {number | undefined} longitude
- *     If `kind` holds `"total"`, the geographic longitude in degrees
+ *     If `kind` holds `EclipseKind.Total`, the geographic longitude in degrees
  *     where the center of the Moon's shadow falls on the Earth at the
  *     time indicated by `peak`; otherwise, `longitude` holds `undefined`.
  */
@@ -7655,10 +7672,10 @@ function EclipseKindFromUmbra(k) {
     // The umbra radius tells us what kind of eclipse the observer sees.
     // If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular.
     // HACK: I added a tiny bias (14 meters) to match Espenak test data.
-    return (k > 0.014) ? 'total' : 'annular';
+    return (k > 0.014) ? EclipseKind.Total : EclipseKind.Annular;
 }
 function GeoidIntersect(shadow) {
-    let kind = 'partial';
+    let kind = EclipseKind.Partial;
     let peak = shadow.time;
     let distance = shadow.r;
     let latitude; // left undefined for partial eclipses
@@ -7852,7 +7869,7 @@ exports.EclipseEvent = EclipseEvent;
  * to report information about a solar eclipse as seen at a given geographic location.
  *
  * When a solar eclipse is found, it is classified by setting `kind`
- * to `"partial"`, `"annular"`, or `"total"`.
+ * to `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
  * A partial solar eclipse is when the Moon does not line up directly enough with the Sun
  * to completely block the Sun's light from reaching the observer.
  * An annular eclipse occurs when the Moon's disc is completely visible against the Sun
@@ -7870,8 +7887,8 @@ exports.EclipseEvent = EclipseEvent;
  * see whether the Sun is above the horizon at the time indicated by the `time` field.
  * See {@link EclipseEvent} for more information.
  *
- * @property {string} kind
- *      The type of solar eclipse found: `"partial"`, `"annular"`, or `"total"`.
+ * @property {EclipseKind} kind
+ *      The type of solar eclipse found: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
  *
  * @property {EclipseEvent} partial_begin
  *      The time and Sun altitude at the beginning of the eclipse.
@@ -7926,7 +7943,7 @@ function LocalEclipse(shadow, observer) {
         kind = EclipseKindFromUmbra(shadow.k);
     }
     else {
-        kind = 'partial';
+        kind = EclipseKind.Partial;
     }
     return new LocalSolarEclipseInfo(kind, partial_begin, total_begin, peak, total_end, partial_end);
 }
