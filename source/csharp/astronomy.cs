@@ -602,16 +602,17 @@ namespace CosineKitty
     /// </remarks>
     public struct JupiterMoonsInfo
     {
-        /// <summary>
-        /// An array of state vectors for each of the 4 moons, in the following order:
-        /// 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto.
-        /// </summary>
-        public readonly StateVector[] moon;
+        /// <summary>The position and velocity of Jupiter's moon Io.</summary>
+        public StateVector io;
 
-        internal JupiterMoonsInfo(StateVector[] moon)
-        {
-            this.moon = moon;
-        }
+        /// <summary>The position and velocity of Jupiter's moon Europa.</summary>
+        public StateVector europa;
+
+        /// <summary>The position and velocity of Jupiter's moon Ganymede.</summary>
+        public StateVector ganymede;
+
+        /// <summary>The position and velocity of Jupiter's moon Callisto.</summary>
+        public StateVector callisto;
     }
 
     /// <summary>
@@ -4184,13 +4185,14 @@ namespace CosineKitty
         /// </remarks>
         /// <param name="time">The date and time for which to calculate the position vectors.</param>
         /// <returns>Position and velocity vectors of Jupiter's largest 4 moons.</returns>
-        public static JupiterMoonsInfo JupiterMoons(AstroTime time)
-        {
-            var infolist = new StateVector[4];
-            for (int mindex = 0; mindex < 4; ++mindex)
-                infolist[mindex] = CalcJupiterMoon(time, JupiterMoonModel[mindex]);
-            return new JupiterMoonsInfo(infolist);
-        }
+        public static JupiterMoonsInfo JupiterMoons(AstroTime time) =>
+            new JupiterMoonsInfo
+            {
+                io       = CalcJupiterMoon(time, JupiterMoonModel[0]),
+                europa   = CalcJupiterMoon(time, JupiterMoonModel[1]),
+                ganymede = CalcJupiterMoon(time, JupiterMoonModel[2]),
+                callisto = CalcJupiterMoon(time, JupiterMoonModel[3]),
+            };
 
 #endregion  // Jupiter's Moons
 

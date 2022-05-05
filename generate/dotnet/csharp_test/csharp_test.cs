@@ -265,7 +265,7 @@ namespace csharp_test
                     JupiterMoonsInfo jm = Astronomy.JupiterMoons(time);
                     for (int mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
                     {
-                        StateVector moon = jm.moon[mindex];
+                        StateVector moon = SelectJupiterMoon(jm, mindex);
                         outfile.WriteLine($"j {mindex} {time.tt:G18} {time.ut:G18} {moon.x:G18} {moon.y:G18} {moon.z:G18} {moon.vx:G18} {moon.vy:G18} {moon.vz:G18}");
                     }
 
@@ -2721,16 +2721,29 @@ namespace csharp_test
 
         const int NUM_JUPITER_MOONS = 4;
 
+        static StateVector SelectJupiterMoon(JupiterMoonsInfo jm, int mindex)
+        {
+            switch (mindex)
+            {
+                case 0: return jm.io;
+                case 1: return jm.europa;
+                case 2: return jm.ganymede;
+                case 3: return jm.callisto;
+                default: throw new ArgumentOutOfRangeException($"Invalid mindex = {mindex}");
+            }
+        }
+
         static int JupiterMoons_CheckJpl(int mindex, double tt, double[] pos, double[] vel)
         {
             const double pos_tolerance = 9.0e-4;
             const double vel_tolerance = 9.0e-4;
             AstroTime time = AstroTime.FromTerrestrialTime(tt);
-            var jm = Astronomy.JupiterMoons(time);
+            JupiterMoonsInfo jm = Astronomy.JupiterMoons(time);
+            StateVector moon = SelectJupiterMoon(jm, mindex);
 
-            double dx = v(pos[0] - jm.moon[mindex].x);
-            double dy = v(pos[1] - jm.moon[mindex].y);
-            double dz = v(pos[2] - jm.moon[mindex].z);
+            double dx = v(pos[0] - moon.x);
+            double dy = v(pos[1] - moon.y);
+            double dz = v(pos[2] - moon.z);
             double mag = Math.Sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
             double pos_diff = Math.Sqrt(dx*dx + dy*dy + dz*dz) / mag;
             if (pos_diff > pos_tolerance)
@@ -2739,9 +2752,9 @@ namespace csharp_test
                 return 1;
             }
 
-            dx = v(vel[0] - jm.moon[mindex].vx);
-            dy = v(vel[1] - jm.moon[mindex].vy);
-            dz = v(vel[2] - jm.moon[mindex].vz);
+            dx = v(vel[0] - moon.vx);
+            dy = v(vel[1] - moon.vy);
+            dz = v(vel[2] - moon.vz);
             mag = Math.Sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
             double vel_diff = Math.Sqrt(dx*dx + dy*dy + dz*dz) / mag;
             if (vel_diff > vel_tolerance)
