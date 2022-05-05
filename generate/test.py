@@ -109,6 +109,9 @@ def GeoMoon():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def SelectJupiterMoon(jm, mindex):
+    return [jm.io, jm.europa, jm.ganymede, jm.callisto][mindex]
+
 def AstroCheck(printflag):
     time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
     stop = astronomy.Time.Make(2200, 1, 1, 0, 0, 0)
@@ -147,7 +150,7 @@ def AstroCheck(printflag):
         jm = astronomy.JupiterMoons(time)
         if printflag:
             for mindex in range(4):
-                moon = jm.moon[mindex]
+                moon = SelectJupiterMoon(jm, mindex)
                 print('j {:d} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e}'.format(mindex, time.tt, time.ut, moon.x, moon.y, moon.z, moon.vx, moon.vy, moon.vz))
         time = time.AddDays(dt)
     return 0
@@ -1813,19 +1816,20 @@ def JupiterMoons_CheckJpl(mindex, tt, pos, vel):
     vel_tolerance = 9.0e-4
     time = astronomy.Time.FromTerrestrialTime(tt)
     jm = astronomy.JupiterMoons(time)
+    moon = SelectJupiterMoon(jm, mindex)
 
-    dx = v(pos[0] - jm.moon[mindex].x)
-    dy = v(pos[1] - jm.moon[mindex].y)
-    dz = v(pos[2] - jm.moon[mindex].z)
+    dx = v(pos[0] - moon.x)
+    dy = v(pos[1] - moon.y)
+    dz = v(pos[2] - moon.z)
     mag = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2])
     pos_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag
     if pos_diff > pos_tolerance:
         print('PY JupiterMoons_CheckJpl(mindex={}, tt={}): excessive position error {}'.format(mindex, tt, pos_diff))
         return 1
 
-    dx = v(vel[0] - jm.moon[mindex].vx)
-    dy = v(vel[1] - jm.moon[mindex].vy)
-    dz = v(vel[2] - jm.moon[mindex].vz)
+    dx = v(vel[0] - moon.vx)
+    dy = v(vel[1] - moon.vy)
+    dz = v(vel[2] - moon.vz)
     mag = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2])
     vel_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag
     if vel_diff > vel_tolerance:

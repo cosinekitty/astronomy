@@ -507,7 +507,10 @@ and the velocities in AU/day.
 
 | Type | Attribute | Description |
 | --- | --- | --- |
-| [`StateVector[4]`](#StateVector[4]) | `moon` | An array of state vectors, one for each of the four major moons of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto. |
+| [`StateVector`](#StateVector) | `io` | The position and velocity of Jupiter's moon Io. |
+| [`StateVector`](#StateVector) | `europa` | The position and velocity of Jupiter's moon Europa. |
+| [`StateVector`](#StateVector) | `ganymede` | The position and velocity of Jupiter's moon Ganymede. |
+| [`StateVector`](#StateVector) | `callisto` | The position and velocity of Jupiter's moon Callisto. |
 
 ---
 
