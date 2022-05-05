@@ -872,13 +872,24 @@ export declare function GeoEmbState(date: FlexibleDateTime): StateVector;
  * The positions are expressed in astronomical units (AU),
  * and the velocities in AU/day.
  *
- * @property {StateVector[]} moon
- *      An array of state vectors, one for each of the four major moons
- *      of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+ * @property {StateVector} io
+ *      The position and velocity of Jupiter's moon Io.
+ *
+ * @property {StateVector} europa
+ *      The position and velocity of Jupiter's moon Europa.
+ *
+ * @property {StateVector} ganymede
+ *      The position and velocity of Jupiter's moon Ganymede.
+ *
+ * @property {StateVector} callisto
+ *      The position and velocity of Jupiter's moon Callisto.
  */
 export declare class JupiterMoonsInfo {
-    moon: StateVector[];
-    constructor(moon: StateVector[]);
+    io: StateVector;
+    europa: StateVector;
+    ganymede: StateVector;
+    callisto: StateVector;
+    constructor(io: StateVector, europa: StateVector, ganymede: StateVector, callisto: StateVector);
 }
 /**
  * @brief Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.

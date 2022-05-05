@@ -63,6 +63,11 @@ function ReadLines(filename) {
     return lines;
 }
 
+function SelectJupiterMoon(jm, mindex) {
+    return [jm.io, jm.europa, jm.ganymede, jm.callisto][mindex] ||
+        Fail(`SelectJupiterMoon: invalid mindex = ${mindex}`);
+}
+
 function AstroCheck() {
     var date = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
     var stop = Astronomy.MakeTime(new Date('2200-01-01T00:00:00Z'));
@@ -98,7 +103,7 @@ function AstroCheck() {
 
         const jm = Astronomy.JupiterMoons(time);
         for (let mindex = 0; mindex < 4; ++mindex) {
-            const moon = jm.moon[mindex];
+            const moon = SelectJupiterMoon(jm, mindex);
             console.log(`j ${mindex} ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${moon.x.toExponential(18)} ${moon.y.toExponential(18)} ${moon.z.toExponential(18)} ${moon.vx.toExponential(18)} ${moon.vy.toExponential(18)} ${moon.vz.toExponential(18)}`);
         }
 
@@ -1980,10 +1985,11 @@ function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
     const vel_tolerance = 9.0e-4;
     const time = Astronomy.AstroTime.FromTerrestrialTime(tt);
     const jm = Astronomy.JupiterMoons(time);
+    const moon = SelectJupiterMoon(jm, mindex);
 
-    let dx = v(pos[0] - jm.moon[mindex].x);
-    let dy = v(pos[1] - jm.moon[mindex].y);
-    let dz = v(pos[2] - jm.moon[mindex].z);
+    let dx = v(pos[0] - moon.x);
+    let dy = v(pos[1] - moon.y);
+    let dz = v(pos[2] - moon.z);
     let mag = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
     const pos_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag;
     if (pos_diff > pos_tolerance) {
@@ -1991,9 +1997,9 @@ function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
         return 1;
     }
 
-    dx = v(vel[0] - jm.moon[mindex].vx);
-    dy = v(vel[1] - jm.moon[mindex].vy);
-    dz = v(vel[2] - jm.moon[mindex].vz);
+    dx = v(vel[0] - moon.vx);
+    dy = v(vel[1] - moon.vy);
+    dz = v(vel[2] - moon.vz);
     mag = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
     const vel_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag;
     if (vel_diff > vel_tolerance) {

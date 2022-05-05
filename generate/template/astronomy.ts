@@ -2778,12 +2778,25 @@ $ASTRO_JUPITER_MOONS();
  * The positions are expressed in astronomical units (AU),
  * and the velocities in AU/day.
  *
- * @property {StateVector[]} moon
- *      An array of state vectors, one for each of the four major moons
- *      of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+ * @property {StateVector} io
+ *      The position and velocity of Jupiter's moon Io.
+ *
+ * @property {StateVector} europa
+ *      The position and velocity of Jupiter's moon Europa.
+ *
+ * @property {StateVector} ganymede
+ *      The position and velocity of Jupiter's moon Ganymede.
+ *
+ * @property {StateVector} callisto
+ *      The position and velocity of Jupiter's moon Callisto.
  */
 export class JupiterMoonsInfo {
-    constructor(public moon: StateVector[]) {}
+    constructor(
+        public io: StateVector,
+        public europa: StateVector,
+        public ganymede: StateVector,
+        public callisto: StateVector)
+        {}
 }
 
 function JupiterMoon_elem2pv(
@@ -2901,10 +2914,12 @@ function CalcJupiterMoon(time: AstroTime, m: jupiter_moon_t): StateVector {
  */
 export function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo {
     const time = new AstroTime(date);
-    let infolist: StateVector[] = [];
-    for (let moon of JupiterMoonModel)
-        infolist.push(CalcJupiterMoon(time, moon));
-    return new JupiterMoonsInfo(infolist);
+    return new JupiterMoonsInfo(
+        CalcJupiterMoon(time, JupiterMoonModel[0]),
+        CalcJupiterMoon(time, JupiterMoonModel[1]),
+        CalcJupiterMoon(time, JupiterMoonModel[2]),
+        CalcJupiterMoon(time, JupiterMoonModel[3])
+    );
 }
 
 // Jupiter Moons ends --------------------------------------------------------

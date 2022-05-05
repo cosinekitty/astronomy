@@ -3417,13 +3417,24 @@ const JupiterMoonModel = [
  * The positions are expressed in astronomical units (AU),
  * and the velocities in AU/day.
  *
- * @property {StateVector[]} moon
- *      An array of state vectors, one for each of the four major moons
- *      of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+ * @property {StateVector} io
+ *      The position and velocity of Jupiter's moon Io.
+ *
+ * @property {StateVector} europa
+ *      The position and velocity of Jupiter's moon Europa.
+ *
+ * @property {StateVector} ganymede
+ *      The position and velocity of Jupiter's moon Ganymede.
+ *
+ * @property {StateVector} callisto
+ *      The position and velocity of Jupiter's moon Callisto.
  */
 class JupiterMoonsInfo {
-    constructor(moon) {
-        this.moon = moon;
+    constructor(io, europa, ganymede, callisto) {
+        this.io = io;
+        this.europa = europa;
+        this.ganymede = ganymede;
+        this.callisto = callisto;
     }
 }
 exports.JupiterMoonsInfo = JupiterMoonsInfo;
@@ -3513,10 +3524,7 @@ function CalcJupiterMoon(time, m) {
  */
 function JupiterMoons(date) {
     const time = new AstroTime(date);
-    let infolist = [];
-    for (let moon of JupiterMoonModel)
-        infolist.push(CalcJupiterMoon(time, moon));
-    return new JupiterMoonsInfo(infolist);
+    return new JupiterMoonsInfo(CalcJupiterMoon(time, JupiterMoonModel[0]), CalcJupiterMoon(time, JupiterMoonModel[1]), CalcJupiterMoon(time, JupiterMoonModel[2]), CalcJupiterMoon(time, JupiterMoonModel[3]));
 }
 exports.JupiterMoons = JupiterMoons;
 // Jupiter Moons ends --------------------------------------------------------
