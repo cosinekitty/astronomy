@@ -6,7 +6,13 @@
 
 ## Quick Start
 
-Add this in your root `build.gradle.kts` at the end of repositories section:
+Here are some [Kotlin examples](../../demo/kotlin/) and [Java examples](../../demo/java/) to get you started.
+
+Feel free to [start a new discussion topic](https://github.com/cosinekitty/astronomy/discussions)
+if you need some help in your astronomy-related project, either with this code or astronomy
+computation concepts in general.
+
+To include Astronomy Engine in your project, add this in your root `build.gradle.kts` at the end of repositories section:
 ```kotlin
 allprojects {
     repositories {
@@ -19,7 +25,7 @@ allprojects {
 Now add the dependency:
 ```kotlin
 dependencies {
-    implementation("io.github.cosinekitty:astronomy:x.y.z")
+    implementation("io.github.cosinekitty:astronomy:[ASTRONOMY_ENGINE_VERSION]")
 }
 ```
 
@@ -30,7 +36,9 @@ For other build tools support have a look at [this](https://jitpack.io/#cosineki
 ## Contents
 
 - [Coordinate Transforms](#coords)
-- [Reference](#reference)
+- [Types](#types)
+- [Functions](#functions)
+- [Properties](#properties)
 
 ---
 
@@ -50,9 +58,3 @@ these are used in function and type names.
 - **GAL = Galactic**: Based on the IAU 1958 definition of galactic coordinates.
 
 ---
-
-<a name="reference"></a>
-## Reference
-
-(More content coming here soon.)
-

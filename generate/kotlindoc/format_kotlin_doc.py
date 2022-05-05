@@ -7,6 +7,7 @@
 #   There are a few things about the `dokkaGfm` tool I don't like.
 #   This script is a hack to work around them.
 #
+import sys
 import os
 import re
 import shutil
@@ -137,6 +138,18 @@ def FixMarkdown(text):
     return fix
 
 
+def ExtractVersionNumber(filename):
+    # Look for a line like this in the build.gradle.kts file:
+    # version = "2.1.0"
+    # This is the current version of Astronomy Engine.
+    with open(filename, "rt") as infile:
+        for line in infile:
+            m = re.match(r'^\s*version\s*=\s*"([^"]+)"\s*$', line)
+            if m:
+                return m.group(1)
+    print('ERROR: Cannot find version number in file:', filename)
+    return None
+
 # A typical line looks like this:
 # | [Direction](-direction/index.md) | [jvm]<br>enum [Direction](-direction/index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[Direction](-direction/index.md)&gt; <br>Selects whether to search for a rising event or a setting event for a celestial body. |
 # Find all the links like (-direction/index.md) and prefix them with 'doc/':
@@ -155,10 +168,16 @@ if __name__ == '__main__':
     outDir = '../../source/kotlin'
     outDocDir = os.path.join(outDir, 'doc')
     outFileName = os.path.join(outDir, 'README.md')
+    version = ExtractVersionNumber(os.path.join(outDir, 'build.gradle.kts'))
+    if version is None:
+        sys.exit(1)
+
     with open(outFileName,'wt') as outfile:
-        # Copy the entire prefix file.
+        # Copy the entire prefix file, but keep the version number updated.
         with open(prefixFileName, 'rt') as infile:
-            outfile.write(infile.read())
+            text = infile.read()
+            text = text.replace("[ASTRONOMY_ENGINE_VERSION]", version)
+            outfile.write(text)
 
         # Slurp in the interesting parts of the documentation root.
         with open(rootFileName,'rt') as infile:
@@ -192,3 +211,5 @@ if __name__ == '__main__':
                 with open(outFileName, 'wt') as outfile:
                     fix = FixMarkdown(text)
                     outfile.write(fix)
+
+    sys.exit(0)
