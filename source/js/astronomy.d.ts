@@ -1717,6 +1717,18 @@ export declare function SearchMaxElongation(body: Body, startDate: FlexibleDateT
  */
 export declare function SearchPeakMagnitude(body: Body, startDate: FlexibleDateTime): IlluminationInfo;
 /**
+ * @brief The two kinds of apsis: pericenter (closest) and apocenter (farthest).
+ *
+ * `Pericenter`: The body is at its closest distance to the object it orbits.
+ * `Apocenter`:  The body is at its farthest distance from the object it orbits.
+ *
+ * @enum {number}
+ */
+export declare enum ApsisKind {
+    Pericenter = 0,
+    Apocenter = 1
+}
+/**
  * @brief A closest or farthest point in a body's orbit around its primary.
  *
  * For a planet orbiting the Sun, apsis is a perihelion or aphelion, respectively.
@@ -1725,9 +1737,9 @@ export declare function SearchPeakMagnitude(body: Body, startDate: FlexibleDateT
  * @property {AstroTime} time
  *      The date and time of the apsis.
  *
- * @property {number} kind
- *      For a closest approach (perigee or perihelion), `kind` is 0.
- *      For a farthest distance event (apogee or aphelion), `kind` is 1.
+ * @property {ApsisKind} kind
+ *      For a closest approach (perigee or perihelion), `kind` is `ApsisKind.Pericenter`.
+ *      For a farthest distance event (apogee or aphelion), `kind` is `ApsisKind.Apocenter`.
  *
  * @property {number} dist_au
  *      The distance between the centers of the two bodies in astronomical units (AU).
@@ -1742,10 +1754,10 @@ export declare function SearchPeakMagnitude(body: Body, startDate: FlexibleDateT
  */
 export declare class Apsis {
     time: AstroTime;
-    kind: number;
+    kind: ApsisKind;
     dist_au: number;
     dist_km: number;
-    constructor(time: AstroTime, kind: number, dist_au: number);
+    constructor(time: AstroTime, kind: ApsisKind, dist_au: number);
 }
 /**
  * @brief Finds the next perigee or apogee of the Moon.

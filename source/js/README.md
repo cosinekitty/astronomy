@@ -563,7 +563,7 @@ For the Moon orbiting the Earth, apsis is a perigee or apogee, respectively.
 | Name | Type | Description |
 | --- | --- | --- |
 | time | [<code>AstroTime</code>](#AstroTime) | The date and time of the apsis. |
-| kind | <code>number</code> | For a closest approach (perigee or perihelion), `kind` is 0.      For a farthest distance event (apogee or aphelion), `kind` is 1. |
+| kind | [<code>ApsisKind</code>](#ApsisKind) | For a closest approach (perigee or perihelion), `kind` is `ApsisKind.Pericenter`.      For a farthest distance event (apogee or aphelion), `kind` is `ApsisKind.Apocenter`. |
 | dist_au | <code>number</code> | The distance between the centers of the two bodies in astronomical units (AU). |
 | dist_km | <code>number</code> | The distance between the centers of the two bodies in kilometers. |
 
@@ -930,6 +930,17 @@ to find which bodies it supports.
 
 You can also use enumeration syntax for the bodies, like
 `Astronomy.Body.Moon`, `Astronomy.Body.Jupiter`, etc.  
+
+* * *
+
+<a name="ApsisKind"></a>
+
+## ApsisKind : <code>enum</code>
+**Kind**: global enum  
+**Brief**: The two kinds of apsis: pericenter (closest) and apocenter (farthest).
+
+`Pericenter`: The body is at its closest distance to the object it orbits.
+`Apocenter`:  The body is at its farthest distance from the object it orbits.  
 
 * * *
 

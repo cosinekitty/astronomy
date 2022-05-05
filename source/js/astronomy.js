@@ -34,8 +34,8 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.SiderealTime = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.Body = exports.AngleBetween = exports.MassProduct = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
-exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = void 0;
-exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = void 0;
+exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.ApsisKind = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = void 0;
+exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -5235,6 +5235,19 @@ function SearchPeakMagnitude(body, startDate) {
 }
 exports.SearchPeakMagnitude = SearchPeakMagnitude;
 /**
+ * @brief The two kinds of apsis: pericenter (closest) and apocenter (farthest).
+ *
+ * `Pericenter`: The body is at its closest distance to the object it orbits.
+ * `Apocenter`:  The body is at its farthest distance from the object it orbits.
+ *
+ * @enum {number}
+ */
+var ApsisKind;
+(function (ApsisKind) {
+    ApsisKind[ApsisKind["Pericenter"] = 0] = "Pericenter";
+    ApsisKind[ApsisKind["Apocenter"] = 1] = "Apocenter";
+})(ApsisKind = exports.ApsisKind || (exports.ApsisKind = {}));
+/**
  * @brief A closest or farthest point in a body's orbit around its primary.
  *
  * For a planet orbiting the Sun, apsis is a perihelion or aphelion, respectively.
@@ -5243,9 +5256,9 @@ exports.SearchPeakMagnitude = SearchPeakMagnitude;
  * @property {AstroTime} time
  *      The date and time of the apsis.
  *
- * @property {number} kind
- *      For a closest approach (perigee or perihelion), `kind` is 0.
- *      For a farthest distance event (apogee or aphelion), `kind` is 1.
+ * @property {ApsisKind} kind
+ *      For a closest approach (perigee or perihelion), `kind` is `ApsisKind.Pericenter`.
+ *      For a farthest distance event (apogee or aphelion), `kind` is `ApsisKind.Apocenter`.
  *
  * @property {number} dist_au
  *      The distance between the centers of the two bodies in astronomical units (AU).
@@ -5359,7 +5372,7 @@ function NextLunarApsis(apsis) {
 }
 exports.NextLunarApsis = NextLunarApsis;
 function PlanetExtreme(body, kind, start_time, dayspan) {
-    const direction = (kind === 1) ? +1.0 : -1.0;
+    const direction = (kind === ApsisKind.Apocenter) ? +1.0 : -1.0;
     const npoints = 10;
     for (;;) {
         const interval = dayspan / (npoints - 1);
@@ -5508,13 +5521,13 @@ function SearchPlanetApsis(body, startTime) {
                 /* We found a minimum-distance event: perihelion. */
                 /* Search the time range for the time when the slope goes from negative to positive. */
                 slope_func = positive_slope;
-                kind = 0; // perihelion
+                kind = ApsisKind.Pericenter;
             }
             else if (m1 > 0.0 || m2 < 0.0) {
                 /* We found a maximum-distance event: aphelion. */
                 /* Search the time range for the time when the slope goes from positive to negative. */
                 slope_func = negative_slope;
-                kind = 1; // aphelion
+                kind = ApsisKind.Apocenter;
             }
             else {
                 /* This should never happen. It should not be possible for both slopes to be zero. */
@@ -5553,7 +5566,7 @@ exports.SearchPlanetApsis = SearchPlanetApsis;
  *      Same as the return value for {@link SearchPlanetApsis}.
  */
 function NextPlanetApsis(body, apsis) {
-    if (apsis.kind !== 0 && apsis.kind !== 1)
+    if (apsis.kind !== ApsisKind.Pericenter && apsis.kind !== ApsisKind.Apocenter)
         throw `Invalid apsis kind: ${apsis.kind}`;
     /* skip 1/4 of an orbit before starting search again */
     const skip = 0.25 * Planet[body].OrbitalPeriod;

@@ -5170,6 +5170,19 @@ export function SearchPeakMagnitude(body, startDate) {
     throw `SearchPeakMagnitude: failed to find event after 2 tries.`;
 }
 /**
+ * @brief The two kinds of apsis: pericenter (closest) and apocenter (farthest).
+ *
+ * `Pericenter`: The body is at its closest distance to the object it orbits.
+ * `Apocenter`:  The body is at its farthest distance from the object it orbits.
+ *
+ * @enum {number}
+ */
+export var ApsisKind;
+(function (ApsisKind) {
+    ApsisKind[ApsisKind["Pericenter"] = 0] = "Pericenter";
+    ApsisKind[ApsisKind["Apocenter"] = 1] = "Apocenter";
+})(ApsisKind || (ApsisKind = {}));
+/**
  * @brief A closest or farthest point in a body's orbit around its primary.
  *
  * For a planet orbiting the Sun, apsis is a perihelion or aphelion, respectively.
@@ -5178,9 +5191,9 @@ export function SearchPeakMagnitude(body, startDate) {
  * @property {AstroTime} time
  *      The date and time of the apsis.
  *
- * @property {number} kind
- *      For a closest approach (perigee or perihelion), `kind` is 0.
- *      For a farthest distance event (apogee or aphelion), `kind` is 1.
+ * @property {ApsisKind} kind
+ *      For a closest approach (perigee or perihelion), `kind` is `ApsisKind.Pericenter`.
+ *      For a farthest distance event (apogee or aphelion), `kind` is `ApsisKind.Apocenter`.
  *
  * @property {number} dist_au
  *      The distance between the centers of the two bodies in astronomical units (AU).
@@ -5291,7 +5304,7 @@ export function NextLunarApsis(apsis) {
     return next;
 }
 function PlanetExtreme(body, kind, start_time, dayspan) {
-    const direction = (kind === 1) ? +1.0 : -1.0;
+    const direction = (kind === ApsisKind.Apocenter) ? +1.0 : -1.0;
     const npoints = 10;
     for (;;) {
         const interval = dayspan / (npoints - 1);
@@ -5440,13 +5453,13 @@ export function SearchPlanetApsis(body, startTime) {
                 /* We found a minimum-distance event: perihelion. */
                 /* Search the time range for the time when the slope goes from negative to positive. */
                 slope_func = positive_slope;
-                kind = 0; // perihelion
+                kind = ApsisKind.Pericenter;
             }
             else if (m1 > 0.0 || m2 < 0.0) {
                 /* We found a maximum-distance event: aphelion. */
                 /* Search the time range for the time when the slope goes from positive to negative. */
                 slope_func = negative_slope;
-                kind = 1; // aphelion
+                kind = ApsisKind.Apocenter;
             }
             else {
                 /* This should never happen. It should not be possible for both slopes to be zero. */
@@ -5484,7 +5497,7 @@ export function SearchPlanetApsis(body, startTime) {
  *      Same as the return value for {@link SearchPlanetApsis}.
  */
 export function NextPlanetApsis(body, apsis) {
-    if (apsis.kind !== 0 && apsis.kind !== 1)
+    if (apsis.kind !== ApsisKind.Pericenter && apsis.kind !== ApsisKind.Apocenter)
         throw `Invalid apsis kind: ${apsis.kind}`;
     /* skip 1/4 of an orbit before starting search again */
     const skip = 0.25 * Planet[body].OrbitalPeriod;
