@@ -67,7 +67,7 @@ the Sun, Moon, and planets, and for predicting interesting events like oppositio
 conjunctions, rise and set times, lunar phases, eclipses, transits, and more.
 
 It supports several popular programming langauges with a consistent API.
-Function and type names are uniform across all the supported languages.
+Function and type names are mostly consistent across all the supported languages.
 
 Astronomy Engine is designed to be small, fast, and accurate to within &plusmn;1 arcminute.
 It is based on the authoritative and well-tested models
