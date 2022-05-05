@@ -85,7 +85,7 @@
             var Options;
 
             function ParseDate(s) {
-                return new Date(s.replace(' ', 'T'));   // Safari doesn't like the space character
+                return new Date((s || '').replace(' ', 'T'));   // Safari doesn't like the space character
             }
 
             function IsValidNumber(s) {
