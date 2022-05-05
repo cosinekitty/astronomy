@@ -1028,32 +1028,26 @@ data class StateVector(
  * The positions are expressed in astronomical units (AU),
  * and the velocities in AU/day.
  */
-class JupiterMoonsInfo(
-    /**
-     * An array of state vectors for each of the 4 moons, in the following order:
-     * 0 = Io, 1 = Europa, 2 = Ganymede, 3 = Callisto.
-     */
-    val moon: Array<StateVector>
-) {
+class JupiterMoonsInfo(time: Time) {
     /**
      * The state vector for Io.
      */
-    val io: StateVector get() = moon[0]
+    val io: StateVector = calcJupiterMoon(time, jupiterMoonModel[0])
 
     /**
      * The state vector for Europa.
      */
-    val europa: StateVector get() = moon[1]
+    val europa: StateVector = calcJupiterMoon(time, jupiterMoonModel[1])
 
     /**
      * The state vector for Ganymede.
      */
-    val ganymede: StateVector get() = moon[2]
+    val ganymede: StateVector = calcJupiterMoon(time, jupiterMoonModel[2])
 
     /**
      * The state vector for Callisto.
      */
-    val callisto: StateVector get() = moon[3]
+    val callisto: StateVector = calcJupiterMoon(time, jupiterMoonModel[3])
 }
 
 
@@ -1597,7 +1591,7 @@ data class Topocentric(
  *
  * Call [seasons] to calculate this data structure for a given year.
  */
-class SeasonsInfo(
+class SeasonsInfo internal constructor(
     /**
      * The date and time of the March equinox for the specified year.
      */
@@ -5203,15 +5197,15 @@ fun nextTransit(body: Body, prevTransitTime: Time) =
  * figure out what time to pass to `jupiterMoons` to get an accurate picture
  * of how Jupiter and its moons look from Earth.
  */
-fun jupiterMoons(time: Time) =
-    JupiterMoonsInfo(
-        arrayOf(
-            calcJupiterMoon(time, jupiterMoonModel[0]),
-            calcJupiterMoon(time, jupiterMoonModel[1]),
-            calcJupiterMoon(time, jupiterMoonModel[2]),
-            calcJupiterMoon(time, jupiterMoonModel[3])
-        )
-    )
+//fun jupiterMoons(time: Time) =
+//    JupiterMoonsInfo(
+//        arrayOf(
+//            calcJupiterMoon(time, jupiterMoonModel[0]),
+//            calcJupiterMoon(time, jupiterMoonModel[1]),
+//            calcJupiterMoon(time, jupiterMoonModel[2]),
+//            calcJupiterMoon(time, jupiterMoonModel[3])
+//        )
+//    )
 
 /**
  * Searches for a time at which a function's value increases through zero.
