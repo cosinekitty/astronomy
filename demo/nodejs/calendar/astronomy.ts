@@ -3784,12 +3784,25 @@ const JupiterMoonModel: jupiter_moon_t[] = [
  * The positions are expressed in astronomical units (AU),
  * and the velocities in AU/day.
  *
- * @property {StateVector[]} moon
- *      An array of state vectors, one for each of the four major moons
- *      of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+ * @property {StateVector} io
+ *      The position and velocity of Jupiter's moon Io.
+ *
+ * @property {StateVector} europa
+ *      The position and velocity of Jupiter's moon Europa.
+ *
+ * @property {StateVector} ganymede
+ *      The position and velocity of Jupiter's moon Ganymede.
+ *
+ * @property {StateVector} callisto
+ *      The position and velocity of Jupiter's moon Callisto.
  */
 export class JupiterMoonsInfo {
-    constructor(public moon: StateVector[]) {}
+    constructor(
+        public io: StateVector,
+        public europa: StateVector,
+        public ganymede: StateVector,
+        public callisto: StateVector)
+        {}
 }
 
 function JupiterMoon_elem2pv(
@@ -3907,10 +3920,12 @@ function CalcJupiterMoon(time: AstroTime, m: jupiter_moon_t): StateVector {
  */
 export function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo {
     const time = new AstroTime(date);
-    let infolist: StateVector[] = [];
-    for (let moon of JupiterMoonModel)
-        infolist.push(CalcJupiterMoon(time, moon));
-    return new JupiterMoonsInfo(infolist);
+    return new JupiterMoonsInfo(
+        CalcJupiterMoon(time, JupiterMoonModel[0]),
+        CalcJupiterMoon(time, JupiterMoonModel[1]),
+        CalcJupiterMoon(time, JupiterMoonModel[2]),
+        CalcJupiterMoon(time, JupiterMoonModel[3])
+    );
 }
 
 // Jupiter Moons ends --------------------------------------------------------
@@ -5781,6 +5796,19 @@ export function SearchPeakMagnitude(body: Body, startDate: FlexibleDateTime): Il
 }
 
 /**
+ * @brief The two kinds of apsis: pericenter (closest) and apocenter (farthest).
+ *
+ * `Pericenter`: The body is at its closest distance to the object it orbits.
+ * `Apocenter`:  The body is at its farthest distance from the object it orbits.
+ *
+ * @enum {number}
+ */
+export enum ApsisKind {
+    Pericenter = 0,
+    Apocenter = 1
+}
+
+/**
  * @brief A closest or farthest point in a body's orbit around its primary.
  *
  * For a planet orbiting the Sun, apsis is a perihelion or aphelion, respectively.
@@ -5789,9 +5817,9 @@ export function SearchPeakMagnitude(body: Body, startDate: FlexibleDateTime): Il
  * @property {AstroTime} time
  *      The date and time of the apsis.
  *
- * @property {number} kind
- *      For a closest approach (perigee or perihelion), `kind` is 0.
- *      For a farthest distance event (apogee or aphelion), `kind` is 1.
+ * @property {ApsisKind} kind
+ *      For a closest approach (perigee or perihelion), `kind` is `ApsisKind.Pericenter`.
+ *      For a farthest distance event (apogee or aphelion), `kind` is `ApsisKind.Apocenter`.
  *
  * @property {number} dist_au
  *      The distance between the centers of the two bodies in astronomical units (AU).
@@ -5809,7 +5837,7 @@ export class Apsis {
 
     constructor(
         public time: AstroTime,
-        public kind: number,
+        public kind: ApsisKind,
         public dist_au: number)
     {
         this.dist_km = dist_au * KM_PER_AU;
@@ -5922,8 +5950,8 @@ export function NextLunarApsis(apsis: Apsis): Apsis {
     return next;
 }
 
-function PlanetExtreme(body: Body, kind: number, start_time: AstroTime, dayspan: number): Apsis {
-    const direction = (kind === 1) ? +1.0 : -1.0;
+function PlanetExtreme(body: Body, kind: ApsisKind, start_time: AstroTime, dayspan: number): Apsis {
+    const direction = (kind === ApsisKind.Apocenter) ? +1.0 : -1.0;
     const npoints = 10;
 
     for(;;) {
@@ -6079,17 +6107,17 @@ export function SearchPlanetApsis(body: Body, startTime: FlexibleDateTime): Apsi
             /* Figure out whether it is perihelion or aphelion. */
 
             let slope_func: (t: AstroTime) => number;
-            let kind: number;
+            let kind: ApsisKind;
             if (m1 < 0.0 || m2 > 0.0) {
                 /* We found a minimum-distance event: perihelion. */
                 /* Search the time range for the time when the slope goes from negative to positive. */
                 slope_func = positive_slope;
-                kind = 0;    // perihelion
+                kind = ApsisKind.Pericenter;
             } else if (m1 > 0.0 || m2 < 0.0) {
                 /* We found a maximum-distance event: aphelion. */
                 /* Search the time range for the time when the slope goes from positive to negative. */
                 slope_func = negative_slope;
-                kind = 1;   // aphelion
+                kind = ApsisKind.Apocenter;
             } else {
                 /* This should never happen. It should not be possible for both slopes to be zero. */
                 throw "Internal error with slopes in SearchPlanetApsis";
@@ -6129,7 +6157,7 @@ export function SearchPlanetApsis(body: Body, startTime: FlexibleDateTime): Apsi
  *      Same as the return value for {@link SearchPlanetApsis}.
  */
 export function NextPlanetApsis(body: Body, apsis: Apsis): Apsis {
-    if (apsis.kind !== 0 && apsis.kind !== 1)
+    if (apsis.kind !== ApsisKind.Pericenter && apsis.kind !== ApsisKind.Apocenter)
         throw `Invalid apsis kind: ${apsis.kind}`;
 
     /* skip 1/4 of an orbit before starting search again */
@@ -7512,6 +7540,25 @@ export function Constellation(ra: number, dec: number): ConstellationInfo {
     throw 'Unable to find constellation for given coordinates.';
 }
 
+
+/**
+ * @brief The different kinds of lunar/solar eclipses..
+ *
+ * `Penumbral`: A lunar eclipse in which only the Earth's penumbra falls on the Moon. (Never used for a solar eclipse.)
+ * `Partial`: A partial lunar/solar eclipse.
+ * `Annular`: A solar eclipse in which the entire Moon is visible against the Sun, but the Sun appears as a ring around the Moon. (Never used for a lunar eclipse.)
+ * `Total`: A total lunar/solar eclipse.
+ *
+ * @enum {string}
+ */
+export enum EclipseKind {
+    Penumbral = 'penumbral',
+    Partial = 'partial',
+    Annular = 'annular',
+    Total = 'total'
+}
+
+
 /**
  * @brief Returns information about a lunar eclipse.
  *
@@ -7523,8 +7570,8 @@ export function Constellation(ra: number, dec: number): ConstellationInfo {
  * Partial eclipses occur when part, but not all, of the Moon touches the Earth's umbra.
  * Total eclipses occur when the entire Moon passes into the Earth's umbra.
  *
- * The `kind` field thus holds one of the strings `"penumbral"`, `"partial"`,
- * or `"total"`, depending on the kind of lunar eclipse found.
+ * The `kind` field thus holds one of the enum values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
+ * or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
  *
  * Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
  *
@@ -7534,7 +7581,7 @@ export function Constellation(ra: number, dec: number): ConstellationInfo {
  * By converting from minutes to days, and subtracting/adding with `peak`, the caller
  * may determine the date and time of the beginning/end of each eclipse phase.
  *
- * @property {string} kind
+ * @property {EclipseKind} kind
  *      The type of lunar eclipse found.
  *
  * @property {AstroTime} peak
@@ -7552,7 +7599,7 @@ export function Constellation(ra: number, dec: number): ConstellationInfo {
  */
 export class LunarEclipseInfo {
     constructor(
-        public kind: string,
+        public kind: EclipseKind,
         public peak: AstroTime,
         public sd_penum: number,
         public sd_partial: number,
@@ -7818,19 +7865,19 @@ export function SearchLunarEclipse(date: FlexibleDateTime): LunarEclipseInfo {
            const shadow = PeakEarthShadow(fullmoon);
            if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM) {
                /* This is at least a penumbral eclipse. We will return a result. */
-               let kind = 'penumbral';
+               let kind = EclipseKind.Penumbral;
                let sd_total = 0.0;
                let sd_partial = 0.0;
                let sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0);
 
                if (shadow.r < shadow.k + MOON_MEAN_RADIUS_KM) {
                    /* This is at least a partial eclipse. */
-                   kind = 'partial';
+                   kind = EclipseKind.Partial;
                    sd_partial = ShadowSemiDurationMinutes(shadow.time, shadow.k + MOON_MEAN_RADIUS_KM, sd_penum);
 
                    if (shadow.r + MOON_MEAN_RADIUS_KM < shadow.k) {
                        /* This is a total eclipse. */
-                       kind = 'total';
+                       kind = EclipseKind.Total;
                        sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, sd_partial);
                    }
                }
@@ -7857,21 +7904,21 @@ export function SearchLunarEclipse(date: FlexibleDateTime): LunarEclipseInfo {
  * maximum amount of the Sun's disc obscured, as seen at the peak location
  * on the surface of the Earth.
  *
- * The `kind` field thus holds one of the strings `"partial"`, `"annular"`, or `"total"`.
+ * The `kind` field thus holds one of the values `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
  * A total eclipse is when the peak observer sees the Sun completely blocked by the Moon.
  * An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface
  * to completely block the Sun; instead, the Sun takes on a ring-shaped appearance.
  * A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth
  * observes either a total or annular eclipse.
  *
- * If `kind` is `"total"` or `"annular"`, the `latitude` and `longitude`
+ * If `kind` is `EclipseKind.Total` or `EclipseKind.Annular`, the `latitude` and `longitude`
  * fields give the geographic coordinates of the center of the Moon's shadow projected
  * onto the daytime side of the Earth at the instant of the eclipse's peak.
  * If `kind` has any other value, `latitude` and `longitude` are undefined and should
  * not be used.
  *
- * @property {string} kind
- *     One of the following string values: `"partial"`, `"annular"`, `"total"`.
+ * @property {EclipseKind} kind
+ *     One of the following enumeration values: `EclipseKind.Partial`, `EclipseKind.Annular`, `EclipseKind.Total`.
  *
  * @property {AstroTime} peak
  *     The date and time when the solar eclipse is darkest.
@@ -7882,18 +7929,18 @@ export function SearchLunarEclipse(date: FlexibleDateTime): LunarEclipseInfo {
  *     and the center of the Earth at the time indicated by `peak`.
  *
  * @property {number | undefined} latitude
- *     If `kind` holds `"total"`, the geographic latitude in degrees
+ *     If `kind` holds `EclipseKind.Total`, the geographic latitude in degrees
  *     where the center of the Moon's shadow falls on the Earth at the
  *     time indicated by `peak`; otherwise, `latitude` holds `undefined`.
  *
  * @property {number | undefined} longitude
- *     If `kind` holds `"total"`, the geographic longitude in degrees
+ *     If `kind` holds `EclipseKind.Total`, the geographic longitude in degrees
  *     where the center of the Moon's shadow falls on the Earth at the
  *     time indicated by `peak`; otherwise, `longitude` holds `undefined`.
  */
 export class GlobalSolarEclipseInfo {
     constructor(
-        public kind: string,
+        public kind: EclipseKind,
         public peak: AstroTime,
         public distance: number,
         public latitude?: number,
@@ -7902,16 +7949,16 @@ export class GlobalSolarEclipseInfo {
 }
 
 
-function EclipseKindFromUmbra(k: number): string {
+function EclipseKindFromUmbra(k: number): EclipseKind {
     // The umbra radius tells us what kind of eclipse the observer sees.
     // If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular.
     // HACK: I added a tiny bias (14 meters) to match Espenak test data.
-    return (k > 0.014) ? 'total' : 'annular';
+    return (k > 0.014) ? EclipseKind.Total : EclipseKind.Annular;
 }
 
 
 function GeoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
-    let kind = 'partial';
+    let kind = EclipseKind.Partial;
     let peak = shadow.time;
     let distance = shadow.r;
     let latitude: number | undefined;       // left undefined for partial eclipses
@@ -8128,7 +8175,7 @@ export class EclipseEvent {
  * to report information about a solar eclipse as seen at a given geographic location.
  *
  * When a solar eclipse is found, it is classified by setting `kind`
- * to `"partial"`, `"annular"`, or `"total"`.
+ * to `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
  * A partial solar eclipse is when the Moon does not line up directly enough with the Sun
  * to completely block the Sun's light from reaching the observer.
  * An annular eclipse occurs when the Moon's disc is completely visible against the Sun
@@ -8146,8 +8193,8 @@ export class EclipseEvent {
  * see whether the Sun is above the horizon at the time indicated by the `time` field.
  * See {@link EclipseEvent} for more information.
  *
- * @property {string} kind
- *      The type of solar eclipse found: `"partial"`, `"annular"`, or `"total"`.
+ * @property {EclipseKind} kind
+ *      The type of solar eclipse found: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
  *
  * @property {EclipseEvent} partial_begin
  *      The time and Sun altitude at the beginning of the eclipse.
@@ -8166,7 +8213,7 @@ export class EclipseEvent {
  */
 export class LocalSolarEclipseInfo {
     constructor(
-        public kind: string,
+        public kind: EclipseKind,
         public partial_begin: EclipseEvent,
         public total_begin: EclipseEvent | undefined,
         public peak : EclipseEvent,
@@ -8197,7 +8244,7 @@ function LocalEclipse(shadow: ShadowInfo, observer: Observer): LocalSolarEclipse
     const partial_end   = LocalEclipseTransition(observer, -1.0, local_partial_distance, shadow.time, t2);
     let total_begin: EclipseEvent | undefined;
     let total_end: EclipseEvent | undefined;
-    let kind: string;
+    let kind: EclipseKind;
 
     if (shadow.r < Math.abs(shadow.k)) {     // take absolute value of 'k' to handle annular eclipses too.
         t1 = shadow.time.AddDays(-TOTAL_WINDOW);
@@ -8206,7 +8253,7 @@ function LocalEclipse(shadow: ShadowInfo, observer: Observer): LocalSolarEclipse
         total_end = LocalEclipseTransition(observer, -1.0, local_total_distance, shadow.time, t2);
         kind = EclipseKindFromUmbra(shadow.k);
     } else {
-        kind = 'partial';
+        kind = EclipseKind.Partial;
     }
 
     return new LocalSolarEclipseInfo(kind, partial_begin, total_begin, peak, total_end, partial_end);

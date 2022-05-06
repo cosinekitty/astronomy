@@ -1,0 +1,42 @@
+#!/bin/bash
+Fail()
+{
+    echo "FATAL(demo/python/demotest): $1"
+    exit 1
+}
+
+TestDemo()
+{
+    local name=$1
+    shift
+    echo "Testing Python demo: $name"
+    ./$name.py $* > test/$name.txt || Fail "Error testing $name.py."
+    diff {correct,test}/$name.txt || Fail "Incorrect output from $name.py."
+}
+
+rm -f test/*.txt
+mkdir -p test
+
+TestDemo jupiter_moons 2021-04-16T00:26:18Z
+TestDemo camera 29 -81 2021-03-22T02:45:00Z
+TestDemo constellation 2021-06-01T00:00:00Z
+TestDemo moonphase 2019-06-15T09:15:32.987Z
+TestDemo riseset +45.6 -90.7 2018-11-30T17:55:07.234Z
+TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z
+TestDemo seasons 2019
+TestDemo culminate +30 -90 2015-02-28T00:00:00Z
+TestDemo horizon +25.5 -85.3 2016-12-25T12:30:45Z
+TestDemo lunar_eclipse 1988-01-01
+TestDemo lunar_angles 2021-05-15
+TestDemo galactic 38.92056 -77.0658 22.793498 197.070510 2025-04-06T00:00:00Z
+TestDemo triangulate 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12
+TestDemo stars_near_moon 30 -80 2021-11-08T23:00:00Z
+
+echo "Testing Python demo: gravity"
+for latitude in {0..90}; do
+    ./gravity.py ${latitude} 0 >> test/gravity.txt || Fail "Error running gravity.py."
+done
+diff {correct,test}/gravity.txt || Fail "Incorrect output from gravity.py."
+
+echo "PASS: Python demos"
+exit 0

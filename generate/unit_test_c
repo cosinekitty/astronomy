@@ -14,7 +14,9 @@ rm -f astronomy.o
 ./ctbuild || exit 1
 time ./ctest $1 check || Fail "Failure in ctest check"
 ./generate check temp/c_check.txt || Fail "Verification failure for C unit test output."
+rm -f temp/c_geoid.txt
 ./ctest $1 all || Fail "Failure in C unit tests"
+diff temp/c_geoid.txt topostate/geoid.txt || Fail "Unexpected geoid output."
 
 for file in temp/c_longitude_*.txt; do
     ./generate $1 check ${file} || Fail "Failed verification of file ${file}"

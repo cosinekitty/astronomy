@@ -52,11 +52,18 @@ if __name__ == '__main__':
 
     jm = JupiterMoons(backdate)
 
+    # Tricky: I'm "cheating" a little bit below by adding Vector `jv`
+    # to StateVector `jm.<moon>`, to result in a Vector position for each moon.
+    # This works because StateVector has all the fields that Vector has,
+    # plus the velocity components (vx, vy, vz).
+    # This is alarming to type purists, but just another normal day of
+    # "duck typing" for Pythonistas.
+
     PrintBody('Jupiter',    jv)
-    PrintBody('Io',         jv + jm.moon[0])
-    PrintBody('Europa',     jv + jm.moon[1])
-    PrintBody('Ganymede',   jv + jm.moon[2])
-    PrintBody('Callisto',   jv + jm.moon[3])
+    PrintBody('Io',         jv + jm.io)
+    PrintBody('Europa',     jv + jm.europa)
+    PrintBody('Ganymede',   jv + jm.ganymede)
+    PrintBody('Callisto',   jv + jm.callisto)
     print()
 
     sys.exit(0)

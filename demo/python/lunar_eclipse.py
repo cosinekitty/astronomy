@@ -46,12 +46,13 @@ def main(args):
 
     count = 0
     e = SearchLunarEclipse(time)
-    while count < 10:
+    while True:
         if e.kind != EclipseKind.Penumbral:
-            count += 1
             PrintEclipse(e)
+            count += 1
+            if count == 10:
+                return 0
         e = NextLunarEclipse(e.peak)
-
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

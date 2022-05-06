@@ -1,0 +1,2 @@
+install:
+  - cd source/kotlin && ./gradlew build publishToMavenLocal --exclude-task test

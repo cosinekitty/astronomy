@@ -4,7 +4,7 @@
   "description": "Demo of enumerating interesting astronomy events for a calendar.",
   "main": "index.js",
   "scripts": {
-    "test": "../../../generate/node_modules/typescript/bin/tsc && node dist/calendar.js > test/calendar.txt && diff test/calendar_correct.txt test/calendar.txt"
+    "test": "../../../generate/node_modules/typescript/bin/tsc && node dist/calendar.js > test/calendar.txt && diff correct/calendar.txt test/calendar.txt"
   },
   "author": "Don Cross <cosinekitty@gmail.com>",
   "license": "MIT",

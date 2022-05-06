@@ -1047,36 +1047,6 @@ astro_axis_t;
 #define TIME_TEXT_BYTES  25
 
 /**
- * \def NUM_JUPITER_MOONS
- * @brief The number of Jupiter's moons that Astronomy Engine knows how to calculate.
- */
-#define NUM_JUPITER_MOONS  4
-
-/**
- * \def JM_IO
- * @brief The array index of Jupiter's moon Io in the `moon` field of #astro_jupiter_moons_t.
- */
-#define JM_IO         0
-
-/**
- * \def JM_EUROPA
- * @brief The array index of Jupiter's moon Europa in the `moon` field of #astro_jupiter_moons_t.
- */
-#define JM_EUROPA     1
-
-/**
- * \def JM_GANYMEDE
- * @brief The array index of Jupiter's moon Ganymede in the `moon` field of #astro_jupiter_moons_t.
- */
-#define JM_GANYMEDE   2
-
-/**
- * \def JM_CALLISTO
- * @brief The array index of Jupiter's moon Callisto in the `moon` field of #astro_jupiter_moons_t.
- */
-#define JM_CALLISTO   3
-
-/**
  * @brief Holds the positions and velocities of Jupiter's major 4 moons.
  *
  * The #Astronomy_JupiterMoons function returns this struct
@@ -1086,13 +1056,13 @@ astro_axis_t;
  * the EQJ system (that is, using Earth's equator at the J2000 epoch.)
  * The positions are expressed in astronomical units (AU),
  * and the velocities in AU/day.
- *
- * The following integer constants may be useful for indexing
- * into the `moon` array: #JM_IO, #JM_EUROPA, #JM_GANYMEDE, #JM_CALLISTO.
  */
 typedef struct
 {
-    astro_state_vector_t moon[NUM_JUPITER_MOONS];     /**< Jovicentric position and velocity of each moon, as described above. */
+    astro_state_vector_t io;        /**< Jovicentric position and velocity of Io. */
+    astro_state_vector_t europa;    /**< Jovicentric position and velocity of Europa. */
+    astro_state_vector_t ganymede;  /**< Jovicentric position and velocity of Ganymede. */
+    astro_state_vector_t callisto;  /**< Jovicentric position and velocity of Callisto. */
 }
 astro_jupiter_moons_t;
 

@@ -1,0 +1,19 @@
+2021-06-01T00:00:00.000Z : The Moon starts in Capricornus.
+2021-06-01T01:43:20.540Z : The Moon enters Aquarius.
+2021-06-03T12:20:46.838Z : The Moon enters Pisces.
+2021-06-04T04:34:27.462Z : The Moon enters Cetus.
+2021-06-05T03:50:55.577Z : The Moon enters Pisces.
+2021-06-06T11:54:31.604Z : The Moon enters Cetus.
+2021-06-06T17:34:49.662Z : The Moon enters Aries.
+2021-06-08T05:07:03.314Z : The Moon enters Taurus.
+2021-06-11T08:17:23.503Z : The Moon enters Gemini.
+2021-06-13T13:37:29.675Z : The Moon enters Cancer.
+2021-06-15T02:27:52.855Z : The Moon enters Leo.
+2021-06-17T18:40:24.889Z : The Moon enters Virgo.
+2021-06-20T23:40:23.918Z : The Moon enters Libra.
+2021-06-22T17:24:01.130Z : The Moon enters Scorpius.
+2021-06-23T01:36:00.284Z : The Moon enters Ophiuchus.
+2021-06-24T07:36:08.557Z : The Moon enters Sagittarius.
+2021-06-26T12:43:42.853Z : The Moon enters Capricornus.
+2021-06-28T10:40:55.317Z : The Moon enters Aquarius.
+2021-06-30T19:53:26.683Z : The Moon enters Pisces.

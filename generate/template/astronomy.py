@@ -265,6 +265,28 @@ class StateVector:
             self.vx, self.vy, self.vz,
             repr(self.t))
 
+    def __add__(self, other):
+        return StateVector(
+            self.x  + other.x,
+            self.y  + other.y,
+            self.z  + other.z,
+            self.vx + other.vx,
+            self.vy + other.vy,
+            self.vz + other.vz,
+            self.t
+        )
+
+    def __sub__(self, other):
+        return StateVector(
+            self.x  - other.x,
+            self.y  - other.y,
+            self.z  - other.z,
+            self.vx - other.vx,
+            self.vy - other.vy,
+            self.vz - other.vz,
+            self.t
+        )
+
 @enum.unique
 class Body(enum.Enum):
     """The celestial bodies supported by Astronomy Engine calculations.
@@ -1936,15 +1958,28 @@ class JupiterMoonsInfo:
 
     Attributes
     ----------
-    moon : StateVector[4]
-        An array of state vectors, one for each of the four major moons
-        of Jupiter, in the following order: 0=Io, 1=Europa, 2=Ganymede, 3=Callisto.
+    io : StateVector
+        The position and velocity of Jupiter's moon Io.
+    europa : StateVector
+        The position and velocity of Jupiter's moon Europa.
+    ganymede : StateVector
+        The position and velocity of Jupiter's moon Ganymede.
+    callisto : StateVector
+        The position and velocity of Jupiter's moon Callisto.
     """
     def __init__(self, moon):
-        self.moon = moon
+        self.io = moon[0]
+        self.europa = moon[1]
+        self.ganymede = moon[2]
+        self.callisto = moon[3]
 
     def __repr__(self):
-        return 'JupiterMoonsInfo({})'.format(repr(self.moon))
+        return 'JupiterMoonsInfo(io={}, europa={}, ganymede={}, callisto={})'.format(
+            repr(self.io),
+            repr(self.europa),
+            repr(self.ganymede),
+            repr(self.callisto)
+        )
 
 
 def _JupiterMoon_elem2pv(time, mu, A, AL, K, H, Q, P):

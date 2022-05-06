@@ -157,10 +157,10 @@ popd
 REM -----------------------------------------------------------------------------------------
 echo.
 echo.Validating JavaScript code.
-node test.js astro_check > temp/js_check.txt
+node test.js astro_check > temp\js_check.txt
 if errorlevel 1 (exit /b 1)
 
-!GENEXE! check temp/js_check.txt
+!GENEXE! check temp\js_check.txt
 if errorlevel 1 (exit /b 1)
 
 echo.
@@ -173,7 +173,7 @@ echo.Running JavaScript unit tests.
 node test.js all
 if errorlevel 1 (exit /b 1)
 
-for %%f in (temp\longitude_*.txt) do (
+for %%f in (temp\js_longitude_*.txt) do (
     !GENEXE! check %%f
     if errorlevel 1 (exit /b 1)
 )
@@ -216,8 +216,63 @@ if errorlevel 1 (exit /b 1)
 
 REM -----------------------------------------------------------------------------------------
 
+echo.Running Kotlin tests.
+if exist temp\k_check.txt (
+    del temp\k_check.txt
+    if errorlevel 1 (exit /b 1)
+)
+
+pushd ..\source\kotlin
+if exist build (
+    rd /s/q build
+    if errorlevel 1 (
+        echo.run.bat: ERROR deleting source/kotlin/build directory.
+        exit /b 1
+    )
+    if exist build (
+        echo.run.bat: FATAL: source/kotlin/build directory still exists after attempted deletion.
+        exit /b 1
+    )
+)
+call gradlew.bat assemble build test dokkaGfm jar
+if errorlevel 1 (exit /b 1)
+popd
+
+cd kotlindoc
+py format_kotlin_doc.py
+if errorlevel 1 (exit /b 1)
+cd ..
+
+!GENEXE! check temp\k_check.txt
+if errorlevel 1 (exit /b 1)
+
+for %%f in (temp\k_longitude_*.txt) do (
+    !GENEXE! check %%f
+    if errorlevel 1 (exit /b 1)
+)
+
+REM -----------------------------------------------------------------------------------------
+
 call diffcalc.bat
 if errorlevel 1 (exit /b 1)
+
+REM -----------------------------------------------------------------------------------------
+
+echo.Validating Java demos.
+pushd ..\demo\java
+call demotest.bat
+if errorlevel 1 (exit /b 1)
+popd
+
+REM -----------------------------------------------------------------------------------------
+
+echo.Validating Kotlin demos.
+pushd ..\demo\kotlin
+call demotest.bat
+if errorlevel 1 (exit /b 1)
+popd
+
+REM -----------------------------------------------------------------------------------------
 
 if exist ..\website\src\assets\documentation.json (
     REM *** documentation.json never generates the same in Windows as Linux.
@@ -233,7 +288,7 @@ REM     Subroutine for downloading an external file.
 REM     Some of the files needed to generate source code are large.
 REM     These files are only needed by Astronomy Engine contributors,
 REM     not by developers who are using the published version of Astronomy Engine.
-REM     A special download process helps keep the repo size reasonable.
+REM     A special download process helps keep the repo size reasonable for most users.
 
 :Download
     setlocal
@@ -272,13 +327,10 @@ REM     A special download process helps keep the repo size reasonable.
     )
 
     :verify_eph
-    echo.Using checksum.bat to test integrity of downloaded !EPHFILE!
-    call checksum.bat sha256 !SHAFILE!
-    if errorlevel 2 (
-        echo.Error verifying checksum for !EPHFILE!.
-        exit /b 1
-    ) else if errorlevel 1 (
-        echo.Corrupt ephemeris file !EPHFILE! detected.
+    echo.Verifying integrity of file: !EPHFILE!
+    py checksum.py sha256 !SHAFILE!
+    if errorlevel 1 (
+        echo.Corrupt file !EPHFILE! detected.
         if exist !EPHFILE! (del !EPHFILE!)
         exit /b 1
     )

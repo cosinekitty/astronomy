@@ -16,7 +16,6 @@ Download()
     local EPHURL=$1
     local EPHFILE=$2
     local SHAFILE=$3
-    local MD5FILE=$4
 
     if [[ ! -f ${EPHFILE} ]]; then
         echo ""
@@ -48,30 +47,19 @@ Download()
         fi
     fi
 
-    if IsInstalled sha256sum; then
-        if sha256sum -c ${SHAFILE}; then
-            echo "Validated file using sha256 checksum."
-        else
-            rm -f ${EPHFILE}
-            Fail "Detected corrupt file: failed sha256 check."
-        fi
-    elif IsInstalled md5sum; then
-        if md5sum -c ${MD5FILE}; then
-            echo "Validated file using md5 checksum."
-        else
-            rm -f ${EPHFILE}
-            Fail "Detected corrupt file: failed md5 check."
-        fi
+    if ./checksum.py sha256 ${SHAFILE}; then
+        echo "Validated file using sha256 checksum."
     else
-        echo "Warning: could not validate file with md5 or sha256."
+        rm -f ${EPHFILE}
+        Fail "Detected corrupt file: failed sha256 check."
     fi
 }
 
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
-Download https://github.com/cosinekitty/ephemeris/raw/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256 ephemeris.md5
-Download https://github.com/cosinekitty/ephemeris/raw/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256 top2013.md5
-Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256 hygdata_v3.md5
+Download https://github.com/cosinekitty/ephemeris/raw/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256
+Download https://github.com/cosinekitty/ephemeris/raw/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256
+Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256
 
 rm -f constellation/test_input.txt
 ./make_constellation_data.py || Fail "Error creating constellation test data."
@@ -136,20 +124,25 @@ echo ""
 ./unit_test_js $1 || exit $?
 ./unit_test_c $1 || exit $?
 ./unit_test_python $1 || exit $?
+./unit_test_kotlin $1 || exit $?
 
 ./diffcalc || exit $?
 
 echo ""
 echo "Testing example programs."
 cd ../demo/c || Fail "Cannot change directory to ../demo/c"
-test/test || Fail "Error testing C examples"
+./demotest || Fail "Error testing C examples"
 cd ../nodejs || Fail "Cannot change directory to ../nodejs"
-test/test || Fail "Error testing nodejs examples."
+./demotest || Fail "Error testing nodejs examples."
 cd ../python || Fail "Cannot change directory to ../python"
-test/test || Fail "Error testing Python examples."
+./demotest || Fail "Error testing Python examples."
 cd ../csharp || Fail "Cannot change directory to ../csharp"
-test/test || Fail "Error testing C# examples."
-cd ../../generate || Fail "Cannot change back to generate directory."
+./demotest || Fail "Error testing C# examples."
+cd ../java || Fail "Cannot change directory to ../java"
+./demotest || Fail "Error testing Java examples."
+cd ../kotlin || Fail "Cannot change directory to ../kotlin"
+./demotest || Fail "Error testing Kotlin examples."
 
+cd ../../generate || Fail "Cannot change back to generate directory."
 cat pass.txt
 exit 0

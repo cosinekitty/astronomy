@@ -8,7 +8,9 @@ fi
 
 echo "run_worldmap: building C++ code"
 
-g++ -Wall -Werror -x c++ -std=c++11 -o worldmap $BUILDOPT \
+rm -f bin/worldmap
+mkdir -p bin
+g++ -Wall -Werror -x c++ -std=c++11 -o bin/worldmap $BUILDOPT \
     -I./raytrace -I../../source/c \
     worldmap.cpp astro_demo_common.c ../../source/c/astronomy.c raytrace/lodepng.cpp \
     || exit $?
@@ -16,21 +18,14 @@ g++ -Wall -Werror -x c++ -std=c++11 -o worldmap $BUILDOPT \
 echo "run_worldmap: creating image"
 
 rm -f sun_moon_map.png test/worldmap.txt
-time ./worldmap sun_moon_map.png 2022-04-09T16:05:35Z > test/worldmap.txt || exit $?
+time bin/worldmap sun_moon_map.png 2022-04-09T16:05:35Z > test/worldmap.txt || exit $?
 more test/worldmap.txt || exit $?
-if ! diff test/worldmap{,_correct}.txt; then
+if ! diff {correct,test}/worldmap.txt; then
     echo "run_worldmap: FAIL - incorrect zenith location output."
     exit 1
 fi
+
 ls -l sun_moon_map.png || exit $?
-
-if type sha256sum > /dev/null 2>&1; then
-    sha256sum -c worldmap.sha256 || exit $?
-else
-    # Some platforms (Mac OS) do not have sha256sum installed.
-    echo "run_worldmap: skipped image verification."
-fi
-
+../../generate/checksum.py sha256 worldmap.sha256 || exit $?
 echo "run_worldmap: PASS"
-
 exit 0

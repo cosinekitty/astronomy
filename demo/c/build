@@ -13,9 +13,11 @@ else
     Fail "unrecognized command line option"
 fi
 
+mkdir -p bin
 for name in gravity galactic camera moonphase positions linux_riseset riseset seasons culminate horizon lunar_eclipse triangulate; do
+    rm -f bin/${name}
     echo "Compiling ${name}.c"
-    gcc ${BUILDOPT} -Wall -Werror -o ${name} -I../../source/c ../../source/c/astronomy.c astro_demo_common.c ${name}.c -lm ||
+    gcc ${BUILDOPT} -Wall -Werror -o bin/${name} -I../../source/c ../../source/c/astronomy.c astro_demo_common.c ${name}.c -lm ||
         Fail "Error building ${name}.c"
 done
 

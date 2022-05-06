@@ -432,6 +432,83 @@ fail:
     return error;
 }
 
+static int KotlinVsop_Series(cg_context_t *context, const vsop_series_t *series, const char *varprefix, int s)
+{
+    int i;
+
+    fprintf(context->outfile, "private val %s%d = VsopSeries(arrayOf(\n", varprefix, s);
+    for (i = 0; i < series->nterms_total; ++i)
+    {
+        const vsop_term_t *term = &series->term[i];
+
+        fprintf(context->outfile, "    VsopTerm(%0.11lf, %0.11lf, %0.11lf)%s\n",
+            term->amplitude,
+            term->phase,
+            term->frequency,
+            (i + 1 < series->nterms_total) ? "," : "");
+    }
+    fprintf(context->outfile, "))\n\n");
+
+    return 0;
+}
+
+static int KotlinVsop_Formula(cg_context_t *context, const vsop_formula_t *formula, const char *coord_name, const char *body_name)
+{
+    int error = 0;
+    int s;
+    char varprefix[100];
+    char sname[120];
+
+    snprintf(varprefix, sizeof(varprefix), "vsop%s%s", coord_name, body_name);
+
+    for (s=0; s < formula->nseries_total; ++s)
+        CHECK(KotlinVsop_Series(context, &formula->series[s], varprefix, s));
+
+    fprintf(context->outfile, "private val %s = VsopFormula(arrayOf(\n", varprefix);
+    for (s=0; s < formula->nseries_total; ++s)
+    {
+        snprintf(sname, sizeof(sname), "%s%d", varprefix, s);
+
+        fprintf(context->outfile, "    %s%s\n",
+            sname,
+            (s+1 < formula->nseries_total) ? "," : "");
+    }
+    fprintf(context->outfile, "))\n\n");
+
+fail:
+    return error;
+}
+
+static int KotlinVsop(cg_context_t *context)
+{
+    int error;
+    const char *name;
+    vsop_body_t body;
+    vsop_model_t model;
+    int check_length;
+    int k;
+    char filename[100];
+    const char *coord_name[3] = { "Lon", "Lat", "Rad" };
+
+    VsopInit(&model);
+
+    name = context->args;
+    CHECK(ParseVsopBodyName(context, name, &body));
+
+    check_length = snprintf(filename, sizeof(filename), "%s/vsop_%d.txt", context->datapath, (int)body);
+    if (check_length < 0 || check_length != (int)strlen(filename))
+        CHECK(LogError(context, "VSOP model filename is too long!"));
+
+    CHECK(VsopReadTrunc(&model, filename));
+
+    for (k=0; k < model.ncoords; ++k)
+        CHECK(KotlinVsop_Formula(context, &model.formula[k], coord_name[k], name));
+
+fail:
+    VsopFreeModel(&model);
+    return error;
+}
+
 #define UDEF(expr)  ((u = (expr)), (u2 = u*u), (u3 = u*u2), (u4 = u2*u2), (u5 = u2*u3), (u6 = u3*u3), (u7 = u3*u4))
 
 double ExtrapolatedDeltaT(int year)
@@ -781,6 +858,28 @@ static int OptIauJS(cg_context_t *context, int lnum, const double *data)
     return 0;
 }
 
+static int OptIauKotlin(cg_context_t *context, int lnum, const double *data)
+{
+    int i;
+
+    fprintf(context->outfile, "    IauRow(%2.0lf", data[0]);
+
+    for (i=1; i < 5; ++i)
+        fprintf(context->outfile, ", %2.0lf", data[i]);
+
+    fprintf(context->outfile, ", %12.1lf", data[i]);
+    for (++i; i < 11; ++i)
+        fprintf(context->outfile, ", %12.1lf", data[i]);
+
+    fprintf(context->outfile, ")");
+    if (lnum < IAU_DATA_NUM_ROWS)
+        fprintf(context->outfile, ",\n");
+    else
+        fprintf(context->outfile, "\n");
+
+    return 0;
+}
+
 static int OptIauData(cg_context_t *context)
 {
     int error = 1;
@@ -817,6 +916,10 @@ static int OptIauData(cg_context_t *context)
 
         case CODEGEN_LANGUAGE_JS:
             CHECK(OptIauJS(context, lnum, data));
+            break;
+
+        case CODEGEN_LANGUAGE_KOTLIN:
+            CHECK(OptIauKotlin(context, lnum, data));
             break;
 
         default:
@@ -914,6 +1017,21 @@ static int OptAddSolCsharp(cg_context_t *context, const double *data)
     return 0;
 }
 
+static int OptAddSolKotlin(cg_context_t *context, const double *data)
+{
+    int i;
+
+    fprintf(context->outfile, "    context.addSol(");
+
+    for (i=0; i < 4; ++i)
+        fprintf(context->outfile, "%11.4lf,", data[i]);
+
+    for(; i < 8; ++i)
+        fprintf(context->outfile, "%2.0lf%s", data[i], (i < 7) ? "," : ")\n");
+
+    return 0;
+}
+
 static int OptAddSolJS(cg_context_t *context, const double *data)
 {
     int i;
@@ -965,6 +1083,10 @@ static int OptAddSol(cg_context_t *context)
 
         case CODEGEN_LANGUAGE_JS:
             CHECK(OptAddSolJS(context, data));
+            break;
+
+        case CODEGEN_LANGUAGE_KOTLIN:
+            CHECK(OptAddSolKotlin(context, data));
             break;
 
         default:
@@ -1077,6 +1199,17 @@ static int ConstellationData(cg_context_t *context)
             fprintf(context->outfile, "   ['%s', '%s'%*s]  // %2d\n", d, d+4, (20-len), "", lnum-1);
             break;
 
+        case CODEGEN_LANGUAGE_KOTLIN:
+            if (lnum == 1)
+            {
+                fprintf(context->outfile, "internal val constelNames: Array<ConstellationText> = arrayOf(\n");
+                fprintf(context->outfile, "    ");
+            }
+            else
+                fprintf(context->outfile, ",   ");
+            fprintf(context->outfile, "ConstellationText(\"%s\", \"%s\"%*s)    // %2d\n", d, d+4, (20-len), "", lnum-1);
+            break;
+
         case CODEGEN_LANGUAGE_PYTHON:
             if (lnum == 1)
                 fprintf(context->outfile, "_ConstelNames = (\n ");
@@ -1117,6 +1250,11 @@ static int ConstellationData(cg_context_t *context)
     case CODEGEN_LANGUAGE_JS:
         fprintf(context->outfile, "];\n\n");
         fprintf(context->outfile, "const ConstelBounds = [\n");
+        break;
+
+    case CODEGEN_LANGUAGE_KOTLIN:
+        fprintf(context->outfile, ")\n\n");
+        fprintf(context->outfile, "internal val constelBounds: Array<ConstellationBoundary> = arrayOf(\n");
         break;
 
     case CODEGEN_LANGUAGE_PYTHON:
@@ -1169,6 +1307,12 @@ static int ConstellationData(cg_context_t *context)
                 index, ra_lo, ra_hi, dec, symbol);
             break;
 
+        case CODEGEN_LANGUAGE_KOTLIN:
+            fprintf(context->outfile, "%c   ConstellationBoundary(%2d, %6.1lf, %6.1lf, %7.1lf)    // %s\n",
+                ((lnum == 1) ? ' ' : ','),
+                index, ra_lo, ra_hi, dec, symbol);
+            break;
+
         case CODEGEN_LANGUAGE_PYTHON:
             fprintf(context->outfile, "%c   ( %2d, %6lg, %6lg, %6lg )    # %s\n",
                 ((lnum == 1) ? ' ' : ','),
@@ -1193,6 +1337,10 @@ static int ConstellationData(cg_context_t *context)
 
     case CODEGEN_LANGUAGE_JS:
         fprintf(context->outfile, "];\n\n");
+        break;
+
+    case CODEGEN_LANGUAGE_KOTLIN:
+        fprintf(context->outfile, ")");
         break;
 
     case CODEGEN_LANGUAGE_PYTHON:
@@ -1283,6 +1431,39 @@ fail:
 }
 
 
+static int PlutoStateTable_Kotlin(cg_context_t *context, const top_model_t *model)
+{
+    int error = 1;
+    double tt;
+    top_rectangular_t equ;
+    int i;
+
+    fprintf(context->outfile, "private const val PLUTO_NUM_STATES = %d\n", PLUTO_NUM_STATES);
+    fprintf(context->outfile, "private const val PLUTO_TIME_STEP  = %d\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "private const val PLUTO_DT         = %d\n", PLUTO_DT);
+    fprintf(context->outfile, "private const val PLUTO_NSTEPS     = %d\n", PLUTO_NSTEPS);
+    fprintf(context->outfile, "\n");
+    fprintf(context->outfile, "private val plutoStateTable: Array<BodyState> = arrayOf(\n");
+
+    for (i=0; i < PLUTO_NUM_STATES; ++i)
+    {
+        tt = i*PLUTO_TIME_STEP + PLUTO_TT1;
+        CHECK(TopPosition(model, tt, &equ));
+
+        fprintf(context->outfile,
+            "%c   BodyState(%10.1lf, TerseVector(%16.12lf, %16.12lf, %16.12lf), TerseVector(%20.13le, %20.13le, %20.13le))\n",
+            (i==0 ? ' ' : ','),
+            tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
+    }
+
+    fprintf(context->outfile, ")");
+
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int PlutoStateTable_JS(cg_context_t *context, const top_model_t *model)
 {
     int error = 1;
@@ -1365,6 +1546,10 @@ static int PlutoStateTable(cg_context_t *context)
 
     case CODEGEN_LANGUAGE_CSHARP:
         CHECK(PlutoStateTable_CSharp(context, &model));
+        break;
+
+    case CODEGEN_LANGUAGE_KOTLIN:
+        CHECK(PlutoStateTable_Kotlin(context, &model));
         break;
 
     case CODEGEN_LANGUAGE_JS:
@@ -1665,7 +1850,6 @@ static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *mod
     return 0;
 }
 
-
 static int JupiterMoons_CSharp(cg_context_t *context, const jupiter_moon_model_t *model)
 {
     int mindex, var, i;
@@ -1762,6 +1946,53 @@ static int JupiterMoons_JS(cg_context_t *context, const jupiter_moon_model_t *mo
 }
 
 
+static int JupiterMoons_Kotlin(cg_context_t *context, const jupiter_moon_model_t *model)
+{
+    int mindex, var, i;
+    vsop_series_t series[4];
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+
+    fprintf(context->outfile, "private val rotationJupEqj = RotationMatrix(\n");
+    fprintf(context->outfile, "    %21.14le, %21.14le, %21.14le,\n", model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "    %21.14le, %21.14le, %21.14le,\n", model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "    %21.14le, %21.14le, %21.14le\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
+    fprintf(context->outfile, ")\n\n");
+
+    fprintf(context->outfile, "private val jupiterMoonModel: Array<JupiterMoon> = arrayOf(\n");
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        fprintf(context->outfile, "    // [%d] %s\n", mindex, moon_name[mindex]);
+        fprintf(context->outfile, "    JupiterMoon(\n");
+        fprintf(context->outfile, "        %23.16le,\n", model->moon[mindex].mu);
+        fprintf(context->outfile, "        %23.16le,\n", model->moon[mindex].al[0]);
+        fprintf(context->outfile, "        %23.16le,\n", model->moon[mindex].al[1]);
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            int nterms = series[var].nterms_total;
+            fprintf(context->outfile, "        arrayOf(  // %s\n", var_name[var]);
+            for (i = 0; i < nterms; ++i)
+            {
+                const vsop_term_t *term = &series[var].term[i];
+                fprintf(context->outfile, "            VsopTerm(%19.16lf, %23.16le, %23.16le)%s\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    (i+1 < nterms) ? "," : "");
+            }
+            fprintf(context->outfile, "        )%s\n", ((var+1 < NUM_JM_VARS) ? "," : ""));
+        }
+        fprintf(context->outfile, "    )%s\n", ((mindex+1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
+    }
+    fprintf(context->outfile, ")");
+    return 0;
+}
+
+
 static int JupiterMoons_Python(cg_context_t *context, const jupiter_moon_model_t *model)
 {
     int mindex, var, i;
@@ -1836,6 +2067,10 @@ static int JupiterMoons(cg_context_t *context)
         CHECK(JupiterMoons_Python(context, model));
         break;
 
+    case CODEGEN_LANGUAGE_KOTLIN:
+        CHECK(JupiterMoons_Kotlin(context, model));
+        break;
+
     default:
         CHECK(LogError(context, "JupiterMoons: Unsupported target language %d", context->language));
     }
@@ -1865,6 +2100,7 @@ static const cg_directive_entry DirectiveTable[] =
 {
     { "C_VSOP",             CVsop               },
     { "CSHARP_VSOP",        CsharpVsop          },
+    { "KOTLIN_VSOP",        KotlinVsop          },
     { "LIST_VSOP",          ListVsop            },
     { "IAU_DATA",           OptIauData          },
     { "ADDSOL",             OptAddSol           },

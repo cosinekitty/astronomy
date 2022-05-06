@@ -448,6 +448,23 @@ fail:
     return error;
 }
 
+static int WriteJupiterMoon(FILE *outfile, int moon_index, astro_state_vector_t moon)
+{
+    int error;
+
+    CHECK_STATUS(moon);
+
+    fprintf(outfile, "j %d %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le\n",
+        moon_index,
+        moon.t.tt, moon.t.ut,
+        moon.x,  moon.y,  moon.z,
+        moon.vx, moon.vy, moon.vz
+    );
+
+fail:
+    return error;
+}
+
 static int AstroCheck(void)
 {
     int error = 1;
@@ -508,14 +525,10 @@ static int AstroCheck(void)
 
         /* Calculate Jupiter's moons for diff purposes only. */
         jm = Astronomy_JupiterMoons(time);
-        for (b = 0; b < NUM_JUPITER_MOONS; ++b)
-        {
-            CHECK_STATUS(jm.moon[b]);
-            fprintf(outfile, "j %d %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le %0.18le\n",
-                b, time.tt, time.ut,
-                jm.moon[b].x, jm.moon[b].y, jm.moon[b].z,
-                jm.moon[b].vx, jm.moon[b].vy, jm.moon[b].vz);
-        }
+        WriteJupiterMoon(outfile, 0, jm.io);
+        WriteJupiterMoon(outfile, 1, jm.europa);
+        WriteJupiterMoon(outfile, 2, jm.ganymede);
+        WriteJupiterMoon(outfile, 3, jm.callisto);
 
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
     }
@@ -773,7 +786,7 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
         na = sscanf(aline, "j %d %lf %lf %lf %lf %lf %lf %lf %lf", &mindex_a, &adata[0], &adata[1], &adata[2], &adata[3], &adata[4], &adata[5], &adata[6], &adata[7]);
         nb = sscanf(bline, "j %d %lf %lf %lf %lf %lf %lf %lf %lf", &mindex_b, &bdata[0], &bdata[1], &bdata[2], &bdata[3], &bdata[4], &bdata[5], &bdata[6], &bdata[7]);
         nrequired = 9;
-        if (mindex_a < 0 || mindex_a >= NUM_JUPITER_MOONS || mindex_a != mindex_b)
+        if (mindex_a < 0 || mindex_a >= 4 || mindex_a != mindex_b)
             FAIL("Bad Jupiter moon index in line %d: mindex_a=%d, mindex_b=%d\n", lnum, mindex_a, mindex_b);
         snprintf(abody, sizeof(abody), "jm%d", mindex_a);
         snprintf(bbody, sizeof(bbody), "jm%d", mindex_b);
@@ -2156,7 +2169,7 @@ static int PlanetApsis(void)
     double expected_distance;
     double period;
     double diff_days, diff_degrees, max_degrees=0.0, diff_dist_ratio;
-    double degree_threshold;
+    const double degree_threshold = 0.1;
     double max_diff_days, max_dist_ratio;
 
     start_time = Astronomy_MakeTime(1700, 1, 1, 0, 0, 0.0);
@@ -2199,7 +2212,6 @@ static int PlanetApsis(void)
             if (diff_degrees > max_degrees)
                 max_degrees = diff_degrees;
 
-            degree_threshold = (body == BODY_PLUTO) ? 0.262 : 0.1;
             if (diff_degrees > degree_threshold)
                 FAIL("C PlanetApsis: FAIL - %s exceeded angular threshold (%lg versus %lg degrees)\n", Astronomy_BodyName(body), max_degrees, degree_threshold);
 
@@ -4314,10 +4326,26 @@ static int StringStartsWith(const char *text, const char *prefix)
 }
 
 
+static astro_state_vector_t SelectJupiterMoon(const astro_jupiter_moons_t *jm, int mindex)
+{
+    switch (mindex)
+    {
+        case 0: return jm->io;
+        case 1: return jm->europa;
+        case 2: return jm->ganymede;
+        case 3: return jm->callisto;
+        default:
+            fprintf(stderr, "FATAL(ctest.c ! SelectJupiterMoon): Invalid mindex = %d\n", mindex);
+            exit(1);
+    }
+}
+
+
 static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double vel[3])
 {
     int error;
     astro_jupiter_moons_t jm;
+    astro_state_vector_t moon;
     astro_time_t time;
     double dx, dy, dz, mag, diff;
     const double pos_tolerance = 9.0e-4;
@@ -4326,22 +4354,23 @@ static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double ve
     time = Astronomy_TerrestrialTime(tt);
 
     jm = Astronomy_JupiterMoons(time);
-    CHECK_STATUS(jm.moon[0]);
-    CHECK_STATUS(jm.moon[1]);
-    CHECK_STATUS(jm.moon[2]);
-    CHECK_STATUS(jm.moon[3]);
+    CHECK_STATUS(jm.io);
+    CHECK_STATUS(jm.europa);
+    CHECK_STATUS(jm.ganymede);
+    CHECK_STATUS(jm.callisto);
+    moon = SelectJupiterMoon(&jm, mindex);
 
-    dx = V(pos[0] - jm.moon[mindex].x);
-    dy = V(pos[1] - jm.moon[mindex].y);
-    dz = V(pos[2] - jm.moon[mindex].z);
+    dx = V(pos[0] - moon.x);
+    dy = V(pos[1] - moon.y);
+    dz = V(pos[2] - moon.z);
     mag = V(sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]));
     diff = V(sqrt(dx*dx + dy*dy + dz*dz) / mag);
     if (diff > pos_tolerance)
         FAIL("C JupiterMoons_CheckJpl(mindex=%d, tt=%0.1lf): excessive position error %le\n", mindex, tt, diff);
 
-    dx = V(vel[0] - jm.moon[mindex].vx);
-    dy = V(vel[1] - jm.moon[mindex].vy);
-    dz = V(vel[2] - jm.moon[mindex].vz);
+    dx = V(vel[0] - moon.vx);
+    dy = V(vel[1] - moon.vy);
+    dz = V(vel[2] - moon.vz);
     mag = V(sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]));
     diff = V(sqrt(dx*dx + dy*dy + dz*dz) / mag);
     if (diff > vel_tolerance)
@@ -4363,7 +4392,7 @@ static int JupiterMoonsTest(void)
     const int expected_count = 5001;
     int count;
 
-    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    for (mindex = 0; mindex < 4; ++mindex)
     {
         snprintf(filename, sizeof(filename), "jupiter_moons/horizons/jm%d.txt", mindex);
         infile = fopen(filename, "rt");
@@ -6229,7 +6258,7 @@ static int MoonNodes(void)
         if (node.status != ASTRO_SUCCESS)
             FAIL("C MoonNodes(%s line %d): error %d returned by node search\n", filename, lnum, node.status);
 
-        /* Verify the ecliptic longitude is very close to zero at the alleged node. */
+        /* Verify the ecliptic latitude is very close to zero at the alleged node. */
         ecl = Astronomy_EclipticGeoMoon(node.time);
         CHECK_STATUS(ecl);
         diff_lat = 60.0 * ABS(ecl.lat);

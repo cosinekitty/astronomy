@@ -63,6 +63,11 @@ function ReadLines(filename) {
     return lines;
 }
 
+function SelectJupiterMoon(jm, mindex) {
+    return [jm.io, jm.europa, jm.ganymede, jm.callisto][mindex] ||
+        Fail(`SelectJupiterMoon: invalid mindex = ${mindex}`);
+}
+
 function AstroCheck() {
     var date = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
     var stop = Astronomy.MakeTime(new Date('2200-01-01T00:00:00Z'));
@@ -98,7 +103,7 @@ function AstroCheck() {
 
         const jm = Astronomy.JupiterMoons(time);
         for (let mindex = 0; mindex < 4; ++mindex) {
-            const moon = jm.moon[mindex];
+            const moon = SelectJupiterMoon(jm, mindex);
             console.log(`j ${mindex} ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${moon.x.toExponential(18)} ${moon.y.toExponential(18)} ${moon.z.toExponential(18)} ${moon.vx.toExponential(18)} ${moon.vy.toExponential(18)} ${moon.vz.toExponential(18)}`);
         }
 
@@ -300,7 +305,7 @@ function LunarEclipseIssue78() {
     const dt = (expected_peak - eclipse.peak.date) / 1000;
     if (abs(dt) > 40.0)
         throw `LunarEclipseIssue78: Excessive prediction error = ${dt} seconds.`;
-    if (eclipse.kind !== 'total')
+    if (eclipse.kind !== Astronomy.EclipseKind.Total)
         throw `Expected total eclipse; found: ${eclipse.kind}`;
     console.log(`JS LunarEclipseIssue78: PASS`);
     return 0;
@@ -336,15 +341,15 @@ function LunarEclipse() {
 
         let valid = false;
         switch (eclipse.kind) {
-        case 'penumbral':
+        case Astronomy.EclipseKind.Penumbral:
             valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial == 0.0) && (eclipse.sd_total == 0.0);
             break;
 
-        case 'partial':
+        case Astronomy.EclipseKind.Partial:
             valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total == 0.0);
             break;
 
-        case 'total':
+        case Astronomy.EclipseKind.Total:
             valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
             break;
 
@@ -465,10 +470,10 @@ function GlobalSolarEclipse() {
         const lat = float(token[3]);
         const lon = float(token[4]);
         const expected_kind = {
-            'P': 'partial',
-            'A': 'annular',
-            'T': 'total',
-            'H': 'total'
+            'P': Astronomy.EclipseKind.Partial,
+            'A': Astronomy.EclipseKind.Annular,
+            'T': Astronomy.EclipseKind.Total,
+            'H': Astronomy.EclipseKind.Total
         }[typeChar];
 
         let diff_days = eclipse.peak.tt - peak.tt;
@@ -497,7 +502,7 @@ function GlobalSolarEclipse() {
             return 1;
         }
 
-        if (eclipse.kind === 'total' || eclipse.kind === 'annular') {
+        if (eclipse.kind === Astronomy.EclipseKind.Total || eclipse.kind === Astronomy.EclipseKind.Annular) {
             // When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
             // it creates a glancing blow whose geographic coordinates are excessively sensitive to
             // slight changes in the ray. Therefore, it is unreasonable to count large errors there.
@@ -667,10 +672,10 @@ function LocalSolarEclipse2() {
         const observer = new Astronomy.Observer(latitude, longitude, 0);
         const typeChar = token[2];
         const expected_kind = {
-            'P': 'partial',
-            'A': 'annular',
-            'T': 'total',
-            'H': 'total'
+            'P': Astronomy.EclipseKind.Partial,
+            'A': Astronomy.EclipseKind.Annular,
+            'T': Astronomy.EclipseKind.Total,
+            'H': Astronomy.EclipseKind.Total
         }[typeChar];
         const p1    = ParseEvent(token[3],  token[4],   true);
         const t1    = ParseEvent(token[5],  token[6],   (typeChar !== 'P'));
@@ -751,8 +756,8 @@ function PlanetApsis() {
             const diff_days = abs(expected_time.tt - apsis.time.tt);
             max_diff_days = max(max_diff_days, diff_days);
             const diff_degrees = (diff_days / period) * 360;
-            const degree_threshold = (body === 'Pluto') ? 0.262 : 0.1;
-            if (diff_degrees > degree_threshold) {
+            const degree_threshold = 0.1;
+            if (diff_degrees > 0.1) {
                 throw `APSIS FAIL: ${body} exceeded angular threshold (${diff_degrees} vs ${degree_threshold} degrees).`;
             }
             const diff_dist_ratio = abs(expected_distance - apsis.dist_au) / expected_distance;
@@ -1980,10 +1985,11 @@ function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
     const vel_tolerance = 9.0e-4;
     const time = Astronomy.AstroTime.FromTerrestrialTime(tt);
     const jm = Astronomy.JupiterMoons(time);
+    const moon = SelectJupiterMoon(jm, mindex);
 
-    let dx = v(pos[0] - jm.moon[mindex].x);
-    let dy = v(pos[1] - jm.moon[mindex].y);
-    let dz = v(pos[2] - jm.moon[mindex].z);
+    let dx = v(pos[0] - moon.x);
+    let dy = v(pos[1] - moon.y);
+    let dz = v(pos[2] - moon.z);
     let mag = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
     const pos_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag;
     if (pos_diff > pos_tolerance) {
@@ -1991,9 +1997,9 @@ function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
         return 1;
     }
 
-    dx = v(vel[0] - jm.moon[mindex].vx);
-    dy = v(vel[1] - jm.moon[mindex].vy);
-    dz = v(vel[2] - jm.moon[mindex].vz);
+    dx = v(vel[0] - moon.vx);
+    dy = v(vel[1] - moon.vy);
+    dz = v(vel[2] - moon.vz);
     mag = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
     const vel_diff = sqrt(dx*dx + dy*dy + dz*dz) / mag;
     if (vel_diff > vel_tolerance) {
@@ -2662,7 +2668,7 @@ function MoonNodes() {
             node = Astronomy.NextMoonNode(node);
         }
 
-        // Verify the ecliptic longitude is very close to zero at the alleged node.
+        // Verify the ecliptic latitude is very close to zero at the alleged node.
         const ecl = Astronomy.EclipticGeoMoon(node.time);
         const diff_lat = 60 * abs(ecl.lat);
         if (diff_lat > 8.1e-4) {

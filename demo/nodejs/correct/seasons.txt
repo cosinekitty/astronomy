@@ -1,0 +1,4 @@
+March equinox     : 2019-03-20T21:58:19.248Z
+June solstice     : 2019-06-21T15:54:02.000Z
+September equinox : 2019-09-23T07:49:59.929Z
+December solstice : 2019-12-22T04:19:32.258Z

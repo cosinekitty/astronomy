@@ -11,36 +11,52 @@
             <div>C</div>
             <div><img src="source/c/c_language.svg" width="100" height="100" alt="C" /></div>
         </td>
+        <td style="text-align: center;"><a href="demo/c/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/c/">Code &amp; Docs</a></td>
+    </tr>
+    <tr>
         <td style="text-align: center;">
             <div>C#</div>
             <div><img src="source/csharp/csharp_language.svg" width="100" height="100" alt="C#" /></div>
         </td>
+        <td style="text-align: center;"><a href="demo/csharp/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/csharp/">Code &amp; Docs</a></td>
+    </tr>
+    <tr>
         <td style="text-align: center;">
-            <div>Browser</div>
-            <div><img src="source/js/javascript.svg" width="100" height="100" alt="JavaScript" /></div>
-        </td>
-        <td style="text-align: center;">
-            <div>Node.js</div>
+            <div>JavaScript</div>
             <div><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></div>
         </td>
+        <td>
+            <div style="text-align: center;">Examples</div>
+            <ul>
+                <li><a href="demo/browser/">Browser</a></li>
+                <li><a href="demo/nodejs/">Node.js</a></li>
+            </ul>
+        </td>
+        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
+    </tr>
+    <tr>
         <td style="text-align: center;">
             <div>Python</div>
             <div><img src="source/python/python_language.svg" width="100" height="100" alt="Python" /></div>
         </td>
-    </tr>
-    <tr>
-        <td style="text-align: center;"><a href="demo/c/">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/csharp/">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/browser/">Examples</a></td>
-        <td style="text-align: center;"><a href="demo/nodejs/">Examples</a></td>
         <td style="text-align: center;"><a href="demo/python/">Examples</a></td>
+        <td style="text-align: center;"><a href="source/python/">Code &amp; Docs</a></td>
     </tr>
     <tr>
-        <td style="text-align: center;"><a href="source/c/">Code &amp; Docs</a></td>
-        <td style="text-align: center;"><a href="source/csharp/">Code &amp; Docs</a></td>
-        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
-        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
-        <td style="text-align: center;"><a href="source/python/">Code &amp; Docs</a></td>
+        <td style="text-align: center;">
+            <div>Kotlin / JVM</div>
+            <div><img src="source/kotlin/kotlin_language.svg" width="100" height="100" alt="Kotlin" /></div>
+        </td>
+        <td>
+            <div style="text-align: center;">Examples</div>
+            <ul>
+                <li><a href="demo/kotlin/">Kotlin</a></li>
+                <li><a href="demo/java/">Java</a></li>
+            </ul>
+        </td>
+        <td style="text-align: center;"><a href="source/kotlin/">Code &amp; Docs</a></td>
     </tr>
 </table>
 
@@ -51,7 +67,7 @@ the Sun, Moon, and planets, and for predicting interesting events like oppositio
 conjunctions, rise and set times, lunar phases, eclipses, transits, and more.
 
 It supports several popular programming langauges with a consistent API.
-Function and type names are uniform across all the supported languages.
+Function and type names are mostly consistent across all the supported languages.
 
 Astronomy Engine is designed to be small, fast, and accurate to within &plusmn;1 arcminute.
 It is based on the authoritative and well-tested models
@@ -151,7 +167,11 @@ of complexity. So I decided to create Astronomy Engine with the following engine
 
 - Support JavaScript, C, C#, and Python with the same algorithms, and verify them to produce identical results.
 - No external dependencies! The code must not require anything outside the standard library for each language.
-- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->108931 bytes.)
+<<<<<<< HEAD
+- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->109281 bytes.)
+=======
+- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->109281 bytes.)
+>>>>>>> kotlin
 - Accuracy always within 1 arcminute of results from NOVAS.
 - It would be well documented, relatively easy to use, and support a wide variety of common use cases.
 

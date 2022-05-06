@@ -4185,10 +4185,11 @@ static astro_state_vector_t CalcJupiterMoon(astro_time_t time, int mindex)
 astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time)
 {
     astro_jupiter_moons_t jm;
-    int mindex;
 
-    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
-        jm.moon[mindex] = CalcJupiterMoon(time, mindex);
+    jm.io       = CalcJupiterMoon(time, 0);
+    jm.europa   = CalcJupiterMoon(time, 1);
+    jm.ganymede = CalcJupiterMoon(time, 2);
+    jm.callisto = CalcJupiterMoon(time, 3);
 
     return jm;
 }
