@@ -6,7 +6,9 @@ fun [nextLunarApsis](next-lunar-apsis.md)(apsis: [ApsisInfo](-apsis-info/index.m
 
 Finds the next lunar perigee or apogee event in a series.
 
-Finds the next consecutive time the Moon is closest or farthest from the Earth in its orbit. See [searchLunarApsis](search-lunar-apsis.md) for more details.
+Finds the next consecutive time the Moon is closest or farthest from the Earth in its orbit.
+
+See [searchLunarApsis](search-lunar-apsis.md) for more details. See [lunarApsidesAfter](lunar-apsides-after.md) for convenient iteration of consecutive lunar apsides.
 
 ## Parameters
 

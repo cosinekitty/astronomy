@@ -8,6 +8,8 @@ Finds the first lunar quarter after the specified date and time. A lunar quarter
 
 To continue iterating through consecutive lunar quarters, call this function once, followed by calls to #NextMoonQuarter as many times as desired.
 
+See [moonQuartersAfter](moon-quarters-after.md) for convenient iteration of consecutive quarter phases.
+
 #### Return
 
 A [MoonQuarterInfo](-moon-quarter-info/index.md) object reporting the next quarter phase and the time it will occur.

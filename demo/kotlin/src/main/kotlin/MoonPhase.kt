@@ -25,11 +25,7 @@ internal fun `Moon Phase demo`(time: Time): Int {
     // Predict when the next 10 lunar quarter phases will happen.
     println()
     println("The next 10 lunar quarters are:")
-    var mq = searchMoonQuarter(time)
-    for (i in 0..9) {
-        if (i > 0) {
-            mq = nextMoonQuarter(mq)
-        }
+    for (mq in moonQuartersAfter(time).take(10)) {
         println("${mq.time} : ${quarterName(mq.quarter)}")
     }
 

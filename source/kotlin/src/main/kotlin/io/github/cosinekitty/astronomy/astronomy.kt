@@ -2235,6 +2235,8 @@ internal fun planetTransitBoundary(body: Body, planetRadiusKm: Double, t1: Time,
  * then keep calling [nextLunarEclipse] as many times as desired,
  * passing in the `center` value returned from the previous call.
  *
+ * See [lunarEclipsesAfter] for convenient iteration of consecutive lunar eclipses.
+ *
  * @param startTime
  * The date and time for starting the search for a lunar eclipse.
  *
@@ -2297,6 +2299,8 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
  * previous call to `searchLunarEclipse` or `nextLunarEclipse`
  * to find the next lunar eclipse.
  *
+ * See [lunarEclipsesAfter] for convenient iteration of consecutive lunar eclipses.
+ *
  * @param prevEclipseTime
  * A time near a full moon. Lunar eclipse search will start at the next full moon.
  *
@@ -2305,6 +2309,22 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
  */
 fun nextLunarEclipse(prevEclipseTime: Time) =
     searchLunarEclipse(prevEclipseTime.addDays(10.0))
+
+
+/**
+ * Enumerates a series of consecutive lunar eclipses that occur after a given time.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive lunar eclipses starting at a given time.
+ *
+ * This is a convenience wrapper around [searchLunarEclipse] and [nextLunarEclipse].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of lunar eclipses.
+ */
+fun lunarEclipsesAfter(startTime: Time): Sequence<LunarEclipseInfo> =
+    generateSequence(searchLunarEclipse(startTime)) { nextLunarEclipse(it.peak) }
+
 
 internal fun moonEclipticLatitudeDegrees(time: Time) = eclipticGeoMoon(time).lat
 
@@ -2409,6 +2429,8 @@ internal fun geoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
  * then keep calling [nextGlobalSolarEclipse] as many times as desired,
  * passing in the `peak` value returned from the previous call.
  *
+ * See [globalSolarEclipsesAfter] for convenient iteration of consecutive eclipses.
+ *
  * @param startTime
  * The date and time for starting the search for a solar eclipse.
  *
@@ -2451,6 +2473,8 @@ fun searchGlobalSolarEclipse(startTime: Time): GlobalSolarEclipseInfo {
  * previous call to `searchGlobalSolarEclipse` or `nextGlobalSolarEclipse`
  * to find the next solar eclipse.
  *
+ * See [globalSolarEclipsesAfter] for convenient iteration of consecutive eclipses.
+ *
  * @param prevEclipseTime
  * A date and time near a new moon. Solar eclipse search will start at the next new moon.
  *
@@ -2458,6 +2482,20 @@ fun searchGlobalSolarEclipse(startTime: Time): GlobalSolarEclipseInfo {
  */
 fun nextGlobalSolarEclipse(prevEclipseTime: Time) =
     searchGlobalSolarEclipse(prevEclipseTime.addDays(10.0))
+
+
+/**
+ * Enumerates a series of consecutive global solar eclipses that occur after a given time.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive global solar eclipses starting at a given time.
+ * This is a convenience wrapper around [searchGlobalSolarEclipse] and [nextGlobalSolarEclipse].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of global solar eclipses.
+ */
+fun globalSolarEclipsesAfter(startTime: Time): Sequence<GlobalSolarEclipseInfo> =
+    generateSequence(searchGlobalSolarEclipse(startTime)) { nextGlobalSolarEclipse(it.peak) }
 
 
 /**
@@ -2474,6 +2512,8 @@ fun nextGlobalSolarEclipse(prevEclipseTime: Time) =
  * IMPORTANT: An eclipse reported by this function might be partly or
  * completely invisible to the observer due to the time of day.
  * See [LocalSolarEclipseInfo] for more information about this topic.
+ *
+ * See [localSolarEclipsesAfter] for convenient iteration of consecutive eclipses.
  *
  * @param startTime
  * The date and time for starting the search for a solar eclipse.
@@ -2571,6 +2611,8 @@ internal fun calcEvent(observer: Observer, time: Time): EclipseEvent {
  * previous call to `searchLocalSolarEclipse` or `nextLocalSolarEclipse`
  * to find the next solar eclipse.
  *
+ * See [localSolarEclipsesAfter] for convenient iteration of consecutive eclipses.
+ *
  * @param prevEclipseTime
  * A date and time near a new moon. Solar eclipse search will start at the next new moon.
  *
@@ -2581,6 +2623,23 @@ internal fun calcEvent(observer: Observer, time: Time): EclipseEvent {
  */
 fun nextLocalSolarEclipse(prevEclipseTime: Time, observer: Observer) =
     searchLocalSolarEclipse(prevEclipseTime.addDays(10.0), observer)
+
+
+/**
+ * Enumerates a series of consecutive local solar eclipses that occur after a given time.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive local solar eclipses starting at a given time.
+ * This is a convenience wrapper around [searchLocalSolarEclipse] and [nextLocalSolarEclipse].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of local solar eclipses.
+ *
+ * @param observer
+ * The geographic location of the observer.
+ */
+fun localSolarEclipsesAfter(startTime: Time, observer: Observer): Sequence<LocalSolarEclipseInfo> =
+    generateSequence(searchLocalSolarEclipse(startTime, observer)) { nextLocalSolarEclipse(it.peak.time, observer) }
 
 
 /**
@@ -5108,6 +5167,8 @@ fun searchRelativeLongitude(body: Body, targetRelativeLongitude: Double, startTi
  * so that the silhouette of the planet is visible against the Sun in the background.
  * To continue the search, pass the `finish` time in the returned object to [nextTransit].
  *
+ * See [transitsAfter] for convenient iteration of consecutive transits.
+ *
  * @param body
  * The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
  *
@@ -5168,6 +5229,8 @@ fun searchTransit(body: Body, startTime: Time): TransitInfo {
  * this function finds the next transit after that.
  * Keep calling this function as many times as you want to keep finding more transits.
  *
+ * See [transitsAfter] for convenient iteration of consecutive transits.
+ *
  * @param body
  * The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
  *
@@ -5176,6 +5239,25 @@ fun searchTransit(body: Body, startTime: Time): TransitInfo {
  */
 fun nextTransit(body: Body, prevTransitTime: Time) =
     searchTransit(body, prevTransitTime.addDays(100.0))
+
+
+/**
+ * Enumerates a series of consecutive transits of Mercury or Venus.
+ *
+ * This function enables iteration through a series of consecutive
+ * transits of Mercury or Venus that occur after a specified time.
+ *
+ * This is a convenience wrapper around [searchTransit] and [nextTransit].
+ *
+ * @param body
+ * The planet for which to enumerate transits. Must be [Body.Mercury] or [Body.Venus].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of transits.
+ */
+fun transitsAfter(body: Body, startTime: Time): Sequence<TransitInfo> =
+    generateSequence(searchTransit(body, startTime)) { nextTransit(body, it.finish) }
+
 
 
 /**
@@ -5669,6 +5751,8 @@ fun searchMoonPhase(targetLon: Double, startTime: Time, limitDays: Double): Time
  * To continue iterating through consecutive lunar quarters, call this function once,
  * followed by calls to #NextMoonQuarter as many times as desired.
  *
+ * See [moonQuartersAfter] for convenient iteration of consecutive quarter phases.
+ *
  * @param startTime
  * The date and time at which to start the search.
  *
@@ -5691,6 +5775,8 @@ fun searchMoonQuarter(startTime: Time): MoonQuarterInfo {
  * This function finds the next consecutive moon quarter event after
  * the one passed in as the parameter `mq`.
  *
+ * See [moonQuartersAfter] for convenient iteration of consecutive quarter phases.
+ *
  * @param mq
  * The previous moon quarter found by a call to [searchMoonQuarter] or `nextMoonQuarter`.
  *
@@ -5709,6 +5795,20 @@ fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
         throw InternalError("Expected to find next quarter $expected, but found ${nextMoonQuarter.quarter}")
     return nextMoonQuarter
 }
+
+/**
+ * Enumerates a series of consecutive moon quarter phase events.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive lunar quarter phases starting at a given time.
+ * This is a convenience wrapper around [searchMoonQuarter] and [nextMoonQuarter].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of quarter phases.
+ */
+fun moonQuartersAfter(startTime: Time): Sequence<MoonQuarterInfo> =
+    generateSequence(searchMoonQuarter(startTime)) { nextMoonQuarter(it) }
+
 
 /**
  * Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
@@ -6055,6 +6155,8 @@ internal fun moonRadialSpeed(time: Time): Double {
  * keep feeding the previous return value from `Astronomy.NextLunarApsis` into another
  * call of `Astronomy.NextLunarApsis` as many times as desired.
  *
+ * See [lunarApsidesAfter] for convenient iteration of consecutive lunar apsides.
+ *
  * @param startTime
  * The date and time at which to start searching for the next perigee or apogee.
  */
@@ -6115,9 +6217,10 @@ fun searchLunarApsis(startTime: Time): ApsisInfo {
 /**
  * Finds the next lunar perigee or apogee event in a series.
  *
- * Finds the next consecutive time the Moon is closest
- * or farthest from the Earth in its orbit.
+ * Finds the next consecutive time the Moon is closest or farthest from the Earth in its orbit.
+ *
  * See [searchLunarApsis] for more details.
+ * See [lunarApsidesAfter] for convenient iteration of consecutive lunar apsides.
  *
  * @param apsis
  * An [ApsisInfo] value obtained from a call to [searchLunarApsis] or [nextLunarApsis].
@@ -6129,6 +6232,20 @@ fun nextLunarApsis(apsis: ApsisInfo): ApsisInfo {
         throw InternalError("Found ${next.kind} for two consecutive apsis events: ${apsis.time} and ${next.time}.")
     return next
 }
+
+
+/**
+ * Enumerates a series of consecutive lunar apsides that occur after a given time.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive lunar perigees/apogees starting at a given time.
+ * This is a convenience wrapper around [searchLunarApsis] and [nextLunarApsis].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of lunar apsides.
+ */
+fun lunarApsidesAfter(startTime: Time): Sequence<ApsisInfo> =
+    generateSequence(searchLunarApsis(startTime)) { nextLunarApsis(it) }
 
 
 /**
@@ -7031,6 +7148,8 @@ private const val moonNodeStepDays = 10.0     // a safe number of days to step w
  * Call `searchMoonNode` to find the first of a series of nodes.
  * Then call [nextMoonNode] to find as many more consecutive nodes as desired.
  *
+ * See [moonNodesAfter] for convenient iteration of consecutive nodes.
+ *
  * @param startTime
  * The date and time for starting the search for an ascending or descending node of the Moon.
  */
@@ -7070,6 +7189,8 @@ fun searchMoonNode(startTime: Time): NodeEventInfo {
  * Call [searchMoonNode] to find the first of a series of nodes.
  * Then call `nextMoonNode` to find as many more consecutive nodes as desired.
  *
+ * See [moonNodesAfter] for convenient iteration of consecutive nodes.
+ *
  * @param prevNode
  * The previous node found from calling [searchMoonNode] or `nextMoonNode`.
  */
@@ -7080,6 +7201,21 @@ fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
         throw InternalError("Invalid repeated moon node kind: ${node.kind}")
     return node
 }
+
+
+/**
+ * Enumerates a series of consecutive ascending/descending nodes of the Moon.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive lunar nodes starting at a given time.
+ * This is a convenience wrapper around [searchMoonNode] and [nextMoonNode].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of ascending/descending nodes of the Moon.
+ */
+fun moonNodesAfter(startTime: Time): Sequence<NodeEventInfo> =
+    generateSequence(searchMoonNode(startTime)) { nextMoonNode(it) }
+
 
 
 /**
@@ -7098,6 +7234,8 @@ fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
  * [nextPlanetApsis]. After that, keep feeding the previous return value
  * from `nextPlanetApsis` into another call of `nextPlanetApsis`
  * as many times as desired.
+ *
+ * See [planetApsidesAfter] for convenient iteration of consecutive apsides.
  *
  * @param body
  * The planet for which to find the next perihelion/aphelion event.
@@ -7166,7 +7304,9 @@ fun searchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
  * This function requires an [ApsisInfo] value obtained from a call
  * to [searchPlanetApsis] or `nextPlanetApsis`.
  * Given an aphelion event, this function finds the next perihelion event, and vice versa.
+ *
  * See [searchPlanetApsis] for more details.
+ * See [planetApsidesAfter] for convenient iteration of consecutive apsides.
  *
  * @param body
  * The planet for which to find the next perihelion/aphelion event.
@@ -7185,6 +7325,25 @@ fun nextPlanetApsis(body: Body, apsis: ApsisInfo): ApsisInfo {
         throw InternalError("Found ${next.kind} twice in a row.")
     return next
 }
+
+
+/**
+ * Enumerates a series of consecutive planetary perihelia/aphelia events.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive planetary apsides.
+ * This is a convenience wrapper around [searchPlanetApsis] and [nextPlanetApsis].
+ *
+ * @param body
+ * The planet for which to find a series of perihelia/aphelia events.
+ * Not allowed to be [Body.Sun] or [Body.Moon].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of apsides.
+ */
+fun planetApsidesAfter(body: Body, startTime: Time): Sequence<ApsisInfo> =
+    generateSequence(searchPlanetApsis(body, startTime)) { nextPlanetApsis(body, it) }
+
 
 
 internal fun planetOrbitalPeriod(body: Body): Double =

@@ -8,6 +8,8 @@ Searches for another transit of Mercury or Venus.
 
 After calling [searchTransit](search-transit.md) to find a transit of Mercury or Venus, this function finds the next transit after that. Keep calling this function as many times as you want to keep finding more transits.
 
+See [transitsAfter](transits-after.md) for convenient iteration of consecutive transits.
+
 ## Parameters
 
 | | |
