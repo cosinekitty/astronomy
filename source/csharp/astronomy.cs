@@ -26,6 +26,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace CosineKitty
 {
@@ -6263,6 +6264,8 @@ namespace CosineKitty
         ///
         /// To continue iterating through consecutive lunar quarters, call this function once,
         /// followed by calls to #Astronomy.NextMoonQuarter as many times as desired.
+        ///
+        /// See #Astronomy.MoonQuartersAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="startTime">The date and time at which to start the search.</param>
         /// <returns>
@@ -6285,6 +6288,8 @@ namespace CosineKitty
         /// one or more times to continue finding consecutive lunar quarters.
         /// This function finds the next consecutive moon quarter event after
         /// the one passed in as the parameter `mq`.
+        ///
+        /// See #Astronomy.MoonQuartersAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="mq">The previous moon quarter found by a call to #Astronomy.SearchMoonQuarter or `Astronomy.NextMoonQuarter`.</param>
         /// <returns>The moon quarter that occurs next in time after the one passed in `mq`.</returns>
@@ -6301,6 +6306,27 @@ namespace CosineKitty
                 throw new InternalError("found the wrong moon quarter.");
             return next_mq;
         }
+
+
+        /// <summary>Enumerates a series of lunar quarter phases that occur after a specified time.</summary>
+        /// <remarks>
+        /// This is a convenience wrapper around the functions
+        /// #Astronomy.SearchMoonQuarter and #Astronomy.NextMoonQuarter.
+        /// </remarks>
+        /// <param name="startTime">
+        /// Specifies the time to begin searching for consecutive lunar quarter phases.
+        /// </param>
+        public static IEnumerable<MoonQuarterInfo> MoonQuartersAfter(AstroTime startTime)
+        {
+            MoonQuarterInfo mq = SearchMoonQuarter(startTime);
+            yield return mq;
+            while (true)
+            {
+                mq = NextMoonQuarter(mq);
+                yield return mq;
+            }
+        }
+
 
         ///
         /// <summary>Searches for the time that the Moon reaches a specified phase.</summary>
@@ -7102,6 +7128,8 @@ namespace CosineKitty
         /// once, then use the return value to call #Astronomy.NextLunarApsis. After that,
         /// keep feeding the previous return value from `Astronomy.NextLunarApsis` into another
         /// call of `Astronomy.NextLunarApsis` as many times as desired.
+        ///
+        /// See #Astronomy.LunarApsidesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="startTime">
         ///      The date and time at which to start searching for the next perigee or apogee.
@@ -7181,6 +7209,7 @@ namespace CosineKitty
         /// an apogee event, this function finds the next perigee event, and vice versa.
         ///
         /// See #Astronomy.SearchLunarApsis for more details.
+        /// See #Astronomy.LunarApsidesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="apsis">
         /// An apsis event obtained from a call to #Astronomy.SearchLunarApsis or `Astronomy.NextLunarApsis`.
@@ -7202,6 +7231,27 @@ namespace CosineKitty
                 throw new InternalError($"Internal error: previous apsis was {apsis.kind}, but found {next.kind} for next apsis.");
             return next;
         }
+
+
+        /// <summary>Enumerates a series of apogees/perigees that occur after a specified time.</summary>
+        /// <remarks>
+        /// This is a convenience wrapper around the functions
+        /// #Astronomy.SearchLunarApsis and #Astronomy.NextLunarApsis.
+        /// </remarks>
+        /// <param name="startTime">
+        /// Specifies the time to begin searching for consecutive lunar apsides.
+        /// </param>
+        public static IEnumerable<ApsisInfo> LunarApsidesAfter(AstroTime startTime)
+        {
+            ApsisInfo apsis = SearchLunarApsis(startTime);
+            yield return apsis;
+            while (true)
+            {
+                apsis = NextLunarApsis(apsis);
+                yield return apsis;
+            }
+        }
+
 
         private static ApsisInfo PlanetExtreme(Body body, ApsisKind kind, AstroTime start_time, double dayspan)
         {
@@ -7344,6 +7394,8 @@ namespace CosineKitty
         /// #Astronomy.NextPlanetApsis. After that, keep feeding the previous return value
         /// from `Astronomy.NextPlanetApsis` into another call of `Astronomy.NextPlanetApsis`
         /// as many times as desired.
+        ///
+        /// See #Astronomy.PlanetApsidesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="body">
         /// The planet for which to find the next perihelion/aphelion event.
@@ -7421,7 +7473,9 @@ namespace CosineKitty
         /// This function requires an #ApsisInfo value obtained from a call
         /// to #Astronomy.SearchPlanetApsis or `Astronomy.NextPlanetApsis`.
         /// Given an aphelion event, this function finds the next perihelion event, and vice versa.
+        ///
         /// See #Astronomy.SearchPlanetApsis for more details.
+        /// See #Astronomy.PlanetApsidesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="body">
         /// The planet for which to find the next perihelion/aphelion event.
@@ -7455,6 +7509,30 @@ namespace CosineKitty
         }
 
 
+        /// <summary>Enumerates a series of planet aphelia/perihelia that occur after a specified time.</summary>
+        /// <remarks>
+        /// This is a convenience wrapper around the functions
+        /// #Astronomy.SearchPlanetApsis and #Astronomy.NextPlanetApsis.
+        /// </remarks>
+        /// <param name="body">
+        /// The planet for which to find a series of consecutive aphelia/perihelia.
+        /// Not allowed to be `Body.Sun` or `Body.Moon`.
+        /// </param>
+        /// <param name="startTime">
+        /// Specifies the time to begin searching for consecutive planetary apsides.
+        /// </param>
+        public static IEnumerable<ApsisInfo> PlanetApsidesAfter(Body body, AstroTime startTime)
+        {
+            ApsisInfo apsis = SearchPlanetApsis(body, startTime);
+            yield return apsis;
+            while (true)
+            {
+                apsis = NextPlanetApsis(body, apsis);
+                yield return apsis;
+            }
+        }
+
+
         // We can get away with creating a single EarthShadowSlope context
         // because it contains no state and it has no side-effects.
         // This reduces memory allocation overhead.
@@ -7479,12 +7557,14 @@ namespace CosineKitty
         /// To find a series of lunar eclipses, call this function once,
         /// then keep calling #Astronomy.NextLunarEclipse as many times as desired,
         /// passing in the `center` value returned from the previous call.
+        ///
+        /// See #Astronomy.LunarEclipsesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="startTime">
-        ///      The date and time for starting the search for a lunar eclipse.
+        /// The date and time for starting the search for a lunar eclipse.
         /// </param>
         /// <returns>
-        ///      A #LunarEclipseInfo structure containing information about the lunar eclipse.
+        /// A #LunarEclipseInfo structure containing information about the lunar eclipse.
         /// </returns>
         public static LunarEclipseInfo SearchLunarEclipse(AstroTime startTime)
         {
@@ -7551,6 +7631,8 @@ namespace CosineKitty
         /// Pass in the `center` value from the #LunarEclipseInfo returned by the
         /// previous call to `Astronomy.SearchLunarEclipse` or `Astronomy.NextLunarEclipse`
         /// to find the next lunar eclipse.
+        ///
+        /// See #Astronomy.LunarEclipsesAfter for a convenient enumerator.
         /// </remarks>
         ///
         /// <param name="prevEclipseTime">
@@ -7564,6 +7646,26 @@ namespace CosineKitty
         {
             AstroTime startTime = prevEclipseTime.AddDays(10.0);
             return SearchLunarEclipse(startTime);
+        }
+
+
+        /// <summary>Enumerates a series of lunar eclipses that occur after a specified time.</summary>
+        /// <remarks>
+        /// This is a convenience wrapper around the functions
+        /// #Astronomy.SearchLunarEclipse and #Astronomy.NextLunarEclipse.
+        /// </remarks>
+        /// <param name="startTime">
+        /// Specifies the time to begin searching for consecutive lunar eclipses.
+        /// </param>
+        public static IEnumerable<LunarEclipseInfo> LunarEclipsesAfter(AstroTime startTime)
+        {
+            LunarEclipseInfo eclipse = SearchLunarEclipse(startTime);
+            yield return eclipse;
+            while (true)
+            {
+                eclipse = NextLunarEclipse(eclipse.peak);
+                yield return eclipse;
+            }
         }
 
 
@@ -7591,6 +7693,8 @@ namespace CosineKitty
         /// To find a series of solar eclipses, call this function once,
         /// then keep calling #Astronomy.NextGlobalSolarEclipse as many times as desired,
         /// passing in the `peak` value returned from the previous call.
+        ///
+        /// See #Astronomy.GlobalSolarEclipsesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="startTime">The date and time for starting the search for a solar eclipse.</param>
         public static GlobalSolarEclipseInfo SearchGlobalSolarEclipse(AstroTime startTime)
@@ -7639,6 +7743,8 @@ namespace CosineKitty
         /// Pass in the `peak` value from the #GlobalSolarEclipseInfo returned by the
         /// previous call to `Astronomy.SearchGlobalSolarEclipse` or `Astronomy.NextGlobalSolarEclipse`
         /// to find the next solar eclipse.
+        ///
+        /// See #Astronomy.GlobalSolarEclipsesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="prevEclipseTime">
         /// A date and time near a new moon. Solar eclipse search will start at the next new moon.
@@ -7647,6 +7753,26 @@ namespace CosineKitty
         {
             AstroTime startTime = prevEclipseTime.AddDays(10.0);
             return SearchGlobalSolarEclipse(startTime);
+        }
+
+
+        /// <summary>Enumerates a series of global solar eclipses that occur after a specified time.</summary>
+        /// <remarks>
+        /// This is a convenience wrapper around the functions
+        /// #Astronomy.SearchGlobalSolarEclipse and #Astronomy.NextGlobalSolarEclipse.
+        /// </remarks>
+        /// <param name="startTime">
+        /// Specifies the time to begin searching for consecutive solar eclipses.
+        /// </param>
+        public static IEnumerable<GlobalSolarEclipseInfo> GlobalSolarEclipsesAfter(AstroTime startTime)
+        {
+            GlobalSolarEclipseInfo eclipse = SearchGlobalSolarEclipse(startTime);
+            yield return eclipse;
+            while (true)
+            {
+                eclipse = NextGlobalSolarEclipse(eclipse.peak);
+                yield return eclipse;
+            }
         }
 
 
@@ -7894,7 +8020,9 @@ namespace CosineKitty
         ///
         /// IMPORTANT: An eclipse reported by this function might be partly or
         /// completely invisible to the observer due to the time of day.
+        ///
         /// See #LocalSolarEclipseInfo for more information about this topic.
+        /// See #Astronomy.LocalSolarEclipsesAfter for a convenient enumerator.
         /// </remarks>
         ///
         /// <param name="startTime">The date and time for starting the search for a solar eclipse.</param>
@@ -7947,19 +8075,46 @@ namespace CosineKitty
         /// Pass in the `peak` value from the #LocalSolarEclipseInfo returned by the
         /// previous call to `Astronomy.SearchLocalSolarEclipse` or `Astronomy.NextLocalSolarEclipse`
         /// to find the next solar eclipse.
+        ///
+        /// See #Astronomy.LocalSolarEclipsesAfter for a convenient enumerator.
         /// </remarks>
         ///
         /// <param name="prevEclipseTime">
-        ///      A date and time near a new moon. Solar eclipse search will start at the next new moon.
+        /// A date and time near a new moon. Solar eclipse search will start at the next new moon.
         /// </param>
         ///
         /// <param name="observer">
-        ///      The geographic location of the observer.
+        /// The geographic location of the observer.
         /// </param>
         public static LocalSolarEclipseInfo NextLocalSolarEclipse(AstroTime prevEclipseTime, Observer observer)
         {
             AstroTime startTime = prevEclipseTime.AddDays(10.0);
             return SearchLocalSolarEclipse(startTime, observer);
+        }
+
+
+        /// <summary>Enumerates a series of local solar eclipses that occur after a specified time.</summary>
+        /// <remarks>
+        /// This is a convenience wrapper around the functions
+        /// #Astronomy.SearchLocalSolarEclipse and #Astronomy.NextLocalSolarEclipse.
+        /// </remarks>
+        /// <param name="startTime">
+        /// Specifies the time to begin searching for consecutive solar eclipses.
+        /// </param>
+        /// <param name="observer">
+        /// The geographic location of the observer.
+        /// </param>
+        public static IEnumerable<LocalSolarEclipseInfo> LocalSolarEclipsesAfter(
+            AstroTime startTime,
+            Observer observer)
+        {
+            LocalSolarEclipseInfo eclipse = SearchLocalSolarEclipse(startTime, observer);
+            yield return eclipse;
+            while (true)
+            {
+                eclipse = NextLocalSolarEclipse(eclipse.peak.time, observer);
+                yield return eclipse;
+            }
         }
 
 
@@ -8056,6 +8211,8 @@ namespace CosineKitty
         /// so that the silhouette of the planet is visible against the Sun in the background.
         /// To continue the search, pass the `finish` time in the returned structure to
         /// #Astronomy.NextTransit.
+        ///
+        /// See #Astronomy.TransitsAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="body">
         /// The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
@@ -8137,6 +8294,8 @@ namespace CosineKitty
         /// After calling #Astronomy.SearchTransit to find a transit of Mercury or Venus,
         /// this function finds the next transit after that.
         /// Keep calling this function as many times as you want to keep finding more transits.
+        ///
+        /// See #Astronomy.TransitsAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="body">
         /// The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`.
@@ -8149,6 +8308,29 @@ namespace CosineKitty
             AstroTime startTime = prevTransitTime.AddDays(100.0);
             return SearchTransit(body, startTime);
         }
+
+        /// <summary>Enumerates a series of transits of Mercury or Venus.</summary>
+        /// <remarks>
+        /// This is a convenience wrapper around the functions
+        /// #Astronomy.SearchTransit and #Astronomy.NextTransit.
+        /// </remarks>
+        /// <param name="body">
+        /// The planet whose transits are to be enumerated. Must be `Body.Mercury` or `Body.Venus`.
+        /// </param>
+        /// <param name="startTime">
+        /// Specifies the time to begin searching for consecutive transits.
+        /// </param>
+        public static IEnumerable<TransitInfo> TransitsAfter(Body body, AstroTime startTime)
+        {
+            TransitInfo transit = SearchTransit(body, startTime);
+            yield return transit;
+            while (true)
+            {
+                transit = NextTransit(body, transit.peak);
+                yield return transit;
+            }
+        }
+
 
         private const double MoonNodeStepDays = +10.0; // a safe number of days to step without missing a Moon node
 
@@ -8164,6 +8346,8 @@ namespace CosineKitty
         /// if the Moon also happens to be in the correct phase (new or full, respectively).
         /// Call `Astronomy.SearchMoonNode` to find the first of a series of nodes.
         /// Then call #Astronomy.NextMoonNode to find as many more consecutive nodes as desired.
+        ///
+        /// See #Astronomy.MoonNodesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="startTime">
         /// The date and time for starting the search for an ascending or descending node of the Moon.
@@ -8211,6 +8395,8 @@ namespace CosineKitty
         /// <remarks>
         /// Call #Astronomy.SearchMoonNode to find the first of a series of nodes.
         /// Then call `Astronomy.NextMoonNode` to find as many more consecutive nodes as desired.
+        ///
+        /// See #Astronomy.MoonNodesAfter for a convenient enumerator.
         /// </remarks>
         /// <param name="prevNode">
         /// The previous node found from calling #Astronomy.SearchMoonNode or `Astronomy.NextMoonNode`.
@@ -8236,6 +8422,27 @@ namespace CosineKitty
             }
             return node;
         }
+
+
+        /// <summary>Enumerates a series of ascending/descending nodes of the Moon that occur after a specified time.</summary>
+        /// <remarks>
+        /// This is a convenience wrapper around the functions
+        /// #Astronomy.SearchMoonNode and #Astronomy.NextMoonNode.
+        /// </remarks>
+        /// <param name="startTime">
+        /// Specifies the time to begin searching for consecutive lunar apsides.
+        /// </param>
+        public static IEnumerable<NodeEventInfo> MoonNodesAfter(AstroTime startTime)
+        {
+            NodeEventInfo node = SearchMoonNode(startTime);
+            yield return node;
+            while (true)
+            {
+                node = NextMoonNode(node);
+                yield return node;
+            }
+        }
+
 
         /// <summary>
         /// Finds visual magnitude, phase angle, and other illumination information about a celestial body.

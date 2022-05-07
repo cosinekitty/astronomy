@@ -284,6 +284,17 @@ namespace csdown
             if (t.FullName.StartsWith("CosineKitty."))
                 return CodeInfo.InternalLink(t.Name);
 
+            if (t.IsGenericType)
+            {
+                int backquoteIndex = t.Name.IndexOf("`");       // "IEnumerable`1"
+                if (backquoteIndex < 0)
+                    throw new NotImplementedException($"Missing backquote in generic type name '{t.Name}'");
+
+                string name = t.Name.Substring(0, backquoteIndex);
+                string args = string.Join(",", t.GenericTypeArguments.Select(child => TypeMarkdown(child)));
+                return $"`{name}<`{args}`>`";     // IEnumerable<LunarEclipseInfo>
+            }
+
             switch (t.FullName)
             {
                 case "System.Double":

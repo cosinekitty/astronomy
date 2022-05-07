@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using demo_helper;
 using CosineKitty;
 
@@ -24,18 +25,12 @@ namespace lunar_eclipse
                     return 1;
             }
 
-            int count = 0;
-            LunarEclipseInfo eclipse = Astronomy.SearchLunarEclipse(time);
-            for(;;)
-            {
-                if (eclipse.kind != EclipseKind.Penumbral)
-                {
-                    PrintEclipse(eclipse);
-                    if (++count == 10)
-                        break;
-                }
-                eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
-            }
+            var eclipseList = Astronomy.LunarEclipsesAfter(time)
+                .Where(eclipse => eclipse.kind != EclipseKind.Penumbral)
+                .Take(10);
+
+            foreach (LunarEclipseInfo eclipse in eclipseList)
+                PrintEclipse(eclipse);
 
             return 0;
         }

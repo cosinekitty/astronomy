@@ -568,6 +568,18 @@ movement of the Earth with respect to the rays of light coming from that body.
 
 **Returns:** A geocentric position vector of the center of the given body.
 
+<a name="Astronomy.GlobalSolarEclipsesAfter"></a>
+### Astronomy.GlobalSolarEclipsesAfter(startTime) &#8658; `IEnumerable<`[`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)`>`
+
+**Enumerates a series of global solar eclipses that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchGlobalSolarEclipse`](#Astronomy.SearchGlobalSolarEclipse) and [`Astronomy.NextGlobalSolarEclipse`](#Astronomy.NextGlobalSolarEclipse).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive solar eclipses. |
+
 <a name="Astronomy.HelioDistance"></a>
 ### Astronomy.HelioDistance(body, time) &#8658; `double`
 
@@ -903,6 +915,43 @@ and the apparent angular diameter of the Moon `diam_deg`.
 
 **Returns:** The Moon's ecliptic position and libration angles as seen from the Earth.
 
+<a name="Astronomy.LocalSolarEclipsesAfter"></a>
+### Astronomy.LocalSolarEclipsesAfter(startTime, observer) &#8658; `IEnumerable<`[`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo)`>`
+
+**Enumerates a series of local solar eclipses that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchLocalSolarEclipse`](#Astronomy.SearchLocalSolarEclipse) and [`Astronomy.NextLocalSolarEclipse`](#Astronomy.NextLocalSolarEclipse).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive solar eclipses. |
+| [`Observer`](#Observer) | `observer` | The geographic location of the observer. |
+
+<a name="Astronomy.LunarApsidesAfter"></a>
+### Astronomy.LunarApsidesAfter(startTime) &#8658; `IEnumerable<`[`ApsisInfo`](#ApsisInfo)`>`
+
+**Enumerates a series of apogees/perigees that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) and [`Astronomy.NextLunarApsis`](#Astronomy.NextLunarApsis).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive lunar apsides. |
+
+<a name="Astronomy.LunarEclipsesAfter"></a>
+### Astronomy.LunarEclipsesAfter(startTime) &#8658; `IEnumerable<`[`LunarEclipseInfo`](#LunarEclipseInfo)`>`
+
+**Enumerates a series of lunar eclipses that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchLunarEclipse`](#Astronomy.SearchLunarEclipse) and [`Astronomy.NextLunarEclipse`](#Astronomy.NextLunarEclipse).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive lunar eclipses. |
+
 <a name="Astronomy.MassProduct"></a>
 ### Astronomy.MassProduct(body) &#8658; `double`
 
@@ -921,6 +970,18 @@ The values come from page 10 of a
 | [`Body`](#Body) | `body` | The body for which to find the GM product. Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet. Any other value will cause an exception to be thrown. |
 
 **Returns:** The mass product of the given body in au^3/day^2.
+
+<a name="Astronomy.MoonNodesAfter"></a>
+### Astronomy.MoonNodesAfter(startTime) &#8658; `IEnumerable<`[`NodeEventInfo`](#NodeEventInfo)`>`
+
+**Enumerates a series of ascending/descending nodes of the Moon that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) and [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive lunar apsides. |
 
 <a name="Astronomy.MoonPhase"></a>
 ### Astronomy.MoonPhase(time) &#8658; `double`
@@ -942,6 +1003,18 @@ Certain values of the angle have conventional definitions:
 
 **Returns:** The angle as described above, a value in the range 0..360 degrees.
 
+<a name="Astronomy.MoonQuartersAfter"></a>
+### Astronomy.MoonQuartersAfter(startTime) &#8658; `IEnumerable<`[`MoonQuarterInfo`](#MoonQuarterInfo)`>`
+
+**Enumerates a series of lunar quarter phases that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter) and [`Astronomy.NextMoonQuarter`](#Astronomy.NextMoonQuarter).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive lunar quarter phases. |
+
 <a name="Astronomy.NextGlobalSolarEclipse"></a>
 ### Astronomy.NextGlobalSolarEclipse(prevEclipseTime) &#8658; [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
 
@@ -952,6 +1025,8 @@ in a series, you can call this function to find the next consecutive solar eclip
 Pass in the `peak` value from the [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo) returned by the
 previous call to `Astronomy.SearchGlobalSolarEclipse` or `Astronomy.NextGlobalSolarEclipse`
 to find the next solar eclipse.
+
+See [`Astronomy.GlobalSolarEclipsesAfter`](#Astronomy.GlobalSolarEclipsesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -968,6 +1043,8 @@ Pass in the `peak` value from the [`LocalSolarEclipseInfo`](#LocalSolarEclipseIn
 previous call to `Astronomy.SearchLocalSolarEclipse` or `Astronomy.NextLocalSolarEclipse`
 to find the next solar eclipse.
 
+See [`Astronomy.LocalSolarEclipsesAfter`](#Astronomy.LocalSolarEclipsesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `prevEclipseTime` | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
@@ -983,6 +1060,7 @@ to [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) or `Astronomy.Nex
 an apogee event, this function finds the next perigee event, and vice versa.
 
 See [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) for more details.
+See [`Astronomy.LunarApsidesAfter`](#Astronomy.LunarApsidesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1001,6 +1079,8 @@ Pass in the `center` value from the [`LunarEclipseInfo`](#LunarEclipseInfo) retu
 previous call to `Astronomy.SearchLunarEclipse` or `Astronomy.NextLunarEclipse`
 to find the next lunar eclipse.
 
+See [`Astronomy.LunarEclipsesAfter`](#Astronomy.LunarEclipsesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `prevEclipseTime` | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
@@ -1014,6 +1094,8 @@ to find the next lunar eclipse.
 
 Call [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) to find the first of a series of nodes.
 Then call `Astronomy.NextMoonNode` to find as many more consecutive nodes as desired.
+
+See [`Astronomy.MoonNodesAfter`](#Astronomy.MoonNodesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1029,6 +1111,8 @@ one or more times to continue finding consecutive lunar quarters.
 This function finds the next consecutive moon quarter event after
 the one passed in as the parameter `mq`.
 
+See [`Astronomy.MoonQuartersAfter`](#Astronomy.MoonQuartersAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`MoonQuarterInfo`](#MoonQuarterInfo) | `mq` | The previous moon quarter found by a call to [`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter) or `Astronomy.NextMoonQuarter`. |
@@ -1043,7 +1127,9 @@ the one passed in as the parameter `mq`.
 This function requires an [`ApsisInfo`](#ApsisInfo) value obtained from a call
 to [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) or `Astronomy.NextPlanetApsis`.
 Given an aphelion event, this function finds the next perihelion event, and vice versa.
+
 See [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) for more details.
+See [`Astronomy.PlanetApsidesAfter`](#Astronomy.PlanetApsidesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1060,6 +1146,8 @@ See [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) for more detai
 After calling [`Astronomy.SearchTransit`](#Astronomy.SearchTransit) to find a transit of Mercury or Venus,
 this function finds the next transit after that.
 Keep calling this function as many times as you want to keep finding more transits.
+
+See [`Astronomy.TransitsAfter`](#Astronomy.TransitsAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1195,6 +1283,19 @@ reorient ECL coordinates to the orientation of your telescope camera.
 | `double` | `angle` | An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. |
 
 **Returns:** A pivoted matrix object.
+
+<a name="Astronomy.PlanetApsidesAfter"></a>
+### Astronomy.PlanetApsidesAfter(body, startTime) &#8658; `IEnumerable<`[`ApsisInfo`](#ApsisInfo)`>`
+
+**Enumerates a series of planet aphelia/perihelia that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) and [`Astronomy.NextPlanetApsis`](#Astronomy.NextPlanetApsis).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet for which to find a series of consecutive aphelia/perihelia. Not allowed to be `Body.Sun` or `Body.Moon`. |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive planetary apsides. |
 
 <a name="Astronomy.RefractionAngle"></a>
 ### Astronomy.RefractionAngle(refraction, altitude) &#8658; `double`
@@ -1571,6 +1672,8 @@ To find a series of solar eclipses, call this function once,
 then keep calling [`Astronomy.NextGlobalSolarEclipse`](#Astronomy.NextGlobalSolarEclipse) as many times as desired,
 passing in the `peak` value returned from the previous call.
 
+See [`Astronomy.GlobalSolarEclipsesAfter`](#Astronomy.GlobalSolarEclipsesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for a solar eclipse. |
@@ -1625,7 +1728,9 @@ passing in the `peak` value returned from the previous call.
 
 IMPORTANT: An eclipse reported by this function might be partly or
 completely invisible to the observer due to the time of day.
+
 See [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo) for more information about this topic.
+See [`Astronomy.LocalSolarEclipsesAfter`](#Astronomy.LocalSolarEclipsesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1651,6 +1756,8 @@ once, then use the return value to call [`Astronomy.NextLunarApsis`](#Astronomy.
 keep feeding the previous return value from `Astronomy.NextLunarApsis` into another
 call of `Astronomy.NextLunarApsis` as many times as desired.
 
+See [`Astronomy.LunarApsidesAfter`](#Astronomy.LunarApsidesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start searching for the next perigee or apogee. |
@@ -1668,6 +1775,8 @@ See [`LunarEclipseInfo`](#LunarEclipseInfo) for more information.
 To find a series of lunar eclipses, call this function once,
 then keep calling [`Astronomy.NextLunarEclipse`](#Astronomy.NextLunarEclipse) as many times as desired,
 passing in the `center` value returned from the previous call.
+
+See [`Astronomy.LunarEclipsesAfter`](#Astronomy.LunarEclipsesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1711,6 +1820,8 @@ if the Moon also happens to be in the correct phase (new or full, respectively).
 Call `Astronomy.SearchMoonNode` to find the first of a series of nodes.
 Then call [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode) to find as many more consecutive nodes as desired.
 
+See [`Astronomy.MoonNodesAfter`](#Astronomy.MoonNodesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for an ascending or descending node of the Moon. |
@@ -1752,6 +1863,8 @@ after the specified date and time.
 
 To continue iterating through consecutive lunar quarters, call this function once,
 followed by calls to [`Astronomy.NextMoonQuarter`](#Astronomy.NextMoonQuarter) as many times as desired.
+
+See [`Astronomy.MoonQuartersAfter`](#Astronomy.MoonQuartersAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1801,6 +1914,8 @@ call `Astronomy.SearchPlanetApsis` once, then use the return value to call
 [`Astronomy.NextPlanetApsis`](#Astronomy.NextPlanetApsis). After that, keep feeding the previous return value
 from `Astronomy.NextPlanetApsis` into another call of `Astronomy.NextPlanetApsis`
 as many times as desired.
+
+See [`Astronomy.PlanetApsidesAfter`](#Astronomy.PlanetApsidesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1917,6 +2032,8 @@ so that the silhouette of the planet is visible against the Sun in the backgroun
 To continue the search, pass the `finish` time in the returned structure to
 [`Astronomy.NextTransit`](#Astronomy.NextTransit).
 
+See [`Astronomy.TransitsAfter`](#Astronomy.TransitsAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
@@ -2017,6 +2134,19 @@ In fact, the function [`Astronomy.Seasons`](#Astronomy.Seasons) does use this fu
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the Sun's position. |
 
 **Returns:** The ecliptic coordinates of the Sun using the Earth's true equator of date.
+
+<a name="Astronomy.TransitsAfter"></a>
+### Astronomy.TransitsAfter(body, startTime) &#8658; `IEnumerable<`[`TransitInfo`](#TransitInfo)`>`
+
+**Enumerates a series of transits of Mercury or Venus.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchTransit`](#Astronomy.SearchTransit) and [`Astronomy.NextTransit`](#Astronomy.NextTransit).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet whose transits are to be enumerated. Must be `Body.Mercury` or `Body.Venus`. |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive transits. |
 
 <a name="Astronomy.VectorFromHorizon"></a>
 ### Astronomy.VectorFromHorizon(sphere, time, refraction) &#8658; [`AstroVector`](#AstroVector)
