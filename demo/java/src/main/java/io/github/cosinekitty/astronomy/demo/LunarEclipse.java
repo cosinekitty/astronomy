@@ -1,5 +1,6 @@
 package io.github.cosinekitty.astronomy.demo;
 
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 import io.github.cosinekitty.astronomy.*;
@@ -12,8 +13,8 @@ public class LunarEclipse {
      * The date and time after which to start searching for lunar eclipses.
      */
     public static int run(Time startTime) {
-        LunarEclipseInfo e = Astronomy.searchLunarEclipse(startTime);
-        Stream.iterate(e, x -> Astronomy.nextLunarEclipse(x.getPeak()))
+        Iterator<LunarEclipseInfo> iterator = Astronomy.lunarEclipsesAfter(startTime);
+        Stream.iterate(iterator.next(), x -> iterator.next())
             .filter(x -> x.getKind() != EclipseKind.Penumbral)
             .limit(10)
             .forEach(LunarEclipse::printEclipse);

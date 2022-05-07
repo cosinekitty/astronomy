@@ -2322,8 +2322,8 @@ fun nextLunarEclipse(prevEclipseTime: Time) =
  * @param startTime
  * The date and time for starting the search for a series of lunar eclipses.
  */
-fun lunarEclipsesAfter(startTime: Time): Sequence<LunarEclipseInfo> =
-    generateSequence(searchLunarEclipse(startTime)) { nextLunarEclipse(it.peak) }
+fun lunarEclipsesAfter(startTime: Time): Iterator<LunarEclipseInfo> =
+    generateSequence(searchLunarEclipse(startTime)) { nextLunarEclipse(it.peak) }.iterator()
 
 
 internal fun moonEclipticLatitudeDegrees(time: Time) = eclipticGeoMoon(time).lat
@@ -2494,8 +2494,8 @@ fun nextGlobalSolarEclipse(prevEclipseTime: Time) =
  * @param startTime
  * The date and time for starting the search for a series of global solar eclipses.
  */
-fun globalSolarEclipsesAfter(startTime: Time): Sequence<GlobalSolarEclipseInfo> =
-    generateSequence(searchGlobalSolarEclipse(startTime)) { nextGlobalSolarEclipse(it.peak) }
+fun globalSolarEclipsesAfter(startTime: Time): Iterator<GlobalSolarEclipseInfo> =
+    generateSequence(searchGlobalSolarEclipse(startTime)) { nextGlobalSolarEclipse(it.peak) }.iterator()
 
 
 /**
@@ -2638,8 +2638,8 @@ fun nextLocalSolarEclipse(prevEclipseTime: Time, observer: Observer) =
  * @param observer
  * The geographic location of the observer.
  */
-fun localSolarEclipsesAfter(startTime: Time, observer: Observer): Sequence<LocalSolarEclipseInfo> =
-    generateSequence(searchLocalSolarEclipse(startTime, observer)) { nextLocalSolarEclipse(it.peak.time, observer) }
+fun localSolarEclipsesAfter(startTime: Time, observer: Observer): Iterator<LocalSolarEclipseInfo> =
+    generateSequence(searchLocalSolarEclipse(startTime, observer)) { nextLocalSolarEclipse(it.peak.time, observer) }.iterator()
 
 
 /**
@@ -5255,8 +5255,8 @@ fun nextTransit(body: Body, prevTransitTime: Time) =
  * @param startTime
  * The date and time for starting the search for a series of transits.
  */
-fun transitsAfter(body: Body, startTime: Time): Sequence<TransitInfo> =
-    generateSequence(searchTransit(body, startTime)) { nextTransit(body, it.finish) }
+fun transitsAfter(body: Body, startTime: Time): Iterator<TransitInfo> =
+    generateSequence(searchTransit(body, startTime)) { nextTransit(body, it.finish) }.iterator()
 
 
 
@@ -5806,8 +5806,8 @@ fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
  * @param startTime
  * The date and time for starting the search for a series of quarter phases.
  */
-fun moonQuartersAfter(startTime: Time): Sequence<MoonQuarterInfo> =
-    generateSequence(searchMoonQuarter(startTime)) { nextMoonQuarter(it) }
+fun moonQuartersAfter(startTime: Time): Iterator<MoonQuarterInfo> =
+    generateSequence(searchMoonQuarter(startTime)) { nextMoonQuarter(it) }.iterator()
 
 
 /**
@@ -6244,8 +6244,8 @@ fun nextLunarApsis(apsis: ApsisInfo): ApsisInfo {
  * @param startTime
  * The date and time for starting the search for a series of lunar apsides.
  */
-fun lunarApsidesAfter(startTime: Time): Sequence<ApsisInfo> =
-    generateSequence(searchLunarApsis(startTime)) { nextLunarApsis(it) }
+fun lunarApsidesAfter(startTime: Time): Iterator<ApsisInfo> =
+    generateSequence(searchLunarApsis(startTime)) { nextLunarApsis(it) }.iterator()
 
 
 /**
@@ -7213,8 +7213,8 @@ fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
  * @param startTime
  * The date and time for starting the search for a series of ascending/descending nodes of the Moon.
  */
-fun moonNodesAfter(startTime: Time): Sequence<NodeEventInfo> =
-    generateSequence(searchMoonNode(startTime)) { nextMoonNode(it) }
+fun moonNodesAfter(startTime: Time): Iterator<NodeEventInfo> =
+    generateSequence(searchMoonNode(startTime)) { nextMoonNode(it) }.iterator()
 
 
 
@@ -7341,8 +7341,8 @@ fun nextPlanetApsis(body: Body, apsis: ApsisInfo): ApsisInfo {
  * @param startTime
  * The date and time for starting the search for a series of apsides.
  */
-fun planetApsidesAfter(body: Body, startTime: Time): Sequence<ApsisInfo> =
-    generateSequence(searchPlanetApsis(body, startTime)) { nextPlanetApsis(body, it) }
+fun planetApsidesAfter(body: Body, startTime: Time): Iterator<ApsisInfo> =
+    generateSequence(searchPlanetApsis(body, startTime)) { nextPlanetApsis(body, it) }.iterator()
 
 
 

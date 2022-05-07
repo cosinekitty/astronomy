@@ -25,7 +25,7 @@ internal fun `Moon Phase demo`(time: Time): Int {
     // Predict when the next 10 lunar quarter phases will happen.
     println()
     println("The next 10 lunar quarters are:")
-    for (mq in moonQuartersAfter(time).take(10)) {
+    for (mq in moonQuartersAfter(time).asSequence().take(10)) {
         println("${mq.time} : ${quarterName(mq.quarter)}")
     }
 

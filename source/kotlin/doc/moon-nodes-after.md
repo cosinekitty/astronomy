@@ -2,7 +2,7 @@
 
 # moonNodesAfter
 
-fun [moonNodesAfter](moon-nodes-after.md)(startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)&lt;[NodeEventInfo](-node-event-info/index.md)&gt;
+fun [moonNodesAfter](moon-nodes-after.md)(startTime: [Time](-time/index.md)): [Iterator](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterator/index.html)&lt;[NodeEventInfo](-node-event-info/index.md)&gt;
 
 Enumerates a series of consecutive ascending/descending nodes of the Moon.
 

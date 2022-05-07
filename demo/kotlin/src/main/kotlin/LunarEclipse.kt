@@ -7,7 +7,7 @@ import io.github.cosinekitty.astronomy.*
  * The date and time after which to start searching for lunar eclipses.
  */
 internal fun `Lunar eclipse demo`(startTime: Time): Int {
-    lunarEclipsesAfter(startTime)
+    lunarEclipsesAfter(startTime).asSequence()
         .filter { it.kind != EclipseKind.Penumbral }
         .take(10)
         .forEach(::printEclipse)
