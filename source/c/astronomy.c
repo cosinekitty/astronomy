@@ -94,6 +94,28 @@ typedef struct
     body_state_t Neptune;
 }
 major_bodies_t;
+
+typedef struct
+{
+    body_state_t Mercury;
+    body_state_t Venus;
+    body_state_t Earth;
+    body_state_t Mars;
+}
+minor_bodies_t;
+
+struct astro_grav_sim_s
+{
+    astro_status_t    status;
+    astro_grav_sim_option_t  option;
+    astro_time_t      time;
+    major_bodies_t    major;
+    minor_bodies_t    minor;
+    body_state_t      moon;
+    int               numBodies;
+    body_grav_calc_t *prevBodies;
+    body_grav_calc_t *currBodies;
+};
 /** @endcond */
 
 static const terse_vector_t VecZero = { 0.0, 0.0, 0.0 };
@@ -153,6 +175,38 @@ static terse_vector_t VecMean(terse_vector_t a, terse_vector_t b)
     c.y = (a.y + b.y) / 2;
     c.z = (a.z + b.z) / 2;
     return c;
+}
+
+static astro_state_vector_t ExportState(body_state_t terse, astro_time_t time)
+{
+    astro_state_vector_t state;
+
+    state.status = ASTRO_SUCCESS;
+    state.x  = terse.r.x;
+    state.y  = terse.r.y;
+    state.z  = terse.r.z;
+    state.vx = terse.v.x;
+    state.vy = terse.v.y;
+    state.vz = terse.v.z;
+    state.t  = time;
+
+    return state;
+}
+
+static astro_state_vector_t ExportGravCalc(body_grav_calc_t calc, astro_time_t time)
+{
+    astro_state_vector_t state;
+
+    state.status = ASTRO_SUCCESS;
+    state.x  = calc.r.x;
+    state.y  = calc.r.y;
+    state.z  = calc.r.z;
+    state.vx = calc.v.x;
+    state.vy = calc.v.y;
+    state.vz = calc.v.z;
+    state.t  = time;
+
+    return state;
 }
 
 static const double DAYS_PER_TROPICAL_YEAR = 365.24217;
@@ -3511,63 +3565,7 @@ static astro_vector_t CalcSolarSystemBarycenter(astro_time_t time)
     return ssb;
 }
 
-/*------------------ begin Pluto integrator ------------------*/
-
-static const body_state_t PlutoStateTable[] =
-{
-    {  -730000.0, {-26.118207232108, -14.376168177825,   3.384402515299}, { 1.6339372163656e-03, -2.7861699588508e-03, -1.3585880229445e-03} }
-,   {  -700800.0, { 41.974905202127,  -0.448502952929, -12.770351505989}, { 7.3458569351457e-04,  2.2785014891658e-03,  4.8619778602049e-04} }
-,   {  -671600.0, { 14.706930780744,  44.269110540027,   9.353698474772}, {-2.1000147999800e-03,  2.2295915939915e-04,  7.0143443551414e-04} }
-,   {  -642400.0, {-29.441003929957,  -6.430161530570,   6.858481011305}, { 8.4495803960544e-04, -3.0783914758711e-03, -1.2106305981192e-03} }
-,   {  -613200.0, { 39.444396946234,  -6.557989760571, -13.913760296463}, { 1.1480029005873e-03,  2.2400006880665e-03,  3.5168075922288e-04} }
-,   {  -584000.0, { 20.230380950700,  43.266966657189,   7.382966091923}, {-1.9754081700585e-03,  5.3457141292226e-04,  7.5929169129793e-04} }
-,   {  -554800.0, {-30.658325364620,   2.093818874552,   9.880531138071}, { 6.1010603013347e-05, -3.1326500935382e-03, -9.9346125151067e-04} }
-,   {  -525600.0, { 35.737703251673, -12.587706024764, -14.677847247563}, { 1.5802939375649e-03,  2.1347678412429e-03,  1.9074436384343e-04} }
-,   {  -496400.0, { 25.466295188546,  41.367478338417,   5.216476873382}, {-1.8054401046468e-03,  8.3283083599510e-04,  8.0260156912107e-04} }
-,   {  -467200.0, {-29.847174904071,  10.636426313081,  12.297904180106}, {-6.3257063052907e-04, -2.9969577578221e-03, -7.4476074151596e-04} }
-,   {  -438000.0, { 30.774692107687, -18.236637015304, -14.945535879896}, { 2.0113162005465e-03,  1.9353827024189e-03, -2.0937793168297e-06} }
-,   {  -408800.0, { 30.243153324028,  38.656267888503,   2.938501750218}, {-1.6052508674468e-03,  1.1183495337525e-03,  8.3333973416824e-04} }
-,   {  -379600.0, {-27.288984772533,  18.643162147874,  14.023633623329}, {-1.1856388898191e-03, -2.7170609282181e-03, -4.9015526126399e-04} }
-,   {  -350400.0, { 24.519605196774, -23.245756064727, -14.626862367368}, { 2.4322321483154e-03,  1.6062008146048e-03, -2.3369181613312e-04} }
-,   {  -321200.0, { 34.505274805875,  35.125338586954,   0.557361475637}, {-1.3824391637782e-03,  1.3833397561817e-03,  8.4823598806262e-04} }
-,   {  -292000.0, {-23.275363915119,  25.818514298769,  15.055381588598}, {-1.6062295460975e-03, -2.3395961498533e-03, -2.4377362639479e-04} }
-,   {  -262800.0, { 17.050384798092, -27.180376290126, -13.608963321694}, { 2.8175521080578e-03,  1.1358749093955e-03, -4.9548725258825e-04} }
-,   {  -233600.0, { 38.093671910285,  30.880588383337,  -1.843688067413}, {-1.1317697153459e-03,  1.6128814698472e-03,  8.4177586176055e-04} }
-,   {  -204400.0, {-18.197852930878,  31.932869934309,  15.438294826279}, {-1.9117272501813e-03, -1.9146495909842e-03, -1.9657304369835e-05} }
-,   {  -175200.0, {  8.528924039997, -29.618422200048, -11.805400994258}, { 3.1034370787005e-03,  5.1393633292430e-04, -7.7293066202546e-04} }
-,   {  -146000.0, { 40.946857258640,  25.904973592021,  -4.256336240499}, {-8.3652705194051e-04,  1.8129497136404e-03,  8.1564228273060e-04} }
-,   {  -116800.0, {-12.326958895325,  36.881883446292,  15.217158258711}, {-2.1166103705038e-03, -1.4814420035990e-03,  1.7401209844705e-04} }
-,   {   -87600.0, { -0.633258375909, -30.018759794709,  -9.171932874950}, { 3.2016994581737e-03, -2.5279858672148e-04, -1.0411088271861e-03} }
-,   {   -58400.0, { 42.936048423883,  20.344685584452,  -6.588027007912}, {-5.0525450073192e-04,  1.9910074335507e-03,  7.7440196540269e-04} }
-,   {   -29200.0, { -5.975910552974,  40.611809958460,  14.470131723673}, {-2.2184202156107e-03, -1.0562361130164e-03,  3.3652250216211e-04} }
-,   {        0.0, { -9.875369580774, -27.978926224737,  -5.753711824704}, { 3.0287533248818e-03, -1.1276087003636e-03, -1.2651326732361e-03} }
-,   {    29200.0, { 43.958831986165,  14.214147973292,  -8.808306227163}, {-1.4717608981871e-04,  2.1404187242141e-03,  7.1486567806614e-04} }
-,   {    58400.0, {  0.678136763520,  43.094461639362,  13.243238780721}, {-2.2358226110718e-03, -6.3233636090933e-04,  4.7664798895648e-04} }
-,   {    87600.0, {-18.282602096834, -23.305039586660,  -1.766620508028}, { 2.5567245263557e-03, -1.9902940754171e-03, -1.3943491701082e-03} }
-,   {   116800.0, { 43.873338744526,   7.700705617215, -10.814273666425}, { 2.3174803055677e-04,  2.2402163127924e-03,  6.2988756452032e-04} }
-,   {   146000.0, {  7.392949027906,  44.382678951534,  11.629500214854}, {-2.1932815453830e-03, -2.1751799585364e-04,  5.9556516201114e-04} }
-,   {   175200.0, {-24.981690229261, -16.204012851426,   2.466457544298}, { 1.8193989149580e-03, -2.6765419531201e-03, -1.3848283502247e-03} }
-,   {   204400.0, { 42.530187039511,   0.845935508021, -12.554907527683}, { 6.5059779150669e-04,  2.2725657282262e-03,  5.1133743202822e-04} }
-,   {   233600.0, { 13.999526486822,  44.462363044894,   9.669418486465}, {-2.1079296569252e-03,  1.7533423831993e-04,  6.9128485798076e-04} }
-,   {   262800.0, {-29.184024803031,  -7.371243995762,   6.493275957928}, { 9.3581363109681e-04, -3.0610357109184e-03, -1.2364201089345e-03} }
-,   {   292000.0, { 39.831980671753,  -6.078405766765, -13.909815358656}, { 1.1117769689167e-03,  2.2362097830152e-03,  3.6230548231153e-04} }
-,   {   321200.0, { 20.294955108476,  43.417190420251,   7.450091985932}, {-1.9742157451535e-03,  5.3102050468554e-04,  7.5938408813008e-04} }
-,   {   350400.0, {-30.669992302160,   2.318743558955,   9.973480913858}, { 4.5605107450676e-05, -3.1308219926928e-03, -9.9066533301924e-04} }
-,   {   379600.0, { 35.626122155983, -12.897647509224, -14.777586508444}, { 1.6015684949743e-03,  2.1171931182284e-03,  1.8002516202204e-04} }
-,   {   408800.0, { 26.133186148561,  41.232139187599,   5.006401326220}, {-1.7857704419579e-03,  8.6046232702817e-04,  8.0614690298954e-04} }
-,   {   438000.0, {-29.576740229230,  11.863535943587,  12.631323039872}, {-7.2292830060955e-04, -2.9587820140709e-03, -7.0824296450300e-04} }
-,   {   467200.0, { 29.910805787391, -19.159019294000, -15.013363865194}, { 2.0871080437997e-03,  1.8848372554514e-03, -3.8528655083926e-05} }
-,   {   496400.0, { 31.375957451819,  38.050372720763,   2.433138343754}, {-1.5546055556611e-03,  1.1699815465629e-03,  8.3565439266001e-04} }
-,   {   525600.0, {-26.360071336928,  20.662505904952,  14.414696258958}, {-1.3142373118349e-03, -2.6236647854842e-03, -4.2542017598193e-04} }
-,   {   554800.0, { 22.599441488648, -24.508879898306, -14.484045731468}, { 2.5454108304806e-03,  1.4917058755191e-03, -3.0243665086079e-04} }
-,   {   584000.0, { 35.877864013014,  33.894226366071,  -0.224524636277}, {-1.2941245730845e-03,  1.4560427668319e-03,  8.4762160640137e-04} }
-,   {   613200.0, {-21.538149762417,  28.204068269761,  15.321973799534}, {-1.7312117409010e-03, -2.1939631314577e-03, -1.6316913275180e-04} }
-,   {   642400.0, { 13.971521374415, -28.339941764789, -13.083792871886}, { 2.9334630526035e-03,  9.1860931752944e-04, -5.9939422488627e-04} }
-,   {   671600.0, { 39.526942044143,  28.939897360110,  -2.872799527539}, {-1.0068481658095e-03,  1.7021132888090e-03,  8.3578230511981e-04} }
-,   {   700800.0, {-15.576200701394,  34.399412961275,  15.466033737854}, {-2.0098814612884e-03, -1.7191109825989e-03,  7.0414782780416e-05} }
-,   {   730000.0, {  4.243252837090, -30.118201690825, -10.707441231349}, { 3.1725847067411e-03,  1.6098461202270e-04, -9.0672150593868e-04} }
-};
-
+/*------------------ begin general gravity simulator ------------------*/
 
 static terse_vector_t UpdatePosition(double dt, terse_vector_t r, terse_vector_t v, terse_vector_t a)
 {
@@ -3629,6 +3627,49 @@ static void MajorBodyBary(major_bodies_t *bary, double tt)
     /* Convert heliocentric SSB to barycentric Sun. */
     VecScale(&bary->Sun.r, -1.0);
     VecScale(&bary->Sun.v, -1.0);
+}
+
+
+static body_state_t CalcBary(astro_body_t body, const body_state_t *sun, double tt)
+{
+    /* Calculate the heliocentric state of the body. */
+    body_state_t planet = CalcVsopPosVel(&vsop[body], tt);
+
+    /*
+        Use the Sun's barycentric position to convert
+        the planet's heliocentric coordinates to barycentric coordinates also.
+    */
+    VecIncr(&planet.r, sun->r);
+    VecIncr(&planet.v, sun->v);
+
+    return planet;
+}
+
+static void MinorBodyBary(minor_bodies_t *bary, const body_state_t *sun, double tt)
+{
+    bary->Mercury = CalcBary(BODY_MERCURY, sun, tt);
+    bary->Venus   = CalcBary(BODY_VENUS,   sun, tt);
+    bary->Earth   = CalcBary(BODY_EARTH,   sun, tt);
+    bary->Mars    = CalcBary(BODY_MARS,    sun, tt);
+}
+
+
+static void MoonBary(body_state_t *moon, const body_state_t *earth, astro_time_t time)
+{
+    astro_state_vector_t geomoon = Astronomy_GeoMoonState(time);
+
+    /* Add the Earth's barycentric position to obtain the Moon's barycentric position. */
+    moon->r.x = earth->r.x + geomoon.x;
+    moon->r.y = earth->r.y + geomoon.y;
+    moon->r.z = earth->r.z + geomoon.z;
+
+    /* Add the Earth's barycentric velocity to obtain the Moon's barycentric velocity. */
+    moon->v.x = earth->v.x + geomoon.vx;
+    moon->v.y = earth->v.y + geomoon.vy;
+    moon->v.z = earth->v.z + geomoon.vz;
+
+    /* Store the Terrestrial Time value for completeness. */
+    moon->tt = time.tt;
 }
 
 
@@ -3696,20 +3737,6 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     return calc2;
 }
 
-/* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
-static body_segment_t *pluto_cache[PLUTO_NUM_STATES-1];
-
-
-static int ClampIndex(double frac, int nsteps)
-{
-    int index = (int) floor(frac);
-    if (index < 0)
-        return 0;
-    if (index >= nsteps)
-        return nsteps-1;
-    return index;
-}
-
 
 static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *state)
 {
@@ -3723,6 +3750,445 @@ static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *
     calc.a  = SmallBodyAcceleration(calc.r, bary);
 
     return calc;
+}
+
+
+static astro_status_t CalcSolarSystem(astro_grav_sim_t *sim)
+{
+    MajorBodyBary(&sim->major, sim->time.tt);
+    if (sim->option == GRAVSIM_OUTER_PLANETS)
+        return ASTRO_SUCCESS;
+
+    MinorBodyBary(&sim->minor, &sim->major.Sun, sim->time.tt);
+    if (sim->option == GRAVSIM_ALL_PLANETS)
+        return ASTRO_SUCCESS;
+
+    MoonBary(&sim->moon, &sim->minor.Earth, sim->time);
+    if (sim->option == GRAVSIM_ALL_PLANETS_AND_MOON)
+        return ASTRO_SUCCESS;
+
+    return ASTRO_INVALID_PARAMETER;
+}
+
+
+static astro_status_t CalcBodyAccelerations(astro_grav_sim_t *sim)
+{
+    int i;
+
+    /* Calculate the gravitational acceleration experienced by the simulated bodies. */
+    for (i = 0; i < sim->numBodies; ++i)
+    {
+        body_grav_calc_t *calc = &sim->currBodies[i];
+
+        /* Always include the pulls of the Sun and major planets. */
+        calc->a = SmallBodyAcceleration(calc->r, &sim->major);
+        if (sim->option != GRAVSIM_OUTER_PLANETS)
+        {
+            /* Include the terrestrial planets other than the Earth. */
+            AddAcceleration(&calc->a, calc->r, MERCURY_GM, sim->minor.Mercury.r);
+            AddAcceleration(&calc->a, calc->r, VENUS_GM,   sim->minor.Venus.r);
+            AddAcceleration(&calc->a, calc->r, MARS_GM,    sim->minor.Mars.r);
+
+            /* Now figure out how to handle the Earth/Moon system. */
+            switch (sim->option)
+            {
+            case GRAVSIM_ALL_PLANETS:
+                /* Combine the Earth and Moon's mass into the Earth's position. */
+                AddAcceleration(&calc->a, calc->r, EARTH_GM + MOON_GM, sim->minor.Earth.r);
+                break;
+
+            case GRAVSIM_ALL_PLANETS_AND_MOON:
+                /* Keep the Earth and Moon as separate gravitationally attracting points. */
+                AddAcceleration(&calc->a, calc->r, EARTH_GM, sim->minor.Earth.r);
+                AddAcceleration(&calc->a, calc->r, MOON_GM,  sim->moon.r);
+                break;
+
+            default:
+                /* The simulation option is not valid! */
+                return ASTRO_INVALID_PARAMETER;
+            }
+        }
+    }
+
+    return ASTRO_SUCCESS;
+}
+
+
+/**
+ * @brief Allocate and initialize a gravity step simulator.
+ *
+ * Prepares to simulate a series of incremental time steps,
+ * simulating the movement of zero or more small bodies through the Solar System
+ * acting under gravitational attraction from the Sun and planets.
+ *
+ * After calling this function, you can call #Astronomy_GravSimUpdate
+ * as many times as desired to advance the simulation by a small
+ * time step.
+ *
+ * If this function succeeds (returns `ASTRO_SUCCESS`), `sim`
+ * will be set to a dynamically allocated object. The caller is
+ * then responsible for eventually calling #Astronomy_GravSimFree
+ * to release the memory.
+ *
+ * @param sim
+ *      The address of a pointer to store the newly allocated simulation object.
+ *      The type #astro_grav_sim_t is an opaque type, so its internal structure is not documented.
+ *
+ * @param option
+ *      Selects how accurately to perform the simulation.
+ *      This opton adjusts the tradeoff between speed and accuracy, depending
+ *      on what is already known about the body's orbit.
+ *      See #astro_grav_sim_option_t for more details.
+ *
+ * @param time
+ *      The initial time at which to start the simulation.
+ *
+ * @param numBodies
+ *      The number of small bodies to be simulated. This may be any non-negative integer.
+ *
+ * @param bodyStateArray
+ *      An array of initial state vectors (positions and velocities) of the small bodies to be simulated.
+ *      The caller must know the positions and velocities of the small bodies at an initial moment in time.
+ *      Their positions and velocities are expressed with respect to the Solar System Barycenter (SSB)
+ *      using equatorial J2000 orientation (EQJ).
+ *      Positions are expressed in astronomical units (AU).
+ *      Velocities are expressed in AU/day.
+ *      All the times embedded within the state vectors must be exactly equal to `time`,
+ *      or this function will fail with the error `ASTRO_INCONSISTENT_TIMES`.
+ *
+ * @return
+ *      `ASTRO_SUCCESS` on success, with `*sim` set to a non-NULL value. Otherwise an error code with `*sim` set to NULL.
+ */
+astro_status_t Astronomy_GravSimInit(
+    astro_grav_sim_t **sim,
+    astro_grav_sim_option_t option,
+    astro_time_t time,
+    int numBodies,
+    const astro_state_vector_t *bodyStateArray)
+{
+    astro_status_t status;
+    body_grav_calc_t *array;
+    int i;
+
+    if (sim == NULL)
+        return ASTRO_INVALID_PARAMETER;
+
+    *sim = NULL;
+
+    if (numBodies < 0)
+        return ASTRO_INVALID_PARAMETER;
+
+    if (numBodies > 0 && bodyStateArray == NULL)
+        return ASTRO_INVALID_PARAMETER;
+
+    /* Verify that all the state vectors are valid and have matching times. */
+    for (i = 0; i < numBodies; ++i)
+    {
+        if (bodyStateArray[i].status != ASTRO_SUCCESS)
+            return ASTRO_INVALID_PARAMETER;
+
+        if (bodyStateArray[i].t.tt != time.tt)
+            return ASTRO_INCONSISTENT_TIMES;
+    }
+
+    *sim = (astro_grav_sim_t *) calloc(1, sizeof(astro_grav_sim_t));
+    if (*sim == NULL)
+        return ASTRO_OUT_OF_MEMORY;
+
+    (*sim)->numBodies = numBodies;
+    if (numBodies > 0)
+    {
+        (*sim)->prevBodies = (body_grav_calc_t *) calloc(numBodies, sizeof(body_grav_calc_t));
+        (*sim)->currBodies = (body_grav_calc_t *) calloc(numBodies, sizeof(body_grav_calc_t));
+        if ((*sim)->prevBodies == NULL || (*sim)->currBodies == NULL)
+        {
+            status = ASTRO_OUT_OF_MEMORY;
+            goto fail;
+        }
+    }
+
+    (*sim)->status = ASTRO_SUCCESS;
+    (*sim)->option = option;
+    (*sim)->time = time;
+
+    /* Remember the initial states of all the bodies as "current". */
+    /* Convert from the public type astro_state_t to our internal type body_grav_calc_t. */
+    array = (*sim)->currBodies;
+    for (i = 0; i < numBodies; ++i)
+    {
+        array[i].tt  = bodyStateArray[i].t.tt;
+        array[i].r.x = bodyStateArray[i].x;
+        array[i].r.y = bodyStateArray[i].y;
+        array[i].r.z = bodyStateArray[i].z;
+        array[i].v.x = bodyStateArray[i].vx;
+        array[i].v.y = bodyStateArray[i].vy;
+        array[i].v.z = bodyStateArray[i].vz;
+    }
+
+    /* Calculate the state of the Sun and planets. */
+    status = CalcSolarSystem(*sim);
+    if (status != ASTRO_SUCCESS)
+        goto fail;
+
+    /* Calculate the net acceleration experienced by the small bodies. */
+    status = CalcBodyAccelerations(*sim);
+    if (status != ASTRO_SUCCESS)
+        goto fail;
+
+    return ASTRO_SUCCESS;
+
+fail:
+    Astronomy_GravSimFree(*sim);
+    *sim = NULL;
+    return status;
+}
+
+
+/**
+ * @brief Advances a gravity simulation of a small body by a small time step.
+ *
+ * @param sim
+ *      A simulation object that was created by a prior call to #Astronomy_GravSimInit.
+ *
+ * @param time
+ *      A time that is a small increment away from the current simulation time.
+ *      It is up to the developer to figure out an appropriate time increment.
+ *      Depending on the trajectories, a smaller or larger increment
+ *      may be needed for the desired accuracy. Some experimentation may be needed.
+ *      Generally, bodies that stay in the outer Solar System and move slowly can
+ *      use larger time steps.  Bodies that pass into the inner Solar System and
+ *      move faster will need a smaller time step to maintain accuracy.
+ *      Some experimentation may be necessary to find a good value.
+ *      The `time` value may be after or before the current simulation time
+ *      to move forward or backward in time.
+ *
+ * @param numBodies
+ *      The number of bodies whose state vectors are to be updated.
+ *      This is the number of elements in the `bodyStateArray`.
+ *      This parameter is passed as a sanity check, and must be equal
+ *      to the value passed to #Astronomy_GravSimInit when `sim` was created.
+ *
+ * @param bodyStateArray
+ *      An array big enough to hold `numBodies` state vectors, to receive
+ *      the updated positions and velocities of the simulated small bodies.
+ *      Alternatively, `bodyStateArray` may be NULL if the output of this
+ *      simulation step is not needed. This makes the call slightly faster.
+ *
+ * @return
+ *      `ASTRO_SUCCESS` if the calculation was successful.
+ *      Otherwise, an error code if something went wrong, in which case
+ *      the simulation should be considered "broken". This means there
+ *      is no reliable output in `bodyStateArray` and that no more calculations
+ *      can be performed with `sim`.
+ */
+astro_status_t Astronomy_GravSimUpdate(
+    astro_grav_sim_t *sim,
+    astro_time_t time,
+    int numBodies,
+    astro_state_vector_t *bodyStateArray)
+{
+    terse_vector_t acc;
+    double dt;      /* terrestrial time increment */
+    body_grav_calc_t *swap;
+    int i;
+
+    /* Has this simulation already been "broken"? If so, it stays broken forever! */
+    if (sim->status != ASTRO_SUCCESS)
+        return sim->status;
+
+    /*
+        The caller's understanding of the number of bodies must match the actual
+        array size in `sim`, or we risk corrupting/accessin invalid memory.
+    */
+    if (numBodies != sim->numBodies)
+        return ASTRO_INVALID_PARAMETER;
+
+    dt = time.tt - sim->time.tt;
+
+    /*
+        Special case: if the time has not changed, leave the simulation state unchanged
+        and return the small body state vectors as they are.
+        This allows a way for the caller to query the current state if desired.
+        It is also necessary to avoid dividing by `dt` if `dt` is zero.
+    */
+    if (dt != 0.0)
+    {
+        /*
+            Swap the pointers `prevBodies` and `currBodies`, so that
+            the previous iteration's small body state vectors are in `prevBodies`,
+            and `currBodies` is a buffer to hold newly calculated state vectors.
+        */
+        swap = sim->prevBodies;
+        sim->prevBodies = sim->currBodies;
+        sim->currBodies = swap;
+
+        /* Update the current time. This is the only place we have a full (tt,ut) pair. */
+        /* All of the Newtonian dynamics are calculated using tt only. */
+        sim->time = time;
+
+        /* Now that sim->time is set, it is safe to call `CalcSolarSystem`. */
+        sim->status = CalcSolarSystem(sim);
+        if (sim->status != ASTRO_SUCCESS)
+            return sim->status;
+
+        for (i = 0; i < numBodies; ++i)
+        {
+            /*
+                Estimate the position of each small body as if the
+                current acceleration applies across the whole time interval.
+                approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
+            */
+            body_grav_calc_t *prev = &sim->prevBodies[i];
+            sim->currBodies[i].r = UpdatePosition(dt, prev->r, prev->v, prev->a);
+        }
+
+        /*
+            Calculate the acceleration experienced by the small bodies
+            at their respective approximate next locations.
+        */
+        sim->status = CalcBodyAccelerations(sim);
+        if (sim->status != ASTRO_SUCCESS)
+            return sim->status;
+
+        for (i = 0; i < numBodies; ++i)
+        {
+            body_grav_calc_t *prev = &sim->prevBodies[i];
+            body_grav_calc_t *curr = &sim->currBodies[i];
+
+            /*
+                Calculate the average of the acceleration vectors
+                experienced by the previous body positions and
+                their estimated next positions.
+                These become estimates of the mean effective accelerations over the whole interval.
+            */
+            acc = VecMean(prev->a, curr->a);
+
+            /*
+                Refine the estimates of position and velocity at the next time step,
+                using the mean acceleration as a better approximation of the
+                continuously changing acceleration acting on each body.
+            */
+            curr->tt = time.tt;
+            curr->r = UpdatePosition(dt, prev->r, prev->v, acc);
+            curr->v = VecAdd(prev->v, VecMul(dt, acc));
+        }
+
+        /*
+            Re-calculate accelerations experienced by each body.
+            These will be needed for the next simulation step (if any).
+            Also, they will be potentially useful if some day we add
+            a function to query the acceleration vectors for the bodies.
+        */
+        sim->status = CalcBodyAccelerations(sim);
+        if (sim->status != ASTRO_SUCCESS)
+            return sim->status;
+    }
+
+    /*
+        Translate our internal calculations of body positions
+        and velocities into state vectors that the caller can understand.
+        But if the output buffer `bodyStateArray` is NULL, it means
+        the caller wanted us to update the simulation state without
+        returning any output.
+    */
+    if (bodyStateArray != NULL)
+        for (i = 0; i < numBodies; ++i)
+            bodyStateArray[i] = ExportGravCalc(sim->currBodies[i], time);
+
+    return ASTRO_SUCCESS;
+}
+
+
+/**
+ * @brief Releases memory allocated to a gravity simulator object.
+ *
+ * To avoid memory leaks, any successful call to #Astronomy_GravSimInit
+ * must be paired with a matching call to `Astronomy_GravSimFree`.
+ *
+ * @param sim
+ *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
+ */
+void Astronomy_GravSimFree(astro_grav_sim_t *sim)
+{
+    if (sim != NULL)
+    {
+        free(sim->prevBodies);
+        free(sim->currBodies);
+        free(sim);
+    }
+}
+
+
+
+/*------------------ begin Pluto integrator ------------------*/
+
+static const body_state_t PlutoStateTable[] =
+{
+    {  -730000.0, {-26.118207232108, -14.376168177825,   3.384402515299}, { 1.6339372163656e-03, -2.7861699588508e-03, -1.3585880229445e-03} }
+,   {  -700800.0, { 41.974905202127,  -0.448502952929, -12.770351505989}, { 7.3458569351457e-04,  2.2785014891658e-03,  4.8619778602049e-04} }
+,   {  -671600.0, { 14.706930780744,  44.269110540027,   9.353698474772}, {-2.1000147999800e-03,  2.2295915939915e-04,  7.0143443551414e-04} }
+,   {  -642400.0, {-29.441003929957,  -6.430161530570,   6.858481011305}, { 8.4495803960544e-04, -3.0783914758711e-03, -1.2106305981192e-03} }
+,   {  -613200.0, { 39.444396946234,  -6.557989760571, -13.913760296463}, { 1.1480029005873e-03,  2.2400006880665e-03,  3.5168075922288e-04} }
+,   {  -584000.0, { 20.230380950700,  43.266966657189,   7.382966091923}, {-1.9754081700585e-03,  5.3457141292226e-04,  7.5929169129793e-04} }
+,   {  -554800.0, {-30.658325364620,   2.093818874552,   9.880531138071}, { 6.1010603013347e-05, -3.1326500935382e-03, -9.9346125151067e-04} }
+,   {  -525600.0, { 35.737703251673, -12.587706024764, -14.677847247563}, { 1.5802939375649e-03,  2.1347678412429e-03,  1.9074436384343e-04} }
+,   {  -496400.0, { 25.466295188546,  41.367478338417,   5.216476873382}, {-1.8054401046468e-03,  8.3283083599510e-04,  8.0260156912107e-04} }
+,   {  -467200.0, {-29.847174904071,  10.636426313081,  12.297904180106}, {-6.3257063052907e-04, -2.9969577578221e-03, -7.4476074151596e-04} }
+,   {  -438000.0, { 30.774692107687, -18.236637015304, -14.945535879896}, { 2.0113162005465e-03,  1.9353827024189e-03, -2.0937793168297e-06} }
+,   {  -408800.0, { 30.243153324028,  38.656267888503,   2.938501750218}, {-1.6052508674468e-03,  1.1183495337525e-03,  8.3333973416824e-04} }
+,   {  -379600.0, {-27.288984772533,  18.643162147874,  14.023633623329}, {-1.1856388898191e-03, -2.7170609282181e-03, -4.9015526126399e-04} }
+,   {  -350400.0, { 24.519605196774, -23.245756064727, -14.626862367368}, { 2.4322321483154e-03,  1.6062008146048e-03, -2.3369181613312e-04} }
+,   {  -321200.0, { 34.505274805875,  35.125338586954,   0.557361475637}, {-1.3824391637782e-03,  1.3833397561817e-03,  8.4823598806262e-04} }
+,   {  -292000.0, {-23.275363915119,  25.818514298769,  15.055381588598}, {-1.6062295460975e-03, -2.3395961498533e-03, -2.4377362639479e-04} }
+,   {  -262800.0, { 17.050384798092, -27.180376290126, -13.608963321694}, { 2.8175521080578e-03,  1.1358749093955e-03, -4.9548725258825e-04} }
+,   {  -233600.0, { 38.093671910285,  30.880588383337,  -1.843688067413}, {-1.1317697153459e-03,  1.6128814698472e-03,  8.4177586176055e-04} }
+,   {  -204400.0, {-18.197852930878,  31.932869934309,  15.438294826279}, {-1.9117272501813e-03, -1.9146495909842e-03, -1.9657304369835e-05} }
+,   {  -175200.0, {  8.528924039997, -29.618422200048, -11.805400994258}, { 3.1034370787005e-03,  5.1393633292430e-04, -7.7293066202546e-04} }
+,   {  -146000.0, { 40.946857258640,  25.904973592021,  -4.256336240499}, {-8.3652705194051e-04,  1.8129497136404e-03,  8.1564228273060e-04} }
+,   {  -116800.0, {-12.326958895325,  36.881883446292,  15.217158258711}, {-2.1166103705038e-03, -1.4814420035990e-03,  1.7401209844705e-04} }
+,   {   -87600.0, { -0.633258375909, -30.018759794709,  -9.171932874950}, { 3.2016994581737e-03, -2.5279858672148e-04, -1.0411088271861e-03} }
+,   {   -58400.0, { 42.936048423883,  20.344685584452,  -6.588027007912}, {-5.0525450073192e-04,  1.9910074335507e-03,  7.7440196540269e-04} }
+,   {   -29200.0, { -5.975910552974,  40.611809958460,  14.470131723673}, {-2.2184202156107e-03, -1.0562361130164e-03,  3.3652250216211e-04} }
+,   {        0.0, { -9.875369580774, -27.978926224737,  -5.753711824704}, { 3.0287533248818e-03, -1.1276087003636e-03, -1.2651326732361e-03} }
+,   {    29200.0, { 43.958831986165,  14.214147973292,  -8.808306227163}, {-1.4717608981871e-04,  2.1404187242141e-03,  7.1486567806614e-04} }
+,   {    58400.0, {  0.678136763520,  43.094461639362,  13.243238780721}, {-2.2358226110718e-03, -6.3233636090933e-04,  4.7664798895648e-04} }
+,   {    87600.0, {-18.282602096834, -23.305039586660,  -1.766620508028}, { 2.5567245263557e-03, -1.9902940754171e-03, -1.3943491701082e-03} }
+,   {   116800.0, { 43.873338744526,   7.700705617215, -10.814273666425}, { 2.3174803055677e-04,  2.2402163127924e-03,  6.2988756452032e-04} }
+,   {   146000.0, {  7.392949027906,  44.382678951534,  11.629500214854}, {-2.1932815453830e-03, -2.1751799585364e-04,  5.9556516201114e-04} }
+,   {   175200.0, {-24.981690229261, -16.204012851426,   2.466457544298}, { 1.8193989149580e-03, -2.6765419531201e-03, -1.3848283502247e-03} }
+,   {   204400.0, { 42.530187039511,   0.845935508021, -12.554907527683}, { 6.5059779150669e-04,  2.2725657282262e-03,  5.1133743202822e-04} }
+,   {   233600.0, { 13.999526486822,  44.462363044894,   9.669418486465}, {-2.1079296569252e-03,  1.7533423831993e-04,  6.9128485798076e-04} }
+,   {   262800.0, {-29.184024803031,  -7.371243995762,   6.493275957928}, { 9.3581363109681e-04, -3.0610357109184e-03, -1.2364201089345e-03} }
+,   {   292000.0, { 39.831980671753,  -6.078405766765, -13.909815358656}, { 1.1117769689167e-03,  2.2362097830152e-03,  3.6230548231153e-04} }
+,   {   321200.0, { 20.294955108476,  43.417190420251,   7.450091985932}, {-1.9742157451535e-03,  5.3102050468554e-04,  7.5938408813008e-04} }
+,   {   350400.0, {-30.669992302160,   2.318743558955,   9.973480913858}, { 4.5605107450676e-05, -3.1308219926928e-03, -9.9066533301924e-04} }
+,   {   379600.0, { 35.626122155983, -12.897647509224, -14.777586508444}, { 1.6015684949743e-03,  2.1171931182284e-03,  1.8002516202204e-04} }
+,   {   408800.0, { 26.133186148561,  41.232139187599,   5.006401326220}, {-1.7857704419579e-03,  8.6046232702817e-04,  8.0614690298954e-04} }
+,   {   438000.0, {-29.576740229230,  11.863535943587,  12.631323039872}, {-7.2292830060955e-04, -2.9587820140709e-03, -7.0824296450300e-04} }
+,   {   467200.0, { 29.910805787391, -19.159019294000, -15.013363865194}, { 2.0871080437997e-03,  1.8848372554514e-03, -3.8528655083926e-05} }
+,   {   496400.0, { 31.375957451819,  38.050372720763,   2.433138343754}, {-1.5546055556611e-03,  1.1699815465629e-03,  8.3565439266001e-04} }
+,   {   525600.0, {-26.360071336928,  20.662505904952,  14.414696258958}, {-1.3142373118349e-03, -2.6236647854842e-03, -4.2542017598193e-04} }
+,   {   554800.0, { 22.599441488648, -24.508879898306, -14.484045731468}, { 2.5454108304806e-03,  1.4917058755191e-03, -3.0243665086079e-04} }
+,   {   584000.0, { 35.877864013014,  33.894226366071,  -0.224524636277}, {-1.2941245730845e-03,  1.4560427668319e-03,  8.4762160640137e-04} }
+,   {   613200.0, {-21.538149762417,  28.204068269761,  15.321973799534}, {-1.7312117409010e-03, -2.1939631314577e-03, -1.6316913275180e-04} }
+,   {   642400.0, { 13.971521374415, -28.339941764789, -13.083792871886}, { 2.9334630526035e-03,  9.1860931752944e-04, -5.9939422488627e-04} }
+,   {   671600.0, { 39.526942044143,  28.939897360110,  -2.872799527539}, {-1.0068481658095e-03,  1.7021132888090e-03,  8.3578230511981e-04} }
+,   {   700800.0, {-15.576200701394,  34.399412961275,  15.466033737854}, {-2.0098814612884e-03, -1.7191109825989e-03,  7.0414782780416e-05} }
+,   {   730000.0, {  4.243252837090, -30.118201690825, -10.707441231349}, { 3.1725847067411e-03,  1.6098461202270e-04, -9.0672150593868e-04} }
+};
+
+/* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
+static body_segment_t *pluto_cache[PLUTO_NUM_STATES-1];
+
+
+static int ClampIndex(double frac, int nsteps)
+{
+    int index = (int) floor(frac);
+    if (index < 0)
+        return 0;
+    if (index >= nsteps)
+        return nsteps-1;
+    return index;
 }
 
 
@@ -4447,21 +4913,6 @@ finished:
     return vector;
 }
 
-static astro_state_vector_t ExportState(body_state_t terse, astro_time_t time)
-{
-    astro_state_vector_t state;
-
-    state.status = ASTRO_SUCCESS;
-    state.x = terse.r.x;
-    state.y = terse.r.y;
-    state.z = terse.r.z;
-    state.vx = terse.v.x;
-    state.vy = terse.v.y;
-    state.vz = terse.v.z;
-    state.t = time;
-
-    return state;
-}
 
 /**
  * @brief  Calculates barycentric position and velocity vectors for the given body.

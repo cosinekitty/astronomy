@@ -256,7 +256,8 @@ typedef enum
     ASTRO_INVALID_PARAMETER,        /**< A parameter value passed to a function was not valid. */
     ASTRO_FAIL_APSIS,               /**< Special-case logic for finding Neptune/Pluto apsis failed. */
     ASTRO_BUFFER_TOO_SMALL,         /**< A provided buffer's size is too small to receive the requested data. */
-    ASTRO_OUT_OF_MEMORY             /**< An attempt to allocate memory failed. */
+    ASTRO_OUT_OF_MEMORY,            /**< An attempt to allocate memory failed. */
+    ASTRO_INCONSISTENT_TIMES        /**< The provided initial state vectors did not have matching times. */
 }
 astro_status_t;
 
@@ -1093,6 +1094,34 @@ typedef struct
 astro_node_event_t;
 
 
+/**
+ * @brief A data type used for managing simulation of the gravitational forces on a small body.
+ *
+ * This is an opaque data type used to hold the internal state of
+ * a numeric integrator used to calculate the trajectory of a small
+ * body moving through the Solar System.
+ */
+typedef struct astro_grav_sim_s astro_grav_sim_t;
+
+
+/**
+ * @brief Select the rigor level of a gravitational simulation.
+ *
+ * The #Astronomy_GravSimInit function accepts an `option` parameter
+ * that adjusts how much work is performed by subsequent calls to
+ * #Astronomy_GravSimUpdate during each step of a gravitational simulation run.
+ * The caller chooses an appropriate option to balance execution speed
+ * with accuracy, depending on what is known about the simulated body's orbit.
+ */
+typedef enum
+{
+    GRAVSIM_OUTER_PLANETS,          /**< The simulation models the Sun and major planets Jupiter, Saturn, Uranus, and Neptune. This is the fastest option, but is appropriate only for outer Solar System bodies like Pluto. */
+    GRAVSIM_ALL_PLANETS,            /**< The simulation includes the Sun and all planets Mercury..Neptune. The Earth and Moon are treated as a single mass. This is an intermediate option that works well for most asteroids and comets that may pass inside Jupiter's orbit. */
+    GRAVSIM_ALL_PLANETS_AND_MOON    /**< The simulation includes the Sun and all planets Mercury..Neptune. The Earth and Moon are treated as separate bodies. This is the slowest but most accurate model, and is appropriate for bodies that may pass near the Earth/Moon system. */
+}
+astro_grav_sim_option_t;
+
+
 /*---------- functions ----------*/
 
 void Astronomy_Reset(void);
@@ -1275,6 +1304,23 @@ double Astronomy_Refraction(astro_refraction_t refraction, double altitude);
 double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude);
 
 astro_constellation_t Astronomy_Constellation(double ra, double dec);
+
+astro_status_t Astronomy_GravSimInit(
+    astro_grav_sim_t **sim,
+    astro_grav_sim_option_t option,
+    astro_time_t time,
+    int numBodies,
+    const astro_state_vector_t *bodyStateArray
+);
+
+astro_status_t Astronomy_GravSimUpdate(
+    astro_grav_sim_t *sim,
+    astro_time_t time,
+    int numBodies,
+    astro_state_vector_t *bodyStateArray
+);
+
+void Astronomy_GravSimFree(astro_grav_sim_t *sim);
 
 #ifdef __cplusplus
 }

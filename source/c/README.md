@@ -746,6 +746,83 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 
 ---
 
+<a name="Astronomy_GravSimFree"></a>
+### Astronomy_GravSimFree(sim) &#8658; `void`
+
+**Releases memory allocated to a gravity simulator object.** 
+
+
+
+To avoid memory leaks, any successful call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit) must be paired with a matching call to `Astronomy_GravSimFree`.
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimInit"></a>
+### Astronomy_GravSimInit(sim, option, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
+
+**Allocate and initialize a gravity step simulator.** 
+
+
+
+Prepares to simulate a series of incremental time steps, simulating the movement of zero or more small bodies through the Solar System acting under gravitational attraction from the Sun and planets.
+
+After calling this function, you can call [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate) as many times as desired to advance the simulation by a small time step.
+
+If this function succeeds (returns `ASTRO_SUCCESS`), `sim` will be set to a dynamically allocated object. The caller is then responsible for eventually calling [`Astronomy_GravSimFree`](#Astronomy_GravSimFree) to release the memory.
+
+
+
+**Returns:**  `ASTRO_SUCCESS` on success, with `*sim` set to a non-NULL value. Otherwise an error code with `*sim` set to NULL. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> **</code> | `sim` |  The address of a pointer to store the newly allocated simulation object. The type [`astro_grav_sim_t`](#astro_grav_sim_t) is an opaque type, so its internal structure is not documented. | 
+| [`astro_grav_sim_option_t`](#astro_grav_sim_option_t) | `option` |  Selects how accurately to perform the simulation. This opton adjusts the tradeoff between speed and accuracy, depending on what is already known about the body's orbit. See [`astro_grav_sim_option_t`](#astro_grav_sim_option_t) for more details. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The initial time at which to start the simulation. | 
+| `int` | `numBodies` |  The number of small bodies to be simulated. This may be any non-negative integer. | 
+| `const astro_state_vector_t *` | `bodyStateArray` |  An array of initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to the Solar System Barycenter (SSB) using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must be exactly equal to `time`, or this function will fail with the error `ASTRO_INCONSISTENT_TIMES`. | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimUpdate"></a>
+### Astronomy_GravSimUpdate(sim, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
+
+**Advances a gravity simulation of a small body by a small time step.** 
+
+
+
+
+
+**Returns:**  `ASTRO_SUCCESS` if the calculation was successful. Otherwise, an error code if something went wrong, in which case the simulation should be considered "broken". This means there is no reliable output in `bodyStateArray` and that no more calculations can be performed with `sim`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A simulation object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit). | 
+| [`astro_time_t`](#astro_time_t) | `time` |  A time that is a small increment away from the current simulation time. It is up to the developer to figure out an appropriate time increment. Depending on the trajectories, a smaller or larger increment may be needed for the desired accuracy. Some experimentation may be needed. Generally, bodies that stay in the outer Solar System and move slowly can use larger time steps. Bodies that pass into the inner Solar System and move faster will need a smaller time step to maintain accuracy. Some experimentation may be necessary to find a good value. The `time` value may be after or before the current simulation time to move forward or backward in time. | 
+| `int` | `numBodies` |  The number of bodies whose state vectors are to be updated. This is the number of elements in the `bodyStateArray`. This parameter is passed as a sanity check, and must be equal to the value passed to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit) when `sim` was created. | 
+| <code><a href="#astro_state_vector_t">astro_state_vector_t</a> *</code> | `bodyStateArray` |  An array big enough to hold `numBodies` state vectors, to receive the updated positions and velocities of the simulated small bodies. Alternatively, `bodyStateArray` may be NULL if the output of this simulation step is not needed. This makes the call slightly faster. | 
+
+
+
+
+---
+
 <a name="Astronomy_HelioDistance"></a>
 ### Astronomy_HelioDistance(body, time) &#8658; [`astro_func_result_t`](#astro_func_result_t)
 
@@ -3444,6 +3521,25 @@ For some other purposes, it is more helpful to represent coordinates using the E
 
 ---
 
+<a name="astro_grav_sim_option_t"></a>
+### `astro_grav_sim_option_t`
+
+**Select the rigor level of a gravitational simulation.** 
+
+
+
+The [`Astronomy_GravSimInit`](#Astronomy_GravSimInit) function accepts an `option` parameter that adjusts how much work is performed by subsequent calls to [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate) during each step of a gravitational simulation run. The caller chooses an appropriate option to balance execution speed with accuracy, depending on what is known about the simulated body's orbit. 
+
+| Enum Value | Description |
+| --- | --- |
+| `GRAVSIM_OUTER_PLANETS` |  The simulation models the Sun and major planets Jupiter, Saturn, Uranus, and Neptune. This is the fastest option, but is appropriate only for outer Solar System bodies like Pluto.  |
+| `GRAVSIM_ALL_PLANETS` |  The simulation includes the Sun and all planets Mercury..Neptune. The Earth and Moon are treated as a single mass. This is an intermediate option that works well for most asteroids and comets that may pass inside Jupiter's orbit.  |
+| `GRAVSIM_ALL_PLANETS_AND_MOON` |  The simulation includes the Sun and all planets Mercury..Neptune. The Earth and Moon are treated as separate bodies. This is the slowest but most accurate model, and is appropriate for bodies that may pass near the Earth/Moon system.  |
+
+
+
+---
+
 <a name="astro_node_kind_t"></a>
 ### `astro_node_kind_t`
 
@@ -3502,6 +3598,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 | `ASTRO_FAIL_APSIS` |  Special-case logic for finding Neptune/Pluto apsis failed.  |
 | `ASTRO_BUFFER_TOO_SMALL` |  A provided buffer's size is too small to receive the requested data.  |
 | `ASTRO_OUT_OF_MEMORY` |  An attempt to allocate memory failed.  |
+| `ASTRO_INCONSISTENT_TIMES` |  The provided initial state vectors did not have matching times.  |
 
 
 
@@ -4149,6 +4246,19 @@ The calculations are performed from the point of view of a geocentric observer.
 
 
 Delta T is the discrepancy between times measured using an atomic clock and times based on observations of the Earth's rotation, which is gradually slowing down over time. Delta T = TT - UT, where TT = Terrestrial Time, based on atomic time, and UT = Universal Time, civil time based on the Earth's rotation. Astronomy Engine defaults to using a Delta T function defined by Espenak and Meeus in their "Five Millennium Canon of Solar Eclipses". See: [https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html)
+
+---
+
+<a name="astro_grav_sim_t"></a>
+### `astro_grav_sim_t`
+
+`typedef struct astro_grav_sim_s astro_grav_sim_t;`
+
+**A data type used for managing simulation of the gravitational forces on a small body.** 
+
+
+
+This is an opaque data type used to hold the internal state of a numeric integrator used to calculate the trajectory of a small body moving through the Solar System. 
 
 ---
 

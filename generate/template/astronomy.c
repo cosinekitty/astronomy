@@ -88,6 +88,28 @@ typedef struct
     body_state_t Neptune;
 }
 major_bodies_t;
+
+typedef struct
+{
+    body_state_t Mercury;
+    body_state_t Venus;
+    body_state_t Earth;
+    body_state_t Mars;
+}
+minor_bodies_t;
+
+struct astro_grav_sim_s
+{
+    astro_status_t    status;
+    astro_grav_sim_option_t  option;
+    astro_time_t      time;
+    major_bodies_t    major;
+    minor_bodies_t    minor;
+    body_state_t      moon;
+    int               numBodies;
+    body_grav_calc_t *prevBodies;
+    body_grav_calc_t *currBodies;
+};
 /** @endcond */
 
 static const terse_vector_t VecZero = { 0.0, 0.0, 0.0 };
@@ -147,6 +169,38 @@ static terse_vector_t VecMean(terse_vector_t a, terse_vector_t b)
     c.y = (a.y + b.y) / 2;
     c.z = (a.z + b.z) / 2;
     return c;
+}
+
+static astro_state_vector_t ExportState(body_state_t terse, astro_time_t time)
+{
+    astro_state_vector_t state;
+
+    state.status = ASTRO_SUCCESS;
+    state.x  = terse.r.x;
+    state.y  = terse.r.y;
+    state.z  = terse.r.z;
+    state.vx = terse.v.x;
+    state.vy = terse.v.y;
+    state.vz = terse.v.z;
+    state.t  = time;
+
+    return state;
+}
+
+static astro_state_vector_t ExportGravCalc(body_grav_calc_t calc, astro_time_t time)
+{
+    astro_state_vector_t state;
+
+    state.status = ASTRO_SUCCESS;
+    state.x  = calc.r.x;
+    state.y  = calc.r.y;
+    state.z  = calc.r.z;
+    state.vx = calc.v.x;
+    state.vy = calc.v.y;
+    state.vz = calc.v.z;
+    state.t  = time;
+
+    return state;
 }
 
 static const double DAYS_PER_TROPICAL_YEAR = 365.24217;
@@ -2499,10 +2553,7 @@ static astro_vector_t CalcSolarSystemBarycenter(astro_time_t time)
     return ssb;
 }
 
-/*------------------ begin Pluto integrator ------------------*/
-
-$ASTRO_PLUTO_TABLE();
-
+/*------------------ begin general gravity simulator ------------------*/
 
 static terse_vector_t UpdatePosition(double dt, terse_vector_t r, terse_vector_t v, terse_vector_t a)
 {
@@ -2564,6 +2615,49 @@ static void MajorBodyBary(major_bodies_t *bary, double tt)
     /* Convert heliocentric SSB to barycentric Sun. */
     VecScale(&bary->Sun.r, -1.0);
     VecScale(&bary->Sun.v, -1.0);
+}
+
+
+static body_state_t CalcBary(astro_body_t body, const body_state_t *sun, double tt)
+{
+    /* Calculate the heliocentric state of the body. */
+    body_state_t planet = CalcVsopPosVel(&vsop[body], tt);
+
+    /*
+        Use the Sun's barycentric position to convert
+        the planet's heliocentric coordinates to barycentric coordinates also.
+    */
+    VecIncr(&planet.r, sun->r);
+    VecIncr(&planet.v, sun->v);
+
+    return planet;
+}
+
+static void MinorBodyBary(minor_bodies_t *bary, const body_state_t *sun, double tt)
+{
+    bary->Mercury = CalcBary(BODY_MERCURY, sun, tt);
+    bary->Venus   = CalcBary(BODY_VENUS,   sun, tt);
+    bary->Earth   = CalcBary(BODY_EARTH,   sun, tt);
+    bary->Mars    = CalcBary(BODY_MARS,    sun, tt);
+}
+
+
+static void MoonBary(body_state_t *moon, const body_state_t *earth, astro_time_t time)
+{
+    astro_state_vector_t geomoon = Astronomy_GeoMoonState(time);
+
+    /* Add the Earth's barycentric position to obtain the Moon's barycentric position. */
+    moon->r.x = earth->r.x + geomoon.x;
+    moon->r.y = earth->r.y + geomoon.y;
+    moon->r.z = earth->r.z + geomoon.z;
+
+    /* Add the Earth's barycentric velocity to obtain the Moon's barycentric velocity. */
+    moon->v.x = earth->v.x + geomoon.vx;
+    moon->v.y = earth->v.y + geomoon.vy;
+    moon->v.z = earth->v.z + geomoon.vz;
+
+    /* Store the Terrestrial Time value for completeness. */
+    moon->tt = time.tt;
 }
 
 
@@ -2631,20 +2725,6 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
     return calc2;
 }
 
-/* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
-static body_segment_t *pluto_cache[PLUTO_NUM_STATES-1];
-
-
-static int ClampIndex(double frac, int nsteps)
-{
-    int index = (int) floor(frac);
-    if (index < 0)
-        return 0;
-    if (index >= nsteps)
-        return nsteps-1;
-    return index;
-}
-
 
 static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *state)
 {
@@ -2658,6 +2738,392 @@ static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *
     calc.a  = SmallBodyAcceleration(calc.r, bary);
 
     return calc;
+}
+
+
+static astro_status_t CalcSolarSystem(astro_grav_sim_t *sim)
+{
+    MajorBodyBary(&sim->major, sim->time.tt);
+    if (sim->option == GRAVSIM_OUTER_PLANETS)
+        return ASTRO_SUCCESS;
+
+    MinorBodyBary(&sim->minor, &sim->major.Sun, sim->time.tt);
+    if (sim->option == GRAVSIM_ALL_PLANETS)
+        return ASTRO_SUCCESS;
+
+    MoonBary(&sim->moon, &sim->minor.Earth, sim->time);
+    if (sim->option == GRAVSIM_ALL_PLANETS_AND_MOON)
+        return ASTRO_SUCCESS;
+
+    return ASTRO_INVALID_PARAMETER;
+}
+
+
+static astro_status_t CalcBodyAccelerations(astro_grav_sim_t *sim)
+{
+    int i;
+
+    /* Calculate the gravitational acceleration experienced by the simulated bodies. */
+    for (i = 0; i < sim->numBodies; ++i)
+    {
+        body_grav_calc_t *calc = &sim->currBodies[i];
+
+        /* Always include the pulls of the Sun and major planets. */
+        calc->a = SmallBodyAcceleration(calc->r, &sim->major);
+        if (sim->option != GRAVSIM_OUTER_PLANETS)
+        {
+            /* Include the terrestrial planets other than the Earth. */
+            AddAcceleration(&calc->a, calc->r, MERCURY_GM, sim->minor.Mercury.r);
+            AddAcceleration(&calc->a, calc->r, VENUS_GM,   sim->minor.Venus.r);
+            AddAcceleration(&calc->a, calc->r, MARS_GM,    sim->minor.Mars.r);
+
+            /* Now figure out how to handle the Earth/Moon system. */
+            switch (sim->option)
+            {
+            case GRAVSIM_ALL_PLANETS:
+                /* Combine the Earth and Moon's mass into the Earth's position. */
+                AddAcceleration(&calc->a, calc->r, EARTH_GM + MOON_GM, sim->minor.Earth.r);
+                break;
+
+            case GRAVSIM_ALL_PLANETS_AND_MOON:
+                /* Keep the Earth and Moon as separate gravitationally attracting points. */
+                AddAcceleration(&calc->a, calc->r, EARTH_GM, sim->minor.Earth.r);
+                AddAcceleration(&calc->a, calc->r, MOON_GM,  sim->moon.r);
+                break;
+
+            default:
+                /* The simulation option is not valid! */
+                return ASTRO_INVALID_PARAMETER;
+            }
+        }
+    }
+
+    return ASTRO_SUCCESS;
+}
+
+
+/**
+ * @brief Allocate and initialize a gravity step simulator.
+ *
+ * Prepares to simulate a series of incremental time steps,
+ * simulating the movement of zero or more small bodies through the Solar System
+ * acting under gravitational attraction from the Sun and planets.
+ *
+ * After calling this function, you can call #Astronomy_GravSimUpdate
+ * as many times as desired to advance the simulation by a small
+ * time step.
+ *
+ * If this function succeeds (returns `ASTRO_SUCCESS`), `sim`
+ * will be set to a dynamically allocated object. The caller is
+ * then responsible for eventually calling #Astronomy_GravSimFree
+ * to release the memory.
+ *
+ * @param sim
+ *      The address of a pointer to store the newly allocated simulation object.
+ *      The type #astro_grav_sim_t is an opaque type, so its internal structure is not documented.
+ *
+ * @param option
+ *      Selects how accurately to perform the simulation.
+ *      This opton adjusts the tradeoff between speed and accuracy, depending
+ *      on what is already known about the body's orbit.
+ *      See #astro_grav_sim_option_t for more details.
+ *
+ * @param time
+ *      The initial time at which to start the simulation.
+ *
+ * @param numBodies
+ *      The number of small bodies to be simulated. This may be any non-negative integer.
+ *
+ * @param bodyStateArray
+ *      An array of initial state vectors (positions and velocities) of the small bodies to be simulated.
+ *      The caller must know the positions and velocities of the small bodies at an initial moment in time.
+ *      Their positions and velocities are expressed with respect to the Solar System Barycenter (SSB)
+ *      using equatorial J2000 orientation (EQJ).
+ *      Positions are expressed in astronomical units (AU).
+ *      Velocities are expressed in AU/day.
+ *      All the times embedded within the state vectors must be exactly equal to `time`,
+ *      or this function will fail with the error `ASTRO_INCONSISTENT_TIMES`.
+ *
+ * @return
+ *      `ASTRO_SUCCESS` on success, with `*sim` set to a non-NULL value. Otherwise an error code with `*sim` set to NULL.
+ */
+astro_status_t Astronomy_GravSimInit(
+    astro_grav_sim_t **sim,
+    astro_grav_sim_option_t option,
+    astro_time_t time,
+    int numBodies,
+    const astro_state_vector_t *bodyStateArray)
+{
+    astro_status_t status;
+    body_grav_calc_t *array;
+    int i;
+
+    if (sim == NULL)
+        return ASTRO_INVALID_PARAMETER;
+
+    *sim = NULL;
+
+    if (numBodies < 0)
+        return ASTRO_INVALID_PARAMETER;
+
+    if (numBodies > 0 && bodyStateArray == NULL)
+        return ASTRO_INVALID_PARAMETER;
+
+    /* Verify that all the state vectors are valid and have matching times. */
+    for (i = 0; i < numBodies; ++i)
+    {
+        if (bodyStateArray[i].status != ASTRO_SUCCESS)
+            return ASTRO_INVALID_PARAMETER;
+
+        if (bodyStateArray[i].t.tt != time.tt)
+            return ASTRO_INCONSISTENT_TIMES;
+    }
+
+    *sim = (astro_grav_sim_t *) calloc(1, sizeof(astro_grav_sim_t));
+    if (*sim == NULL)
+        return ASTRO_OUT_OF_MEMORY;
+
+    (*sim)->numBodies = numBodies;
+    if (numBodies > 0)
+    {
+        (*sim)->prevBodies = (body_grav_calc_t *) calloc(numBodies, sizeof(body_grav_calc_t));
+        (*sim)->currBodies = (body_grav_calc_t *) calloc(numBodies, sizeof(body_grav_calc_t));
+        if ((*sim)->prevBodies == NULL || (*sim)->currBodies == NULL)
+        {
+            status = ASTRO_OUT_OF_MEMORY;
+            goto fail;
+        }
+    }
+
+    (*sim)->status = ASTRO_SUCCESS;
+    (*sim)->option = option;
+    (*sim)->time = time;
+
+    /* Remember the initial states of all the bodies as "current". */
+    /* Convert from the public type astro_state_t to our internal type body_grav_calc_t. */
+    array = (*sim)->currBodies;
+    for (i = 0; i < numBodies; ++i)
+    {
+        array[i].tt  = bodyStateArray[i].t.tt;
+        array[i].r.x = bodyStateArray[i].x;
+        array[i].r.y = bodyStateArray[i].y;
+        array[i].r.z = bodyStateArray[i].z;
+        array[i].v.x = bodyStateArray[i].vx;
+        array[i].v.y = bodyStateArray[i].vy;
+        array[i].v.z = bodyStateArray[i].vz;
+    }
+
+    /* Calculate the state of the Sun and planets. */
+    status = CalcSolarSystem(*sim);
+    if (status != ASTRO_SUCCESS)
+        goto fail;
+
+    /* Calculate the net acceleration experienced by the small bodies. */
+    status = CalcBodyAccelerations(*sim);
+    if (status != ASTRO_SUCCESS)
+        goto fail;
+
+    return ASTRO_SUCCESS;
+
+fail:
+    Astronomy_GravSimFree(*sim);
+    *sim = NULL;
+    return status;
+}
+
+
+/**
+ * @brief Advances a gravity simulation of a small body by a small time step.
+ *
+ * @param sim
+ *      A simulation object that was created by a prior call to #Astronomy_GravSimInit.
+ *
+ * @param time
+ *      A time that is a small increment away from the current simulation time.
+ *      It is up to the developer to figure out an appropriate time increment.
+ *      Depending on the trajectories, a smaller or larger increment
+ *      may be needed for the desired accuracy. Some experimentation may be needed.
+ *      Generally, bodies that stay in the outer Solar System and move slowly can
+ *      use larger time steps.  Bodies that pass into the inner Solar System and
+ *      move faster will need a smaller time step to maintain accuracy.
+ *      Some experimentation may be necessary to find a good value.
+ *      The `time` value may be after or before the current simulation time
+ *      to move forward or backward in time.
+ *
+ * @param numBodies
+ *      The number of bodies whose state vectors are to be updated.
+ *      This is the number of elements in the `bodyStateArray`.
+ *      This parameter is passed as a sanity check, and must be equal
+ *      to the value passed to #Astronomy_GravSimInit when `sim` was created.
+ *
+ * @param bodyStateArray
+ *      An array big enough to hold `numBodies` state vectors, to receive
+ *      the updated positions and velocities of the simulated small bodies.
+ *      Alternatively, `bodyStateArray` may be NULL if the output of this
+ *      simulation step is not needed. This makes the call slightly faster.
+ *
+ * @return
+ *      `ASTRO_SUCCESS` if the calculation was successful.
+ *      Otherwise, an error code if something went wrong, in which case
+ *      the simulation should be considered "broken". This means there
+ *      is no reliable output in `bodyStateArray` and that no more calculations
+ *      can be performed with `sim`.
+ */
+astro_status_t Astronomy_GravSimUpdate(
+    astro_grav_sim_t *sim,
+    astro_time_t time,
+    int numBodies,
+    astro_state_vector_t *bodyStateArray)
+{
+    terse_vector_t acc;
+    double dt;      /* terrestrial time increment */
+    body_grav_calc_t *swap;
+    int i;
+
+    /* Has this simulation already been "broken"? If so, it stays broken forever! */
+    if (sim->status != ASTRO_SUCCESS)
+        return sim->status;
+
+    /*
+        The caller's understanding of the number of bodies must match the actual
+        array size in `sim`, or we risk corrupting/accessin invalid memory.
+    */
+    if (numBodies != sim->numBodies)
+        return ASTRO_INVALID_PARAMETER;
+
+    dt = time.tt - sim->time.tt;
+
+    /*
+        Special case: if the time has not changed, leave the simulation state unchanged
+        and return the small body state vectors as they are.
+        This allows a way for the caller to query the current state if desired.
+        It is also necessary to avoid dividing by `dt` if `dt` is zero.
+    */
+    if (dt != 0.0)
+    {
+        /*
+            Swap the pointers `prevBodies` and `currBodies`, so that
+            the previous iteration's small body state vectors are in `prevBodies`,
+            and `currBodies` is a buffer to hold newly calculated state vectors.
+        */
+        swap = sim->prevBodies;
+        sim->prevBodies = sim->currBodies;
+        sim->currBodies = swap;
+
+        /* Update the current time. This is the only place we have a full (tt,ut) pair. */
+        /* All of the Newtonian dynamics are calculated using tt only. */
+        sim->time = time;
+
+        /* Now that sim->time is set, it is safe to call `CalcSolarSystem`. */
+        sim->status = CalcSolarSystem(sim);
+        if (sim->status != ASTRO_SUCCESS)
+            return sim->status;
+
+        for (i = 0; i < numBodies; ++i)
+        {
+            /*
+                Estimate the position of each small body as if the
+                current acceleration applies across the whole time interval.
+                approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
+            */
+            body_grav_calc_t *prev = &sim->prevBodies[i];
+            sim->currBodies[i].r = UpdatePosition(dt, prev->r, prev->v, prev->a);
+        }
+
+        /*
+            Calculate the acceleration experienced by the small bodies
+            at their respective approximate next locations.
+        */
+        sim->status = CalcBodyAccelerations(sim);
+        if (sim->status != ASTRO_SUCCESS)
+            return sim->status;
+
+        for (i = 0; i < numBodies; ++i)
+        {
+            body_grav_calc_t *prev = &sim->prevBodies[i];
+            body_grav_calc_t *curr = &sim->currBodies[i];
+
+            /*
+                Calculate the average of the acceleration vectors
+                experienced by the previous body positions and
+                their estimated next positions.
+                These become estimates of the mean effective accelerations over the whole interval.
+            */
+            acc = VecMean(prev->a, curr->a);
+
+            /*
+                Refine the estimates of position and velocity at the next time step,
+                using the mean acceleration as a better approximation of the
+                continuously changing acceleration acting on each body.
+            */
+            curr->tt = time.tt;
+            curr->r = UpdatePosition(dt, prev->r, prev->v, acc);
+            curr->v = VecAdd(prev->v, VecMul(dt, acc));
+        }
+
+        /*
+            Re-calculate accelerations experienced by each body.
+            These will be needed for the next simulation step (if any).
+            Also, they will be potentially useful if some day we add
+            a function to query the acceleration vectors for the bodies.
+        */
+        sim->status = CalcBodyAccelerations(sim);
+        if (sim->status != ASTRO_SUCCESS)
+            return sim->status;
+    }
+
+    /*
+        Translate our internal calculations of body positions
+        and velocities into state vectors that the caller can understand.
+        But if the output buffer `bodyStateArray` is NULL, it means
+        the caller wanted us to update the simulation state without
+        returning any output.
+    */
+    if (bodyStateArray != NULL)
+        for (i = 0; i < numBodies; ++i)
+            bodyStateArray[i] = ExportGravCalc(sim->currBodies[i], time);
+
+    return ASTRO_SUCCESS;
+}
+
+
+/**
+ * @brief Releases memory allocated to a gravity simulator object.
+ *
+ * To avoid memory leaks, any successful call to #Astronomy_GravSimInit
+ * must be paired with a matching call to `Astronomy_GravSimFree`.
+ *
+ * @param sim
+ *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
+ */
+void Astronomy_GravSimFree(astro_grav_sim_t *sim)
+{
+    if (sim != NULL)
+    {
+        free(sim->prevBodies);
+        free(sim->currBodies);
+        free(sim);
+    }
+}
+
+
+
+/*------------------ begin Pluto integrator ------------------*/
+
+$ASTRO_PLUTO_TABLE();
+
+/* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
+static body_segment_t *pluto_cache[PLUTO_NUM_STATES-1];
+
+
+static int ClampIndex(double frac, int nsteps)
+{
+    int index = (int) floor(frac);
+    if (index < 0)
+        return 0;
+    if (index >= nsteps)
+        return nsteps-1;
+    return index;
 }
 
 
@@ -3208,21 +3674,6 @@ finished:
     return vector;
 }
 
-static astro_state_vector_t ExportState(body_state_t terse, astro_time_t time)
-{
-    astro_state_vector_t state;
-
-    state.status = ASTRO_SUCCESS;
-    state.x = terse.r.x;
-    state.y = terse.r.y;
-    state.z = terse.r.z;
-    state.vx = terse.v.x;
-    state.vy = terse.v.y;
-    state.vz = terse.v.z;
-    state.t = time;
-
-    return state;
-}
 
 /**
  * @brief  Calculates barycentric position and velocity vectors for the given body.

@@ -192,6 +192,7 @@ static int ConstellationTest(void);
 static int LunarEclipseIssue78(void);
 static int LunarEclipseTest(void);
 static int GlobalSolarEclipseTest(void);
+static int GravitySimulatorTest(void);
 static int PlotDeltaT(const char *outFileName);
 static double AngleDiff(double alat, double alon, double blat, double blon);
 static int LocalSolarEclipseTest(void);
@@ -239,6 +240,7 @@ static unit_test_t UnitTests[] =
     {"elongation",              ElongationTest},
     {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
+    {"gravsim",                 GravitySimulatorTest},
     {"heliostate",              HelioStateTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
@@ -6312,6 +6314,95 @@ static int SiderealTimeTest(void)
         FAIL("C SiderealTimeTest: EXCESSIVE ERROR\n");
 
     printf("C SiderealTimeTest: PASS\n");
+    error = 0;
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int GravSimFile(
+    const char *filename,
+    astro_grav_sim_option_t option,
+    int nsteps,
+    double r_thresh,
+    double v_thresh)
+{
+    int error;
+    int i, k;
+    double rdiff, vdiff;
+    double max_rdiff = 0.0, max_vdiff = 0.0;
+    astro_grav_sim_t *sim = NULL;
+    astro_state_vector_t state;
+    astro_status_t status;
+    state_vector_batch_t batch = EmptyStateVectorBatch();
+    astro_time_t time;
+
+    if (nsteps < 1)
+        FAIL("C GravSimFile(%d : %s): invalid nsteps=%d\n", option, filename, nsteps);
+
+    CHECK(LoadStateVectors(&batch, filename));
+
+    if (batch.length <= 0)
+        FAIL("C GravSimFile(%d : %s): batch.length = %d is invalid.\n", option, filename, batch.length);
+
+    /* Use the state vector and time in the batch to initialize the gravity simulator. */
+    state = batch.array[0];
+
+    status = Astronomy_GravSimInit(&sim, GRAVSIM_ALL_PLANETS, state.t, 1, &state);
+    if (status != ASTRO_SUCCESS)
+        FAIL("C GravSimFile(%d : %s): Astronomy_GravSimInit returned error %d\n", option, filename, status);
+
+    time = state.t;
+    for (i = 1; i < batch.length; ++i)
+    {
+        /* Split each entry of the input batch into `nsteps` simulation steps. */
+        double dt = (batch.array[i].t.ut - batch.array[i-1].t.ut) / nsteps;
+        for (k = 0; k < nsteps; ++k)
+        {
+            time = Astronomy_AddDays(time, dt);
+            status = Astronomy_GravSimUpdate(sim, time, 1, &state);
+            if (status != ASTRO_SUCCESS)
+                FAIL("C GravSimFile(%d : %s : i=%d): Astronomy_GravSimInit returned error %d\n", option, filename, i, status);
+        }
+
+        /* Compare the simulated state with the reference state. */
+        rdiff = StateVectorDiff((r_thresh > 0.0), &batch.array[i].x, state.x, state.y, state.z);
+        if (rdiff > max_rdiff)
+            max_rdiff = rdiff;
+
+        if (rdiff > fabs(r_thresh))
+        {
+            PrintDiagnostic(state.x, state.y, state.z, &batch.array[i].x);
+            FAIL("C GravSimFile(%d : %s : i=%d): EXCESSIVE position error = %0.4le\n", option, filename, i, rdiff);
+        }
+
+        vdiff = StateVectorDiff((v_thresh > 0.0), &batch.array[i].vx, state.vx, state.vy, state.vz);
+        if (vdiff > max_vdiff)
+            max_vdiff = vdiff;
+
+        if (vdiff > fabs(v_thresh))
+        {
+            PrintDiagnostic(state.vx, state.vy, state.vz, &batch.array[i].vx);
+            FAIL("C GravSimFile(%d : %s : i=%d): EXCESSIVE velocity error = %0.4le\n", option, filename, i, vdiff);
+        }
+
+    }
+
+    printf("C GravSimFile(%d : %s): PASS (max_rdiff = %0.3le, max_vdiff = %0.3le)\n", option, filename, max_rdiff, max_vdiff);
+    error = 0;
+fail:
+    Astronomy_GravSimFree(sim);
+    return error;
+}
+
+
+static int GravitySimulatorTest(void)
+{
+    int error;
+
+    CHECK(GravSimFile("barystate/Ceres.txt", GRAVSIM_OUTER_PLANETS, 100, -8.5e-03, -3.5e-05));
+    printf("C GravitySimulatorTest: PASS\n");
     error = 0;
 fail:
     return error;
