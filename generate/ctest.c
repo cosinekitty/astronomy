@@ -6389,10 +6389,24 @@ static int GravSimFile(
 
     }
 
-    printf("C GravSimFile(%d : %s): PASS (max_rdiff = %0.3le, max_vdiff = %0.3le)\n", option, filename, max_rdiff, max_vdiff);
+    printf("C GravSimFile(%d : %-20s): PASS (max_rdiff = %0.3le, max_vdiff = %0.3le)\n", option, filename, max_rdiff, max_vdiff);
     error = 0;
 fail:
     Astronomy_GravSimFree(sim);
+    return error;
+}
+
+
+static int GravSimOption(astro_grav_sim_option_t option)
+{
+    const int nsteps = 20;
+    int error;
+
+    CHECK(GravSimFile("barystate/Ceres.txt",  option, nsteps, -4.35e-04, -1.74e-06));
+    CHECK(GravSimFile("barystate/Pallas.txt", option, nsteps, -2.83e-04, -1.27e-06));
+    CHECK(GravSimFile("barystate/Vesta.txt",  option, nsteps, -5.21e-04, -2.71e-06));
+    CHECK(GravSimFile("barystate/Juno.txt",   option, nsteps, -2.17e-04, -1.07e-06));
+fail:
     return error;
 }
 
@@ -6401,9 +6415,11 @@ static int GravitySimulatorTest(void)
 {
     int error;
 
-    CHECK(GravSimFile("barystate/Ceres.txt", GRAVSIM_OUTER_PLANETS, 100, -8.5e-03, -3.5e-05));
+    CHECK(GravSimOption(GRAVSIM_OUTER_PLANETS));
+    CHECK(GravSimOption(GRAVSIM_ALL_PLANETS));
+    CHECK(GravSimOption(GRAVSIM_ALL_PLANETS_AND_MOON));
+
     printf("C GravitySimulatorTest: PASS\n");
-    error = 0;
 fail:
     return error;
 }
