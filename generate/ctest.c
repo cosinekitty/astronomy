@@ -6389,10 +6389,11 @@ static int GravSimFile(
 
     }
 
-    printf("C GravSimFile(%d : %-20s): PASS (max_rdiff = %0.3le, max_vdiff = %0.3le)\n", option, filename, max_rdiff, max_vdiff);
+    printf("C GravSimFile(%d : %-20s): PASS (count = %d, max_rdiff = %0.3le, max_vdiff = %0.3le)\n", option, filename, batch.length, max_rdiff, max_vdiff);
     error = 0;
 fail:
     Astronomy_GravSimFree(sim);
+    FreeStateVectorBatch(&batch);
     return error;
 }
 
