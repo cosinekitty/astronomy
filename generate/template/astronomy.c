@@ -2751,9 +2751,11 @@ static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *
 
 static astro_status_t CalcSolarSystem(astro_grav_sim_t *sim)
 {
+    sim->valid = 0;     /* Invalidate all the body calculations. */
+
     if (sim->status == ASTRO_SUCCESS)
     {
-        sim->valid = MajorBodyBary(&sim->major, sim->time.tt);
+        sim->valid |= MajorBodyBary(&sim->major, sim->time.tt);
         if (sim->option == GRAVSIM_OUTER_PLANETS)
             return ASTRO_SUCCESS;
 
@@ -2766,7 +2768,6 @@ static astro_status_t CalcSolarSystem(astro_grav_sim_t *sim)
             return ASTRO_SUCCESS;
     }
 
-    sim->valid = 0;
     sim->status = ASTRO_INVALID_PARAMETER;
     return ASTRO_INVALID_PARAMETER;
 }
@@ -2817,18 +2818,23 @@ static astro_status_t CalcBodyAccelerations(astro_grav_sim_t *sim)
 
 static body_state_t *GravSimBodyStatePtr(astro_grav_sim_t *sim, astro_body_t body)
 {
+    /*
+        Return a pointer to the place where we cache the barycentric
+        state of the given body, or NULL if this body is not one
+        that we use for calculating gravitational interactions.
+    */
     switch (sim->originBody)
     {
+    case BODY_SUN:      return &sim->major.Sun;
+    case BODY_MOON:     return &sim->moon;
     case BODY_MERCURY:  return &sim->minor.Mercury;
     case BODY_VENUS:    return &sim->minor.Venus;
     case BODY_EARTH:    return &sim->minor.Earth;
     case BODY_MARS:     return &sim->minor.Mars;
-    case BODY_SUN:      return &sim->major.Sun;
     case BODY_JUPITER:  return &sim->major.Jupiter;
     case BODY_SATURN:   return &sim->major.Saturn;
     case BODY_URANUS:   return &sim->major.Uranus;
     case BODY_NEPTUNE:  return &sim->major.Neptune;
-    case BODY_MOON:     return &sim->moon;
     default:            return NULL;
     }
 }
@@ -2836,8 +2842,7 @@ static body_state_t *GravSimBodyStatePtr(astro_grav_sim_t *sim, astro_body_t bod
 
 static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
 {
-    astro_state_vector_t pstate;
-    body_state_t *ostate;
+    body_state_t *optr;
 
     if (sim->originBody == BODY_SSB)
     {
@@ -2854,43 +2859,52 @@ static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
         return state;
     }
 
-    ostate = GravSimBodyStatePtr(sim, sim->originBody);
-
-    if (sim->valid & (1 << sim->originBody))
+    optr = GravSimBodyStatePtr(sim, sim->originBody);
+    if (optr != NULL)
     {
-        /* This is a body whose state vectors we already know. */
-        if (ostate != NULL)
-            return ExportState(*ostate, sim->time);
+        /*
+            This is one of the solar system bodies (Sun or planet)
+            that we could calculate, depending on `sim->option`.
+            The `valid` bitmask tells us whether we have already calculated this body.
+            If we have not yet calculated it, do so now and cache the result.
+        */
+        if (0 == (sim->valid & (1 << sim->originBody)))
+        {
+            /* Precondition: we must already have determined the SSB. */
+            if (0 == (sim->valid & (1 << BODY_SUN)))
+                return StateVecError(ASTRO_INTERNAL_ERROR, sim->time);
 
-        /* This should never happen, because `sim->valid` says we calculated this body. */
-        sim->status = ASTRO_INTERNAL_ERROR;
-        return StateVecError(ASTRO_INTERNAL_ERROR, sim->time);
+            /* Calculate the origin body now. */
+            if (sim->originBody == BODY_MOON)
+            {
+                /* The Moon is a special case, because we need to know the Earth first. */
+                if (0 == (sim->valid & (1 << BODY_EARTH)))
+                {
+                    /* We need to calculate the Earth's state in order to calculate the Moon's. */
+                    sim->minor.Earth = CalcBary(BODY_EARTH, &sim->major.Sun, sim->time.tt);
+                    sim->valid |= (1 << BODY_EARTH);
+                }
+
+                MoonBary(optr, &sim->minor.Earth, sim->time);
+            }
+            else
+            {
+                *optr = CalcBary(sim->originBody, &sim->major.Sun, sim->time.tt);
+            }
+
+            /* Mark the additional body as valid. */
+            sim->valid |= (1 << sim->originBody);
+        }
+
+        /* Return the barycentric position and velocity of the origin body. */
+        return ExportState(*optr, sim->time);
     }
 
     /*
         We have to calculate the barycentric state of this body.
         This is more expensive, but it's necessary.
     */
-    pstate = Astronomy_BaryState(sim->originBody, sim->time);
-
-    if (pstate.status == ASTRO_SUCCESS)
-    {
-        /* We might be able to save some time later by caching this state vector. */
-        if (ostate != NULL)
-        {
-            ostate->tt  = sim->time.tt;
-            ostate->r.x = pstate.x;
-            ostate->r.y = pstate.y;
-            ostate->r.z = pstate.z;
-            ostate->v.x = pstate.vx;
-            ostate->v.y = pstate.vy;
-            ostate->v.z = pstate.vz;
-
-            sim->valid |= (1 << sim->originBody);
-        }
-    }
-
-    return pstate;
+    return Astronomy_BaryState(sim->originBody, sim->time);
 }
 
 
@@ -3286,7 +3300,7 @@ astro_state_vector_t Astronomy_GravSimBodyState(
     astro_body_t body)
 {
     astro_state_vector_t state;
-    body_state_t *p;
+    body_state_t *bptr;
 
     if (body < BODY_MERCURY || body > BODY_SSB)
         return StateVecError(ASTRO_INVALID_BODY, sim->time);
@@ -3294,8 +3308,8 @@ astro_state_vector_t Astronomy_GravSimBodyState(
     if (0 == (sim->valid & (1 << body)))
         return StateVecError(ASTRO_INVALID_BODY, sim->time);
 
-    p = GravSimBodyStatePtr(sim, body);
-    if (p == NULL)
+    bptr = GravSimBodyStatePtr(sim, body);
+    if (bptr == NULL)
         return StateVecError(ASTRO_INTERNAL_ERROR, sim->time);      /* should never happen */
 
     state = GravSimOriginState(sim);
@@ -3308,12 +3322,12 @@ astro_state_vector_t Astronomy_GravSimBodyState(
         state.t and state.status are already initialized correctly.
     */
 
-    state.x  = p->r.x - state.x;
-    state.y  = p->r.y - state.y;
-    state.z  = p->r.z - state.z;
-    state.vx = p->v.x - state.vx;
-    state.vy = p->v.y - state.vy;
-    state.vz = p->v.z - state.vz;
+    state.x  = bptr->r.x - state.x;
+    state.y  = bptr->r.y - state.y;
+    state.z  = bptr->r.z - state.z;
+    state.vx = bptr->v.x - state.vx;
+    state.vy = bptr->v.y - state.vy;
+    state.vz = bptr->v.z - state.vz;
 
     return state;
 }
