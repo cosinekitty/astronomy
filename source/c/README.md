@@ -746,6 +746,33 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 
 ---
 
+<a name="Astronomy_GravSimBodyState"></a>
+### Astronomy_GravSimBodyState(sim, body) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Get the position and velocity of a Solar System body included in the simulation.** 
+
+
+
+In order to simulate the movement of small bodies through the Solar System, the simulator needs to calculate the state vectors for the Sun and planets. Depending on the `option` value passed to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit), some or all of the planets are calculated to determine their gravitational effects on the small bodies.
+
+If an application wants to know the positions of one or more of the planets in addition to the small bodies, this function provides a way to obtain their state vectors. This is provided for the sake of efficiency, to avoid redundant calculations.
+
+
+
+**Returns:**  If the given body is part of the set of calculated bodies (Sun and planets), returns the current time step's state vector for that body, expressed in the coordinate system that was specified by the `option` parameter to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit). Success is indicated by the returned structure's `status` field holding `ASTRO_SUCCESS`. Any other `status` value indicates an error, meaning the returned state vector is invalid. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object created by a successful call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit). | 
+| [`astro_body_t`](#astro_body_t) | `body` |  Any body that is included by the `option` call that was passed to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit). If it was `GRAVSIM_OUTER_PLANETS`, allowed bodies are the Sun, Jupiter, Saturn, Uranus, or Neptune. If it was `GRAVSIM_ALL_PLANETS`, the allowed bodies additionally include Mercury, Venus, Earth, and Mars. If `GRAVSIM_ALL_PLANETS_AND_MOON`, the allowed bodies further include the Moon. | 
+
+
+
+
+---
+
 <a name="Astronomy_GravSimFree"></a>
 ### Astronomy_GravSimFree(sim) &#8658; `void`
 
@@ -767,7 +794,7 @@ To avoid memory leaks, any successful call to [`Astronomy_GravSimInit`](#Astrono
 ---
 
 <a name="Astronomy_GravSimInit"></a>
-### Astronomy_GravSimInit(sim, option, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
+### Astronomy_GravSimInit(sim, originBody, option, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
 
 **Allocate and initialize a gravity step simulator.** 
 
@@ -788,6 +815,7 @@ If this function succeeds (returns `ASTRO_SUCCESS`), `sim` will be set to a dyna
 | Type | Parameter | Description |
 | --- | --- | --- |
 | <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> **</code> | `sim` |  The address of a pointer to store the newly allocated simulation object. The type [`astro_grav_sim_t`](#astro_grav_sim_t) is an opaque type, so its internal structure is not documented. | 
+| [`astro_body_t`](#astro_body_t) | `originBody` |  Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStateArray` parameter of this function, along with all output vectors returned by [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate). Most callers will want to provide one of the following: `BODY_SUN` for heliocentric coordinates, `BODY_SSB` for solar system barycentric coordinates, or `BODY_EARTH` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. | 
 | [`astro_grav_sim_option_t`](#astro_grav_sim_option_t) | `option` |  Selects how accurately to perform the simulation. This opton adjusts the tradeoff between speed and accuracy, depending on what is already known about the body's orbit. See [`astro_grav_sim_option_t`](#astro_grav_sim_option_t) for more details. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The initial time at which to start the simulation. | 
 | `int` | `numBodies` |  The number of small bodies to be simulated. This may be any non-negative integer. | 

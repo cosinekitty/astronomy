@@ -1307,6 +1307,7 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec);
 
 astro_status_t Astronomy_GravSimInit(
     astro_grav_sim_t **sim,
+    astro_body_t originBody,
     astro_grav_sim_option_t option,
     astro_time_t time,
     int numBodies,
@@ -1318,6 +1319,11 @@ astro_status_t Astronomy_GravSimUpdate(
     astro_time_t time,
     int numBodies,
     astro_state_vector_t *bodyStateArray
+);
+
+astro_state_vector_t Astronomy_GravSimBodyState(
+    astro_grav_sim_t *sim,
+    astro_body_t body
 );
 
 void Astronomy_GravSimFree(astro_grav_sim_t *sim);
