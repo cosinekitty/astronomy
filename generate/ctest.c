@@ -6430,20 +6430,20 @@ static int GravitySimulatorTest(void)
     double rscore = 0.0;
     double vscore = 0.0;
 
-    CHECK(GravSimFile("barystate/Ceres.txt",  BODY_SSB, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("barystate/Pallas.txt", BODY_SSB, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("barystate/Vesta.txt",  BODY_SSB, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("barystate/Juno.txt",   BODY_SSB, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("barystate/Ceres.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 0.6640, 0.6226));
+    CHECK(GravSimFile("barystate/Pallas.txt",   BODY_SSB,   nsteps, &rscore, &vscore, 0.4687, 0.3474));
+    CHECK(GravSimFile("barystate/Vesta.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 0.5806, 0.5462));
+    CHECK(GravSimFile("barystate/Juno.txt",     BODY_SSB,   nsteps, &rscore, &vscore, 0.6760, 0.5750));
 
-    CHECK(GravSimFile("heliostate/Ceres.txt",  BODY_SUN, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("heliostate/Pallas.txt", BODY_SUN, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("heliostate/Vesta.txt",  BODY_SUN, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("heliostate/Juno.txt",   BODY_SUN, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("heliostate/Ceres.txt",   BODY_SUN,   nsteps, &rscore, &vscore, 0.0445, 0.0355));
+    CHECK(GravSimFile("heliostate/Pallas.txt",  BODY_SUN,   nsteps, &rscore, &vscore, 0.1062, 0.0854));
+    CHECK(GravSimFile("heliostate/Vesta.txt",   BODY_SUN,   nsteps, &rscore, &vscore, 0.1432, 0.1308));
+    CHECK(GravSimFile("heliostate/Juno.txt",    BODY_SUN,   nsteps, &rscore, &vscore, 0.1554, 0.1328));
 
-    CHECK(GravSimFile("geostate/Ceres.txt",  BODY_EARTH, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("geostate/Pallas.txt", BODY_EARTH, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("geostate/Vesta.txt",  BODY_EARTH, nsteps, &rscore, &vscore, 60, 60));
-    CHECK(GravSimFile("geostate/Juno.txt",   BODY_EARTH, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("geostate/Ceres.txt",     BODY_EARTH, nsteps, &rscore, &vscore, 6.5689, 6.4797));
+    CHECK(GravSimFile("geostate/Pallas.txt",    BODY_EARTH, nsteps, &rscore, &vscore, 9.3288, 7.3533));
+    CHECK(GravSimFile("geostate/Vesta.txt",     BODY_EARTH, nsteps, &rscore, &vscore, 3.2980, 3.8863));
+    CHECK(GravSimFile("geostate/Juno.txt",      BODY_EARTH, nsteps, &rscore, &vscore, 6.0962, 7.7147));
 
     printf("C GravitySimulatorTest: PASS (pos score = %0.4lf arcmin, vel score = %0.4lf arcmin)\n", rscore, vscore);
 fail:

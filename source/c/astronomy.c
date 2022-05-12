@@ -95,21 +95,11 @@ typedef struct
 }
 major_bodies_t;
 
-typedef struct
-{
-    body_state_t Mercury;
-    body_state_t Venus;
-    body_state_t Earth;
-    body_state_t Mars;
-}
-minor_bodies_t;
-
 struct astro_grav_sim_s
 {
     astro_body_t      originBody;
     astro_time_t      time;
-    major_bodies_t    major;
-    minor_bodies_t    minor;
+    body_state_t      gravitators[1 + BODY_SUN];
     int               numBodies;
     body_grav_calc_t *prevBodies;
     body_grav_calc_t *currBodies;
@@ -3605,7 +3595,7 @@ static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_b
 
 static void MajorBodyBary(major_bodies_t *bary, double tt)
 {
-    /* bary[0] starts out receiving the Solar System Barycenter. */
+    /* Initialize the Sun's position as a zero vector, then adjust it from pulls from the planets. */
     bary->Sun.tt = tt;
     bary->Sun.r = VecZero;
     bary->Sun.v = VecZero;
@@ -3625,30 +3615,6 @@ static void MajorBodyBary(major_bodies_t *bary, double tt)
     /* Convert heliocentric SSB to barycentric Sun. */
     VecScale(&bary->Sun.r, -1.0);
     VecScale(&bary->Sun.v, -1.0);
-}
-
-
-static body_state_t CalcBary(astro_body_t body, const body_state_t *sun, double tt)
-{
-    /* Calculate the heliocentric state of the body. */
-    body_state_t planet = CalcVsopPosVel(&vsop[body], tt);
-
-    /*
-        Use the Sun's barycentric position to convert
-        the planet's heliocentric coordinates to barycentric coordinates also.
-    */
-    VecIncr(&planet.r, sun->r);
-    VecIncr(&planet.v, sun->v);
-
-    return planet;
-}
-
-static void MinorBodyBary(minor_bodies_t *bary, const body_state_t *sun, double tt)
-{
-    bary->Mercury = CalcBary(BODY_MERCURY, sun, tt);
-    bary->Venus   = CalcBary(BODY_VENUS,   sun, tt);
-    bary->Earth   = CalcBary(BODY_EARTH,   sun, tt);
-    bary->Mars    = CalcBary(BODY_MARS,    sun, tt);
 }
 
 
@@ -3734,8 +3700,35 @@ static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *
 
 static void CalcSolarSystem(astro_grav_sim_t *sim)
 {
-    MajorBodyBary(&sim->major, sim->time.tt);
-    MinorBodyBary(&sim->minor, &sim->major.Sun, sim->time.tt);
+    int body;
+    double tt = sim->time.tt;
+    body_state_t *sun = &sim->gravitators[BODY_SUN];
+
+    /* Initialize the Sun's position as a zero vector, then adjust from pulls from the planets. */
+    sun->tt = tt;
+    sun->r  = VecZero;
+    sun->v  = VecZero;
+
+    /* Calculate the position of each planet, and adjust the SSB position accordingly. */
+    sim->gravitators[BODY_MERCURY] = AdjustBarycenterPosVel(sun, tt, BODY_MERCURY, MERCURY_GM);
+    sim->gravitators[BODY_VENUS  ] = AdjustBarycenterPosVel(sun, tt, BODY_VENUS,   VENUS_GM);
+    sim->gravitators[BODY_EARTH  ] = AdjustBarycenterPosVel(sun, tt, BODY_EARTH,   EARTH_GM + MOON_GM);
+    sim->gravitators[BODY_MARS   ] = AdjustBarycenterPosVel(sun, tt, BODY_MARS,    MARS_GM);
+    sim->gravitators[BODY_JUPITER] = AdjustBarycenterPosVel(sun, tt, BODY_JUPITER, JUPITER_GM);
+    sim->gravitators[BODY_SATURN ] = AdjustBarycenterPosVel(sun, tt, BODY_SATURN,  SATURN_GM);
+    sim->gravitators[BODY_URANUS ] = AdjustBarycenterPosVel(sun, tt, BODY_URANUS,  URANUS_GM);
+    sim->gravitators[BODY_NEPTUNE] = AdjustBarycenterPosVel(sun, tt, BODY_NEPTUNE, NEPTUNE_GM);
+
+    /* Convert planet state vectors from heliocentric to barycentric. */
+    for (body = BODY_MERCURY; body <= BODY_NEPTUNE; ++body)
+    {
+        VecDecr(&sim->gravitators[body].r, sun->r);
+        VecDecr(&sim->gravitators[body].v, sun->v);
+    }
+
+    /* Convert heliocentric SSB to barycentric Sun. */
+    VecScale(&sun->r, -1.0);
+    VecScale(&sun->v, -1.0);
 }
 
 
@@ -3748,14 +3741,17 @@ static void CalcBodyAccelerations(astro_grav_sim_t *sim)
     {
         body_grav_calc_t *calc = &sim->currBodies[i];
 
-        /* Always include the pulls of the Sun and major planets. */
-        calc->a = SmallBodyAcceleration(calc->r, &sim->major);
+        calc->a = VecZero;
 
-        /* Include the inner 4 planets. */
-        AddAcceleration(&calc->a, calc->r, MERCURY_GM, sim->minor.Mercury.r);
-        AddAcceleration(&calc->a, calc->r, VENUS_GM,   sim->minor.Venus.r);
-        AddAcceleration(&calc->a, calc->r, EARTH_GM + MOON_GM, sim->minor.Earth.r);
-        AddAcceleration(&calc->a, calc->r, MARS_GM,    sim->minor.Mars.r);
+        AddAcceleration(&calc->a, calc->r, SUN_GM,              sim->gravitators[BODY_SUN    ].r);
+        AddAcceleration(&calc->a, calc->r, MERCURY_GM,          sim->gravitators[BODY_MERCURY].r);
+        AddAcceleration(&calc->a, calc->r, VENUS_GM,            sim->gravitators[BODY_VENUS  ].r);
+        AddAcceleration(&calc->a, calc->r, EARTH_GM + MOON_GM,  sim->gravitators[BODY_EARTH  ].r);
+        AddAcceleration(&calc->a, calc->r, MARS_GM,             sim->gravitators[BODY_MARS   ].r);
+        AddAcceleration(&calc->a, calc->r, JUPITER_GM,          sim->gravitators[BODY_JUPITER].r);
+        AddAcceleration(&calc->a, calc->r, SATURN_GM,           sim->gravitators[BODY_SATURN ].r);
+        AddAcceleration(&calc->a, calc->r, URANUS_GM,           sim->gravitators[BODY_URANUS ].r);
+        AddAcceleration(&calc->a, calc->r, NEPTUNE_GM,          sim->gravitators[BODY_NEPTUNE].r);
     }
 }
 
@@ -3767,19 +3763,11 @@ static body_state_t *GravSimBodyStatePtr(astro_grav_sim_t *sim, astro_body_t bod
         state of the given body, or NULL if this body is not one
         that we use for calculating gravitational interactions.
     */
-    switch (sim->originBody)
-    {
-    case BODY_SUN:      return &sim->major.Sun;
-    case BODY_MERCURY:  return &sim->minor.Mercury;
-    case BODY_VENUS:    return &sim->minor.Venus;
-    case BODY_EARTH:    return &sim->minor.Earth;
-    case BODY_MARS:     return &sim->minor.Mars;
-    case BODY_JUPITER:  return &sim->major.Jupiter;
-    case BODY_SATURN:   return &sim->major.Saturn;
-    case BODY_URANUS:   return &sim->major.Uranus;
-    case BODY_NEPTUNE:  return &sim->major.Neptune;
-    default:            return NULL;
-    }
+
+    if ((body == BODY_SUN) || (body >= BODY_MERCURY && body <= BODY_NEPTUNE))
+        return &sim->gravitators[body];
+
+    return NULL;
 }
 
 
