@@ -1104,24 +1104,6 @@ astro_node_event_t;
 typedef struct astro_grav_sim_s astro_grav_sim_t;
 
 
-/**
- * @brief Select the rigor level of a gravitational simulation.
- *
- * The #Astronomy_GravSimInit function accepts an `option` parameter
- * that adjusts how much work is performed by subsequent calls to
- * #Astronomy_GravSimUpdate during each step of a gravitational simulation run.
- * The caller chooses an appropriate option to balance execution speed
- * with accuracy, depending on what is known about the simulated body's orbit.
- */
-typedef enum
-{
-    GRAVSIM_OUTER_PLANETS,          /**< The simulation models the Sun and major planets Jupiter, Saturn, Uranus, and Neptune. This is the fastest option, but is appropriate only for outer Solar System bodies like Pluto. */
-    GRAVSIM_ALL_PLANETS,            /**< The simulation includes the Sun and all planets Mercury..Neptune. The Earth and Moon are treated as a single mass. This is an intermediate option that works well for most asteroids and comets that may pass inside Jupiter's orbit. */
-    GRAVSIM_ALL_PLANETS_AND_MOON    /**< The simulation includes the Sun and all planets Mercury..Neptune. The Earth and Moon are treated as separate bodies. This is the slowest but most accurate model, and is appropriate for bodies that may pass near the Earth/Moon system. */
-}
-astro_grav_sim_option_t;
-
-
 /*---------- functions ----------*/
 
 void Astronomy_Reset(void);
@@ -1308,7 +1290,6 @@ astro_constellation_t Astronomy_Constellation(double ra, double dec);
 astro_status_t Astronomy_GravSimInit(
     astro_grav_sim_t **sim,
     astro_body_t originBody,
-    astro_grav_sim_option_t option,
     astro_time_t time,
     int numBodies,
     const astro_state_vector_t *bodyStateArray

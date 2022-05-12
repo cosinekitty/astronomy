@@ -4791,7 +4791,7 @@ static int VerifyStateBody(
         }
     }
 
-    DEBUG("C VerifyStateBody(%s): PASS - Tested %d cases. max rdiff=%0.3le, vdiff=%0.3le\n", filename, count, max_rdiff, max_vdiff);
+    DEBUG("C VerifyStateBody(%-22s): PASS - Tested %d cases. max rdiff=%0.3le, vdiff=%0.3le\n", filename, count, max_rdiff, max_vdiff);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -6349,7 +6349,6 @@ static double ArcminVelError(astro_state_vector_t correct, astro_state_vector_t 
 static int GravSimFile(
     const char *filename,
     astro_body_t originBody,
-    astro_grav_sim_option_t option,
     int nsteps,
     double *r_score,
     double *v_score,
@@ -6367,19 +6366,19 @@ static int GravSimFile(
     astro_time_t time;
 
     if (nsteps < 1)
-        FAIL("C GravSimFile(%d : %s): invalid nsteps=%d\n", option, filename, nsteps);
+        FAIL("C GravSimFile(%s): invalid nsteps=%d\n", filename, nsteps);
 
     CHECK(LoadStateVectors(&batch, filename));
 
     if (batch.length <= 0)
-        FAIL("C GravSimFile(%d : %s): batch.length = %d is invalid.\n", option, filename, batch.length);
+        FAIL("C GravSimFile(%s): batch.length = %d is invalid.\n", filename, batch.length);
 
     /* Use the state vector and time in the batch to initialize the gravity simulator. */
     state = batch.array[0];
 
-    status = Astronomy_GravSimInit(&sim, originBody, option, state.t, 1, &state);
+    status = Astronomy_GravSimInit(&sim, originBody, state.t, 1, &state);
     if (status != ASTRO_SUCCESS)
-        FAIL("C GravSimFile(%d : %s): Astronomy_GravSimInit returned error %d\n", option, filename, status);
+        FAIL("C GravSimFile(%s): Astronomy_GravSimInit returned error %d\n", filename, status);
 
     time = state.t;
     for (i = 1; i < batch.length; ++i)
@@ -6391,7 +6390,7 @@ static int GravSimFile(
             time = Astronomy_AddDays(time, dt);
             status = Astronomy_GravSimUpdate(sim, time, 1, &state);
             if (status != ASTRO_SUCCESS)
-                FAIL("C GravSimFile(%d : %s : i=%d): Astronomy_GravSimInit returned error %d\n", option, filename, i, status);
+                FAIL("C GravSimFile(%s : i=%d): Astronomy_GravSimInit returned error %d\n", filename, i, status);
         }
 
         /* Compare the simulated state with the reference state. */
@@ -6400,14 +6399,14 @@ static int GravSimFile(
             max_rdiff = rdiff;
 
         if (rdiff > r_thresh)
-            FAIL("C GravSimFile(%d : %s : i=%d): EXCESSIVE position error = %0.4lf arcmin\n", option, filename, i, rdiff);
+            FAIL("C GravSimFile(%s : i=%d): EXCESSIVE position error = %0.4lf arcmin\n", filename, i, rdiff);
 
         vdiff = ArcminVelError(batch.array[i], state);
         if (vdiff > max_vdiff)
             max_vdiff = vdiff;
 
         if (vdiff > v_thresh)
-            FAIL("C GravSimFile(%d : %s : i=%d): EXCESSIVE velocity error = %0.4lf arcmin\n", option, filename, i, vdiff);
+            FAIL("C GravSimFile(%s : i=%d): EXCESSIVE velocity error = %0.4lf arcmin\n", filename, i, vdiff);
     }
 
     if (max_rdiff > *r_score)
@@ -6416,7 +6415,7 @@ static int GravSimFile(
     if (max_vdiff > *v_score)
         *v_score = max_vdiff;
 
-    printf("C GravSimFile(%d : %-22s): PASS (count = %d, pos error = %7.4lf arcmin, vel error = %7.4lf arcmin)\n", option, filename, batch.length, max_rdiff, max_vdiff);
+    DEBUG("C GravSimFile(%-22s): PASS (count = %d, pos error = %7.4lf arcmin, vel error = %7.4lf arcmin)\n", filename, batch.length, max_rdiff, max_vdiff);
     error = 0;
 fail:
     Astronomy_GravSimFree(sim);
@@ -6424,64 +6423,27 @@ fail:
     return error;
 }
 
-
-static int BaryGravSimTest(astro_grav_sim_option_t option, double *rscore, double *vscore)
-{
-    const int nsteps = 20;
-    int error;
-
-    CHECK(GravSimFile("barystate/Ceres.txt",  BODY_SSB, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("barystate/Pallas.txt", BODY_SSB, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("barystate/Vesta.txt",  BODY_SSB, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("barystate/Juno.txt",   BODY_SSB, option, nsteps, rscore, vscore, 60, 60));
-fail:
-    return error;
-}
-
-
-static int HelioGravSimTest(astro_grav_sim_option_t option, double *rscore, double *vscore)
-{
-    const int nsteps = 20;
-    int error;
-
-    CHECK(GravSimFile("heliostate/Ceres.txt",  BODY_SUN, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("heliostate/Pallas.txt", BODY_SUN, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("heliostate/Vesta.txt",  BODY_SUN, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("heliostate/Juno.txt",   BODY_SUN, option, nsteps, rscore, vscore, 60, 60));
-fail:
-    return error;
-}
-
-static int GeoGravSimTest(astro_grav_sim_option_t option, double *rscore, double *vscore)
-{
-    const int nsteps = 20;
-    int error;
-
-    CHECK(GravSimFile("geostate/Ceres.txt",  BODY_EARTH, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("geostate/Pallas.txt", BODY_EARTH, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("geostate/Vesta.txt",  BODY_EARTH, option, nsteps, rscore, vscore, 60, 60));
-    CHECK(GravSimFile("geostate/Juno.txt",   BODY_EARTH, option, nsteps, rscore, vscore, 60, 60));
-fail:
-    return error;
-}
-
 static int GravitySimulatorTest(void)
 {
     int error;
+    const int nsteps = 20;
     double rscore = 0.0;
     double vscore = 0.0;
 
-    CHECK(BaryGravSimTest(GRAVSIM_OUTER_PLANETS,         &rscore, &vscore));
-    CHECK(BaryGravSimTest(GRAVSIM_ALL_PLANETS,           &rscore, &vscore));
-    CHECK(BaryGravSimTest(GRAVSIM_ALL_PLANETS_AND_MOON,  &rscore, &vscore));
+    CHECK(GravSimFile("barystate/Ceres.txt",  BODY_SSB, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("barystate/Pallas.txt", BODY_SSB, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("barystate/Vesta.txt",  BODY_SSB, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("barystate/Juno.txt",   BODY_SSB, nsteps, &rscore, &vscore, 60, 60));
 
-    CHECK(HelioGravSimTest(GRAVSIM_OUTER_PLANETS,        &rscore, &vscore));
-    CHECK(HelioGravSimTest(GRAVSIM_ALL_PLANETS,          &rscore, &vscore));
-    CHECK(HelioGravSimTest(GRAVSIM_ALL_PLANETS_AND_MOON, &rscore, &vscore));
+    CHECK(GravSimFile("heliostate/Ceres.txt",  BODY_SUN, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("heliostate/Pallas.txt", BODY_SUN, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("heliostate/Vesta.txt",  BODY_SUN, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("heliostate/Juno.txt",   BODY_SUN, nsteps, &rscore, &vscore, 60, 60));
 
-    CHECK(GeoGravSimTest(GRAVSIM_OUTER_PLANETS,          &rscore, &vscore));
-    CHECK(GeoGravSimTest(GRAVSIM_ALL_PLANETS,            &rscore, &vscore));
-    CHECK(GeoGravSimTest(GRAVSIM_ALL_PLANETS_AND_MOON,   &rscore, &vscore));
+    CHECK(GravSimFile("geostate/Ceres.txt",  BODY_EARTH, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("geostate/Pallas.txt", BODY_EARTH, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("geostate/Vesta.txt",  BODY_EARTH, nsteps, &rscore, &vscore, 60, 60));
+    CHECK(GravSimFile("geostate/Juno.txt",   BODY_EARTH, nsteps, &rscore, &vscore, 60, 60));
 
     printf("C GravitySimulatorTest: PASS (pos score = %0.4lf arcmin, vel score = %0.4lf arcmin)\n", rscore, vscore);
 fail:

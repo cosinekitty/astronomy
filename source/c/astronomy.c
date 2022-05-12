@@ -106,14 +106,10 @@ minor_bodies_t;
 
 struct astro_grav_sim_s
 {
-    astro_status_t    status;
     astro_body_t      originBody;
-    unsigned          valid;        /* bit-mask of bodies that have been calculated in `currBodies` */
-    astro_grav_sim_option_t  option;
     astro_time_t      time;
     major_bodies_t    major;
     minor_bodies_t    minor;
-    body_state_t      moon;
     int               numBodies;
     body_grav_calc_t *prevBodies;
     body_grav_calc_t *currBodies;
@@ -3607,7 +3603,7 @@ static body_state_t AdjustBarycenterPosVel(body_state_t *ssb, double tt, astro_b
 }
 
 
-static unsigned MajorBodyBary(major_bodies_t *bary, double tt)
+static void MajorBodyBary(major_bodies_t *bary, double tt)
 {
     /* bary[0] starts out receiving the Solar System Barycenter. */
     bary->Sun.tt = tt;
@@ -3629,8 +3625,6 @@ static unsigned MajorBodyBary(major_bodies_t *bary, double tt)
     /* Convert heliocentric SSB to barycentric Sun. */
     VecScale(&bary->Sun.r, -1.0);
     VecScale(&bary->Sun.v, -1.0);
-
-    return (1 << BODY_SUN) | (1 << BODY_JUPITER) | (1 << BODY_SATURN) | (1 << BODY_URANUS) | (1 << BODY_NEPTUNE);
 }
 
 
@@ -3649,35 +3643,12 @@ static body_state_t CalcBary(astro_body_t body, const body_state_t *sun, double 
     return planet;
 }
 
-static unsigned MinorBodyBary(minor_bodies_t *bary, const body_state_t *sun, double tt)
+static void MinorBodyBary(minor_bodies_t *bary, const body_state_t *sun, double tt)
 {
     bary->Mercury = CalcBary(BODY_MERCURY, sun, tt);
     bary->Venus   = CalcBary(BODY_VENUS,   sun, tt);
     bary->Earth   = CalcBary(BODY_EARTH,   sun, tt);
     bary->Mars    = CalcBary(BODY_MARS,    sun, tt);
-
-    return (1 << BODY_MERCURY) | (1 << BODY_VENUS) | (1 << BODY_EARTH) | (1 << BODY_MARS);
-}
-
-
-static unsigned MoonBary(body_state_t *moon, const body_state_t *earth, astro_time_t time)
-{
-    astro_state_vector_t geomoon = Astronomy_GeoMoonState(time);
-
-    /* Add the Earth's barycentric position to obtain the Moon's barycentric position. */
-    moon->r.x = earth->r.x + geomoon.x;
-    moon->r.y = earth->r.y + geomoon.y;
-    moon->r.z = earth->r.z + geomoon.z;
-
-    /* Add the Earth's barycentric velocity to obtain the Moon's barycentric velocity. */
-    moon->v.x = earth->v.x + geomoon.vx;
-    moon->v.y = earth->v.y + geomoon.vy;
-    moon->v.z = earth->v.z + geomoon.vz;
-
-    /* Store the Terrestrial Time value for completeness. */
-    moon->tt = time.tt;
-
-    return (1 << BODY_MOON);
 }
 
 
@@ -3761,31 +3732,14 @@ static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *
 }
 
 
-static astro_status_t CalcSolarSystem(astro_grav_sim_t *sim)
+static void CalcSolarSystem(astro_grav_sim_t *sim)
 {
-    sim->valid = 0;     /* Invalidate all the body calculations. */
-
-    if (sim->status == ASTRO_SUCCESS)
-    {
-        sim->valid |= MajorBodyBary(&sim->major, sim->time.tt);
-        if (sim->option == GRAVSIM_OUTER_PLANETS)
-            return ASTRO_SUCCESS;
-
-        sim->valid |= MinorBodyBary(&sim->minor, &sim->major.Sun, sim->time.tt);
-        if (sim->option == GRAVSIM_ALL_PLANETS)
-            return ASTRO_SUCCESS;
-
-        sim->valid |= MoonBary(&sim->moon, &sim->minor.Earth, sim->time);
-        if (sim->option == GRAVSIM_ALL_PLANETS_AND_MOON)
-            return ASTRO_SUCCESS;
-    }
-
-    sim->status = ASTRO_INVALID_PARAMETER;
-    return ASTRO_INVALID_PARAMETER;
+    MajorBodyBary(&sim->major, sim->time.tt);
+    MinorBodyBary(&sim->minor, &sim->major.Sun, sim->time.tt);
 }
 
 
-static astro_status_t CalcBodyAccelerations(astro_grav_sim_t *sim)
+static void CalcBodyAccelerations(astro_grav_sim_t *sim)
 {
     int i;
 
@@ -3796,35 +3750,13 @@ static astro_status_t CalcBodyAccelerations(astro_grav_sim_t *sim)
 
         /* Always include the pulls of the Sun and major planets. */
         calc->a = SmallBodyAcceleration(calc->r, &sim->major);
-        if (sim->option != GRAVSIM_OUTER_PLANETS)
-        {
-            /* Include the terrestrial planets other than the Earth. */
-            AddAcceleration(&calc->a, calc->r, MERCURY_GM, sim->minor.Mercury.r);
-            AddAcceleration(&calc->a, calc->r, VENUS_GM,   sim->minor.Venus.r);
-            AddAcceleration(&calc->a, calc->r, MARS_GM,    sim->minor.Mars.r);
 
-            /* Now figure out how to handle the Earth/Moon system. */
-            switch (sim->option)
-            {
-            case GRAVSIM_ALL_PLANETS:
-                /* Combine the Earth and Moon's mass into the Earth's position. */
-                AddAcceleration(&calc->a, calc->r, EARTH_GM + MOON_GM, sim->minor.Earth.r);
-                break;
-
-            case GRAVSIM_ALL_PLANETS_AND_MOON:
-                /* Keep the Earth and Moon as separate gravitationally attracting points. */
-                AddAcceleration(&calc->a, calc->r, EARTH_GM, sim->minor.Earth.r);
-                AddAcceleration(&calc->a, calc->r, MOON_GM,  sim->moon.r);
-                break;
-
-            default:
-                /* The simulation option is not valid! */
-                return ASTRO_INVALID_PARAMETER;
-            }
-        }
+        /* Include the inner 4 planets. */
+        AddAcceleration(&calc->a, calc->r, MERCURY_GM, sim->minor.Mercury.r);
+        AddAcceleration(&calc->a, calc->r, VENUS_GM,   sim->minor.Venus.r);
+        AddAcceleration(&calc->a, calc->r, EARTH_GM + MOON_GM, sim->minor.Earth.r);
+        AddAcceleration(&calc->a, calc->r, MARS_GM,    sim->minor.Mars.r);
     }
-
-    return ASTRO_SUCCESS;
 }
 
 
@@ -3838,7 +3770,6 @@ static body_state_t *GravSimBodyStatePtr(astro_grav_sim_t *sim, astro_body_t bod
     switch (sim->originBody)
     {
     case BODY_SUN:      return &sim->major.Sun;
-    case BODY_MOON:     return &sim->moon;
     case BODY_MERCURY:  return &sim->minor.Mercury;
     case BODY_VENUS:    return &sim->minor.Venus;
     case BODY_EARTH:    return &sim->minor.Earth;
@@ -3873,50 +3804,13 @@ static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
 
     optr = GravSimBodyStatePtr(sim, sim->originBody);
     if (optr != NULL)
-    {
-        /*
-            This is one of the solar system bodies (Sun or planet)
-            that we could calculate, depending on `sim->option`.
-            The `valid` bitmask tells us whether we have already calculated this body.
-            If we have not yet calculated it, do so now and cache the result.
-        */
-        if (0 == (sim->valid & (1 << sim->originBody)))
-        {
-            /* Precondition: we must already have determined the SSB. */
-            if (0 == (sim->valid & (1 << BODY_SUN)))
-                return StateVecError(ASTRO_INTERNAL_ERROR, sim->time);
-
-            /* Calculate the origin body now. */
-            if (sim->originBody == BODY_MOON)
-            {
-                /* The Moon is a special case, because we need to know the Earth first. */
-                if (0 == (sim->valid & (1 << BODY_EARTH)))
-                {
-                    /* We need to calculate the Earth's state in order to calculate the Moon's. */
-                    sim->minor.Earth = CalcBary(BODY_EARTH, &sim->major.Sun, sim->time.tt);
-                    sim->valid |= (1 << BODY_EARTH);
-                }
-
-                MoonBary(optr, &sim->minor.Earth, sim->time);
-            }
-            else
-            {
-                *optr = CalcBary(sim->originBody, &sim->major.Sun, sim->time.tt);
-            }
-
-            /* Mark the additional body as valid. */
-            sim->valid |= (1 << sim->originBody);
-        }
-
-        /* Return the barycentric position and velocity of the origin body. */
         return ExportState(*optr, sim->time);
-    }
 
     /*
         We have to calculate the barycentric state of this body.
         This is more expensive, but it's necessary.
     */
-    return Astronomy_BaryState(sim->originBody, sim->time);
+    return StateVecError(ASTRO_INVALID_BODY, sim->time);
 }
 
 
@@ -3955,12 +3849,6 @@ static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
  *      gravity simulator does not correct for light travel time;
  *      all state vectors are tied to a Newtonian "instantaneous" time.
  *
- * @param option
- *      Selects how accurately to perform the simulation.
- *      This opton adjusts the tradeoff between speed and accuracy, depending
- *      on what is already known about the body's orbit.
- *      See #astro_grav_sim_option_t for more details.
- *
  * @param time
  *      The initial time at which to start the simulation.
  *
@@ -3983,7 +3871,6 @@ static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
 astro_status_t Astronomy_GravSimInit(
     astro_grav_sim_t **sim,
     astro_body_t originBody,
-    astro_grav_sim_option_t option,
     astro_time_t time,
     int numBodies,
     const astro_state_vector_t *bodyStateArray)
@@ -4034,9 +3921,7 @@ astro_status_t Astronomy_GravSimInit(
         }
     }
 
-    (*sim)->status = ASTRO_SUCCESS;
     (*sim)->originBody = originBody;
-    (*sim)->option = option;
     (*sim)->time = time;
 
     /* Remember the initial states of all the bodies as "current". */
@@ -4054,9 +3939,7 @@ astro_status_t Astronomy_GravSimInit(
     }
 
     /* Calculate the state of the Sun and planets. */
-    status = CalcSolarSystem(*sim);
-    if (status != ASTRO_SUCCESS)
-        goto fail;
+    CalcSolarSystem(*sim);
 
     /*
         We need to do all the physics calculations in barycentric coordinates.
@@ -4086,10 +3969,7 @@ astro_status_t Astronomy_GravSimInit(
     }
 
     /* Calculate the net acceleration experienced by the small bodies. */
-    status = CalcBodyAccelerations(*sim);
-    if (status != ASTRO_SUCCESS)
-        goto fail;
-
+    CalcBodyAccelerations(*sim);
     return ASTRO_SUCCESS;
 
 fail:
@@ -4147,10 +4027,6 @@ astro_status_t Astronomy_GravSimUpdate(
     body_grav_calc_t *swap;
     int i;
 
-    /* Has this simulation already been "broken"? If so, it stays broken forever! */
-    if (sim->status != ASTRO_SUCCESS)
-        return sim->status;
-
     /*
         The caller's understanding of the number of bodies must match the actual
         array size in `sim`, or we risk corrupting/accessin invalid memory.
@@ -4182,9 +4058,7 @@ astro_status_t Astronomy_GravSimUpdate(
         sim->time = time;
 
         /* Now that sim->time is set, it is safe to call `CalcSolarSystem`. */
-        sim->status = CalcSolarSystem(sim);
-        if (sim->status != ASTRO_SUCCESS)
-            return sim->status;
+        CalcSolarSystem(sim);
 
         for (i = 0; i < numBodies; ++i)
         {
@@ -4201,9 +4075,7 @@ astro_status_t Astronomy_GravSimUpdate(
             Calculate the acceleration experienced by the small bodies
             at their respective approximate next locations.
         */
-        sim->status = CalcBodyAccelerations(sim);
-        if (sim->status != ASTRO_SUCCESS)
-            return sim->status;
+        CalcBodyAccelerations(sim);
 
         for (i = 0; i < numBodies; ++i)
         {
@@ -4234,9 +4106,7 @@ astro_status_t Astronomy_GravSimUpdate(
             Also, they will be potentially useful if some day we add
             a function to query the acceleration vectors for the bodies.
         */
-        sim->status = CalcBodyAccelerations(sim);
-        if (sim->status != ASTRO_SUCCESS)
-            return sim->status;
+        CalcBodyAccelerations(sim);
     }
 
     /*
@@ -4280,9 +4150,6 @@ astro_status_t Astronomy_GravSimUpdate(
  *
  * In order to simulate the movement of small bodies through the Solar System,
  * the simulator needs to calculate the state vectors for the Sun and planets.
- * Depending on the `option` value passed to #Astronomy_GravSimInit, some or all
- * of the planets are calculated to determine their gravitational effects on the
- * small bodies.
  *
  * If an application wants to know the positions of one or more of the planets
  * in addition to the small bodies, this function provides a way to obtain
@@ -4293,16 +4160,13 @@ astro_status_t Astronomy_GravSimUpdate(
  *      A gravity simulator object created by a successful call to #Astronomy_GravSimInit.
  *
  * @param body
- *      Any body that is included by the `option` call that was passed to #Astronomy_GravSimInit.
- *      If it was `GRAVSIM_OUTER_PLANETS`, allowed bodies are the Sun, Jupiter, Saturn, Uranus, or Neptune.
- *      If it was `GRAVSIM_ALL_PLANETS`, the allowed bodies additionally include Mercury, Venus, Earth, and Mars.
- *      If `GRAVSIM_ALL_PLANETS_AND_MOON`, the allowed bodies further include the Moon.
+ *      The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune.
  *
  * @return
  *      If the given body is part of the set of calculated bodies
  *      (Sun and planets), returns the current time step's state
  *      vector for that body, expressed in the coordinate system
- *      that was specified by the `option` parameter to #Astronomy_GravSimInit.
+ *      that was specified by the `originBody` parameter to #Astronomy_GravSimInit.
  *      Success is indicated by the returned structure's `status` field holding
  *      `ASTRO_SUCCESS`. Any other `status` value indicates an error, meaning
  *      the returned state vector is invalid.
@@ -4314,15 +4178,9 @@ astro_state_vector_t Astronomy_GravSimBodyState(
     astro_state_vector_t state;
     body_state_t *bptr;
 
-    if (body < BODY_MERCURY || body > BODY_SSB)
-        return StateVecError(ASTRO_INVALID_BODY, sim->time);
-
-    if (0 == (sim->valid & (1 << body)))
-        return StateVecError(ASTRO_INVALID_BODY, sim->time);
-
     bptr = GravSimBodyStatePtr(sim, body);
     if (bptr == NULL)
-        return StateVecError(ASTRO_INTERNAL_ERROR, sim->time);      /* should never happen */
+        return StateVecError(ASTRO_INVALID_BODY, sim->time);
 
     state = GravSimOriginState(sim);
     if (state.status != ASTRO_SUCCESS)
