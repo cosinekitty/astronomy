@@ -89,14 +89,21 @@ typedef struct
 }
 major_bodies_t;
 
-struct astro_grav_sim_s
+typedef struct
 {
-    astro_body_t      originBody;
     astro_time_t      time;
     body_state_t      gravitators[1 + BODY_SUN];
-    int               numBodies;
-    body_grav_calc_t *prevBodies;
-    body_grav_calc_t *currBodies;
+    body_grav_calc_t *bodies;
+}
+gravsim_endpoint_t;
+
+struct astro_grav_sim_s
+{
+    astro_body_t        originBody;
+    int                 numBodies;
+    gravsim_endpoint_t  endpoint[2];
+    gravsim_endpoint_t *prev;
+    gravsim_endpoint_t *curr;
 };
 /** @endcond */
 
@@ -2689,8 +2696,9 @@ static body_grav_calc_t GravFromState(major_bodies_t *bary, const body_state_t *
 static void CalcSolarSystem(astro_grav_sim_t *sim)
 {
     int body;
-    double tt = sim->time.tt;
-    body_state_t *sun = &sim->gravitators[BODY_SUN];
+    double tt = sim->curr->time.tt;
+    body_state_t *grav = sim->curr->gravitators;
+    body_state_t *sun = &grav[BODY_SUN];
 
     /* Initialize the Sun's position as a zero vector, then adjust from pulls from the planets. */
     sun->tt = tt;
@@ -2698,20 +2706,20 @@ static void CalcSolarSystem(astro_grav_sim_t *sim)
     sun->v  = VecZero;
 
     /* Calculate the position of each planet, and adjust the SSB position accordingly. */
-    sim->gravitators[BODY_MERCURY] = AdjustBarycenterPosVel(sun, tt, BODY_MERCURY, MERCURY_GM);
-    sim->gravitators[BODY_VENUS  ] = AdjustBarycenterPosVel(sun, tt, BODY_VENUS,   VENUS_GM);
-    sim->gravitators[BODY_EARTH  ] = AdjustBarycenterPosVel(sun, tt, BODY_EARTH,   EARTH_GM + MOON_GM);
-    sim->gravitators[BODY_MARS   ] = AdjustBarycenterPosVel(sun, tt, BODY_MARS,    MARS_GM);
-    sim->gravitators[BODY_JUPITER] = AdjustBarycenterPosVel(sun, tt, BODY_JUPITER, JUPITER_GM);
-    sim->gravitators[BODY_SATURN ] = AdjustBarycenterPosVel(sun, tt, BODY_SATURN,  SATURN_GM);
-    sim->gravitators[BODY_URANUS ] = AdjustBarycenterPosVel(sun, tt, BODY_URANUS,  URANUS_GM);
-    sim->gravitators[BODY_NEPTUNE] = AdjustBarycenterPosVel(sun, tt, BODY_NEPTUNE, NEPTUNE_GM);
+    grav[BODY_MERCURY] = AdjustBarycenterPosVel(sun, tt, BODY_MERCURY, MERCURY_GM);
+    grav[BODY_VENUS  ] = AdjustBarycenterPosVel(sun, tt, BODY_VENUS,   VENUS_GM);
+    grav[BODY_EARTH  ] = AdjustBarycenterPosVel(sun, tt, BODY_EARTH,   EARTH_GM + MOON_GM);
+    grav[BODY_MARS   ] = AdjustBarycenterPosVel(sun, tt, BODY_MARS,    MARS_GM);
+    grav[BODY_JUPITER] = AdjustBarycenterPosVel(sun, tt, BODY_JUPITER, JUPITER_GM);
+    grav[BODY_SATURN ] = AdjustBarycenterPosVel(sun, tt, BODY_SATURN,  SATURN_GM);
+    grav[BODY_URANUS ] = AdjustBarycenterPosVel(sun, tt, BODY_URANUS,  URANUS_GM);
+    grav[BODY_NEPTUNE] = AdjustBarycenterPosVel(sun, tt, BODY_NEPTUNE, NEPTUNE_GM);
 
     /* Convert planet state vectors from heliocentric to barycentric. */
     for (body = BODY_MERCURY; body <= BODY_NEPTUNE; ++body)
     {
-        VecDecr(&sim->gravitators[body].r, sun->r);
-        VecDecr(&sim->gravitators[body].v, sun->v);
+        VecDecr(&grav[body].r, sun->r);
+        VecDecr(&grav[body].v, sun->v);
     }
 
     /* Convert heliocentric SSB to barycentric Sun. */
@@ -2727,19 +2735,20 @@ static void CalcBodyAccelerations(astro_grav_sim_t *sim)
     /* Calculate the gravitational acceleration experienced by the simulated bodies. */
     for (i = 0; i < sim->numBodies; ++i)
     {
-        body_grav_calc_t *calc = &sim->currBodies[i];
+        body_grav_calc_t *calc = &sim->curr->bodies[i];
+        const body_state_t *grav = sim->curr->gravitators;
 
         calc->a = VecZero;
 
-        AddAcceleration(&calc->a, calc->r, SUN_GM,              sim->gravitators[BODY_SUN    ].r);
-        AddAcceleration(&calc->a, calc->r, MERCURY_GM,          sim->gravitators[BODY_MERCURY].r);
-        AddAcceleration(&calc->a, calc->r, VENUS_GM,            sim->gravitators[BODY_VENUS  ].r);
-        AddAcceleration(&calc->a, calc->r, EARTH_GM + MOON_GM,  sim->gravitators[BODY_EARTH  ].r);
-        AddAcceleration(&calc->a, calc->r, MARS_GM,             sim->gravitators[BODY_MARS   ].r);
-        AddAcceleration(&calc->a, calc->r, JUPITER_GM,          sim->gravitators[BODY_JUPITER].r);
-        AddAcceleration(&calc->a, calc->r, SATURN_GM,           sim->gravitators[BODY_SATURN ].r);
-        AddAcceleration(&calc->a, calc->r, URANUS_GM,           sim->gravitators[BODY_URANUS ].r);
-        AddAcceleration(&calc->a, calc->r, NEPTUNE_GM,          sim->gravitators[BODY_NEPTUNE].r);
+        AddAcceleration(&calc->a, calc->r, SUN_GM,              grav[BODY_SUN    ].r);
+        AddAcceleration(&calc->a, calc->r, MERCURY_GM,          grav[BODY_MERCURY].r);
+        AddAcceleration(&calc->a, calc->r, VENUS_GM,            grav[BODY_VENUS  ].r);
+        AddAcceleration(&calc->a, calc->r, EARTH_GM + MOON_GM,  grav[BODY_EARTH  ].r);
+        AddAcceleration(&calc->a, calc->r, MARS_GM,             grav[BODY_MARS   ].r);
+        AddAcceleration(&calc->a, calc->r, JUPITER_GM,          grav[BODY_JUPITER].r);
+        AddAcceleration(&calc->a, calc->r, SATURN_GM,           grav[BODY_SATURN ].r);
+        AddAcceleration(&calc->a, calc->r, URANUS_GM,           grav[BODY_URANUS ].r);
+        AddAcceleration(&calc->a, calc->r, NEPTUNE_GM,          grav[BODY_NEPTUNE].r);
     }
 }
 
@@ -2753,7 +2762,7 @@ static body_state_t *GravSimBodyStatePtr(astro_grav_sim_t *sim, astro_body_t bod
     */
 
     if ((body == BODY_SUN) || (body >= BODY_MERCURY && body <= BODY_NEPTUNE))
-        return &sim->gravitators[body];
+        return &sim->curr->gravitators[body];
 
     return NULL;
 }
@@ -2762,13 +2771,14 @@ static body_state_t *GravSimBodyStatePtr(astro_grav_sim_t *sim, astro_body_t bod
 static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
 {
     body_state_t *optr;
+    astro_time_t time = sim->curr->time;
 
     if (sim->originBody == BODY_SSB)
     {
         /* The barycentric state of the SSB is zero, by definition. */
         astro_state_vector_t state;
         state.status = ASTRO_SUCCESS;
-        state.t  = sim->time;
+        state.t  = time;
         state.x  = 0.0;
         state.y  = 0.0;
         state.z  = 0.0;
@@ -2780,15 +2790,23 @@ static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
 
     optr = GravSimBodyStatePtr(sim, sim->originBody);
     if (optr != NULL)
-        return ExportState(*optr, sim->time);
+        return ExportState(*optr, time);
 
     /*
         We have to calculate the barycentric state of this body.
         This is more expensive, but it's necessary.
     */
-    return StateVecError(ASTRO_INVALID_BODY, sim->time);
+    return StateVecError(ASTRO_INVALID_BODY, time);
 }
 
+
+static void GravSimDuplicate(astro_grav_sim_t *sim)
+{
+    /* Copy the current state into the previous state, so that both become the same moment in time. */
+    sim->prev->time = sim->curr->time;
+    memcpy(sim->prev->gravitators, sim->curr->gravitators, sizeof(sim->prev->gravitators));
+    memcpy(sim->prev->bodies, sim->curr->bodies, ((size_t)sim->numBodies) * sizeof(sim->prev->bodies[0]));
+}
 
 
 /**
@@ -2807,7 +2825,7 @@ static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
  * then responsible for eventually calling #Astronomy_GravSimFree
  * to release the memory.
  *
- * @param sim
+ * @param simOut
  *      The address of a pointer to store the newly allocated simulation object.
  *      The type #astro_grav_sim_t is an opaque type, so its internal structure is not documented.
  *
@@ -2845,22 +2863,23 @@ static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
  *      `ASTRO_SUCCESS` on success, with `*sim` set to a non-NULL value. Otherwise an error code with `*sim` set to NULL.
  */
 astro_status_t Astronomy_GravSimInit(
-    astro_grav_sim_t **sim,
+    astro_grav_sim_t **simOut,
     astro_body_t originBody,
     astro_time_t time,
     int numBodies,
     const astro_state_vector_t *bodyStateArray)
 {
+    astro_grav_sim_t *sim;
     astro_status_t status;
     body_grav_calc_t *array;
     int i;
 
     /* Validate parameters before attempting to allocate memory. */
 
-    if (sim == NULL)
+    if (simOut == NULL)
         return ASTRO_INVALID_PARAMETER;
 
-    *sim = NULL;
+    *simOut = NULL;
 
     if (numBodies < 0)
         return ASTRO_INVALID_PARAMETER;
@@ -2881,28 +2900,30 @@ astro_status_t Astronomy_GravSimInit(
             return ASTRO_INCONSISTENT_TIMES;
     }
 
-    *sim = (astro_grav_sim_t *) calloc(1, sizeof(astro_grav_sim_t));
-    if (*sim == NULL)
+    *simOut = sim = (astro_grav_sim_t *) calloc(1, sizeof(astro_grav_sim_t));
+    if (sim == NULL)
         return ASTRO_OUT_OF_MEMORY;
 
-    (*sim)->numBodies = numBodies;
+    sim->originBody = originBody;
+    sim->numBodies = numBodies;
+    sim->prev = &(sim->endpoint[0]);
+    sim->curr = &(sim->endpoint[1]);
+    sim->curr->time = time;
+
     if (numBodies > 0)
     {
-        (*sim)->prevBodies = (body_grav_calc_t *) calloc(numBodies, sizeof(body_grav_calc_t));
-        (*sim)->currBodies = (body_grav_calc_t *) calloc(numBodies, sizeof(body_grav_calc_t));
-        if ((*sim)->prevBodies == NULL || (*sim)->currBodies == NULL)
+        sim->prev->bodies = (body_grav_calc_t *) calloc(numBodies, sizeof(body_grav_calc_t));
+        sim->curr->bodies = (body_grav_calc_t *) calloc(numBodies, sizeof(body_grav_calc_t));
+        if (sim->prev->bodies == NULL || sim->curr->bodies == NULL)
         {
             status = ASTRO_OUT_OF_MEMORY;
             goto fail;
         }
     }
 
-    (*sim)->originBody = originBody;
-    (*sim)->time = time;
-
     /* Remember the initial states of all the bodies as "current". */
     /* Convert from the public type astro_state_t to our internal type body_grav_calc_t. */
-    array = (*sim)->currBodies;
+    array = sim->curr->bodies;
     for (i = 0; i < numBodies; ++i)
     {
         array[i].tt  = bodyStateArray[i].t.tt;
@@ -2915,7 +2936,7 @@ astro_status_t Astronomy_GravSimInit(
     }
 
     /* Calculate the state of the Sun and planets. */
-    CalcSolarSystem(*sim);
+    CalcSolarSystem(sim);
 
     /*
         We need to do all the physics calculations in barycentric coordinates.
@@ -2925,7 +2946,7 @@ astro_status_t Astronomy_GravSimInit(
     if (originBody != BODY_SSB)
     {
         /* Determine the barycentric state of the origin body. */
-        astro_state_vector_t originState = GravSimOriginState(*sim);
+        astro_state_vector_t originState = GravSimOriginState(sim);
         if (originState.status != ASTRO_SUCCESS)
         {
             status = originState.status;
@@ -2945,12 +2966,16 @@ astro_status_t Astronomy_GravSimInit(
     }
 
     /* Calculate the net acceleration experienced by the small bodies. */
-    CalcBodyAccelerations(*sim);
+    CalcBodyAccelerations(sim);
+
+    /* To prepare for a possible swap operation, duplicate the current state into the previous state. */
+    GravSimDuplicate(sim);
+
     return ASTRO_SUCCESS;
 
 fail:
-    Astronomy_GravSimFree(*sim);
-    *sim = NULL;
+    Astronomy_GravSimFree(sim);
+    *simOut = NULL;
     return status;
 }
 
@@ -3000,38 +3025,35 @@ astro_status_t Astronomy_GravSimUpdate(
 {
     terse_vector_t acc;
     double dt;      /* terrestrial time increment */
-    body_grav_calc_t *swap;
     int i;
 
     /*
         The caller's understanding of the number of bodies must match the actual
-        array size in `sim`, or we risk corrupting/accessin invalid memory.
+        array size in `sim`, or we risk corrupting/accessing invalid memory.
     */
     if (numBodies != sim->numBodies)
         return ASTRO_INVALID_PARAMETER;
 
-    dt = time.tt - sim->time.tt;
+    dt = time.tt - sim->curr->time.tt;
 
-    /*
-        Special case: if the time has not changed, leave the simulation state unchanged
-        and return the small body state vectors as they are.
-        This allows a way for the caller to query the current state if desired.
-        It is also necessary to avoid dividing by `dt` if `dt` is zero.
-    */
-    if (dt != 0.0)
+    if (dt == 0.0)
     {
         /*
-            Swap the pointers `prevBodies` and `currBodies`, so that
-            the previous iteration's small body state vectors are in `prevBodies`,
-            and `currBodies` is a buffer to hold newly calculated state vectors.
+            Special case: the time has not changed, so skip the usual physics calculations.
+            This allows a way for the caller to query the current state if desired.
+            It is also necessary to avoid dividing by `dt` if `dt` is zero.
+            To prepare for a possible swap operation, duplicate the current state into the previous state.
         */
-        swap = sim->prevBodies;
-        sim->prevBodies = sim->currBodies;
-        sim->currBodies = swap;
+        GravSimDuplicate(sim);
+    }
+    else
+    {
+        /* Swap the current state and the previous state. Then calculate the new current state. */
+        Astronomy_GravSimSwap(sim);
 
         /* Update the current time. This is the only place we have a full (tt,ut) pair. */
         /* All of the Newtonian dynamics are calculated using tt only. */
-        sim->time = time;
+        sim->curr->time = time;
 
         /* Now that sim->time is set, it is safe to call `CalcSolarSystem`. */
         CalcSolarSystem(sim);
@@ -3043,8 +3065,8 @@ astro_status_t Astronomy_GravSimUpdate(
                 current acceleration applies across the whole time interval.
                 approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
             */
-            body_grav_calc_t *prev = &sim->prevBodies[i];
-            sim->currBodies[i].r = UpdatePosition(dt, prev->r, prev->v, prev->a);
+            body_grav_calc_t *prev = &sim->prev->bodies[i];
+            sim->curr->bodies[i].r = UpdatePosition(dt, prev->r, prev->v, prev->a);
         }
 
         /*
@@ -3055,8 +3077,8 @@ astro_status_t Astronomy_GravSimUpdate(
 
         for (i = 0; i < numBodies; ++i)
         {
-            body_grav_calc_t *prev = &sim->prevBodies[i];
-            body_grav_calc_t *curr = &sim->currBodies[i];
+            body_grav_calc_t *prev = &sim->prev->bodies[i];
+            body_grav_calc_t *curr = &sim->curr->bodies[i];
 
             /*
                 Calculate the average of the acceleration vectors
@@ -3095,7 +3117,7 @@ astro_status_t Astronomy_GravSimUpdate(
     if (bodyStateArray != NULL)
     {
         for (i = 0; i < numBodies; ++i)
-            bodyStateArray[i] = ExportGravCalc(sim->currBodies[i], time);
+            bodyStateArray[i] = ExportGravCalc(sim->curr->bodies[i], time);
 
         if (sim->originBody != BODY_SSB)
         {
@@ -3156,7 +3178,7 @@ astro_state_vector_t Astronomy_GravSimBodyState(
 
     bptr = GravSimBodyStatePtr(sim, body);
     if (bptr == NULL)
-        return StateVecError(ASTRO_INVALID_BODY, sim->time);
+        return StateVecError(ASTRO_INVALID_BODY, sim->curr->time);
 
     state = GravSimOriginState(sim);
     if (state.status != ASTRO_SUCCESS)
@@ -3179,6 +3201,86 @@ astro_state_vector_t Astronomy_GravSimBodyState(
 }
 
 
+/**
+ * @brief Exchange the current time step with the previous time step.
+ *
+ * Sometimes it is helpful to "explore" various times near a given
+ * simulation time step, while repeatedly returning to the original
+ * time step. For example, when backdating a position for light travel
+ * time, the caller may wish to repeatedly try different amounts of
+ * backdating. When the backdating solver has converged, the caller
+ * wants to leave the simulation in its original state.
+ *
+ * This function allows a single "undo" of a simulation, and does so
+ * very efficiently.
+ *
+ * Usually this function will be called immediately after a matching
+ * call to #Astronomy_GravSimUpdate. It has the effect of rolling
+ * back the most recent update. If called twice in a row, it reverts
+ * the swap and thus has no net effect.
+ *
+ * #Astronomy_GravSimInit initializes the current state and previous
+ * state to be identical. Both states represent the `time` parameter that was
+ * passed into the initializer. Therefore, `Astronomy_GravSimSwap` will
+ * have no effect from the caller's point of view when passed a simulator
+ * that has not yet been updated by a call to #Astronomy_GravSimUpdate.
+ *
+ * @param sim
+ *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
+ */
+void Astronomy_GravSimSwap(astro_grav_sim_t *sim)
+{
+    gravsim_endpoint_t *swap = sim->prev;
+    sim->prev = sim->curr;
+    sim->curr = swap;
+}
+
+
+/**
+ * @brief Returns the time of the current simulation step.
+ *
+ * @param sim
+ *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
+ */
+astro_time_t Astronomy_GravSimTime(astro_grav_sim_t *sim)
+{
+    return sim->curr->time;
+}
+
+
+/**
+ * @brief Returns the number of small bodies represented in this simulation.
+ *
+ * When a simulation is created by a call to #Astronomy_GravSimInit,
+ * the caller specifies the number of small bodies.
+ * This function returns that same number, which may be convenient for a caller,
+ * so that it does not need to track the body count separately.
+ *
+ * @param sim
+ *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
+ */
+int Astronomy_GravSimNumBodies(astro_grav_sim_t *sim)
+{
+    return sim->numBodies;
+}
+
+
+/**
+ * @brief Returns the body whose center is the coordinate origin that small bodies are referenced to.
+ *
+ * When a simulation is created by a call to #Astronomy_GravSimInit,
+ * the caller specifies an `originBody` to indicate the coordinate origin
+ * used to represent the small bodies being simulated.
+ * This function returns that same #astro_body_t value.
+ *
+ * @param sim
+ *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
+ */
+astro_body_t Astronomy_GravSimOrigin(astro_grav_sim_t *sim)
+{
+    return sim->originBody;
+}
+
 
 /**
  * @brief Releases memory allocated to a gravity simulator object.
@@ -3193,12 +3295,11 @@ void Astronomy_GravSimFree(astro_grav_sim_t *sim)
 {
     if (sim != NULL)
     {
-        free(sim->prevBodies);
-        free(sim->currBodies);
+        free(sim->endpoint[0].bodies);
+        free(sim->endpoint[1].bodies);
         free(sim);
     }
 }
-
 
 
 /*------------------ begin Pluto integrator ------------------*/

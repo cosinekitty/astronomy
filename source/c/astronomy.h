@@ -1288,7 +1288,7 @@ double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_al
 astro_constellation_t Astronomy_Constellation(double ra, double dec);
 
 astro_status_t Astronomy_GravSimInit(
-    astro_grav_sim_t **sim,
+    astro_grav_sim_t **simOut,
     astro_body_t originBody,
     astro_time_t time,
     int numBodies,
@@ -1307,6 +1307,10 @@ astro_state_vector_t Astronomy_GravSimBodyState(
     astro_body_t body
 );
 
+astro_time_t Astronomy_GravSimTime(astro_grav_sim_t *sim);
+int Astronomy_GravSimNumBodies(astro_grav_sim_t *sim);
+astro_body_t Astronomy_GravSimOrigin(astro_grav_sim_t *sim);
+void Astronomy_GravSimSwap(astro_grav_sim_t *sim);
 void Astronomy_GravSimFree(astro_grav_sim_t *sim);
 
 #ifdef __cplusplus

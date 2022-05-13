@@ -6378,7 +6378,8 @@ static int GravSimFile(
     astro_state_vector_t state;
     astro_status_t status;
     state_vector_batch_t batch = EmptyStateVectorBatch();
-    astro_time_t time;
+    astro_time_t time, checkTime;
+    astro_body_t checkOrigin;
 
     if (nsteps < 1)
         FAIL("C GravSimFile(%s): invalid nsteps=%d\n", filename, nsteps);
@@ -6395,6 +6396,14 @@ static int GravSimFile(
     if (status != ASTRO_SUCCESS)
         FAIL("C GravSimFile(%s): Astronomy_GravSimInit returned error %d\n", filename, status);
 
+    i = Astronomy_GravSimNumBodies(sim);
+    if (i != 1)
+        FAIL("C GravSimFile(%s): expected 1 body, found %d\n", filename, i);
+
+    checkOrigin = Astronomy_GravSimOrigin(sim);
+    if (checkOrigin != originBody)
+        FAIL("C GravSimFile(%s): expected body %d, found %d\n", filename, originBody, checkOrigin);
+
     time = state.t;
     for (i = 1; i < batch.length; ++i)
     {
@@ -6408,6 +6417,10 @@ static int GravSimFile(
             status = Astronomy_GravSimUpdate(sim, time, 1, &state);
             if (status != ASTRO_SUCCESS)
                 FAIL("C GravSimFile(%s : i=%d): Astronomy_GravSimInit returned error %d\n", filename, i, status);
+
+            checkTime = Astronomy_GravSimTime(sim);
+            if (checkTime.tt != time.tt)
+                FAIL("C GravSimFile(%s): Expected tt=%0.16lf, found tt=%0.16lf", filename, time.tt, checkTime.tt);
         }
 
         tdiff = SECONDS_PER_DAY * ABS(time.tt - batch.array[i].t.tt);
@@ -6454,6 +6467,7 @@ static int GravSimEmpty(
 {
     int error;
     int i;
+    astro_body_t checkOrigin;
     astro_status_t status;
     astro_grav_sim_t *sim = NULL;
     state_vector_batch_t batch = EmptyStateVectorBatch();
@@ -6470,6 +6484,14 @@ static int GravSimEmpty(
     status = Astronomy_GravSimInit(&sim, origin, batch.array[0].t, 0, NULL);
     if (status != ASTRO_SUCCESS)
         FAIL("C GravSimEmpty(%s): Astronomy_GravSimInit returned %d\n", filename, status);
+
+    i = Astronomy_GravSimNumBodies(sim);
+    if (i != 0)
+        FAIL("C GravSimEmpty(%s): expected 0 bodies, found %d\n", filename, i);
+
+    checkOrigin = Astronomy_GravSimOrigin(sim);
+    if (checkOrigin != origin)
+        FAIL("C GravSimEmpty(%s): expected body %d, found %d\n", filename, origin, checkOrigin);
 
     for (i = 0; i < batch.length; ++i)
     {

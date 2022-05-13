@@ -794,7 +794,7 @@ To avoid memory leaks, any successful call to [`Astronomy_GravSimInit`](#Astrono
 ---
 
 <a name="Astronomy_GravSimInit"></a>
-### Astronomy_GravSimInit(sim, originBody, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
+### Astronomy_GravSimInit(simOut, originBody, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
 
 **Allocate and initialize a gravity step simulator.** 
 
@@ -814,11 +814,95 @@ If this function succeeds (returns `ASTRO_SUCCESS`), `sim` will be set to a dyna
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> **</code> | `sim` |  The address of a pointer to store the newly allocated simulation object. The type [`astro_grav_sim_t`](#astro_grav_sim_t) is an opaque type, so its internal structure is not documented. | 
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> **</code> | `simOut` |  The address of a pointer to store the newly allocated simulation object. The type [`astro_grav_sim_t`](#astro_grav_sim_t) is an opaque type, so its internal structure is not documented. | 
 | [`astro_body_t`](#astro_body_t) | `originBody` |  Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStateArray` parameter of this function, along with all output vectors returned by [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate). Most callers will want to provide one of the following: `BODY_SUN` for heliocentric coordinates, `BODY_SSB` for solar system barycentric coordinates, or `BODY_EARTH` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The initial time at which to start the simulation. | 
 | `int` | `numBodies` |  The number of small bodies to be simulated. This may be any non-negative integer. | 
 | `const astro_state_vector_t *` | `bodyStateArray` |  An array of initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to the Solar System Barycenter (SSB) using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must be exactly equal to `time`, or this function will fail with the error `ASTRO_INCONSISTENT_TIMES`. | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimNumBodies"></a>
+### Astronomy_GravSimNumBodies(sim) &#8658; `int`
+
+**Returns the number of small bodies represented in this simulation.** 
+
+
+
+When a simulation is created by a call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit), the caller specifies the number of small bodies. This function returns that same number, which may be convenient for a caller, so that it does not need to track the body count separately.
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimOrigin"></a>
+### Astronomy_GravSimOrigin(sim) &#8658; [`astro_body_t`](#astro_body_t)
+
+**Returns the body whose center is the coordinate origin that small bodies are referenced to.** 
+
+
+
+When a simulation is created by a call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit), the caller specifies an `originBody` to indicate the coordinate origin used to represent the small bodies being simulated. This function returns that same [`astro_body_t`](#astro_body_t) value.
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimSwap"></a>
+### Astronomy_GravSimSwap(sim) &#8658; `void`
+
+**Exchange the current time step with the previous time step.** 
+
+
+
+Sometimes it is helpful to "explore" various times near a given simulation time step, while repeatedly returning to the original time step. For example, when backdating a position for light travel time, the caller may wish to repeatedly try different amounts of backdating. When the backdating solver has converged, the caller wants to leave the simulation in its original state.
+
+This function allows a single "undo" of a simulation, and does so very efficiently.
+
+Usually this function will be called immediately after a matching call to [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate). It has the effect of rolling back the most recent update. If called twice in a row, it reverts the swap and thus has no net effect.
+
+[`Astronomy_GravSimInit`](#Astronomy_GravSimInit) initializes the current state and previous state to be identical. Both states represent the `time` parameter that was passed into the initializer. Therefore, `Astronomy_GravSimSwap` will have no effect from the caller's point of view when passed a simulator that has not yet been updated by a call to [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate).
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimTime"></a>
+### Astronomy_GravSimTime(sim) &#8658; [`astro_time_t`](#astro_time_t)
+
+**Returns the time of the current simulation step.** 
+
+
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
 
 
 
