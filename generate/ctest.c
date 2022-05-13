@@ -6537,6 +6537,7 @@ static int GravitySimulatorTest(void)
     CHECK(GravSimFile("barystate/Pallas.txt",   BODY_SSB,   nsteps, &rscore, &vscore, 0.4687, 0.3474));
     CHECK(GravSimFile("barystate/Vesta.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 0.5806, 0.5462));
     CHECK(GravSimFile("barystate/Juno.txt",     BODY_SSB,   nsteps, &rscore, &vscore, 0.6760, 0.5750));
+    CHECK(GravSimFile("barystate/Bennu.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 3.7444, 2.6581));
 
     CHECK(GravSimFile("heliostate/Ceres.txt",   BODY_SUN,   nsteps, &rscore, &vscore, 0.0445, 0.0355));
     CHECK(GravSimFile("heliostate/Pallas.txt",  BODY_SUN,   nsteps, &rscore, &vscore, 0.1062, 0.0854));
