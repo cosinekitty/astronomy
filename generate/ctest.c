@@ -6533,11 +6533,14 @@ static int GravitySimulatorTest(void)
     CHECK(GravSimEmpty("heliostate/Uranus.txt",  BODY_SUN, BODY_URANUS,   0.3106, 0.9322));
     CHECK(GravSimEmpty("heliostate/Neptune.txt", BODY_SUN, BODY_NEPTUNE,  0.3381, 1.5584));
 
+    DEBUG("\n");
+
     CHECK(GravSimFile("barystate/Ceres.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 0.6640, 0.6226));
     CHECK(GravSimFile("barystate/Pallas.txt",   BODY_SSB,   nsteps, &rscore, &vscore, 0.4687, 0.3474));
     CHECK(GravSimFile("barystate/Vesta.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 0.5806, 0.5462));
     CHECK(GravSimFile("barystate/Juno.txt",     BODY_SSB,   nsteps, &rscore, &vscore, 0.6760, 0.5750));
     CHECK(GravSimFile("barystate/Bennu.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 3.7444, 2.6581));
+    CHECK(GravSimFile("barystate/Halley.txt",   BODY_SSB,   nsteps, &rscore, &vscore, 0.0539, 0.0825));
 
     CHECK(GravSimFile("heliostate/Ceres.txt",   BODY_SUN,   nsteps, &rscore, &vscore, 0.0445, 0.0355));
     CHECK(GravSimFile("heliostate/Pallas.txt",  BODY_SUN,   nsteps, &rscore, &vscore, 0.1062, 0.0854));
