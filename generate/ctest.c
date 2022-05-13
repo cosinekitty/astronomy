@@ -37,6 +37,8 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 
 #define PI      3.14159265358979323846
 
+#define SECONDS_PER_DAY     (24 * 3600)
+
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
 #define FAIL(...)       do{printf(__VA_ARGS__); error = 1; goto fail;}while(0)
 #define FAILRET(...)    do{printf(__VA_ARGS__); return 1;}while(0)
@@ -6357,7 +6359,7 @@ static int GravSimFile(
 {
     int error;
     int i, k;
-    double rdiff, vdiff;
+    double rdiff, vdiff, tdiff;
     double max_rdiff = 0.0, max_vdiff = 0.0;
     astro_grav_sim_t *sim = NULL;
     astro_state_vector_t state;
@@ -6384,14 +6386,20 @@ static int GravSimFile(
     for (i = 1; i < batch.length; ++i)
     {
         /* Split each entry of the input batch into `nsteps` simulation steps. */
-        double dt = (batch.array[i].t.ut - batch.array[i-1].t.ut) / nsteps;
-        for (k = 0; k < nsteps; ++k)
+        double tt1 = batch.array[i-1].t.tt;
+        double tt2 = batch.array[i].t.tt;
+        double dt = (tt2 - tt1) / nsteps;
+        for (k = 1; k <= nsteps; ++k)
         {
-            time = Astronomy_AddDays(time, dt);
+            time = Astronomy_TerrestrialTime(tt1 + k*dt);
             status = Astronomy_GravSimUpdate(sim, time, 1, &state);
             if (status != ASTRO_SUCCESS)
                 FAIL("C GravSimFile(%s : i=%d): Astronomy_GravSimInit returned error %d\n", filename, i, status);
         }
+
+        tdiff = SECONDS_PER_DAY * ABS(time.tt - batch.array[i].t.tt);
+        if (tdiff > 1.0e-15)
+            FAIL("C GravSimFile(%s): terrestrial time error = %0.16lf seconds.\n", filename, tdiff);
 
         /* Compare the simulated state with the reference state. */
         rdiff = ArcminPosError(batch.array[i], state);
