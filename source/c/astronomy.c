@@ -3683,7 +3683,7 @@ body_grav_calc_t GravSim(           /* out: [pos, vel, acc] of the simulated bod
 
     /* Refine the estimates of [pos, vel, acc] at tt2 using the mean acceleration. */
     calc2.r = UpdatePosition(dt, calc1->r, calc1->v, acc);
-    calc2.v = VecAdd(calc1->v, VecMul(dt, acc));
+    calc2.v = UpdateVelocity(dt, calc1->v, acc);
     calc2.a = SmallBodyAcceleration(calc2.r, bary2);
     calc2.tt = tt2;
     return calc2;
@@ -3804,10 +3804,7 @@ static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
     if (optr != NULL)
         return ExportState(*optr, time);
 
-    /*
-        We have to calculate the barycentric state of this body.
-        This is more expensive, but it's necessary.
-    */
+    /* We only support the VSOP bodies, for efficiency. */
     return StateVecError(ASTRO_INVALID_BODY, time);
 }
 
@@ -4107,7 +4104,7 @@ astro_status_t Astronomy_GravSimUpdate(
             */
             curr->tt = time.tt;
             curr->r = UpdatePosition(dt, prev->r, prev->v, acc);
-            curr->v = VecAdd(prev->v, VecMul(dt, acc));
+            curr->v = UpdateVelocity(dt, prev->v, acc);
         }
 
         /*
