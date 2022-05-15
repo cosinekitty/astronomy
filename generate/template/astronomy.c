@@ -2700,7 +2700,7 @@ static void CalcSolarSystem(astro_grav_sim_t *sim)
     body_state_t *grav = sim->curr->gravitators;
     body_state_t *sun = &grav[BODY_SUN];
 
-    /* Initialize the Sun's position as a zero vector, then adjust from pulls from the planets. */
+    /* Initialize the Sun's position/velocity as zero vectors, then adjust from pulls from the planets. */
     sun->tt = tt;
     sun->r  = VecZero;
     sun->v  = VecZero;

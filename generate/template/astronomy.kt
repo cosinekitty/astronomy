@@ -693,6 +693,18 @@ internal data class TerseVector(var x: Double, var y: Double, var z: Double) {
         z = (1.0 - ramp)*z + ramp*other.z
     }
 
+    fun setToZero() {
+        x = 0.0
+        y = 0.0
+        z = 0.0
+    }
+
+    fun negate() {
+        x = -x
+        y = -y
+        z = -z
+    }
+
     companion object {
         @JvmStatic
         fun zero() = TerseVector(0.0, 0.0, 0.0)
@@ -2928,7 +2940,7 @@ private fun vsopDerivCalc(formula: VsopFormula, t: Double): Double {
 }
 
 internal class BodyState(
-    val tt: Double,
+    var tt: Double,
     val r: TerseVector,
     val v: TerseVector
 ) {
@@ -7801,6 +7813,133 @@ fun constellation(ra: Double, dec: Double): ConstellationInfo {
     // This should never happen! If it does, please report to: https://github.com/cosinekitty/astronomy/issues
     throw InternalError("Unable to find constellation for coordinates RA=$ra, DEC=$dec")
 }
+
+//=======================================================================================
+// Generic gravity simulator
+
+/**
+ * A simulation of zero or more small bodies moving through the Solar System.
+ *
+ * A gravity simulator object simulates a series of incremental time steps,
+ * calculating the movement of the Sun and planets around the Solar System Barycenter (SSB).
+ * It calculates the resulting gravitational forces on an arbitrary list of small bodies
+ * provided by the caller.
+ */
+class GravitySimulator {
+    /** The origin of the reference frame. See constructor for more info.
+     */
+    val originBody: Body
+
+    private var prev: GravSimEndpoint;
+    private var curr: GravSimEndpoint;
+
+    /**
+     * Creates a gravity simulation object.
+     *
+     * @param originBody
+     * Specifies the origin of the reference frame.
+     * All position vectors and velocity vectors will use `originBody`
+     * as the origin of the coordinate system.
+     * This origin applies to all the input vectors provided in the
+     * `bodyStateArray` parameter of this function, along with all
+     * output vectors returned by #Astronomy_GravSimUpdate.
+     * Most callers will want to provide one of the following:
+     * [Body.Sun] for heliocentric coordinates,
+     * [Body.SSB] for solar system barycentric coordinates,
+     * or [Body.Earth] for geocentric coordinates. Note that the
+     * gravity simulator does not correct for light travel time;
+     * all state vectors are tied to a Newtonian "instantaneous" time.
+     *
+     * @param time
+     * The initial time at which to start the simulation.
+     *
+     * @param bodyStates
+     * An array of initial state vectors (positions and velocities) of the small bodies to be simulated.
+     * The caller must know the positions and velocities of the small bodies at an initial moment in time.
+     * Their positions and velocities are expressed with respect to the Solar System Barycenter (SSB)
+     * using equatorial J2000 orientation (EQJ).
+     * Positions are expressed in astronomical units (AU).
+     * Velocities are expressed in AU/day.
+     * All the times embedded within the state vectors must be exactly equal to `time`,
+     * or this constructor will throw an exception.
+     */
+    constructor(
+        originBody: Body,
+        time: Time,
+        bodyStates: List<StateVector>
+    ) {
+        this.originBody = originBody
+
+        // Verify that all the state vectors are valid and have matching times.
+        for (b in bodyStates) {
+            if (b.t.tt != time.tt)
+                throw IllegalArgumentException("Inconsistent time(s) in bodyStates array.")
+        }
+
+        curr = initialEndpoint(time, bodyStates)
+        prev = initialEndpoint(time, bodyStates)
+
+        calcSolarSystem()
+    }
+
+    private fun initialEndpoint(time: Time, bodyStates: List<StateVector>): GravSimEndpoint {
+        val gravitators = Array<BodyState>(Body.Sun.ordinal + 1) {
+            BodyState(
+                time.tt,
+                TerseVector(0.0, 0.0, 0.0),
+                TerseVector(0.0, 0.0, 0.0)
+            )
+        }
+
+        val bodies = bodyStates.map {
+            BodyGravCalc(
+                time.tt,
+                TerseVector(it.x, it.y, it.z),
+                TerseVector(it.vx, it.vy, it.vz),
+                TerseVector(0.0, 0.0, 0.0)
+            )
+        }.toTypedArray()
+
+        return GravSimEndpoint(time, gravitators, bodies)
+    }
+
+    private fun calcSolarSystem() {
+        val tt = curr.time.tt
+
+        // Initialize the Sun's position/velocity as zero vectors, then adjust from pulls from the planets.
+        val sun: BodyState = curr.gravitators[Body.Sun.ordinal]
+        sun.tt = tt
+        sun.r.setToZero()
+        sun.v.setToZero()
+
+        // Calculate the state of each planet, and adjust the SSB state accordingly.
+        curr.gravitators[Body.Mercury.ordinal] = adjustBarycenterPosVel(sun, tt, Body.Mercury, MERCURY_GM)
+        curr.gravitators[Body.Venus.ordinal  ] = adjustBarycenterPosVel(sun, tt, Body.Venus,   VENUS_GM)
+        curr.gravitators[Body.Earth.ordinal  ] = adjustBarycenterPosVel(sun, tt, Body.Earth,   EARTH_GM + MOON_GM)
+        curr.gravitators[Body.Mars.ordinal   ] = adjustBarycenterPosVel(sun, tt, Body.Mars,    MARS_GM)
+        curr.gravitators[Body.Jupiter.ordinal] = adjustBarycenterPosVel(sun, tt, Body.Jupiter, JUPITER_GM)
+        curr.gravitators[Body.Saturn.ordinal ] = adjustBarycenterPosVel(sun, tt, Body.Saturn,  SATURN_GM)
+        curr.gravitators[Body.Uranus.ordinal ] = adjustBarycenterPosVel(sun, tt, Body.Uranus,  URANUS_GM)
+        curr.gravitators[Body.Neptune.ordinal] = adjustBarycenterPosVel(sun, tt, Body.Neptune, NEPTUNE_GM)
+
+        // Convert planet states from heliocentric to barycentric.
+        for (bindex in Body.Mercury.ordinal .. Body.Neptune.ordinal) {
+            curr.gravitators[bindex].r.decrement(sun.r)
+            curr.gravitators[bindex].v.decrement(sun.v)
+        }
+
+        // Convert heliocentric SSB to barycentric Sun.
+        sun.r.negate()
+        sun.v.negate()
+    }
+}
+
+
+private class GravSimEndpoint(
+    var time: Time,
+    var gravitators: Array<BodyState>,
+    var bodies: Array<BodyGravCalc>
+)
 
 //=======================================================================================
 // Generated code goes to the bottom of the source file,
