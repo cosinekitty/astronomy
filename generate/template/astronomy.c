@@ -2731,12 +2731,12 @@ static void CalcSolarSystem(astro_grav_sim_t *sim)
 static void CalcBodyAccelerations(astro_grav_sim_t *sim)
 {
     int i;
+    const body_state_t *grav = sim->curr->gravitators;
 
     /* Calculate the gravitational acceleration experienced by the simulated bodies. */
     for (i = 0; i < sim->numBodies; ++i)
     {
         body_grav_calc_t *calc = &sim->curr->bodies[i];
-        const body_state_t *grav = sim->curr->gravitators;
 
         calc->a = VecZero;
 
@@ -2978,7 +2978,7 @@ fail:
 
 
 /**
- * @brief Advances a gravity simulation of a small body by a small time step.
+ * @brief Advances a gravity simulation by a small time step.
  *
  * @param sim
  *      A simulation object that was created by a prior call to #Astronomy_GravSimInit.

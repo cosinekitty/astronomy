@@ -14,6 +14,13 @@ A gravity simulator object simulates a series of incremental time steps, calcula
 |---|---|
 | [GravitySimulator](-gravity-simulator.md)<br>fun [GravitySimulator](-gravity-simulator.md)(originBody: [Body](../-body/index.md), time: [Time](../-time/index.md), bodyStates: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;)<br>Creates a gravity simulation object. |
 
+## Functions
+
+| Name | Summary |
+|---|---|
+| [swap](swap.md)<br>fun [swap](swap.md)()<br>Exchange the current time step with the previous time step. |
+| [update](update.md)<br>fun [update](update.md)(time: [Time](../-time/index.md)): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;<br>Advances a gravity simulation by a small time step. |
+
 ## Properties
 
 | Name | Summary |
