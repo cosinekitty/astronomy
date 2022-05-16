@@ -2246,7 +2246,56 @@ class Tests {
         gravSimEmpty("heliostate/Uranus.txt",  Body.Sun, Body.Uranus,   0.3106, 0.9322)
         gravSimEmpty("heliostate/Neptune.txt", Body.Sun, Body.Neptune,  0.3381, 1.5584)
 
-        //val nsteps = 20
+        val nsteps = 20
+
+        gravSimFile("barystate/Ceres.txt",    Body.SSB,   nsteps, 0.6640, 0.6226)
+        gravSimFile("barystate/Pallas.txt",   Body.SSB,   nsteps, 0.4687, 0.3474)
+        gravSimFile("barystate/Vesta.txt",    Body.SSB,   nsteps, 0.5806, 0.5462)
+        gravSimFile("barystate/Juno.txt",     Body.SSB,   nsteps, 0.6760, 0.5750)
+        gravSimFile("barystate/Bennu.txt",    Body.SSB,   nsteps, 3.7444, 2.6581)
+        gravSimFile("barystate/Halley.txt",   Body.SSB,   nsteps, 0.0539, 0.0825)
+
+        gravSimFile("heliostate/Ceres.txt",   Body.Sun,   nsteps, 0.0445, 0.0355)
+        gravSimFile("heliostate/Pallas.txt",  Body.Sun,   nsteps, 0.1062, 0.0854)
+        gravSimFile("heliostate/Vesta.txt",   Body.Sun,   nsteps, 0.1432, 0.1308)
+        gravSimFile("heliostate/Juno.txt",    Body.Sun,   nsteps, 0.1554, 0.1328)
+
+        gravSimFile("geostate/Ceres.txt",     Body.Earth, nsteps, 6.5689, 6.4797)
+        gravSimFile("geostate/Pallas.txt",    Body.Earth, nsteps, 9.3288, 7.3533)
+        gravSimFile("geostate/Vesta.txt",     Body.Earth, nsteps, 3.2980, 3.8863)
+        gravSimFile("geostate/Juno.txt",      Body.Earth, nsteps, 6.0962, 7.7147)
+    }
+
+    private fun gravSimFile(fileNameSuffix: String, originBody: Body, nsteps: Int, rthresh: Double, vthresh: Double) {
+        val filename = dataRootDir + fileNameSuffix
+        val list = jplHorizonsStateVectors(filename)
+        val sim = GravitySimulator(originBody, list[0].state.t, listOf(list[0].state))
+        assertEquals(sim.originBody, originBody)
+        var i = 0
+        var prev = list[0]
+        var time = list[0].state.t
+        for (rec in list) {
+            if (i > 0) {
+                val tt1 = prev.state.t.tt
+                val tt2 = rec.state.t.tt
+                val dt = (tt2 - tt1) / nsteps
+                for (k in 1..nsteps) {
+                    time = Time.fromTerrestrialTime(tt1 + k*dt)
+                    val smallBodyArray: Array<StateVector> = sim.update(time)
+                    assertEquals(1, smallBodyArray.size)
+                    assertEquals(time.tt, sim.time().tt)
+                }
+                // Compare the simulated state with the reference state.
+                val smallBodyArray: Array<StateVector> = sim.update(time)
+                assertEquals(1, smallBodyArray.size)
+                val rdiff = arcminPosError(rec.state, smallBodyArray[0])
+                assertTrue(rdiff < rthresh, "$filename line ${rec.lnum}: excessive position error = $rdiff arcmin.")
+                val vdiff = arcminVelError(rec.state, smallBodyArray[0])
+                assertTrue(vdiff < vthresh, "$filename line ${rec.lnum}: excessive velocity error = $vdiff arcmin.")
+            }
+            ++i
+            prev = rec
+        }
     }
 
     private fun gravSimEmpty(fileNameSuffix: String, origin: Body, body: Body, limit_rdiff: Double, limit_vdiff: Double) {

@@ -7943,6 +7943,11 @@ class GravitySimulator {
         duplicate()
     }
 
+    /**
+     * Returns the time of the current simulation step.
+     */
+    fun time(): Time = curr.time
+
 
     /**
      * Advances a gravity simulation by a small time step.
