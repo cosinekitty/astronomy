@@ -912,7 +912,7 @@ Usually this function will be called immediately after a matching call to [`Astr
 <a name="Astronomy_GravSimUpdate"></a>
 ### Astronomy_GravSimUpdate(sim, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
 
-**Advances a gravity simulation of a small body by a small time step.** 
+**Advances a gravity simulation by a small time step.** 
 
 
 
