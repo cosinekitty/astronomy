@@ -18,6 +18,7 @@ A gravity simulator object simulates a series of incremental time steps, calcula
 
 | Name | Summary |
 |---|---|
+| [solarSystemBodyState](solar-system-body-state.md)<br>fun [solarSystemBodyState](solar-system-body-state.md)(body: [Body](../-body/index.md)): [StateVector](../-state-vector/index.md)<br>Get the position and velocity of a Solar System body included in the simulation. |
 | [swap](swap.md)<br>fun [swap](swap.md)()<br>Exchange the current time step with the previous time step. |
 | [update](update.md)<br>fun [update](update.md)(time: [Time](../-time/index.md)): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;<br>Advances a gravity simulation by a small time step. |
 

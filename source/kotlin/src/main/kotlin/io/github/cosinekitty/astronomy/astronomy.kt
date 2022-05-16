@@ -2965,6 +2965,9 @@ internal class BodyState(
         r.copyFrom(other.r)
         v.copyFrom(other.v)
     }
+
+    operator fun minus(other: BodyState) =
+        BodyState(tt, r - other.r, v - other.v)
 }
 
 
@@ -7920,7 +7923,7 @@ class GravitySimulator {
         // Correct the input body state vectors for the specified origin.
         if (originBody != Body.SSB) {
             // Determine the barycentric state of the origin body.
-            val ostate = bodyState(originBody)
+            val ostate = internalBodyState(originBody)
 
             // Add barycentric origin to origin-centric bodies to obtain barycentric bodies.
             for (bstate in curr.bodies) {
@@ -7939,6 +7942,7 @@ class GravitySimulator {
         // To prepare for a possible swap operation, duplicate the current state into the previous state.
         duplicate()
     }
+
 
     /**
      * Advances a gravity simulation by a small time step.
@@ -8022,7 +8026,7 @@ class GravitySimulator {
         if (originBody != Body.SSB) {
             // Now we have to convert the coordinate system to the caller's chosen origin body.
             // Determine the barycentric state of the origin body.
-            val ostate = bodyState(originBody)
+            val ostate = internalBodyState(originBody)
 
             // Subtract vectors to convert barycentric states to origin-centric states.
             for (i in bodyStateArray.indices) {
@@ -8071,11 +8075,38 @@ class GravitySimulator {
         prev = s
     }
 
-    private fun bodyState(body: Body): BodyState =
-        // Return a reference to the object where we cache the barycentric
-        // state of a given body, or fail if this body is not valid.
+
+    /**
+     * Get the position and velocity of a Solar System body included in the simulation.
+     *
+     * In order to simulate the movement of small bodies through the Solar System,
+     * the simulator needs to calculate the state vectors for the Sun and planets.
+     *
+     * If an application wants to know the positions of one or more of the planets
+     * in addition to the small bodies, this function provides a way to obtain
+     * their state vectors. This is provided for the sake of efficiency, to avoid
+     * redundant calculations.
+     *
+     * The state vector is returned relative to the position and velocity
+     * of the `originBody` parameter that was passed to this object's constructor.
+     *
+     * @param body
+     * The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune.
+     */
+    fun solarSystemBodyState(body: Body): StateVector {
+        // Subtract the origin's state from the body's barycentric state
+        // to get the body in the desired reference frame.
+        val bstate = internalBodyState(body)
+        val ostate = internalBodyState(originBody)
+        return exportState(bstate - ostate, curr.time)
+    }
+
+    private fun internalBodyState(body: Body): BodyState =
+        // Return the barycentric state of the given solar system body.
         if (body == Body.Sun || (body.ordinal >= Body.Mercury.ordinal && body.ordinal <= Body.Neptune.ordinal))
             curr.gravitators[body.ordinal]
+        else if (body == Body.SSB)
+            BodyState(curr.time.tt, TerseVector.zero(), TerseVector.zero())
         else
             throw InvalidBodyException(body)
 

@@ -6518,7 +6518,7 @@ static int GravSimEmpty(
             max_vdiff = vdiff;
 
         if (vdiff > limit_vdiff)
-            FAIL("C GravSimEmpty(%s): excessive position error = %0.6lf arcmin\n", filename, vdiff);
+            FAIL("C GravSimEmpty(%s): excessive velocity error = %0.6lf arcmin\n", filename, vdiff);
     }
 
     DEBUG("C GravSimEmpty(%-22s): PASS - %d cases, pos error = %0.4lf arcmin, vel error = %0.4lf arcmin\n", filename, batch.length, max_rdiff, max_vdiff);

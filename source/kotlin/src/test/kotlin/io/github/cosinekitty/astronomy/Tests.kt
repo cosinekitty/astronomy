@@ -2224,4 +2224,81 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Gravity simulation`() {
+        gravSimEmpty("barystate/Sun.txt",      Body.SSB, Body.Sun,      0.0269, 1.9635)
+        gravSimEmpty("barystate/Mercury.txt",  Body.SSB, Body.Mercury,  0.5725, 0.9332)
+        gravSimEmpty("barystate/Venus.txt",    Body.SSB, Body.Venus,    0.1433, 0.1458)
+        gravSimEmpty("barystate/Earth.txt",    Body.SSB, Body.Earth,    0.0651, 0.2098)
+        gravSimEmpty("barystate/Mars.txt",     Body.SSB, Body.Mars,     0.1150, 0.1896)
+        gravSimEmpty("barystate/Jupiter.txt",  Body.SSB, Body.Jupiter,  0.2546, 0.8831)
+        gravSimEmpty("barystate/Saturn.txt",   Body.SSB, Body.Saturn,   0.3660, 1.0818)
+        gravSimEmpty("barystate/Uranus.txt",   Body.SSB, Body.Uranus,   0.3107, 0.9321)
+        gravSimEmpty("barystate/Neptune.txt",  Body.SSB, Body.Neptune,  0.3382, 1.5586)
+
+        gravSimEmpty("heliostate/Mercury.txt", Body.Sun, Body.Mercury,  0.5087, 0.9473)
+        gravSimEmpty("heliostate/Venus.txt",   Body.Sun, Body.Venus,    0.1214, 0.1543)
+        gravSimEmpty("heliostate/Earth.txt",   Body.Sun, Body.Earth,    0.0508, 0.2099)
+        gravSimEmpty("heliostate/Mars.txt",    Body.Sun, Body.Mars,     0.1085, 0.1927)
+        gravSimEmpty("heliostate/Jupiter.txt", Body.Sun, Body.Jupiter,  0.2564, 0.8805)
+        gravSimEmpty("heliostate/Saturn.txt",  Body.Sun, Body.Saturn,   0.3664, 1.0826)
+        gravSimEmpty("heliostate/Uranus.txt",  Body.Sun, Body.Uranus,   0.3106, 0.9322)
+        gravSimEmpty("heliostate/Neptune.txt", Body.Sun, Body.Neptune,  0.3381, 1.5584)
+
+        //val nsteps = 20
+    }
+
+    private fun gravSimEmpty(fileNameSuffix: String, origin: Body, body: Body, limit_rdiff: Double, limit_vdiff: Double) {
+        val filename = dataRootDir + fileNameSuffix
+        val list = jplHorizonsStateVectors(filename)
+        val sim = GravitySimulator(origin, list[0].state.t, listOf<StateVector>())
+        for (rec in list) {
+            sim.update(rec.state.t)
+            val calc = sim.solarSystemBodyState(body)
+            val rdiff = if (origin==Body.SSB && body==Body.Sun)
+                ssbArcminPosError(rec.state, calc)
+            else
+                arcminPosError(rec.state, calc)
+            assertTrue(rdiff < limit_rdiff, "$filename line ${rec.lnum}: excessive position error = $rdiff arcmin.")
+
+            val vdiff = arcminVelError(rec.state, calc)
+            assertTrue(vdiff < limit_vdiff, "$filename line ${rec.lnum}: excessive velocity error = $vdiff arcmin.")
+        }
+    }
+
+    private fun ssbArcminPosError(correct: StateVector, calc: StateVector): Double {
+        // Scale the SSB based on 1 AU, not on its absolute magnitude, which can become very close to zero.
+        val dx = calc.x - correct.x
+        val dy = calc.y - correct.y
+        val dz = calc.z - correct.z
+        val diffSquared = dx*dx + dy*dy + dz*dz
+        val radians = sqrt(diffSquared)
+        val arcmin = 60.0 * radians.radiansToDegrees()
+        return arcmin
+    }
+
+    private fun arcminPosError(correct: StateVector, calc: StateVector): Double {
+        val dx = calc.x - correct.x
+        val dy = calc.y - correct.y
+        val dz = calc.z - correct.z
+        val diffSquared = dx*dx + dy*dy + dz*dz
+        val magSquared = correct.x*correct.x + correct.y*correct.y + correct.z*correct.z
+        val radians = sqrt(diffSquared / magSquared)
+        val arcmin = 60.0 * radians.radiansToDegrees()
+        return arcmin
+    }
+
+    private fun arcminVelError(correct: StateVector, calc: StateVector): Double {
+        val dx = calc.vx - correct.vx
+        val dy = calc.vy - correct.vy
+        val dz = calc.vz - correct.vz
+        val diffSquared = dx*dx + dy*dy + dz*dz
+        val magSquared = correct.vx*correct.vx + correct.vy*correct.vy + correct.vz*correct.vz
+        val radians = sqrt(diffSquared / magSquared)
+        val arcmin = 60.0 * radians.radiansToDegrees()
+        return arcmin
+    }
+
+    //----------------------------------------------------------------------------------------
 }
