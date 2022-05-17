@@ -2274,6 +2274,7 @@ namespace CosineKitty
             IEnumerable<StateVector> bodyStates)
         {
             OriginBody = originBody;
+            body_state_t ostate = InternalBodyState(originBody);
 
             // Verify that all the state vectors have matching times.
             StateVector[] bodyStateArray = (bodyStates == null) ? new StateVector[0] : bodyStates.ToArray();
@@ -2311,8 +2312,6 @@ namespace CosineKitty
             if (originBody != Body.SSB)
             {
                 // Determine the barycentric state of the origin body.
-                body_state_t ostate = InternalBodyState(originBody);
-
                 // Add barycentric origin to origin-centric bodies to obtain barycentric bodies.
                 for (int i = 0; i < curr.bodies.Length; ++i)
                 {
@@ -2329,6 +2328,17 @@ namespace CosineKitty
         }
 
         /// <summary>
+        /// The number of small bodies that are included in this gravity simulation.
+        /// </summary>
+        /// <remarks>
+        /// #GravitySimulator.Update requres the caller to pass in an array to
+        /// receive updated state vectors for the small bodies. This array must
+        /// have the same number of elements as the bodies that are being simulated.
+        /// `NumSmallBodies` returns this number as a convenience.
+        /// </remarks>
+        public int NumSmallBodies => curr.bodies.Length;
+
+        /// <summary>
         /// Advances a gravity simulation by a small time step.
         /// </summary>
         /// <remarks>
@@ -2341,12 +2351,107 @@ namespace CosineKitty
         /// to the `originBody` that was used to construct this simulator.
         /// </remarks>
         /// <param name="time">
+        /// A time that is a small increment away from the current simulation time.
+        /// It is up to the developer to figure out an appropriate time increment.
+        /// Depending on the trajectories, a smaller or larger increment
+        /// may be needed for the desired accuracy. Some experimentation may be needed.
+        /// Generally, bodies that stay in the outer Solar System and move slowly can
+        /// use larger time steps.  Bodies that pass into the inner Solar System and
+        /// move faster will need a smaller time step to maintain accuracy.
+        /// Some experimentation may be necessary to find a good value.
+        /// The `time` value may be after or before the current simulation time
+        /// to move forward or backward in time.
         /// </param>
         /// <param name="bodyStates">
+        /// If this array is not null, it must contain exactly the same number
+        /// of elements as the number of small bodies that were added when this
+        /// simulator was created. The non-null array receives updated state vectors
+        /// for the simulated small bodies.
+        /// If `bodyStates` is null, the simulation is updated but without returning
+        /// the state vectors.
         /// </param>
         public void Update(AstroTime time, StateVector[] bodyStates)
         {
-            throw new NotImplementedException();
+            int nbodies = NumSmallBodies;
+
+            if (bodyStates != null && bodyStates.Length != nbodies)
+                throw new ArgumentException($"This simulation contains {nbodies} small bodies, but the {nameof(bodyStates)} array has length {bodyStates.Length}. The array must either be null, or it must have the same number of elements.");
+
+            double dt = time.tt - curr.time.tt;
+            if (dt == 0.0)
+            {
+                // Special case: the time has not changed, so skip the usual physics calculations.
+                // This allows another way for the caller to query the current body states.
+                // It is also necessary to avoid dividing by `dt` if `dt` is zero.
+                // To prepare for a possible swap operation, duplicate the current state into the previous state.
+                Duplicate();
+            }
+            else
+            {
+                // Exchange the current state with the previous state. Then calculate the new current state.
+                Swap();
+
+                // Update the current time.
+                curr.time = time;
+
+                // Now that the time is set, it is safe to update the Solar System.
+                CalcSolarSystem();
+
+                // Estimate the position of each small body as if their existing
+                // accelerations apply across the whole time interval.
+                for (int i = 0; i < nbodies; ++i)
+                    curr.bodies[i].r = Astronomy.UpdatePosition(dt, prev.bodies[i].r, prev.bodies[i].v, prev.bodies[i].a);
+
+                // Calculate the acceleration experienced by the small bodies at
+                // their respective approximate next locations.
+                CalcBodyAccelerations();
+
+                for (int i = 0; i < nbodies; ++i)
+                {
+                    // Calculate the average of the acceleration vectors
+                    // experienced by the previous body positions and
+                    // their estimated next positions.
+                    // These become estimates of the mean effective accelerations
+                    // over the whole interval.
+                    TerseVector acc = (curr.bodies[i].a + prev.bodies[i].a) / 2.0;
+
+                    // Refine the estimates of position and velocity at the next time step,
+                    // using the mean acceleration as a better approximation of the
+                    // continuously changing acceleration acting on each body.
+                    curr.bodies[i].tt = time.tt;
+                    curr.bodies[i].r = Astronomy.UpdatePosition(dt, prev.bodies[i].r, prev.bodies[i].v, acc);
+                    curr.bodies[i].v = Astronomy.UpdateVelocity(dt, prev.bodies[i].v, acc);
+                }
+
+                // Re-calculate accelerations experienced by each body.
+                // These will be needed for the next simulation step (if any).
+                // Also, they will be potentially useful if some day we add
+                // a function to query the acceleration vectors for the bodies.
+                CalcBodyAccelerations();
+            }
+
+            if (bodyStates != null)
+            {
+                // Translate our internal calculations of body positions and velocities
+                // into state vectors that the caller can understand.
+                // We have to convert the internal type body_grav_calc_t to the public
+                // type StateVector.
+                // Also convert from barycentric coordinates to coordinates based on the
+                // selected origin body.
+                body_state_t ostate = InternalBodyState(OriginBody);
+                for (int i = 0; i < nbodies; ++i)
+                {
+                    bodyStates[i] = new StateVector(
+                        curr.bodies[i].r.x - ostate.r.x,
+                        curr.bodies[i].r.y - ostate.r.y,
+                        curr.bodies[i].r.z - ostate.r.z,
+                        curr.bodies[i].v.x - ostate.v.x,
+                        curr.bodies[i].v.y - ostate.v.y,
+                        curr.bodies[i].v.z - ostate.v.z,
+                        time
+                    );
+                }
+            }
         }
 
         /// <summary>
@@ -3991,7 +4096,7 @@ namespace CosineKitty
         ,   new body_state_t(  730000.0, new TerseVector(  4.243252837090, -30.118201690825, -10.707441231349), new TerseVector( 3.1725847067411e-03,  1.6098461202270e-04, -9.0672150593868e-04))
         };
 
-        private static TerseVector UpdatePosition(double dt, TerseVector r, TerseVector v, TerseVector a)
+        internal static TerseVector UpdatePosition(double dt, TerseVector r, TerseVector v, TerseVector a)
         {
             return new TerseVector(
                 r.x + dt*(v.x + dt*a.x/2),
@@ -4000,7 +4105,7 @@ namespace CosineKitty
             );
         }
 
-        private static TerseVector UpdateVelocity(double dt, TerseVector v, TerseVector a)
+        internal static TerseVector UpdateVelocity(double dt, TerseVector v, TerseVector a)
         {
             return new TerseVector(
                 v.x + dt*a.x,

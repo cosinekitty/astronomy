@@ -7979,22 +7979,22 @@ class GravitySimulator {
         val dt = time.tt - curr.time.tt
         if (dt == 0.0) {
             // Special case: the time has not changed, so skip the usual physics calculations.
-            // This allows a way for the caller to query the current state if desired.
+            // This allows another way for the caller to query the current body states.
             // It is also necessary to avoid dividing by `dt` if `dt` is zero.
             // To prepare for a possible swap operation, duplicate the current state into the previous state.
             duplicate()
         } else {
-            // Swap the current state and the previous state. Then calculate the new state.
+            // Exchange the current state with the previous state. Then calculate the new current state.
             swap()
 
             // Update the current time.
             curr.time = time
 
-            // Now that the time is set, it is safe to update the solar system.
+            // Now that the time is set, it is safe to update the Solar System.
             calcSolarSystem()
 
-            // Estimate the position of each small body as if the current
-            // acceleration applies across the whole time interval.
+            // Estimate the position of each small body as if their existing
+            // accelerations apply across the whole time interval.
             prev.bodies.forEachIndexed { i, p ->
                 curr.bodies[i].r = updatePosition(dt, p.r, p.v, p.a)
             }
