@@ -2169,7 +2169,6 @@ $ASTRO_ADDSOL()
             IEnumerable<StateVector> bodyStates)
         {
             OriginBody = originBody;
-            body_state_t ostate = InternalBodyState(originBody);
 
             // Verify that all the state vectors have matching times.
             StateVector[] bodyStateArray = (bodyStates == null) ? new StateVector[0] : bodyStates.ToArray();
@@ -2207,6 +2206,8 @@ $ASTRO_ADDSOL()
             if (originBody != Body.SSB)
             {
                 // Determine the barycentric state of the origin body.
+                body_state_t ostate = InternalBodyState(originBody);
+
                 // Add barycentric origin to origin-centric bodies to obtain barycentric bodies.
                 for (int i = 0; i < curr.bodies.Length; ++i)
                 {
@@ -2232,6 +2233,11 @@ $ASTRO_ADDSOL()
         /// `NumSmallBodies` returns this number as a convenience.
         /// </remarks>
         public int NumSmallBodies => curr.bodies.Length;
+
+        /// <summary>
+        /// The time represented by the current step of the gravity simulation.
+        /// </summary>
+        public AstroTime Time => curr.time;
 
         /// <summary>
         /// Advances a gravity simulation by a small time step.

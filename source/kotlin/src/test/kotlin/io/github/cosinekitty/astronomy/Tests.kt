@@ -2298,7 +2298,7 @@ class Tests {
         }
     }
 
-    private fun gravSimEmpty(fileNameSuffix: String, origin: Body, body: Body, limit_rdiff: Double, limit_vdiff: Double) {
+    private fun gravSimEmpty(fileNameSuffix: String, origin: Body, body: Body, rthresh: Double, vthresh: Double) {
         val filename = dataRootDir + fileNameSuffix
         val list = jplHorizonsStateVectors(filename)
         val sim = GravitySimulator(origin, list[0].state.t, listOf<StateVector>())
@@ -2309,10 +2309,10 @@ class Tests {
                 ssbArcminPosError(rec.state, calc)
             else
                 arcminPosError(rec.state, calc)
-            assertTrue(rdiff < limit_rdiff, "$filename line ${rec.lnum}: excessive position error = $rdiff arcmin.")
+            assertTrue(rdiff < rthresh, "$filename line ${rec.lnum}: excessive position error = $rdiff arcmin.")
 
             val vdiff = arcminVelError(rec.state, calc)
-            assertTrue(vdiff < limit_vdiff, "$filename line ${rec.lnum}: excessive velocity error = $vdiff arcmin.")
+            assertTrue(vdiff < vthresh, "$filename line ${rec.lnum}: excessive velocity error = $vdiff arcmin.")
         }
     }
 

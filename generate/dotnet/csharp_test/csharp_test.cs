@@ -39,6 +39,7 @@ namespace csharp_test
             new Test("constellation", ConstellationTest),
             new Test("elongation", ElongationTest),
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
+            new Test("gravsim", GravitySimulatorTest),
             new Test("jupiter_moons", JupiterMoonsTest),
             new Test("libration", LibrationTest),
             new Test("lagrange", LagrangeTest),
@@ -3576,6 +3577,191 @@ namespace csharp_test
             }
             Console.WriteLine("C# SiderealTimeTest: PASS");
             return 0;
+        }
+
+        //-----------------------------------------------------------------------------------------
+
+        static int GravitySimulatorTest()
+        {
+            Debug("");
+
+            if (0 != GravSimEmpty("barystate/Sun.txt",      Body.SSB, Body.Sun,      0.0269, 1.9635)) return 1;
+            if (0 != GravSimEmpty("barystate/Mercury.txt",  Body.SSB, Body.Mercury,  0.5725, 0.9332)) return 1;
+            if (0 != GravSimEmpty("barystate/Venus.txt",    Body.SSB, Body.Venus,    0.1433, 0.1458)) return 1;
+            if (0 != GravSimEmpty("barystate/Earth.txt",    Body.SSB, Body.Earth,    0.0651, 0.2098)) return 1;
+            if (0 != GravSimEmpty("barystate/Mars.txt",     Body.SSB, Body.Mars,     0.1150, 0.1896)) return 1;
+            if (0 != GravSimEmpty("barystate/Jupiter.txt",  Body.SSB, Body.Jupiter,  0.2546, 0.8831)) return 1;
+            if (0 != GravSimEmpty("barystate/Saturn.txt",   Body.SSB, Body.Saturn,   0.3660, 1.0818)) return 1;
+            if (0 != GravSimEmpty("barystate/Uranus.txt",   Body.SSB, Body.Uranus,   0.3107, 0.9321)) return 1;
+            if (0 != GravSimEmpty("barystate/Neptune.txt",  Body.SSB, Body.Neptune,  0.3382, 1.5586)) return 1;
+
+            if (0 != GravSimEmpty("heliostate/Mercury.txt", Body.Sun, Body.Mercury,  0.5087, 0.9473)) return 1;
+            if (0 != GravSimEmpty("heliostate/Venus.txt",   Body.Sun, Body.Venus,    0.1214, 0.1543)) return 1;
+            if (0 != GravSimEmpty("heliostate/Earth.txt",   Body.Sun, Body.Earth,    0.0508, 0.2099)) return 1;
+            if (0 != GravSimEmpty("heliostate/Mars.txt",    Body.Sun, Body.Mars,     0.1085, 0.1927)) return 1;
+            if (0 != GravSimEmpty("heliostate/Jupiter.txt", Body.Sun, Body.Jupiter,  0.2564, 0.8805)) return 1;
+            if (0 != GravSimEmpty("heliostate/Saturn.txt",  Body.Sun, Body.Saturn,   0.3664, 1.0826)) return 1;
+            if (0 != GravSimEmpty("heliostate/Uranus.txt",  Body.Sun, Body.Uranus,   0.3106, 0.9322)) return 1;
+            if (0 != GravSimEmpty("heliostate/Neptune.txt", Body.Sun, Body.Neptune,  0.3381, 1.5584)) return 1;
+
+            Debug("");
+            const int nsteps = 20;
+
+            if (0 != GravSimFile("barystate/Ceres.txt",    Body.SSB,   nsteps, 0.6640, 0.6226)) return 1;
+            if (0 != GravSimFile("barystate/Pallas.txt",   Body.SSB,   nsteps, 0.4687, 0.3474)) return 1;
+            if (0 != GravSimFile("barystate/Vesta.txt",    Body.SSB,   nsteps, 0.5806, 0.5462)) return 1;
+            if (0 != GravSimFile("barystate/Juno.txt",     Body.SSB,   nsteps, 0.6760, 0.5750)) return 1;
+            if (0 != GravSimFile("barystate/Bennu.txt",    Body.SSB,   nsteps, 3.7444, 2.6581)) return 1;
+            if (0 != GravSimFile("barystate/Halley.txt",   Body.SSB,   nsteps, 0.0539, 0.0825)) return 1;
+
+            if (0 != GravSimFile("heliostate/Ceres.txt",   Body.Sun,   nsteps, 0.0445, 0.0355)) return 1;
+            if (0 != GravSimFile("heliostate/Pallas.txt",  Body.Sun,   nsteps, 0.1062, 0.0854)) return 1;
+            if (0 != GravSimFile("heliostate/Vesta.txt",   Body.Sun,   nsteps, 0.1432, 0.1308)) return 1;
+            if (0 != GravSimFile("heliostate/Juno.txt",    Body.Sun,   nsteps, 0.1554, 0.1328)) return 1;
+
+            if (0 != GravSimFile("geostate/Ceres.txt",     Body.Earth, nsteps, 6.5689, 6.4797)) return 1;
+            if (0 != GravSimFile("geostate/Pallas.txt",    Body.Earth, nsteps, 9.3288, 7.3533)) return 1;
+            if (0 != GravSimFile("geostate/Vesta.txt",     Body.Earth, nsteps, 3.2980, 3.8863)) return 1;
+            if (0 != GravSimFile("geostate/Juno.txt",      Body.Earth, nsteps, 6.0962, 7.7147)) return 1;
+
+            Debug("");
+            Console.WriteLine("C# GravitySimulatorTest: PASS");
+
+            return 0;
+        }
+
+        static int GravSimFile(string fileNameSuffix, Body originBody, int nsteps, double rthresh, double vthresh)
+        {
+            string filename = "../../" + fileNameSuffix;
+            GravitySimulator sim = null;    // can't create until we see the first state vector.
+            JplStateRecord prev = new JplStateRecord();
+            AstroTime time = null;
+            var smallBodyArray = new StateVector[1];
+            double max_rdiff = 0.0;
+            double max_vdiff = 0.0;
+            foreach (JplStateRecord rec in JplHorizonsStateVectors(filename))
+            {
+                if (sim == null)
+                {
+                    sim = new GravitySimulator(originBody, rec.state.t, new StateVector[] { rec.state });
+                    time = rec.state.t;
+                }
+                else
+                {
+                    double tt1 = prev.state.t.tt;
+                    double tt2 = rec.state.t.tt;
+                    double dt = (tt2 - tt1) / nsteps;
+                    for (int k = 1; k <= nsteps; ++k)
+                    {
+                        time = AstroTime.FromTerrestrialTime(tt1 + k*dt);
+                        sim.Update(time, null);     // confirm null works to indicate no output state vectors are desired.
+                        if (time.tt != sim.Time.tt)
+                        {
+                            Console.WriteLine($"C# GravSimFile({filename} line {rec.lnum}): expected time {time} but simulator reports {sim.Time}.");
+                            return 1;
+                        }
+                    }
+                    // Confirm we can set to the same time and request output parameters.
+                    sim.Update(time, smallBodyArray);
+
+                    double rdiff = ArcminPosError(rec.state, smallBodyArray[0]);
+                    if (rdiff > rthresh)
+                    {
+                        Console.WriteLine($"C# GravSimFile({filename} line {rec.lnum}): excessive position error = {rdiff} arcmin.");
+                        return 1;
+                    }
+                    if (rdiff > max_rdiff)
+                        max_rdiff = rdiff;
+
+                    double vdiff = ArcminVelError(rec.state, smallBodyArray[0]);
+                    if (vdiff > vthresh)
+                    {
+                        Console.WriteLine($"C# GravSimFile({filename} line {rec.lnum}): excessive velocity error = {vdiff} arcmin.");
+                        return 1;
+                    }
+                    if (vdiff > max_vdiff)
+                        max_vdiff = vdiff;
+                }
+                prev = rec;
+            }
+
+            Debug($"C# GravSimFile ({filename,-28}): PASS - max pos error = {max_rdiff:F4} arcmin, max vel error = {max_vdiff:F4} arcmin.");
+            return 0;
+        }
+
+        static int GravSimEmpty(string fileNameSuffix, Body origin, Body body, double rthresh, double vthresh)
+        {
+            string filename = "../../" + fileNameSuffix;
+            GravitySimulator sim = null;
+            double max_rdiff = 0.0;
+            double max_vdiff = 0.0;
+            foreach (JplStateRecord rec in JplHorizonsStateVectors(filename))
+            {
+                if (sim == null)
+                    sim = new GravitySimulator(origin, rec.state.t, new StateVector[0]);
+
+                sim.Update(rec.state.t, null);
+                StateVector calc = sim.SolarSystemBodyState(body);
+
+                double rdiff = (
+                    (origin==Body.SSB && body==Body.Sun)
+                    ? SsbArcminPosError(rec.state, calc)
+                    : ArcminPosError(rec.state, calc)
+                );
+
+                if (rdiff > rthresh)
+                {
+                    Console.WriteLine($"C# GravSimEmpty({filename} line {rec.lnum}): excessive position error = {rdiff} arcmin.");
+                    return 1;
+                }
+                if (rdiff > max_rdiff)
+                    max_rdiff = rdiff;
+
+                double vdiff = ArcminVelError(rec.state, calc);
+                if (vdiff > vthresh)
+                {
+                    Console.WriteLine($"C# GravSimEmpty({filename} line {rec.lnum}): excessive velocity error = {vdiff} arcmin.");
+                    return 1;
+                }
+                if (vdiff > max_vdiff)
+                    max_vdiff = vdiff;
+            }
+
+            Debug($"C# GravSimEmpty({filename,-28}): PASS - max pos error = {max_rdiff:F4} arcmin, max vel error = {max_vdiff:F4} arcmin.");
+            return 0;
+        }
+
+        static double SsbArcminPosError(StateVector correct, StateVector calc)
+        {
+            // Scale the SSB based on 1 AU, not on its absolute magnitude, which can become very close to zero.
+            double dx = calc.x - correct.x;
+            double dy = calc.y - correct.y;
+            double dz = calc.z - correct.z;
+            double diffSquared = dx*dx + dy*dy + dz*dz;
+            double radians = sqrt(diffSquared);
+            return (60.0 * Astronomy.RAD2DEG) * radians;
+        }
+
+        static double ArcminPosError(StateVector correct, StateVector calc)
+        {
+            double dx = calc.x - correct.x;
+            double dy = calc.y - correct.y;
+            double dz = calc.z - correct.z;
+            double diffSquared = dx*dx + dy*dy + dz*dz;
+            double magSquared = correct.x*correct.x + correct.y*correct.y + correct.z*correct.z;
+            double radians = sqrt(diffSquared / magSquared);
+            return (60.0 * Astronomy.RAD2DEG) * radians;
+        }
+
+        static double ArcminVelError(StateVector correct, StateVector calc)
+        {
+            double dx = calc.vx - correct.vx;
+            double dy = calc.vy - correct.vy;
+            double dz = calc.vz - correct.vz;
+            double diffSquared = dx*dx + dy*dy + dz*dz;
+            double magSquared = correct.vx*correct.vx + correct.vy*correct.vy + correct.vz*correct.vz;
+            double radians = sqrt(diffSquared / magSquared);
+            return (60.0 * Astronomy.RAD2DEG) * radians;
         }
 
         //-----------------------------------------------------------------------------------------
