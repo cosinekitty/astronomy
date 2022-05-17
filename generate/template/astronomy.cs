@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CosineKitty
 {
@@ -341,6 +342,11 @@ namespace CosineKitty
         public static TerseVector operator -(TerseVector a, TerseVector b)
         {
             return new TerseVector(a.x - b.x, a.y - b.y, a.z - b.z);
+        }
+
+        public static TerseVector operator -(TerseVector a)
+        {
+            return new TerseVector(-a.x, -a.y, -a.z);
         }
 
         public static TerseVector operator *(double s, TerseVector v)
@@ -2108,6 +2114,323 @@ $ASTRO_ADDSOL()
     }
 
     /// <summary>
+    /// A simulation of zero or more small bodies moving through the Solar System.
+    /// </summary>
+    /// <remarks>
+    /// This class calculates the movement of arbitrary small bodies,
+    /// such as asteroids or comets, that move through the Solar System.
+    /// It does so by calculating the gravitational forces on the bodies
+    /// from the Sun and planets. The user of this class supplies a
+    /// list of initial positions and velocities for the bodies.
+    /// Then the class can update the positions and velocities over small
+    /// time steps.
+    /// </remarks>
+    public class GravitySimulator
+    {
+        /// <summary>
+        /// The origin of the reference frame. See constructor for more info.
+        /// </summary>
+        public readonly Body OriginBody;
+
+        private GravSimEndpoint prev;
+        private GravSimEndpoint curr;
+        private const int GravitatorArraySize = 1 + (int)Body.Sun;
+        private static readonly int[] PlanetIndexes = new int[] {
+            (int)Body.Mercury,
+            (int)Body.Venus,
+            (int)Body.Earth,
+            (int)Body.Mars,
+            (int)Body.Jupiter,
+            (int)Body.Saturn,
+            (int)Body.Uranus,
+            (int)Body.Neptune
+        };
+
+        /// <summary>Creates a gravity simulation object.</summary>
+        /// <param name="originBody">
+        /// Specifies the origin of the reference frame.
+        /// All position vectors and velocity vectors will use `originBody`
+        /// as the origin of the coordinate system.
+        /// This origin applies to all the input vectors provided in the
+        /// `bodyStateArray` parameter of this function, along with all
+        /// output vectors returned by #Astronomy_GravSimUpdate.
+        /// Most callers will want to provide one of the following:
+        /// [Body.Sun] for heliocentric coordinates,
+        /// [Body.SSB] for solar system barycentric coordinates,
+        /// or [Body.Earth] for geocentric coordinates. Note that the
+        /// gravity simulator does not correct for light travel time;
+        /// all state vectors are tied to a Newtonian "instantaneous" time.
+        /// </param>
+        /// <param name="time"></param>
+        /// <param name="bodyStates"></param>
+        public GravitySimulator(
+            Body originBody,
+            AstroTime time,
+            IEnumerable<StateVector> bodyStates)
+        {
+            OriginBody = originBody;
+
+            // Verify that all the state vectors have matching times.
+            StateVector[] bodyStateArray = (bodyStates == null) ? new StateVector[0] : bodyStates.ToArray();
+            foreach (StateVector b in bodyStateArray)
+                if (b.t.tt != time.tt)
+                    throw new ArgumentException("Inconsistent time(s) in bodyStates");
+
+            prev = new GravSimEndpoint
+            {
+                time = time,
+                gravitators = new body_state_t[GravitatorArraySize],
+                bodies = new body_grav_calc_t[bodyStateArray.Length],
+            };
+
+            curr = new GravSimEndpoint
+            {
+                time = time,
+                gravitators = new body_state_t[GravitatorArraySize],
+                bodies = bodyStateArray.Select(b =>
+                    new body_grav_calc_t(
+                        time.tt,
+                        new TerseVector(b.x, b.y, b.z),
+                        new TerseVector(b.vx, b.vy, b.vz),
+                        TerseVector.Zero
+                    )
+                ).ToArray(),
+            };
+
+            // Calculate the states of the Sun and planets.
+            CalcSolarSystem();
+
+            // We need to do all the physics calculations in barycentric coordinates.
+            // But the caller provides the input vectors with respect to `originBody`.
+            // Correct the input body state vectors for the specified origin.
+            if (originBody != Body.SSB)
+            {
+                // Determine the barycentric state of the origin body.
+                body_state_t ostate = InternalBodyState(originBody);
+
+                // Add barycentric origin to origin-centric bodies to obtain barycentric bodies.
+                for (int i = 0; i < curr.bodies.Length; ++i)
+                {
+                    curr.bodies[i].r += ostate.r;
+                    curr.bodies[i].v += ostate.v;
+                }
+            }
+
+            // Calculate the net acceleration experienced by the small bodies.
+            CalcBodyAccelerations();
+
+            // To prepare for a possible swap operation, duplicate the current state into the previous state.
+            Duplicate();
+        }
+
+        /// <summary>
+        /// Advances a gravity simulation by a small time step.
+        /// </summary>
+        /// <remarks>
+        /// Updates the simulation of the user-supplied small bodies
+        /// to the time indicated by the `time` parameter.
+        /// Updates the supplied array `bodyStates` of state vectors for the small bodies.
+        /// This array must be the same size as the number of bodies supplied
+        /// to the constructor of this object.
+        /// The positions and velocities in the returned array are referenced
+        /// to the `originBody` that was used to construct this simulator.
+        /// </remarks>
+        /// <param name="time">
+        /// </param>
+        /// <param name="bodyStates">
+        /// </param>
+        public void Update(AstroTime time, StateVector[] bodyStates)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Exchange the current time step with the previous time step.
+        /// </summary>
+        /// <remarks>
+        /// Sometimes it is helpful to "explore" various times near a given
+        /// simulation time step, while repeatedly returning to the original
+        /// time step. For example, when backdating a position for light travel
+        /// time, the caller may wish to repeatedly try different amounts of
+        /// backdating. When the backdating solver has converged, the caller
+        /// wants to leave the simulation in its original state.
+        ///
+        /// This function allows a single "undo" of a simulation, and does so
+        /// very efficiently.
+        ///
+        /// Usually this function will be called immediately after a matching
+        /// call to #GravitySimulator.Update. It has the effect of rolling
+        /// back the most recent update. If called twice in a row, it reverts
+        /// the swap and thus has no net effect.
+        ///
+        /// The constructor initializes the current state and previous
+        /// state to be identical. Both states represent the `time` parameter that was
+        /// passed into the constructor. Therefore, `Swap` will
+        /// have no effect from the caller's point of view when passed a simulator
+        /// that has not yet been updated by a call to #GravitySimulator.Update.
+        /// </remarks>
+        public void Swap()
+        {
+            var swap = curr;
+            curr = prev;
+            prev = swap;
+        }
+
+        /// <summary>
+        /// Get the position and velocity of a Solar System body included in the simulation.
+        /// </summary>
+        /// <remarks>
+        /// In order to simulate the movement of small bodies through the Solar System,
+        /// the simulator needs to calculate the state vectors for the Sun and planets.
+        ///
+        /// If an application wants to know the positions of one or more of the planets
+        /// in addition to the small bodies, this function provides a way to obtain
+        /// their state vectors. This is provided for the sake of efficiency, to avoid
+        /// redundant calculations.
+        ///
+        /// The state vector is returned relative to the position and velocity
+        /// of the `originBody` parameter that was passed to this object's constructor.
+        /// </remarks>
+        ///
+        /// <param name="body">
+        /// The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune.
+        /// </param>
+        public StateVector SolarSystemBodyState(Body body)
+        {
+            body_state_t bstate = InternalBodyState(body);
+            body_state_t ostate = InternalBodyState(OriginBody);
+            return Astronomy.ExportState(bstate - ostate, curr.time);
+        }
+
+        private void CalcSolarSystem()
+        {
+            double tt = curr.time.tt;
+
+            // Initialize the Sun's position/velocity as zero vectors, then adjust from pulls of the planets.
+            var ssb = new body_state_t(tt, TerseVector.Zero, TerseVector.Zero);
+
+            curr.gravitators[(int)Body.Mercury] = Astronomy.AdjustBarycenterPosVel(ref ssb, tt, Body.Mercury, Astronomy.MERCURY_GM);
+            curr.gravitators[(int)Body.Venus  ] = Astronomy.AdjustBarycenterPosVel(ref ssb, tt, Body.Venus,   Astronomy.VENUS_GM);
+            curr.gravitators[(int)Body.Earth  ] = Astronomy.AdjustBarycenterPosVel(ref ssb, tt, Body.Earth,   Astronomy.EARTH_GM + Astronomy.MOON_GM);
+            curr.gravitators[(int)Body.Mars   ] = Astronomy.AdjustBarycenterPosVel(ref ssb, tt, Body.Mars,    Astronomy.MARS_GM);
+            curr.gravitators[(int)Body.Jupiter] = Astronomy.AdjustBarycenterPosVel(ref ssb, tt, Body.Jupiter, Astronomy.JUPITER_GM);
+            curr.gravitators[(int)Body.Saturn ] = Astronomy.AdjustBarycenterPosVel(ref ssb, tt, Body.Saturn,  Astronomy.SATURN_GM);
+            curr.gravitators[(int)Body.Uranus ] = Astronomy.AdjustBarycenterPosVel(ref ssb, tt, Body.Uranus,  Astronomy.URANUS_GM);
+            curr.gravitators[(int)Body.Neptune] = Astronomy.AdjustBarycenterPosVel(ref ssb, tt, Body.Neptune, Astronomy.NEPTUNE_GM);
+
+            // Convert planets states from heliocentric to barycentric.
+            foreach (int bindex in PlanetIndexes)
+            {
+                curr.gravitators[bindex].r -= ssb.r;
+                curr.gravitators[bindex].v -= ssb.v;
+            }
+
+            // Convert heliocentric SSB to barycentric Sun.
+            curr.gravitators[(int)Body.Sun] = new body_state_t(tt, -ssb.r, -ssb.v);
+        }
+
+        private body_state_t InternalBodyState(Body body)
+        {
+            if (body == Body.Sun || (body >= Body.Mercury && body <= Body.Neptune))
+                return curr.gravitators[(int)body];
+
+            if (body == Body.SSB)
+                return new body_state_t(curr.time.tt, TerseVector.Zero, TerseVector.Zero);
+
+            throw new InvalidBodyException(body);
+        }
+
+        private void CalcBodyAccelerations()
+        {
+            // Calculate the gravitational acceleration experienced by the simulated bodies.
+            const double EMB_GM = Astronomy.EARTH_GM + Astronomy.MOON_GM;
+            for (int i = 0; i < curr.bodies.Length; ++i)
+            {
+                TerseVector a = TerseVector.Zero;
+                a += Acceleration(curr.bodies[i].r, Astronomy.SUN_GM,     curr.gravitators[(int)Body.Sun].r);
+                a += Acceleration(curr.bodies[i].r, Astronomy.MERCURY_GM, curr.gravitators[(int)Body.Mercury].r);
+                a += Acceleration(curr.bodies[i].r, Astronomy.VENUS_GM,   curr.gravitators[(int)Body.Venus].r);
+                a += Acceleration(curr.bodies[i].r, EMB_GM,               curr.gravitators[(int)Body.Earth].r);
+                a += Acceleration(curr.bodies[i].r, Astronomy.MARS_GM,    curr.gravitators[(int)Body.Mars].r);
+                a += Acceleration(curr.bodies[i].r, Astronomy.JUPITER_GM, curr.gravitators[(int)Body.Jupiter].r);
+                a += Acceleration(curr.bodies[i].r, Astronomy.SATURN_GM,  curr.gravitators[(int)Body.Saturn].r);
+                a += Acceleration(curr.bodies[i].r, Astronomy.URANUS_GM,  curr.gravitators[(int)Body.Uranus].r);
+                a += Acceleration(curr.bodies[i].r, Astronomy.NEPTUNE_GM, curr.gravitators[(int)Body.Neptune].r);
+                curr.bodies[i].a = a;
+            }
+        }
+
+        private TerseVector Acceleration(TerseVector smallPos, double gm, TerseVector majorPos)
+        {
+            double dx = majorPos.x - smallPos.x;
+            double dy = majorPos.y - smallPos.y;
+            double dz = majorPos.z - smallPos.z;
+            double r2 = dx*dx + dy*dy + dz*dz;
+            double pull = gm / (r2 * Math.Sqrt(r2));
+            return new TerseVector(dx * pull, dy * pull, dz * pull);
+        }
+
+        private void Duplicate()
+        {
+            // Copy the current state into the previous state, so that both become the same moment in time.
+            prev.time = curr.time;
+
+            for (int i = 0; i < curr.gravitators.Length; ++i)
+                prev.gravitators[i] = curr.gravitators[i];
+
+            for (int i = 0; i < curr.bodies.Length; ++i)
+                prev.bodies[i] = curr.bodies[i];
+        }
+    }
+
+    internal class GravSimEndpoint
+    {
+        public AstroTime time;
+        public body_state_t[] gravitators;
+        public body_grav_calc_t[] bodies;
+    }
+
+    internal struct body_state_t
+    {
+        public double tt;       // Terrestrial Time in J2000 days
+        public TerseVector r;   // position [au]
+        public TerseVector v;   // velocity [au/day]
+
+        public body_state_t(double tt, TerseVector r, TerseVector v)
+        {
+            this.tt = tt;
+            this.r = r;
+            this.v = v;
+        }
+
+        public static body_state_t operator -(body_state_t s)
+        {
+            return new body_state_t(s.tt, -s.r, -s.v);
+        }
+
+        public static body_state_t operator -(body_state_t a, body_state_t b)
+        {
+            return new body_state_t(a.tt, a.r - b.r, a.v - b.v);
+        }
+    }
+
+    internal struct body_grav_calc_t
+    {
+        public double tt;       // J2000 terrestrial time [days]
+        public TerseVector r;   // position [au]
+        public TerseVector v;   // velocity [au/day]
+        public TerseVector a;   // acceleration [au/day^2]
+
+        public body_grav_calc_t(double tt, TerseVector r, TerseVector v, TerseVector a)
+        {
+            this.tt = tt;
+            this.r = r;
+            this.v = v;
+            this.a = a;
+        }
+    }
+
+    /// <summary>
     /// The wrapper class that holds Astronomy Engine functions.
     /// </summary>
     public static class Astronomy
@@ -2230,18 +2553,18 @@ $ASTRO_ADDSOL()
             This side-steps issues of not knowing the exact values of G and masses M[i];
             the products GM[i] are known extremely accurately.
         */
-        private const double SUN_GM     = 0.2959122082855911e-03;
-        private const double MERCURY_GM = 0.4912547451450812e-10;
-        private const double VENUS_GM   = 0.7243452486162703e-09;
-        private const double EARTH_GM   = 0.8887692390113509e-09;
-        private const double MARS_GM    = 0.9549535105779258e-10;
-        private const double JUPITER_GM = 0.2825345909524226e-06;
-        private const double SATURN_GM  = 0.8459715185680659e-07;
-        private const double URANUS_GM  = 0.1292024916781969e-07;
-        private const double NEPTUNE_GM = 0.1524358900784276e-07;
-        private const double PLUTO_GM   = 0.2188699765425970e-11;
+        internal const double SUN_GM     = 0.2959122082855911e-03;
+        internal const double MERCURY_GM = 0.4912547451450812e-10;
+        internal const double VENUS_GM   = 0.7243452486162703e-09;
+        internal const double EARTH_GM   = 0.8887692390113509e-09;
+        internal const double MARS_GM    = 0.9549535105779258e-10;
+        internal const double JUPITER_GM = 0.2825345909524226e-06;
+        internal const double SATURN_GM  = 0.8459715185680659e-07;
+        internal const double URANUS_GM  = 0.1292024916781969e-07;
+        internal const double NEPTUNE_GM = 0.1524358900784276e-07;
+        internal const double PLUTO_GM   = 0.2188699765425970e-11;
 
-        private const double MOON_GM = EARTH_GM / EARTH_MOON_MASS_RATIO;
+        internal const double MOON_GM = EARTH_GM / EARTH_MOON_MASS_RATIO;
 
         /// <summary>
         /// Returns the product of mass and universal gravitational constant of a Solar System body.
@@ -2597,20 +2920,6 @@ $ASTRO_CSHARP_VSOP(Neptune)
             return deriv;
         }
 
-        private struct body_state_t
-        {
-            public double tt;       // Terrestrial Time in J2000 days
-            public TerseVector r;   // position [au]
-            public TerseVector v;   // velocity [au/day]
-
-            public body_state_t(double tt, TerseVector r, TerseVector v)
-            {
-                this.tt = tt;
-                this.r = r;
-                this.v = v;
-            }
-        }
-
         private struct major_bodies_t
         {
             public body_state_t Sun;
@@ -2690,22 +2999,6 @@ $ASTRO_CSHARP_VSOP(Neptune)
 
 #region Pluto
 
-        private struct body_grav_calc_t
-        {
-            public double tt;       // J2000 terrestrial time [days]
-            public TerseVector r;   // position [au]
-            public TerseVector v;   // velocity [au/day]
-            public TerseVector a;   // acceleration [au/day^2]
-
-            public body_grav_calc_t(double tt, TerseVector r, TerseVector v, TerseVector a)
-            {
-                this.tt = tt;
-                this.r = r;
-                this.v = v;
-                this.a = a;
-            }
-        }
-
 $ASTRO_PLUTO_TABLE();
 
         private static TerseVector UpdatePosition(double dt, TerseVector r, TerseVector v, TerseVector a)
@@ -2726,7 +3019,7 @@ $ASTRO_PLUTO_TABLE();
             );
         }
 
-        private static body_state_t AdjustBarycenterPosVel(ref body_state_t ssb, double tt, Body body, double planet_gm)
+        internal static body_state_t AdjustBarycenterPosVel(ref body_state_t ssb, double tt, Body body, double planet_gm)
         {
             double shift = planet_gm / (planet_gm + SUN_GM);
             body_state_t planet = CalcVsopPosVel(vsop[(int)body], tt);
@@ -2751,9 +3044,7 @@ $ASTRO_PLUTO_TABLE();
             bary.Neptune.r -= ssb.r;    bary.Neptune.v -= ssb.v;
 
             // Convert heliocentric SSB to barycentric Sun.
-            bary.Sun.tt = tt;
-            bary.Sun.r = -1.0 * ssb.r;
-            bary.Sun.v = -1.0 * ssb.v;
+            bary.Sun = -ssb;
 
             return bary;
         }
@@ -4021,7 +4312,7 @@ $ASTRO_IAU_DATA()
             }
         }
 
-        private static StateVector ExportState(body_state_t terse, AstroTime time)
+        internal static StateVector ExportState(body_state_t terse, AstroTime time)
         {
             return new StateVector(
                 terse.r.x, terse.r.y, terse.r.z,

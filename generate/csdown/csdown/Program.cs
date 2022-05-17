@@ -312,6 +312,9 @@ namespace csdown
                 case "System.DateTime":
                     return "`DateTime`";
 
+                case "System.Void":
+                    return "`void`";
+
                 default:
                     throw new NotImplementedException("Unhandled type " + t.FullName);
             }

@@ -2622,6 +2622,91 @@ not be used.
 
 ---
 
+<a name="GravitySimulator"></a>
+## `class GravitySimulator`
+
+**A simulation of zero or more small bodies moving through the Solar System.**
+
+This class calculates the movement of arbitrary small bodies,
+such as asteroids or comets, that move through the Solar System.
+It does so by calculating the gravitational forces on the bodies
+from the Sun and planets. The user of this class supplies a
+list of initial positions and velocities for the bodies.
+Then the class can update the positions and velocities over small
+time steps.
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `OriginBody` | The origin of the reference frame. See constructor for more info. |
+
+### member functions
+
+<a name="GravitySimulator.SolarSystemBodyState"></a>
+### GravitySimulator.SolarSystemBodyState(body) &#8658; [`StateVector`](#StateVector)
+
+**Get the position and velocity of a Solar System body included in the simulation.**
+
+In order to simulate the movement of small bodies through the Solar System,
+the simulator needs to calculate the state vectors for the Sun and planets.
+
+If an application wants to know the positions of one or more of the planets
+in addition to the small bodies, this function provides a way to obtain
+their state vectors. This is provided for the sake of efficiency, to avoid
+redundant calculations.
+
+The state vector is returned relative to the position and velocity
+of the `originBody` parameter that was passed to this object's constructor.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune. |
+
+<a name="GravitySimulator.Swap"></a>
+### GravitySimulator.Swap() &#8658; `void`
+
+**Exchange the current time step with the previous time step.**
+
+Sometimes it is helpful to "explore" various times near a given
+simulation time step, while repeatedly returning to the original
+time step. For example, when backdating a position for light travel
+time, the caller may wish to repeatedly try different amounts of
+backdating. When the backdating solver has converged, the caller
+wants to leave the simulation in its original state.
+
+This function allows a single "undo" of a simulation, and does so
+very efficiently.
+
+Usually this function will be called immediately after a matching
+call to [`GravitySimulator.Update`](#GravitySimulator.Update). It has the effect of rolling
+back the most recent update. If called twice in a row, it reverts
+the swap and thus has no net effect.
+
+The constructor initializes the current state and previous
+state to be identical. Both states represent the `time` parameter that was
+passed into the constructor. Therefore, `Swap` will
+have no effect from the caller's point of view when passed a simulator
+that has not yet been updated by a call to [`GravitySimulator.Update`](#GravitySimulator.Update).
+
+<a name="GravitySimulator.Update"></a>
+### GravitySimulator.Update(time, bodyStates) &#8658; `void`
+
+**Advances a gravity simulation by a small time step.**
+
+Updates the simulation of the user-supplied small bodies
+to the time indicated by the `time` parameter.
+Updates the supplied array `bodyStates` of state vectors for the small bodies.
+This array must be the same size as the number of bodies supplied
+to the constructor of this object.
+The positions and velocities in the returned array are referenced
+to the `originBody` that was used to construct this simulator.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` |  |
+| [`StateVector[]`](#StateVector[]) | `bodyStates` |  |
+
+---
+
 <a name="HourAngleInfo"></a>
 ## `struct HourAngleInfo`
 

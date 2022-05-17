@@ -7855,13 +7855,18 @@ fun constellation(ra: Double, dec: Double): ConstellationInfo {
 /**
  * A simulation of zero or more small bodies moving through the Solar System.
  *
- * A gravity simulator object simulates a series of incremental time steps,
- * calculating the movement of the Sun and planets around the Solar System Barycenter (SSB).
- * It calculates the resulting gravitational forces on an arbitrary list of small bodies
- * provided by the caller.
+ * This class calculates the movement of arbitrary small bodies,
+ * such as asteroids or comets, that move through the Solar System.
+ * It does so by calculating the gravitational forces on the bodies
+ * from the Sun and planets. The user of this class supplies a
+ * list of initial positions and velocities for the bodies.
+ * Then the class can update the positions and velocities over small
+ * time steps. The gravity simulator also provides access to the
+ * positions and velocities of the Sun and planets used in the simulation.
  */
 class GravitySimulator {
-    /** The origin of the reference frame. See constructor for more info.
+    /**
+     * The origin of the reference frame. See constructor for more info.
      */
     val originBody: Body
 
@@ -7876,8 +7881,8 @@ class GravitySimulator {
      * All position vectors and velocity vectors will use `originBody`
      * as the origin of the coordinate system.
      * This origin applies to all the input vectors provided in the
-     * `bodyStateArray` parameter of this function, along with all
-     * output vectors returned by #Astronomy_GravSimUpdate.
+     * `bodyStates` parameter of this function, along with all
+     * output vectors returned by [GravitySimulator.update].
      * Most callers will want to provide one of the following:
      * [Body.Sun] for heliocentric coordinates,
      * [Body.SSB] for solar system barycentric coordinates,
@@ -7905,7 +7910,7 @@ class GravitySimulator {
     ) {
         this.originBody = originBody
 
-        // Verify that all the state vectors are valid and have matching times.
+        // Verify that all the state vectors have matching times.
         for (b in bodyStates) {
             if (b.t.tt != time.tt) {
                 throw IllegalArgumentException("Inconsistent time(s) in bodyStates array.")
