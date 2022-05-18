@@ -118,6 +118,9 @@ Calculations are also verified to be identical among all the supported programmi
 
 - Calculates the positions of Jupiter's four largest moons: Io, Europa, Ganymede, and Callisto.
 
+- Allows custom simulation of the movements of user-defined small bodies,
+  such as asteroids and comets, through the Solar System.
+
 - Converts angular and vector coordinates among the following orientations:
   - Equatorial J2000
   - Equatorial equator-of-date
@@ -126,6 +129,10 @@ Calculations are also verified to be identical among all the supported programmi
   - Galactic (IAU 1958)
 
 - Determines which constellation contains a given point in the sky.
+
+- Calculates libration of the Moon.
+
+- Calculates axis orientation and rotation angles for the Sun, Moon, and planets.
 
 ### Why I Created This Thing
 
@@ -166,8 +173,9 @@ non-intertial frames of reference! My humble needs did not require this herculea
 of complexity. So I decided to create Astronomy Engine with the following engineering goals:
 
 - Support JavaScript, C, C#, and Python with the same algorithms, and verify them to produce identical results.
+  (Kotlin support was added in 2022.)
 - No external dependencies! The code must not require anything outside the standard library for each language.
-- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->109281 bytes.)
+- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->113534 bytes.)
 - Accuracy always within 1 arcminute of results from NOVAS.
 - It would be well documented, relatively easy to use, and support a wide variety of common use cases.
 

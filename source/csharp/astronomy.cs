@@ -2257,17 +2257,30 @@ namespace CosineKitty
         /// All position vectors and velocity vectors will use `originBody`
         /// as the origin of the coordinate system.
         /// This origin applies to all the input vectors provided in the
-        /// `bodyStateArray` parameter of this function, along with all
-        /// output vectors returned by #Astronomy_GravSimUpdate.
+        /// `bodyStates` parameter of this function, along with all
+        /// output vectors returned by #GravitySimulator.Update.
         /// Most callers will want to provide one of the following:
-        /// [Body.Sun] for heliocentric coordinates,
-        /// [Body.SSB] for solar system barycentric coordinates,
-        /// or [Body.Earth] for geocentric coordinates. Note that the
+        /// `Body.Sun` for heliocentric coordinates,
+        /// `Body.SSB` for solar system barycentric coordinates,
+        /// or `Body.Earth` for geocentric coordinates. Note that the
         /// gravity simulator does not correct for light travel time;
         /// all state vectors are tied to a Newtonian "instantaneous" time.
         /// </param>
-        /// <param name="time"></param>
-        /// <param name="bodyStates"></param>
+        /// <param name="time">
+        /// The initial time at which to start the simulation.
+        /// </param>
+        /// <param name="bodyStates">
+        /// An enumeration of zero or more initial state vectors (positions and velocities)
+        /// of the small bodies to be simulated.
+        /// The caller must know the positions and velocities of the small bodies at an initial moment in time.
+        /// Their positions and velocities are expressed with respect to `originBody`, using equatorial
+        /// J2000 orientation (EQJ).
+        /// Positions are expressed in astronomical units (AU).
+        /// Velocities are expressed in AU/day.
+        /// All the times embedded within the state vectors must be exactly equal to `time`,
+        /// or this constructor will throw an exception.
+        /// If `bodyStates` is null, the gravity simulator will contain zero small bodies.
+        /// </param>
         public GravitySimulator(
             Body originBody,
             AstroTime time,
@@ -2563,20 +2576,20 @@ namespace CosineKitty
             for (int i = 0; i < curr.bodies.Length; ++i)
             {
                 TerseVector a = TerseVector.Zero;
-                a += Acceleration(curr.bodies[i].r, Astronomy.SUN_GM,     curr.gravitators[(int)Body.Sun].r);
-                a += Acceleration(curr.bodies[i].r, Astronomy.MERCURY_GM, curr.gravitators[(int)Body.Mercury].r);
-                a += Acceleration(curr.bodies[i].r, Astronomy.VENUS_GM,   curr.gravitators[(int)Body.Venus].r);
-                a += Acceleration(curr.bodies[i].r, EMB_GM,               curr.gravitators[(int)Body.Earth].r);
-                a += Acceleration(curr.bodies[i].r, Astronomy.MARS_GM,    curr.gravitators[(int)Body.Mars].r);
-                a += Acceleration(curr.bodies[i].r, Astronomy.JUPITER_GM, curr.gravitators[(int)Body.Jupiter].r);
-                a += Acceleration(curr.bodies[i].r, Astronomy.SATURN_GM,  curr.gravitators[(int)Body.Saturn].r);
-                a += Acceleration(curr.bodies[i].r, Astronomy.URANUS_GM,  curr.gravitators[(int)Body.Uranus].r);
-                a += Acceleration(curr.bodies[i].r, Astronomy.NEPTUNE_GM, curr.gravitators[(int)Body.Neptune].r);
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Sun].r,      Astronomy.SUN_GM    );
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Mercury].r,  Astronomy.MERCURY_GM);
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Venus].r,    Astronomy.VENUS_GM  );
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Earth].r,    EMB_GM              );
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Mars].r,     Astronomy.MARS_GM   );
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Jupiter].r,  Astronomy.JUPITER_GM);
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Saturn].r,   Astronomy.SATURN_GM );
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Uranus].r,   Astronomy.URANUS_GM );
+                a += Acceleration(curr.bodies[i].r, curr.gravitators[(int)Body.Neptune].r,  Astronomy.NEPTUNE_GM);
                 curr.bodies[i].a = a;
             }
         }
 
-        private TerseVector Acceleration(TerseVector smallPos, double gm, TerseVector majorPos)
+        private TerseVector Acceleration(TerseVector smallPos, TerseVector majorPos, double gm)
         {
             double dx = majorPos.x - smallPos.x;
             double dy = majorPos.y - smallPos.y;

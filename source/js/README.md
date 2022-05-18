@@ -809,6 +809,121 @@ It is expressed in the equatorial J2000 system (EQJ).
 
 * * *
 
+<a name="GravitySimulator"></a>
+
+## GravitySimulator
+**Kind**: global class  
+**Brief**: A simulation of zero or more small bodies moving through the Solar System.
+
+This class calculates the movement of arbitrary small bodies,
+such as asteroids or comets, that move through the Solar System.
+It does so by calculating the gravitational forces on the bodies
+from the Sun and planets. The user of this class supplies a
+list of initial positions and velocities for the bodies.
+Then the class can update the positions and velocities over small
+time steps.  
+
+* * *
+
+<a name="new_GravitySimulator_new"></a>
+
+### new GravitySimulator(originBody, date, bodyStates)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| originBody | [<code>Body</code>](#Body) | Specifies the origin of the reference frame.      All position vectors and velocity vectors will use `originBody`      as the origin of the coordinate system.      This origin applies to all the input vectors provided in the      `bodyStates` parameter of this function, along with all      output vectors returned by [Update](#GravitySimulator+Update).      Most callers will want to provide one of the following:      `Body.Sun` for heliocentric coordinates,      `Body.SSB` for solar system barycentric coordinates,      or `Body.Earth` for geocentric coordinates. Note that the      gravity simulator does not correct for light travel time;      all state vectors are tied to a Newtonian "instantaneous" time. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The initial time at which to start the simulation. |
+| bodyStates | [<code>Array.&lt;StateVector&gt;</code>](#StateVector) | An array of zero or more initial state vectors (positions and velocities)      of the small bodies to be simulated.      The caller must know the positions and velocities of the small bodies at an initial moment in time.      Their positions and velocities are expressed with respect to `originBody`, using equatorial      J2000 orientation (EQJ).      Positions are expressed in astronomical units (AU).      Velocities are expressed in AU/day.      All the times embedded within the state vectors must exactly match `date`,      or this constructor will throw an exception. |
+
+
+* * *
+
+<a name="GravitySimulator+OriginBody"></a>
+
+### gravitySimulator.OriginBody
+**Kind**: instance property of [<code>GravitySimulator</code>](#GravitySimulator)  
+**Brief**: The body that was selected as the coordinate origin when this simulator was created.  
+
+* * *
+
+<a name="GravitySimulator+Update"></a>
+
+### gravitySimulator.Update(date)
+Advances a gravity simulation by a small time step.
+
+Updates the simulation of the user-supplied small bodies
+to the time indicated by the `date` parameter.
+Returns an array of state vectors for the simulated bodies.
+The array is in the same order as the original array that
+was used to construct this simulator object.
+The positions and velocities in the returned array are
+referenced to the `originBody` that was used to construct
+this simulator.
+
+**Kind**: instance method of [<code>GravitySimulator</code>](#GravitySimulator)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A time that is a small increment away from the current simulation time.      It is up to the developer to figure out an appropriate time increment.      Depending on the trajectories, a smaller or larger increment      may be needed for the desired accuracy. Some experimentation may be needed.      Generally, bodies that stay in the outer Solar System and move slowly can      use larger time steps. Bodies that pass into the inner Solar System and      move faster will need a smaller time step to maintain accuracy.      Some experimentation may be necessary to find a good value.      The `date` value may be after or before the current simulation time      to move forward or backward in time. |
+
+
+* * *
+
+<a name="GravitySimulator+Swap"></a>
+
+### gravitySimulator.Swap()
+Exchange the current time step with the previous time step.
+
+Sometimes it is helpful to "explore" various times near a given
+simulation time step, while repeatedly returning to the original
+time step. For example, when backdating a position for light travel
+time, the caller may wish to repeatedly try different amounts of
+backdating. When the backdating solver has converged, the caller
+wants to leave the simulation in its original state.
+
+This function allows a single "undo" of a simulation, and does so
+very efficiently.
+
+Usually this function will be called immediately after a matching
+call to [Update](#GravitySimulator+Update). It has the effect of rolling
+back the most recent update. If called twice in a row, it reverts
+the swap and thus has no net effect.
+
+The constructor initializes the current state and previous
+state to be identical. Both states represent the `time` parameter that was
+passed into the constructor. Therefore, `Swap` will
+have no effect from the caller's point of view when passed a simulator
+that has not yet been updated by a call to [Update](#GravitySimulator+Update).
+
+**Kind**: instance method of [<code>GravitySimulator</code>](#GravitySimulator)  
+
+* * *
+
+<a name="GravitySimulator+SolarSystemBodyState"></a>
+
+### gravitySimulator.SolarSystemBodyState(body)
+Get the position and velocity of a Solar System body included in the simulation.
+
+In order to simulate the movement of small bodies through the Solar System,
+the simulator needs to calculate the state vectors for the Sun and planets.
+
+If an application wants to know the positions of one or more of the planets
+in addition to the small bodies, this function provides a way to obtain
+their state vectors. This is provided for the sake of efficiency, to avoid
+redundant calculations.
+
+The state vector is returned relative to the position and velocity
+of the `originBody` parameter that was passed to this object's constructor.
+
+**Kind**: instance method of [<code>GravitySimulator</code>](#GravitySimulator)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | [<code>Body</code>](#Body) | The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune. |
+
+
+* * *
+
 <a name="C_AUDAY"></a>
 
 ## C\_AUDAY

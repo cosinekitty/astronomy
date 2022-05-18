@@ -7896,8 +7896,8 @@ class GravitySimulator {
      * @param bodyStates
      * An array of initial state vectors (positions and velocities) of the small bodies to be simulated.
      * The caller must know the positions and velocities of the small bodies at an initial moment in time.
-     * Their positions and velocities are expressed with respect to the Solar System Barycenter (SSB)
-     * using equatorial J2000 orientation (EQJ).
+     * Their positions and velocities are expressed with respect to `originBody`, using equatorial
+     * J2000 orientation (EQJ).
      * Positions are expressed in astronomical units (AU).
      * Velocities are expressed in AU/day.
      * All the times embedded within the state vectors must be exactly equal to `time`,
@@ -8182,19 +8182,19 @@ class GravitySimulator {
         // Calculate the gravitational acceleration experienced by the simulated bodies.
         for (calc in curr.bodies) {
             calc.a.setToZero()
-            addAcceleration(calc.a, calc.r, SUN_GM,             curr.gravitators[Body.Sun.ordinal    ].r)
-            addAcceleration(calc.a, calc.r, MERCURY_GM,         curr.gravitators[Body.Mercury.ordinal].r)
-            addAcceleration(calc.a, calc.r, VENUS_GM,           curr.gravitators[Body.Venus.ordinal  ].r)
-            addAcceleration(calc.a, calc.r, EARTH_GM + MOON_GM, curr.gravitators[Body.Earth.ordinal  ].r)
-            addAcceleration(calc.a, calc.r, MARS_GM,            curr.gravitators[Body.Mars.ordinal   ].r)
-            addAcceleration(calc.a, calc.r, JUPITER_GM,         curr.gravitators[Body.Jupiter.ordinal].r)
-            addAcceleration(calc.a, calc.r, SATURN_GM,          curr.gravitators[Body.Saturn.ordinal ].r)
-            addAcceleration(calc.a, calc.r, URANUS_GM,          curr.gravitators[Body.Uranus.ordinal ].r)
-            addAcceleration(calc.a, calc.r, NEPTUNE_GM,         curr.gravitators[Body.Neptune.ordinal].r)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Sun.ordinal    ].r, SUN_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Mercury.ordinal].r, MERCURY_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Venus.ordinal  ].r, VENUS_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Earth.ordinal  ].r, EARTH_GM + MOON_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Mars.ordinal   ].r, MARS_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Jupiter.ordinal].r, JUPITER_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Saturn.ordinal ].r, SATURN_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Uranus.ordinal ].r, URANUS_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Neptune.ordinal].r, NEPTUNE_GM)
         }
     }
 
-    private fun addAcceleration(acc: TerseVector, smallPos: TerseVector, gm: Double, majorPos: TerseVector) {
+    private fun addAcceleration(acc: TerseVector, smallPos: TerseVector, majorPos: TerseVector, gm: Double) {
         val dx = majorPos.x - smallPos.x
         val dy = majorPos.y - smallPos.y
         val dz = majorPos.z - smallPos.z
