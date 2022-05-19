@@ -9261,20 +9261,22 @@ export class GravitySimulator {
             }
         }
 
+        // Create a stub list that we append to later.
+        // We just need the stub to put into `this.curr`.
+        const smallBodyList: body_grav_calc_t[] = [];
+
+        // Calculate the states of the Sun and planets.
+        const largeBodyDict = this.CalcSolarSystem(time);
+        this.curr = new GravSimEndpoint(time, largeBodyDict, smallBodyList);
 
         // Convert origin-centric bodyStates vectors into barycentric body_grav_calc_t array.
         const o = this.InternalBodyState(originBody);
-        const smallBodyList: body_grav_calc_t[] = [];
         for (let b of bodyStates) {
             const r = new TerseVector(b.x + o.r.x, b.y + o.r.y, b.z + o.r.z);
             const v = new TerseVector(b.vx + o.v.x, b.vy + o.v.y, b.vz + o.v.z);
             const a = TerseVector.zero();
             smallBodyList.push(new body_grav_calc_t(time.tt, r, v, a));
         }
-
-        // Calculate the states of the Sun and planets.
-        const largeBodyDict = this.CalcSolarSystem(time);
-        this.curr = new GravSimEndpoint(time, largeBodyDict, smallBodyList);
 
         // Calculate the net acceleration experienced by the small bodies.
         this.CalcBodyAccelerations();

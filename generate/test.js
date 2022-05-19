@@ -3,6 +3,10 @@ const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
 let Verbose = false;
 
+function Debug(text) {
+    if (Verbose) console.debug(text);
+}
+
 function Fail(message) {
     console.trace();
     console.log(`FATAL(test.js): ${message}`);
@@ -180,7 +184,7 @@ function MoonPhase() {
             mq = Astronomy.NextMoonQuarter(mq);
             date = mq.time.date;
         }
-        if (Verbose) console.log(`JS SearchYear(${year}): count=${count}, maxdiff=${maxdiff.toFixed(3)}`);
+        Debug(`JS SearchYear(${year}): count=${count}, maxdiff=${maxdiff.toFixed(3)}`);
         return 0;
     }
 
@@ -285,9 +289,7 @@ function LunarApsis() {
     const time_after = new Date();
     const elapsed = (time_after - time_before) / 1000;
 
-    if (Verbose) {
-        console.log(`JS LunarApsis: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
-    }
+    Debug(`JS LunarApsis: verified ${count} lines, max time error = ${max_minute_error.toFixed(3)} minutes, max dist error = ${max_dist_error.toFixed(3)} km.`);
 
     if (count !== 2651)
         throw 'FATAL: Did not process the expected number of data rows!';
@@ -781,7 +783,7 @@ function PlanetApsis() {
         if (count < 2) {
             throw `Failed to find apsides for ${body}`;
         }
-        if (Verbose) console.log(`JS PlanetApsis: ${count} apsides for ${body} -- intervals: min=${min_interval}, max=${max_interval}, ratio=${max_interval/min_interval}; max day=${max_diff_days}, degrees=${(max_diff_days / period) * 360}, dist ratio=${max_dist_ratio}`);
+        Debug(`JS PlanetApsis: ${count} apsides for ${body} -- intervals: min=${min_interval}, max=${max_interval}, ratio=${max_interval/min_interval}; max day=${max_diff_days}, degrees=${(max_diff_days / period) * 360}, dist ratio=${max_dist_ratio}`);
         ++pindex;
     }
     return 0;
@@ -885,7 +887,7 @@ function Elongation() {
         for (let item of data) {
             let time = Astronomy.SearchRelativeLongitude(item.body, targetRelLon, startDate);
             let diff_minutes = (time.date - item.date) / 60000;
-            if (Verbose) console.log(`JS ${item.body}: error = ${diff_minutes.toFixed(3)} minutes`);
+            Debug(`JS ${item.body}: error = ${diff_minutes.toFixed(3)} minutes`);
             if (abs(diff_minutes) > 6.8)
                 throw `!!! Excessive error for body ${item.body}`;
         }
@@ -926,7 +928,7 @@ function Elongation() {
         fs.writeFileSync(outFileName, text);
 
         const ratio = max_diff / min_diff;
-        if (Verbose) console.log(`JS TestPlanet(${body}): ${count} events, interval min=${min_diff.toFixed(1)}, max=${max_diff.toFixed(1)}, avg=${(sum_diff/count).toFixed(1)}, ratio=${ratio.toFixed(3)}`);
+        Debug(`JS TestPlanet(${body}): ${count} events, interval min=${min_diff.toFixed(1)}, max=${max_diff.toFixed(1)}, avg=${(sum_diff/count).toFixed(1)}, ratio=${ratio.toFixed(3)}`);
 
         let thresh = {Mercury:1.65, Mars:1.30}[body] || 1.07;
         if (ratio > thresh)
@@ -940,7 +942,7 @@ function Elongation() {
 
         let hour_diff = (verifyDate - evt.time.date) / (1000 * 3600);
         let arcmin_diff = 60.0 * abs(evt.elongation - verifyAngle);
-        if (Verbose) console.log(`JS TestMaxElong: ${body.padStart(8)} ${evt.visibility.padStart(8)} elong=${evt.elongation.toFixed(2).padStart(5)} (${arcmin_diff.toFixed(2).padStart(4)} arcmin)  ${evt.time.toString()} (err ${hour_diff.toFixed(2).padStart(5)} hours)`);
+        Debug(`JS TestMaxElong: ${body.padStart(8)} ${evt.visibility.padStart(8)} elong=${evt.elongation.toFixed(2).padStart(5)} (${arcmin_diff.toFixed(2).padStart(4)} arcmin)  ${evt.time.toString()} (err ${hour_diff.toFixed(2).padStart(5)} hours)`);
 
         if (evt.visibility !== verifyVisibility)
             throw `TestMaxElong: expected visibility ${verifyVisibility}, but found ${evt.visibility}`;
@@ -1136,9 +1138,7 @@ function RiseSet() {
             observer = new Astronomy.Observer(evt.lat, evt.lon, 0);
             r_search_date = s_search_date = new Date(Date.UTC(evt.date.getUTCFullYear(), 0, 1));
             b_date = null;
-            if (Verbose) {
-                console.log(`JS RiseSet: ${body} ${evt.lat} ${evt.lon}`);
-            }
+            Debug(`JS RiseSet: ${body} ${evt.lat} ${evt.lon}`);
         }
 
         if (b_date) {
@@ -1178,9 +1178,7 @@ function RiseSet() {
         sum_minutes += error_minutes * error_minutes;
         if (error_minutes > max_minutes) {
             max_minutes = error_minutes;
-            if (Verbose) {
-                console.log(`Line ${evt.lnum} : error = ${error_minutes.toFixed(4)}`);
-            }
+            Debug(`Line ${evt.lnum} : error = ${error_minutes.toFixed(4)}`);
         }
         if (error_minutes > 0.57) {
             console.log(`Expected ${evt.date.toISOString()}`);
@@ -1284,7 +1282,7 @@ function Rotation() {
 
         /* Use the existing Astronomy.Ecliptic() to calculate ecliptic vector and angles. */
         const ecl = Astronomy.Ecliptic(ev);
-        if (Verbose) console.log(`JS Test_EQJ_ECL ecl = (${ecl.vec.x}, ${ecl.vec.y}, ${ecl.vec.z})`);
+        Debug(`JS Test_EQJ_ECL ecl = (${ecl.vec.x}, ${ecl.vec.y}, ${ecl.vec.z})`);
 
         /* Now compute the same vector via rotation matrix. */
         const ee = Astronomy.RotateVector(r, ev);
@@ -1292,7 +1290,7 @@ function Rotation() {
         const dy = ee.y - ecl.vec.y;
         const dz = ee.z - ecl.vec.z;
         const diff = sqrt(dx*dx + dy*dy + dz*dz);
-        if (Verbose) console.log(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
+        Debug(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
         if (diff > 2.0e-15)
             throw 'Test_EQJ_ECL: EXCESSIVE VECTOR ERROR';
 
@@ -1300,7 +1298,7 @@ function Rotation() {
         const ir = Astronomy.Rotation_ECL_EQJ();
         const et = Astronomy.RotateVector(ir, ee);
         const idiff = VectorDiff(et, ev);
-        if (Verbose) console.log(`JS Test_EQJ_ECL ev diff = ${idiff}`);
+        Debug(`JS Test_EQJ_ECL ev diff = ${idiff}`);
         if (idiff > 2.3e-16)
             throw 'Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR';
     }
@@ -1334,7 +1332,7 @@ function Rotation() {
             if (diff > max_diff)
                 max_diff = diff;
         }
-        if (Verbose) console.log(`JS Test_GAL_EQJ_NOVAS: PASS. max_diff = ${max_diff.toFixed(3)} arcseconds.`);
+        Debug(`JS Test_GAL_EQJ_NOVAS: PASS. max_diff = ${max_diff.toFixed(3)} arcseconds.`);
         return 0;
     }
 
@@ -1362,7 +1360,7 @@ function Rotation() {
         const ra_diff = abs(equcheck.ra - eqdate.ra);
         const dec_diff = abs(equcheck.dec - eqdate.dec);
         const dist_diff = abs(equcheck.dist - eqdate.dist);
-        if (Verbose) console.log(`JS Test_EQJ_EQD: ${body} ra=${eqdate.ra}, dec=${eqdate.dec}, dist=${eqdate.dist}, ra_diff=${ra_diff}, dec_diff=${dec_diff}, dist_diff=${dist_diff}`);
+        Debug(`JS Test_EQJ_EQD: ${body} ra=${eqdate.ra}, dec=${eqdate.dec}, dist=${eqdate.dist}, ra_diff=${ra_diff}, dec_diff=${dec_diff}, dist_diff=${dist_diff}`);
         if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
             throw 'Test_EQJ_EQD: EXCESSIVE ERROR';
 
@@ -1370,7 +1368,7 @@ function Rotation() {
         const ir = Astronomy.Rotation_EQD_EQJ(time);
         const t2000 = Astronomy.RotateVector(ir, vdate);
         const diff = VectorDiff(t2000, v2000);
-        if (Verbose) console.log(`JS Test_EQJ_EQD: ${body} inverse diff = ${diff}`);
+        Debug(`JS Test_EQJ_EQD: ${body} inverse diff = ${diff}`);
         if (diff > 5.0e-15)
             throw 'Test_EQJ_EQD: EXCESSIVE INVERSE ERROR';
     }
@@ -1380,7 +1378,7 @@ function Rotation() {
         const time = Astronomy.MakeTime(new Date('1970-12-13T05:15:00Z'));
         const observer = new Astronomy.Observer(-37, +45, 0);
         const eqd = Astronomy.Equator(body, time, observer, true, true);
-        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: OFDATE ra=${eqd.ra}, dec=${eqd.dec}`);
+        Debug(`JS Test_EQD_HOR ${body}: OFDATE ra=${eqd.ra}, dec=${eqd.dec}`);
         const hor = Astronomy.Horizon(time, observer, eqd.ra, eqd.dec, 'normal');
 
         /* Calculate the position of the body as an equatorial vector of date. */
@@ -1397,14 +1395,14 @@ function Rotation() {
         const diff_alt = abs(xsphere.lat - hor.altitude);
         const diff_az = abs(xsphere.lon - hor.azimuth);
 
-        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: trusted alt=${hor.altitude}, az=${hor.azimuth}; test alt=${xsphere.lat}, az=${xsphere.lon}; diff_alt=${diff_alt}, diff_az=${diff_az}`);
+        Debug(`JS Test_EQD_HOR ${body}: trusted alt=${hor.altitude}, az=${hor.azimuth}; test alt=${xsphere.lat}, az=${xsphere.lon}; diff_alt=${diff_alt}, diff_az=${diff_az}`);
         if (diff_alt > 4.3e-14 || diff_az > 1.2e-13)
             throw 'Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.';
 
         /* Confirm that we can convert back to horizontal vector. */
         const check_hor = Astronomy.VectorFromHorizon(xsphere, time, 'normal');
         let diff = VectorDiff(check_hor, vec_hor);
-        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: horizontal recovery: diff = ${diff}`);
+        Debug(`JS Test_EQD_HOR ${body}: horizontal recovery: diff = ${diff}`);
         if (diff > 2.0e-15)
             throw 'Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.';
 
@@ -1412,7 +1410,7 @@ function Rotation() {
         const irot = Astronomy.Rotation_HOR_EQD(time, observer);
         const check_eqd = Astronomy.RotateVector(irot, vec_hor);
         diff = VectorDiff(check_eqd, vec_eqd);
-        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
+        Debug(`JS Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
         if (diff > 2.1e-15)
             throw 'Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.';
 
@@ -1422,7 +1420,7 @@ function Rotation() {
         const yrot = Astronomy.Rotation_HOR_EQJ(time, observer);
         const check_eqj = Astronomy.RotateVector(yrot, vec_hor);
         diff = VectorDiff(check_eqj, vec_eqj);
-        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: J2000 inverse rotation diff = ${diff}`);
+        Debug(`JS Test_EQD_HOR ${body}: J2000 inverse rotation diff = ${diff}`);
         if (diff > 6.0e-15)
             throw 'Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.';
 
@@ -1430,7 +1428,7 @@ function Rotation() {
         const zrot = Astronomy.Rotation_EQJ_HOR(time, observer);
         const another_hor = Astronomy.RotateVector(zrot, vec_eqj);
         diff = VectorDiff(another_hor, vec_hor);
-        if (Verbose) console.log(`JS Test_EQD_HOR ${body}: EQJ inverse rotation diff = ${diff}`);
+        Debug(`JS Test_EQD_HOR ${body}: EQJ inverse rotation diff = ${diff}`);
         if (diff > 3.0e-15)
             throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
     }
@@ -1501,7 +1499,7 @@ function Rotation() {
        CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj);     /* excluded corner = ECL */
        CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl);     /* excluded corner = EQJ */
 
-       if (Verbose) console.log('JS Test_RotRoundTrip: PASS');
+       Debug('JS Test_RotRoundTrip: PASS');
     }
 
     function Rotation_Pivot() {
@@ -1543,7 +1541,7 @@ function Rotation() {
 
         CompareVectors('Rotation_Pivot #2', v2, ve, tolerance);
 
-        if (Verbose) console.log('JS Rotation_Pivot: PASS');
+        Debug('JS Rotation_Pivot: PASS');
     }
 
 
@@ -1677,7 +1675,7 @@ function Magnitude() {
 
         for (let item of data) {
             let illum = Astronomy.Illumination('Saturn', new Date(item.date));
-            if (Verbose) console.log(`JS Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
+            Debug(`JS Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
             const mag_diff = abs(illum.mag - item.mag);
             if (mag_diff > 1.0e-4) {
                 console.log(`ERROR: Excessive magnitude error ${mag_diff}`);
@@ -1718,7 +1716,7 @@ function Magnitude() {
             max_diff = max(max_diff, diff_hours);
             date = date2;
         }
-        if (Verbose) console.log(`JS TestMaxMag: ${lines.length} events, max error = ${max_diff.toFixed(3)} hours.`);
+        Debug(`JS TestMaxMag: ${lines.length} events, max error = ${max_diff.toFixed(3)} hours.`);
         return true;
     }
 
@@ -1845,7 +1843,7 @@ function Transit() {
 function PlutoCheckDate(ut, arcmin_tolerance, x, y, z) {
     const time = Astronomy.MakeTime(ut);
     const timeText = time.toString();
-    if (Verbose) console.log(`JS PlutoCheck: ${timeText} = ${time.ut} UT = ${time.tt} TT`);
+    Debug(`JS PlutoCheck: ${timeText} = ${time.ut} UT = ${time.tt} TT`);
     const vector = Astronomy.HelioVector('Pluto', time);
     const dx = v(vector.x - x);
     const dy = v(vector.y - y);
@@ -1853,11 +1851,11 @@ function PlutoCheckDate(ut, arcmin_tolerance, x, y, z) {
     const diff = sqrt(dx*dx + dy*dy + dz*dz);
     const dist = (sqrt(x*x + y*y + z*z) - 1.0);       /* worst-case distance between Pluto and Earth */
     const arcmin = (diff / dist) * (180.0 * 60.0 / Math.PI);
-    if (Verbose) console.log(`JS PlutoCheck: calc pos = [${vector.x}, ${vector.y}, ${vector.z}]`);
-    if (Verbose) console.log(`JS PlutoCheck: ref  pos = [${x}, ${y}, ${z}]`);
-    if (Verbose) console.log(`JS PlutoCheck: del  pos = [${vector.x - x}, ${vector.y - y}, ${vector.z - z}]`);
-    if (Verbose) console.log(`JS PlutoCheck: diff = ${diff} AU, ${arcmin} arcmin`);
-    if (Verbose) console.log("");
+    Debug(`JS PlutoCheck: calc pos = [${vector.x}, ${vector.y}, ${vector.z}]`);
+    Debug(`JS PlutoCheck: ref  pos = [${x}, ${y}, ${z}]`);
+    Debug(`JS PlutoCheck: del  pos = [${vector.x - x}, ${vector.y - y}, ${vector.z - z}]`);
+    Debug(`JS PlutoCheck: diff = ${diff} AU, ${arcmin} arcmin`);
+    Debug("");
     if (v(arcmin) > arcmin_tolerance) {
         console.error("JS PlutoCheck: EXCESSIVE ERROR");
         return 1;
@@ -1867,11 +1865,11 @@ function PlutoCheckDate(ut, arcmin_tolerance, x, y, z) {
 
 
 function PlutoCheck() {
-    if (0 != PlutoCheckDate(  +18250.0,  0.089, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809)) return 1;
-    if (0 != PlutoCheckDate( -856493.0,  4.067, +23.4292113199166252, +42.1452685817740829,  +6.0580908436642940)) return 1;
-    if (0 != PlutoCheckDate( +435633.0,  0.016, -27.3178902095231813, +18.5887022581070305, +14.0493896259306936)) return 1;
-    if (0 != PlutoCheckDate(       0.0,  8.e-9,  -9.8753673425269000, -27.9789270580402771,  -5.7537127596369588)) return 1;
-    if (0 != PlutoCheckDate( +800916.0,  2.286, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091)) return 1;
+    if (0 !== PlutoCheckDate(  +18250.0,  0.089, +37.4377303523676090, -10.2466292454075898, -14.4773101310875809)) return 1;
+    if (0 !== PlutoCheckDate( -856493.0,  4.067, +23.4292113199166252, +42.1452685817740829,  +6.0580908436642940)) return 1;
+    if (0 !== PlutoCheckDate( +435633.0,  0.016, -27.3178902095231813, +18.5887022581070305, +14.0493896259306936)) return 1;
+    if (0 !== PlutoCheckDate(       0.0,  8.e-9,  -9.8753673425269000, -27.9789270580402771,  -5.7537127596369588)) return 1;
+    if (0 !== PlutoCheckDate( +800916.0,  2.286, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091)) return 1;
     console.log("JS PlutoCheck: PASS");
     return 0;
 }
@@ -1892,7 +1890,7 @@ function GeoidTestCase(time, observer, ofdate) {
     const dy = Astronomy.KM_PER_AU * v((geo_moon.y - surface.y) - topo_moon.vec.y);
     const dz = Astronomy.KM_PER_AU * v((geo_moon.z - surface.z) - topo_moon.vec.z);
     const diff = sqrt(dx*dx + dy*dy + dz*dz);
-    if (Verbose) console.log(`JS GeoidTestCase: ofdate=${ofdate}, time=${time.toISOString()}, lat=${observer.latitude}, lon=${observer.longitude}, ht=${observer.height}, surface=(${Astronomy.KM_PER_AU * surface.x}, ${Astronomy.KM_PER_AU * surface.y}, ${Astronomy.KM_PER_AU * surface.z}), diff = ${diff} km`);
+    Debug(`JS GeoidTestCase: ofdate=${ofdate}, time=${time.toISOString()}, lat=${observer.latitude}, lon=${observer.longitude}, ht=${observer.height}, surface=(${Astronomy.KM_PER_AU * surface.x}, ${Astronomy.KM_PER_AU * surface.y}, ${Astronomy.KM_PER_AU * surface.z}), diff = ${diff} km`);
 
     // Require 1 millimeter accuracy! (one millionth of a kilometer).
     if (diff > 1.0e-6) {
@@ -1920,7 +1918,7 @@ function GeoidTestCase(time, observer, ofdate) {
     }
 
     const h_diff = abs(vobs.height - observer.height);
-    if (Verbose) console.log(`JS GeoidTestCase: vobs=(lat=${vobs.latitude}, lon=${vobs.longitude}, height=${vobs.height}), lat_diff=${lat_diff}, lon_diff=${lon_diff}, h_diff=${h_diff}`);
+    Debug(`JS GeoidTestCase: vobs=(lat=${vobs.latitude}, lon=${vobs.longitude}, height=${vobs.height}), lat_diff=${lat_diff}, lon_diff=${lon_diff}, h_diff=${h_diff}`);
 
     if (lat_diff > 1.0e-6) {
         console.error(`JS GeoidTestCase: EXCESSIVE latitude check error = ${lat_diff}`);
@@ -2007,9 +2005,74 @@ function JupiterMoons_CheckJpl(mindex, tt, pos, vel) {
         return 1;
     }
 
-    if (Verbose) console.debug(`JS JupiterMoons_CheckJpl: mindex=${mindex}, tt=${tt}, pos_diff=${pos_diff}, vel_diff=${vel_diff}`);
+    Debug(`JS JupiterMoons_CheckJpl: mindex=${mindex}, tt=${tt}, pos_diff=${pos_diff}, vel_diff=${vel_diff}`);
     return 0;
 }
+
+
+class JplStateRecord {
+    constructor(lnum, state) {
+        this.lnum = lnum;
+        this.state = state;
+    }
+}
+
+function JplHorizonsStateVectors(filename) {
+    const lines = ReadLines(filename);
+    let lnum = 0;
+    let found = false;
+    let part = -1;
+    let tt, match, pos, vel, time;
+    let reclist = [];
+    for (let line of lines) {
+        ++lnum;
+        if (!found) {
+            if (line == '$$SOE') {
+                found = true;
+                part = 0;
+            }
+        } else if (line == '$$EOE') {
+            break;
+        } else {
+            switch (part) {
+            case 0:
+                // 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
+                tt = float(line.split()[0]) - 2451545.0;    // convert JD to J2000 TT
+                time = Astronomy.AstroTime.FromTerrestrialTime(tt);
+                break;
+
+            case 1:
+                // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
+                match = /\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)/.exec(line);
+                if (!match) {
+                    console.error(`JS JplHorizonsStateVectors(${filename} line ${lnum}): cannot parse position vector.`);
+                    return 1;
+                }
+                pos = [ float(match[1]), float(match[2]), float(match[3]) ];
+                break;
+
+            case 2:
+                // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
+                match = /\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)/.exec(line);
+                if (!match) {
+                    console.error(`JS JplHorizonsStateVectors(${filename} line ${lnum}): cannot parse velocity vector.`);
+                    return 1;
+                }
+                vel = [ float(match[1]), float(match[2]), float(match[3]) ];
+                let state = new Astronomy.StateVector(pos[0], pos[1], pos[2], vel[0], vel[1], vel[2], time);
+                reclist.push(new JplStateRecord(lnum, state));
+                break;
+
+            default:
+                console.error(`JS JplHorizonsStateVectors(${filename} line ${lnum}): unexpected part = ${part}`);
+                return 1;
+            }
+            part = (part + 1) % 3;
+        }
+    }
+    return reclist;
+}
+
 
 
 function JupiterMoons() {
@@ -2167,7 +2230,7 @@ function AberrationTest() {
             const xra = factor * abs(eqd_sphere.lon - dra);
             const xdec = abs(eqd_sphere.lat - ddec);
             const diff_seconds = 3600 * sqrt(xra*xra + xdec*xdec);
-            if (Verbose) console.debug(`JS AberrationTest(${filename} line ${lnum}): xra=${xra.toFixed(6)} deg, xdec=${xdec.toFixed(6)} deg, diff_seconds=${diff_seconds.toFixed(3)}`);
+            Debug(`JS AberrationTest(${filename} line ${lnum}): xra=${xra.toFixed(6)} deg, xdec=${xdec.toFixed(6)} deg, diff_seconds=${diff_seconds.toFixed(3)}`);
             if (diff_seconds > THRESHOLD_SECONDS) {
                 console.error(`JS AberrationTest(${filename} line ${lnum}): EXCESSIVE ANGULAR ERROR = ${diff_seconds.toFixed(3)} seconds.`);
                 return 1;
@@ -2219,62 +2282,18 @@ function VerifyState(func, score, filename, lnum, time, pos, vel, r_thresh, v_th
 
 
 function VerifyStateBody(func, filename, r_thresh, v_thresh) {
-    const lines = ReadLines(filename);
-    let lnum = 0;
-    let found = false;
-    let part = -1;
-    let count = 0;
-    let tt, match, pos, vel, time;
     let score = { max_rdiff:0, max_vdiff:0 };
-    for (let line of lines) {
-        ++lnum;
-        if (!found) {
-            if (line == '$$SOE') {
-                found = true;
-                part = 0;
-            }
-        } else if (line == '$$EOE') {
-            break;
-        } else {
-            switch (part) {
-            case 0:
-                // 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
-                tt = float(line.split()[0]) - 2451545.0;    // convert JD to J2000 TT
-                time = Astronomy.AstroTime.FromTerrestrialTime(tt);
-                break;
+    let count = 0;
 
-            case 1:
-                // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
-                match = /\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)/.exec(line);
-                if (!match) {
-                    console.error(`JS VerifyStateBody(${filename} line ${lnum}): cannot parse position vector.`);
-                    return 1;
-                }
-                pos = [ float(match[1]), float(match[2]), float(match[3]) ];
-                break;
-
-            case 2:
-                // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
-                match = /\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)/.exec(line);
-                if (!match) {
-                    console.error(`JS VerifyStateBody(${filename} line ${lnum}): cannot parse velocity vector.`);
-                    return 1;
-                }
-                vel = [ float(match[1]), float(match[2]), float(match[3]) ];
-                if (VerifyState(func, score, filename, lnum, time, pos, vel, r_thresh, v_thresh))
-                    return 1;
-                ++count;
-                break;
-
-            default:
-                console.error(`JS VerifyStateBody(${filename} line ${lnum}): unexpected part = ${part}`);
-                return 1;
-            }
-            part = (part + 1) % 3;
-        }
+    for (let rec of JplHorizonsStateVectors(filename)) {
+        let pos = [rec.state.x, rec.state.y, rec.state.z];
+        let vel = [rec.state.vx, rec.state.vy, rec.state.vz];
+        if (VerifyState(func, score, filename, rec.lnum, rec.state.t, pos, vel, r_thresh, v_thresh))
+            return 1;
+        ++count;
     }
 
-    if (Verbose) console.debug(`JS VerifyStateBody(${filename}): PASS - Tested ${count} cases. max rdiff=${score.max_rdiff.toExponential(3)}, vdiff=${score.max_vdiff.toExponential(3)}`);
+    Debug(`JS VerifyStateBody(${filename}): PASS - Tested ${count} cases. max rdiff=${score.max_rdiff.toExponential(3)}, vdiff=${score.max_vdiff.toExponential(3)}`);
     return 0;
 }
 
@@ -2479,7 +2498,7 @@ function Libration(filename) {
             const year = int(token[2]);
             const hmtoken = token[3].split(':');
             if (hmtoken.length !== 2) {
-                Console.WriteLine(`JS Libration(${filename} line ${lnum}): expected hh:mm but found '${token[3]}'`);
+                console.error(`JS Libration(${filename} line ${lnum}): expected hh:mm but found '${token[3]}'`);
                 return 1;
             }
             const hour = int(hmtoken[0]);
@@ -2604,7 +2623,7 @@ function AxisTestBody(body, filename, arcmin_tolerance) {
             ++count;
         }
     }
-    if (Verbose) console.debug(`JS AxisTestBody(${body}): ${count} test cases, max arcmin error = ${max_arcmin}.`);
+    Debug(`JS AxisTestBody(${body}): ${count} test cases, max arcmin error = ${max_arcmin}.`);
     if (max_arcmin > arcmin_tolerance) {
         console.log(`JS AxisTestBody(${body}): EXCESSIVE ERROR = ${max_arcmin} arcmin.`);
         return 1;
@@ -2724,16 +2743,16 @@ function VerifyStateLagrange(major_body, minor_body, point, filename, r_thresh, 
 
 function LagrangeTest() {
     // Test Sun/EMB Lagrange points.
-    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 1, "lagrange/semb_L1.txt",   1.33e-5, 6.13e-5)) return 1;
-    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 2, "lagrange/semb_L2.txt",   1.33e-5, 6.13e-5)) return 1;
-    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 4, "lagrange/semb_L4.txt",   3.75e-5, 5.28e-5)) return 1;
-    if (0 != VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 5, "lagrange/semb_L5.txt",   3.75e-5, 5.28e-5)) return 1;
+    if (0 !== VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 1, "lagrange/semb_L1.txt",   1.33e-5, 6.13e-5)) return 1;
+    if (0 !== VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 2, "lagrange/semb_L2.txt",   1.33e-5, 6.13e-5)) return 1;
+    if (0 !== VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 4, "lagrange/semb_L4.txt",   3.75e-5, 5.28e-5)) return 1;
+    if (0 !== VerifyStateLagrange(Astronomy.Body.Sun, Astronomy.Body.EMB, 5, "lagrange/semb_L5.txt",   3.75e-5, 5.28e-5)) return 1;
 
     // Test Earth/Moon Lagrange points.
-    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 1, "lagrange/em_L1.txt",  3.79e-5, 5.06e-5)) return 1;
-    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 2, "lagrange/em_L2.txt",  3.79e-5, 5.06e-5)) return 1;
-    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3)) return 1;
-    if (0 != VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3)) return 1;
+    if (0 !== VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 1, "lagrange/em_L1.txt",  3.79e-5, 5.06e-5)) return 1;
+    if (0 !== VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 2, "lagrange/em_L2.txt",  3.79e-5, 5.06e-5)) return 1;
+    if (0 !== VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3)) return 1;
+    if (0 !== VerifyStateLagrange(Astronomy.Body.Earth, Astronomy.Body.Moon, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3)) return 1;
 
     console.log("JS LagrangeTest: PASS");
     return 0;
@@ -2754,6 +2773,129 @@ function SiderealTimeTest() {
     return 0;
 }
 
+//-------------------------------------------------------------------------------------------------
+
+
+function GravSimTest() {
+    Debug("");
+
+    if (0 !== GravSimEmpty("barystate/Sun.txt",      Astronomy.Body.SSB, Astronomy.Body.Sun,      0.0269, 1.9635)) return 1;
+    if (0 !== GravSimEmpty("barystate/Mercury.txt",  Astronomy.Body.SSB, Astronomy.Body.Mercury,  0.5725, 0.9332)) return 1;
+    if (0 !== GravSimEmpty("barystate/Venus.txt",    Astronomy.Body.SSB, Astronomy.Body.Venus,    0.1433, 0.1458)) return 1;
+    if (0 !== GravSimEmpty("barystate/Earth.txt",    Astronomy.Body.SSB, Astronomy.Body.Earth,    0.0651, 0.2098)) return 1;
+    if (0 !== GravSimEmpty("barystate/Mars.txt",     Astronomy.Body.SSB, Astronomy.Body.Mars,     0.1150, 0.1896)) return 1;
+    if (0 !== GravSimEmpty("barystate/Jupiter.txt",  Astronomy.Body.SSB, Astronomy.Body.Jupiter,  0.2546, 0.8831)) return 1;
+    if (0 !== GravSimEmpty("barystate/Saturn.txt",   Astronomy.Body.SSB, Astronomy.Body.Saturn,   0.3660, 1.0818)) return 1;
+    if (0 !== GravSimEmpty("barystate/Uranus.txt",   Astronomy.Body.SSB, Astronomy.Body.Uranus,   0.3107, 0.9321)) return 1;
+    if (0 !== GravSimEmpty("barystate/Neptune.txt",  Astronomy.Body.SSB, Astronomy.Body.Neptune,  0.3382, 1.5586)) return 1;
+
+    if (0 !== GravSimEmpty("heliostate/Mercury.txt", Astronomy.Body.Sun, Astronomy.Body.Mercury,  0.5087, 0.9473)) return 1;
+    if (0 !== GravSimEmpty("heliostate/Venus.txt",   Astronomy.Body.Sun, Astronomy.Body.Venus,    0.1214, 0.1543)) return 1;
+    if (0 !== GravSimEmpty("heliostate/Earth.txt",   Astronomy.Body.Sun, Astronomy.Body.Earth,    0.0508, 0.2099)) return 1;
+    if (0 !== GravSimEmpty("heliostate/Mars.txt",    Astronomy.Body.Sun, Astronomy.Body.Mars,     0.1085, 0.1927)) return 1;
+    if (0 !== GravSimEmpty("heliostate/Jupiter.txt", Astronomy.Body.Sun, Astronomy.Body.Jupiter,  0.2564, 0.8805)) return 1;
+    if (0 !== GravSimEmpty("heliostate/Saturn.txt",  Astronomy.Body.Sun, Astronomy.Body.Saturn,   0.3664, 1.0826)) return 1;
+    if (0 !== GravSimEmpty("heliostate/Uranus.txt",  Astronomy.Body.Sun, Astronomy.Body.Uranus,   0.3106, 0.9322)) return 1;
+    if (0 !== GravSimEmpty("heliostate/Neptune.txt", Astronomy.Body.Sun, Astronomy.Body.Neptune,  0.3381, 1.5584)) return 1;
+
+    Debug("");
+    const nsteps = 20;
+
+    if (0 !== GravSimFile("barystate/Ceres.txt",    Astronomy.Body.SSB,   nsteps, 0.6640, 0.6226)) return 1;
+    if (0 !== GravSimFile("barystate/Pallas.txt",   Astronomy.Body.SSB,   nsteps, 0.4687, 0.3474)) return 1;
+    if (0 !== GravSimFile("barystate/Vesta.txt",    Astronomy.Body.SSB,   nsteps, 0.5806, 0.5462)) return 1;
+    if (0 !== GravSimFile("barystate/Juno.txt",     Astronomy.Body.SSB,   nsteps, 0.6760, 0.5750)) return 1;
+    if (0 !== GravSimFile("barystate/Bennu.txt",    Astronomy.Body.SSB,   nsteps, 3.7444, 2.6581)) return 1;
+    if (0 !== GravSimFile("barystate/Halley.txt",   Astronomy.Body.SSB,   nsteps, 0.0539, 0.0825)) return 1;
+
+    if (0 !== GravSimFile("heliostate/Ceres.txt",   Astronomy.Body.Sun,   nsteps, 0.0445, 0.0355)) return 1;
+    if (0 !== GravSimFile("heliostate/Pallas.txt",  Astronomy.Body.Sun,   nsteps, 0.1062, 0.0854)) return 1;
+    if (0 !== GravSimFile("heliostate/Vesta.txt",   Astronomy.Body.Sun,   nsteps, 0.1432, 0.1308)) return 1;
+    if (0 !== GravSimFile("heliostate/Juno.txt",    Astronomy.Body.Sun,   nsteps, 0.1554, 0.1328)) return 1;
+
+    if (0 !== GravSimFile("geostate/Ceres.txt",     Astronomy.Body.Earth, nsteps, 6.5689, 6.4797)) return 1;
+    if (0 !== GravSimFile("geostate/Pallas.txt",    Astronomy.Body.Earth, nsteps, 9.3288, 7.3533)) return 1;
+    if (0 !== GravSimFile("geostate/Vesta.txt",     Astronomy.Body.Earth, nsteps, 3.2980, 3.8863)) return 1;
+    if (0 !== GravSimFile("geostate/Juno.txt",      Astronomy.Body.Earth, nsteps, 6.0962, 7.7147)) return 1;
+
+    Debug("");
+    console.log("JS GravSimTest: PASS");
+
+    return 0;
+}
+
+
+function GravSimEmpty(filename, origin, body, rthresh, vthresh) {
+    let max_rdiff = 0;
+    let max_vdiff = 0;
+    let sim = null;
+    for (let rec of JplHorizonsStateVectors(filename)) {
+        if (sim === null)
+            sim = new Astronomy.GravitySimulator(origin, rec.state.t, []);
+
+        sim.Update(rec.state.t);
+        let calc = sim.SolarSystemBodyState(body);
+
+        let rdiff = (
+            (origin === Astronomy.Body.SSB && body === Astronomy.Body.Sun)
+            ? SsbArcminPosError(rec.state, calc)
+            : ArcminPosError(rec.state, calc)
+        );
+
+        if (rdiff > rthresh) {
+            console.log(`JS GravSimEmpty(${filename} line ${rec.lnum}): excessive position error = ${rdiff} arcmin.`);
+            return 1;
+        }
+        if (rdiff > max_rdiff)
+            max_rdiff = rdiff;
+
+        let vdiff = ArcminVelError(rec.state, calc);
+        if (vdiff > vthresh) {
+            console.log(`JS GravSimEmpty(${filename} line ${rec.lnum}): excessive velocity error = ${vdiff} arcmin.`);
+            return 1;
+        }
+    }
+    Debug(`JS GravSimFile(${filename}): PASS - max pos error = ${max_rdiff.toFixed(4)} arcmin, max vel error = ${max_vdiff.toFixed(4)} arcmin.`);
+    return 0;
+}
+
+function GravSimFile(filename, originBody, nsteps, rthresh, vthresh) {
+    return 0;
+}
+
+
+function SsbArcminPosError(correct, calc) {
+    // Scale the SSB based on 1 AU, not on its absolute magnitude, which can become very close to zero.
+    const dx = calc.x - correct.x;
+    const dy = calc.y - correct.y;
+    const dz = calc.z - correct.z;
+    const diffSquared = dx*dx + dy*dy + dz*dz;
+    const radians = sqrt(diffSquared);
+    return (60.0 * Astronomy.RAD2DEG) * radians;
+}
+
+function ArcminPosError(correct, calc) {
+    const dx = calc.x - correct.x;
+    const dy = calc.y - correct.y;
+    const dz = calc.z - correct.z;
+    const diffSquared = dx*dx + dy*dy + dz*dz;
+    const magSquared = correct.x*correct.x + correct.y*correct.y + correct.z*correct.z;
+    const radians = sqrt(diffSquared / magSquared);
+    return (60.0 * Astronomy.RAD2DEG) * radians;
+}
+
+function ArcminVelError(correct, calc) {
+    const dx = calc.vx - correct.vx;
+    const dy = calc.vy - correct.vy;
+    const dz = calc.vz - correct.vz;
+    const diffSquared = dx*dx + dy*dy + dz*dz;
+    const magSquared = correct.vx*correct.vx + correct.vy*correct.vy + correct.vz*correct.vz;
+    const radians = sqrt(diffSquared / magSquared);
+    return (60.0 * Astronomy.RAD2DEG) * radians;
+}
+
+
+//-------------------------------------------------------------------------------------------------
 
 const UnitTests = {
     aberration:             AberrationTest,
@@ -2763,6 +2905,7 @@ const UnitTests = {
     elongation:             Elongation,
     geoid:                  Geoid,
     global_solar_eclipse:   GlobalSolarEclipse,
+    gravsim:                GravSimTest,
     heliostate:             HelioStateTest,
     issue_103:              Issue103,
     jupiter_moons:          JupiterMoons,
