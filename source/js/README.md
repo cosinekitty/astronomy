@@ -846,6 +846,14 @@ time steps.
 
 * * *
 
+<a name="GravitySimulator+Time"></a>
+
+### gravitySimulator.Time
+**Kind**: instance property of [<code>GravitySimulator</code>](#GravitySimulator)  
+**Brief**: The time represented by the current step of the gravity simulation.  
+
+* * *
+
 <a name="GravitySimulator+Update"></a>
 
 ### gravitySimulator.Update(date)

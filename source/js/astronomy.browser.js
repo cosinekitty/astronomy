@@ -8816,7 +8816,7 @@ class GravitySimulator {
         this.originBody = originBody;
         // Verify that the state vectors have matching times.
         for (let b of bodyStates) {
-            if (b.t.tt != time.tt) {
+            if (b.t.tt !== time.tt) {
                 throw 'Inconsistent times in bodyStates';
             }
         }
@@ -8846,6 +8846,12 @@ class GravitySimulator {
         return this.originBody;
     }
     /**
+     * @brief The time represented by the current step of the gravity simulation.
+     */
+    get Time() {
+        return this.curr.time;
+    }
+    /**
      * Advances a gravity simulation by a small time step.
      *
      * Updates the simulation of the user-supplied small bodies
@@ -8872,7 +8878,7 @@ class GravitySimulator {
     Update(date) {
         const time = MakeTime(date);
         const dt = time.tt - this.curr.time.tt;
-        if (dt == 0.0) {
+        if (dt === 0.0) {
             // Special case: the time has not changed, so skip the usual physics calculations.
             // This allows another way for the caller to query the current body states.
             // It is also necessary to avoid dividing by `dt` if `dt` is zero.
@@ -8924,7 +8930,7 @@ class GravitySimulator {
         const bodyStates = [];
         const ostate = this.InternalBodyState(this.originBody);
         for (let bcalc of this.curr.bodies) {
-            bodyStates.push(new StateVector(bcalc.r.x - ostate.r.x, bcalc.r.y - ostate.r.x, bcalc.r.z - ostate.r.x, bcalc.v.x - ostate.v.x, bcalc.v.y - ostate.v.x, bcalc.v.z - ostate.v.x, time));
+            bodyStates.push(new StateVector(bcalc.r.x - ostate.r.x, bcalc.r.y - ostate.r.y, bcalc.r.z - ostate.r.z, bcalc.v.x - ostate.v.x, bcalc.v.y - ostate.v.y, bcalc.v.z - ostate.v.z, time));
         }
         return bodyStates;
     }
@@ -8980,7 +8986,7 @@ class GravitySimulator {
         return ExportState(bstate.sub(ostate), this.curr.time);
     }
     InternalBodyState(body) {
-        if (body == Body.SSB)
+        if (body === Body.SSB)
             return new body_state_t(this.curr.time.tt, TerseVector.zero(), TerseVector.zero());
         const bstate = this.curr.gravitators[body];
         if (bstate)
@@ -9030,7 +9036,7 @@ class GravitySimulator {
         const dy = majorPos.y - smallPos.y;
         const dz = majorPos.z - smallPos.z;
         const r2 = dx * dx + dy * dy + dz * dz;
-        const pull = gm * (r2 * Math.sqrt(r2));
+        const pull = gm / (r2 * Math.sqrt(r2));
         acc.x += dx * pull;
         acc.y += dy * pull;
         acc.z += dz * pull;

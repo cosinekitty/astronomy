@@ -2988,6 +2988,10 @@ export declare class GravitySimulator {
      */
     get OriginBody(): Body;
     /**
+     * @brief The time represented by the current step of the gravity simulation.
+     */
+    get Time(): AstroTime;
+    /**
      * Advances a gravity simulation by a small time step.
      *
      * Updates the simulation of the user-supplied small bodies

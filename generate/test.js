@@ -2854,12 +2854,61 @@ function GravSimEmpty(filename, origin, body, rthresh, vthresh) {
             console.log(`JS GravSimEmpty(${filename} line ${rec.lnum}): excessive velocity error = ${vdiff} arcmin.`);
             return 1;
         }
+        if (vdiff > max_vdiff)
+            max_vdiff = vdiff;
     }
     Debug(`JS GravSimFile(${filename}): PASS - max pos error = ${max_rdiff.toFixed(4)} arcmin, max vel error = ${max_vdiff.toFixed(4)} arcmin.`);
     return 0;
 }
 
 function GravSimFile(filename, originBody, nsteps, rthresh, vthresh) {
+    let sim = null;
+    let prev = null;
+    let time = null;
+    let max_rdiff = 0;
+    let max_vdiff = 0;
+    let smallBodyArray;
+    for (let rec of JplHorizonsStateVectors(filename)) {
+        if (sim === null) {
+            sim = new Astronomy.GravitySimulator(originBody, rec.state.t, [rec.state]);
+            time = rec.state.t;
+            smallBodyArray = sim.Update(time);
+        } else {
+            let tt1 = prev.state.t.tt;
+            let tt2 = rec.state.t.tt;
+            let dt = (tt2 - tt1) / nsteps;
+            for (let k = 1; k <= nsteps; ++k) {
+                time = Astronomy.AstroTime.FromTerrestrialTime(tt1 + k*dt);
+                smallBodyArray = sim.Update(time);
+                if (smallBodyArray.length !== 1) {
+                    console.log(`JS GravSimFile(${filename} line ${rec.lnum}): unexpected smallBodyArray.length = ${smallBodyArray.length}.`);
+                    return 1;
+                }
+                if (time.tt !== sim.Time.tt) {
+                    console.log(`JS GravSimFile(${filename} line ${rec.lnum}): expected ${time} but simulator reports ${sim.Time}.`);
+                    return 1;
+                }
+            }
+        }
+
+        const rdiff = ArcminPosError(rec.state, smallBodyArray[0]);
+        if (rdiff > rthresh) {
+            console.log(`JS GravSimFile(${filename} line ${rec.lnum}): excessive position error = ${rdiff} arcmin.`);
+            return 1;
+        }
+        if (rdiff > max_rdiff)
+            max_rdiff = rdiff;
+
+        const vdiff = ArcminVelError(rec.state, smallBodyArray[0]);
+        if (vdiff > vthresh) {
+            console.log(`JS GravSimFile(${filename} line ${rec.lnum}): excessive velocity error = ${vdiff} arcmin.`);
+            return 1;
+        }
+        if (vdiff > max_vdiff)
+            max_vdiff = vdiff;
+        prev = rec;
+    }
+    Debug(`JS GravSimFile(${filename}): PASS - max pos error = ${max_rdiff.toFixed(4)} arcmin, max = ${max_vdiff.toFixed(4)} arcmin.`);
     return 0;
 }
 
