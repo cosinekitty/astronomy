@@ -7955,7 +7955,7 @@ class GravitySimulator {
 
 
     /**
-     * Advances a gravity simulation by a small time step.
+     * Advances the gravity simulation by a small time step.
      *
      * Updates the simulation of the user-supplied small bodies
      * to the time indicated by the `time` parameter.
@@ -7971,7 +7971,6 @@ class GravitySimulator {
      * Generally, bodies that stay in the outer Solar System and move slowly can
      * use larger time steps.  Bodies that pass into the inner Solar System and
      * move faster will need a smaller time step to maintain accuracy.
-     * Some experimentation may be necessary to find a good value.
      * The `time` value may be after or before the current simulation time
      * to move forward or backward in time.
      */
@@ -7993,7 +7992,7 @@ class GravitySimulator {
             // Now that the time is set, it is safe to update the Solar System.
             calcSolarSystem()
 
-            // Estimate the position of each small body as if their existing
+            // Estimate the positions of the small bodies as if their existing
             // accelerations apply across the whole time interval.
             prev.bodies.forEachIndexed { i, p ->
                 curr.bodies[i].r = updatePosition(dt, p.r, p.v, p.a)

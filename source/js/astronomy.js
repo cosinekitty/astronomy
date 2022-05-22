@@ -8823,7 +8823,7 @@ class GravitySimulator {
         // We just need the stub to put into `this.curr`.
         const smallBodyList = [];
         // Calculate the states of the Sun and planets.
-        const largeBodyDict = this.CalcSolarSystem(time);
+        const largeBodyDict = GravitySimulator.CalcSolarSystem(time);
         this.curr = new GravSimEndpoint(time, largeBodyDict, smallBodyList);
         // Convert origin-centric bodyStates vectors into barycentric body_grav_calc_t array.
         const o = this.InternalBodyState(originBody);
@@ -8851,7 +8851,7 @@ class GravitySimulator {
         return this.curr.time;
     }
     /**
-     * Advances a gravity simulation by a small time step.
+     * Advances the gravity simulation by a small time step.
      *
      * Updates the simulation of the user-supplied small bodies
      * to the time indicated by the `date` parameter.
@@ -8870,9 +8870,11 @@ class GravitySimulator {
      *      Generally, bodies that stay in the outer Solar System and move slowly can
      *      use larger time steps. Bodies that pass into the inner Solar System and
      *      move faster will need a smaller time step to maintain accuracy.
-     *      Some experimentation may be necessary to find a good value.
      *      The `date` value may be after or before the current simulation time
      *      to move forward or backward in time.
+     *
+     * @return {StateVector[]}
+     *      An array of state vectors, one for each simulated small body.
      */
     Update(date) {
         const time = MakeTime(date);
@@ -8889,9 +8891,9 @@ class GravitySimulator {
             this.Swap();
             // Update the current time.
             this.curr.time = time;
-            // Now that the time is set, it is safe to update the Solar System.
-            this.curr.gravitators = this.CalcSolarSystem(time);
-            // Estimate the position of each small body as if their existing
+            // Calculate the positions and velocities of the Sun and planets at the given time.
+            this.curr.gravitators = GravitySimulator.CalcSolarSystem(time);
+            // Estimate the positions of the small bodies as if their existing
             // accelerations apply across the whole time interval.
             for (let i = 0; i < this.curr.bodies.length; ++i) {
                 const p = this.prev.bodies[i];
@@ -8992,7 +8994,7 @@ class GravitySimulator {
             return bstate;
         throw `Invalid body: ${body}`;
     }
-    CalcSolarSystem(time) {
+    static CalcSolarSystem(time) {
         const dict = {};
         // Start with the SSB at zero position and velocity.
         const ssb = new body_state_t(time.tt, TerseVector.zero(), TerseVector.zero());
@@ -9019,18 +9021,18 @@ class GravitySimulator {
         // Calculate the gravitational acceleration experienced by the simulated small bodies.
         for (let b of this.curr.bodies) {
             b.a = TerseVector.zero();
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Sun].r, SUN_GM);
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Mercury].r, MERCURY_GM);
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Venus].r, VENUS_GM);
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Earth].r, EARTH_GM + MOON_GM);
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Mars].r, MARS_GM);
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Jupiter].r, JUPITER_GM);
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Saturn].r, SATURN_GM);
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Uranus].r, URANUS_GM);
-            this.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Neptune].r, NEPTUNE_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Sun].r, SUN_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Mercury].r, MERCURY_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Venus].r, VENUS_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Earth].r, EARTH_GM + MOON_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Mars].r, MARS_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Jupiter].r, JUPITER_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Saturn].r, SATURN_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Uranus].r, URANUS_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Neptune].r, NEPTUNE_GM);
         }
     }
-    AddAcceleration(acc, smallPos, majorPos, gm) {
+    static AddAcceleration(acc, smallPos, majorPos, gm) {
         const dx = majorPos.x - smallPos.x;
         const dy = majorPos.y - smallPos.y;
         const dz = majorPos.z - smallPos.z;

@@ -2272,7 +2272,6 @@ $ASTRO_ADDSOL()
         /// Generally, bodies that stay in the outer Solar System and move slowly can
         /// use larger time steps.  Bodies that pass into the inner Solar System and
         /// move faster will need a smaller time step to maintain accuracy.
-        /// Some experimentation may be necessary to find a good value.
         /// The `time` value may be after or before the current simulation time
         /// to move forward or backward in time.
         /// </param>
@@ -2311,7 +2310,7 @@ $ASTRO_ADDSOL()
                 // Now that the time is set, it is safe to update the Solar System.
                 CalcSolarSystem();
 
-                // Estimate the position of each small body as if their existing
+                // Estimate the positions of the small bodies as if their existing
                 // accelerations apply across the whole time interval.
                 for (int i = 0; i < nbodies; ++i)
                     curr.bodies[i].r = Astronomy.UpdatePosition(dt, prev.bodies[i].r, prev.bodies[i].v, prev.bodies[i].a);
@@ -2484,7 +2483,7 @@ $ASTRO_ADDSOL()
             }
         }
 
-        private TerseVector Acceleration(TerseVector smallPos, TerseVector majorPos, double gm)
+        private static TerseVector Acceleration(TerseVector smallPos, TerseVector majorPos, double gm)
         {
             double dx = majorPos.x - smallPos.x;
             double dy = majorPos.y - smallPos.y;

@@ -462,6 +462,13 @@ time steps.
 | [`Time`](#Time) | `time` | The initial time at which to start the simulation. |
 | [`StateVector[]`](#StateVector[]) | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
 
+<a name="GravitySimulator.OriginBody"></a>
+### GravitySimulator.OriginBody(self)
+
+**The origin of the reference frame. See constructor for more info.**
+
+### Returns: [`Body`](#Body)
+
 <a name="GravitySimulator.SolarSystemBodyState"></a>
 ### GravitySimulator.SolarSystemBodyState(self, body)
 
@@ -479,6 +486,9 @@ of the `originBody` parameter that was passed to this object's constructor.
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune. |
+
+### Returns: [`StateVector`](#StateVector)
+The state vector of the requested Solar System body.
 
 <a name="GravitySimulator.Swap"></a>
 ### GravitySimulator.Swap(self)
@@ -506,7 +516,30 @@ that has not yet been updated by a call to [`GravitySimulator`](#GravitySimulato
 <a name="GravitySimulator.Time"></a>
 ### GravitySimulator.Time(self)
 
-The time represented by the current step of the gravity simulation.
+**The time represented by the current step of the gravity simulation.**
+
+### Returns: [`Time`](#Time)
+
+<a name="GravitySimulator.Update"></a>
+### GravitySimulator.Update(self, time)
+
+**Advances the gravity simulation by a small time step.**
+
+Updates the simulation of the user-supplied small bodies
+to the time indicated by the `time` parameter.
+Returns an array of state vectors for the simulated bodies.
+The array is in the same order as the original array that
+was used to construct this simulator object.
+The positions and velocities in the returned array are
+referenced to the `originBody` that was used to construct
+this simulator.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | A time that is a small increment away from the current simulation time. It is up to the developer to figure out an appropriate time increment. Depending on the trajectories, a smaller or larger increment may be needed for the desired accuracy. Some experimentation may be needed. Generally, bodies that stay in the outer Solar System and move slowly can use larger time steps. Bodies that pass into the inner Solar System and move faster will need a smaller time step to maintain accuracy. The `time` value may be after or before the current simulation time to move forward or backward in time. |
+
+### Returns: [`StateVector[]`](#StateVector[])
+An array of state vectors, one for each small body.
 
 ---
 

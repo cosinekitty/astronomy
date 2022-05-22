@@ -2991,7 +2991,6 @@ fail:
  *      Generally, bodies that stay in the outer Solar System and move slowly can
  *      use larger time steps.  Bodies that pass into the inner Solar System and
  *      move faster will need a smaller time step to maintain accuracy.
- *      Some experimentation may be necessary to find a good value.
  *      The `time` value may be after or before the current simulation time
  *      to move forward or backward in time.
  *
@@ -3058,8 +3057,8 @@ astro_status_t Astronomy_GravSimUpdate(
         for (i = 0; i < numBodies; ++i)
         {
             /*
-                Estimate the position of each small body as if the
-                current acceleration applies across the whole time interval.
+                Estimate the positions of the small bodies as if their
+                current accelerations apply across the whole time interval.
                 approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
             */
             body_grav_calc_t *prev = &sim->prev->bodies[i];

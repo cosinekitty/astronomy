@@ -2992,7 +2992,7 @@ export declare class GravitySimulator {
      */
     get Time(): AstroTime;
     /**
-     * Advances a gravity simulation by a small time step.
+     * Advances the gravity simulation by a small time step.
      *
      * Updates the simulation of the user-supplied small bodies
      * to the time indicated by the `date` parameter.
@@ -3011,9 +3011,11 @@ export declare class GravitySimulator {
      *      Generally, bodies that stay in the outer Solar System and move slowly can
      *      use larger time steps. Bodies that pass into the inner Solar System and
      *      move faster will need a smaller time step to maintain accuracy.
-     *      Some experimentation may be necessary to find a good value.
      *      The `date` value may be after or before the current simulation time
      *      to move forward or backward in time.
+     *
+     * @return {StateVector[]}
+     *      An array of state vectors, one for each simulated small body.
      */
     Update(date: FlexibleDateTime): StateVector[];
     /**
@@ -3060,8 +3062,8 @@ export declare class GravitySimulator {
      */
     SolarSystemBodyState(body: Body): StateVector;
     private InternalBodyState;
-    private CalcSolarSystem;
+    private static CalcSolarSystem;
     private CalcBodyAccelerations;
-    private AddAcceleration;
+    private static AddAcceleration;
     private Duplicate;
 }

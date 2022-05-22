@@ -856,8 +856,8 @@ time steps.
 
 <a name="GravitySimulator+Update"></a>
 
-### gravitySimulator.Update(date)
-Advances a gravity simulation by a small time step.
+### gravitySimulator.Update(date) ⇒ [<code>Array.&lt;StateVector&gt;</code>](#StateVector)
+Advances the gravity simulation by a small time step.
 
 Updates the simulation of the user-supplied small bodies
 to the time indicated by the `date` parameter.
@@ -869,10 +869,11 @@ referenced to the `originBody` that was used to construct
 this simulator.
 
 **Kind**: instance method of [<code>GravitySimulator</code>](#GravitySimulator)  
+**Returns**: [<code>Array.&lt;StateVector&gt;</code>](#StateVector) - An array of state vectors, one for each simulated small body.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A time that is a small increment away from the current simulation time.      It is up to the developer to figure out an appropriate time increment.      Depending on the trajectories, a smaller or larger increment      may be needed for the desired accuracy. Some experimentation may be needed.      Generally, bodies that stay in the outer Solar System and move slowly can      use larger time steps. Bodies that pass into the inner Solar System and      move faster will need a smaller time step to maintain accuracy.      Some experimentation may be necessary to find a good value.      The `date` value may be after or before the current simulation time      to move forward or backward in time. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | A time that is a small increment away from the current simulation time.      It is up to the developer to figure out an appropriate time increment.      Depending on the trajectories, a smaller or larger increment      may be needed for the desired accuracy. Some experimentation may be needed.      Generally, bodies that stay in the outer Solar System and move slowly can      use larger time steps. Bodies that pass into the inner Solar System and      move faster will need a smaller time step to maintain accuracy.      The `date` value may be after or before the current simulation time      to move forward or backward in time. |
 
 
 * * *
