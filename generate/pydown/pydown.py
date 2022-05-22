@@ -190,6 +190,9 @@ def MdFunction(func, parent=None):
     md = ''
     doc = inspect.getdoc(func)
     if doc:
+        if doc.startswith('Initialize self.'):
+            # Special case: skip trivial constructors that have no documentation.
+            return ''
         sig = inspect.signature(func)
         md += '\n'
         if parent:
@@ -219,14 +222,15 @@ def MdClass(c):
         info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
-
-        firstMemberFunc = True
+        func_md = ''
+        for name, obj in inspect.getmembers(c):
+            if name == '__init__':
+                func_md += MdFunction(obj, parent=c)
         for name, obj in inspect.getmembers(c):
             if not name.startswith('_'):
-                if firstMemberFunc:
-                    firstMemberFunc = False
-                    md += '#### member functions\n\n'
-                md += MdFunction(obj, parent=c)
+                func_md += MdFunction(obj, parent=c)
+        if func_md:
+            md += '#### member functions\n\n' + func_md
     else:
         Fail('No documentation for class ' + c.__name__)
     return md
