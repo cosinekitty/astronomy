@@ -3461,6 +3461,13 @@ class _body_state_t:
         self.r = r
         self.v = v
 
+    def clone(self):
+        '''Make a copy of this body state.'''
+        return _body_state_t(self.tt, self.r.clone(), self.v.clone())
+
+    def __sub__(self, other):
+        return _body_state_t(self.tt, self.r - other.r, self.v - other.v)
+
 def _CalcVsopPosVel(model, tt):
     t = tt / _DAYS_PER_MILLENNIUM
 
@@ -3602,6 +3609,10 @@ class _TerseVector:
         self.y = y
         self.z = z
 
+    def clone(self):
+        '''Create a copy of this vector.'''
+        return _TerseVector(self.x, self.y, self.z)
+
     @staticmethod
     def zero():
         '''Return a zero vector.'''
@@ -3691,6 +3702,10 @@ class _body_grav_calc_t:
         self.r = r      # position [au]
         self.v = v      # velocity [au/day]
         self.a = a      # acceleration [au/day^2]
+
+    def clone(self):
+        '''Creates a copy of this gravity simulation state.'''
+        return _body_grav_calc_t(self.tt, self.r.clone(), self.v.clone(), self.a.clone())
 
 
 class _grav_sim_t:
@@ -10095,7 +10110,7 @@ class GravitySimulator:
         raise Error('Invalid body: {}'.format(body))
 
     def _CalcBodyAccelerations(self):
-        for b in self.curr.bodies.values():
+        for b in self.curr.bodies:
             b.a = _TerseVector.zero()
             _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Sun    ].r, _SUN_GM)
             _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Mercury].r, _MERCURY_GM)
@@ -10110,8 +10125,8 @@ class GravitySimulator:
     def _Duplicate(self):
         # Copy the current stateinto the previous state, so that both become the same moment in time.
         gravitators = {}
-        for body in self.curr.gravitators.values():
-            gravitators[body] = self.curr.gravitators[body].clone()
+        for body, grav in self.curr.gravitators.items():
+            gravitators[body] = grav.clone()
 
         bodies = []
         for b in self.curr.bodies:

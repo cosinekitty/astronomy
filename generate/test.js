@@ -2908,7 +2908,7 @@ function GravSimFile(filename, originBody, nsteps, rthresh, vthresh) {
             max_vdiff = vdiff;
         prev = rec;
     }
-    Debug(`JS GravSimFile(${filename}): PASS - max pos error = ${max_rdiff.toFixed(4)} arcmin, max = ${max_vdiff.toFixed(4)} arcmin.`);
+    Debug(`JS GravSimFile(${filename}): PASS - max pos error = ${max_rdiff.toFixed(4)} arcmin, max vel error = ${max_vdiff.toFixed(4)} arcmin.`);
     return 0;
 }
 
