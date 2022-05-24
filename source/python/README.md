@@ -171,6 +171,15 @@ these are used in function and type names.
 | [Rotation_EQJ_GAL](#Rotation_EQJ_GAL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL). |
 | [Rotation_GAL_EQJ](#Rotation_GAL_EQJ) | Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ). |
 
+### Gravitational simulation of small bodies
+
+Astronomy Engine provides a [GravitySimulator](#GravitySimulator) class
+that allows you to model the trajectories of one or more small bodies like asteroids,
+comets, or coasting spacecraft. If you know an initial position vector
+and velocity vector for a small body, the gravity simulator can incrementally
+simulate the pull of gravity on it from the Sun and planets, to calculate its
+movement through the Solar System.
+
 ---
 
 ---

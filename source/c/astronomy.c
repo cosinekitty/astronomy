@@ -3826,8 +3826,7 @@ static void GravSimDuplicate(astro_grav_sim_t *sim)
  * acting under gravitational attraction from the Sun and planets.
  *
  * After calling this function, you can call #Astronomy_GravSimUpdate
- * as many times as desired to advance the simulation by a small
- * time step.
+ * as many times as desired to advance the simulation by small time steps.
  *
  * If this function succeeds (returns `ASTRO_SUCCESS`), `sim`
  * will be set to a dynamically allocated object. The caller is

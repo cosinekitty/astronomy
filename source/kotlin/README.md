@@ -36,6 +36,7 @@ For other build tools support have a look at [this](https://jitpack.io/#cosineki
 ## Contents
 
 - [Coordinate Transforms](#coords)
+- [Gravity Simulator](#gravsim)
 - [Types](#types)
 - [Functions](#functions)
 - [Properties](#properties)
@@ -56,6 +57,16 @@ these are used in function and type names.
 - **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
 - **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
 - **GAL = Galactic**: Based on the IAU 1958 definition of galactic coordinates.
+
+<a name="gravsim"></a>
+## Gravity Simulator
+
+Astronomy Engine provides a [GravitySimulator](doc/-gravity-simulator/index.md) class
+that allows you to model the trajectories of one or more small bodies like asteroids,
+comets, or coasting spacecraft. If you know an initial position vector
+and velocity vector for a small body, the gravity simulator can incrementally
+simulate the pull of gravity on it from the Sun and planets, to calculate its
+movement through the Solar System.
 
 ---
 
