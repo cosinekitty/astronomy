@@ -7520,6 +7520,26 @@ $ASTRO_IAU_DATA()
             throw new InternalError("Peak magnitude search failed.");
         }
 
+
+        private static double CubeRoot(double x)
+        {
+            // .NET Core has a Math.Cbrt function, but .NET Framework doesn't.
+#if NET
+            // Use the standard Math.Cbrt where available.
+            return Math.Cbrt(x);
+#else
+            // Provide a substitute cube root function when Math.Cbrt isn't available.
+
+            if (x < 0.0)
+                return -CubeRoot(-x);
+
+            if (x == 0.0)
+                return 0.0;
+
+            return Math.Pow(x, (1.0 / 3.0));
+#endif
+        }
+
         /// <summary>
         /// Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
         /// </summary>
@@ -7743,7 +7763,7 @@ $ASTRO_IAU_DATA()
                 double scale, numer1, numer2;
                 if (point == 1 || point == 2)
                 {
-                    scale = (major_mass / (major_mass + minor_mass)) * Math.Cbrt(minor_mass / (3.0 * major_mass));
+                    scale = (major_mass / (major_mass + minor_mass)) * CubeRoot(minor_mass / (3.0 * major_mass));
                     numer1 = -major_mass;    /* The major mass is to the left of L1 and L2 */
                     if (point == 1)
                     {
