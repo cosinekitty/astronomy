@@ -129,6 +129,17 @@ namespace csdown
             return "";
         }
 
+        public CodeItem FindConstructor(ConstructorInfo c)
+        {
+            string id = c.DeclaringType.FullName + ".#ctor";
+            ParameterInfo[] parms = c.GetParameters();
+            if (parms.Length > 0)
+                id += "(" + string.Join(",", parms.Select(p => p.ParameterType.FullName)) + ")";
+            CodeItem item;
+            table.TryGetValue(id, out item);
+            return item;
+        }
+
         public CodeItem FindMethod(MethodInfo f)
         {
             string id = f.DeclaringType.FullName + "." + f.Name;
@@ -144,6 +155,12 @@ namespace csdown
         public CodeItem FindField(FieldInfo f)
         {
             string id = f.DeclaringType.FullName + "." + f.Name;
+            return table[id];
+        }
+
+        public CodeItem FindProperty(PropertyInfo p)
+        {
+            string id = p.DeclaringType.FullName + "." + p.Name;
             return table[id];
         }
 

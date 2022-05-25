@@ -40,7 +40,7 @@ namespace CosineKitty
     public class EarthNotAllowedException: ArgumentException
     {
         /// <summary>Creates an exception indicating that the Earth is not allowed as a target body.</summary>
-        public EarthNotAllowedException():
+        internal EarthNotAllowedException():
             base("The Earth is not allowed as the body parameter.")
             {}
     }
@@ -52,7 +52,8 @@ namespace CosineKitty
     public class InvalidBodyException: ArgumentException
     {
         /// <summary>Creates an exception indicating that the given body is not valid for this operation.</summary>
-        public InvalidBodyException(Body body):
+        /// <param name="body">The body that was invalid.</param>
+        internal InvalidBodyException(Body body):
             base("Invalid body: " + body)
             {}
     }
@@ -65,7 +66,8 @@ namespace CosineKitty
     public class InternalError: Exception
     {
         /// <summary>Creates an exception indicating that an unexpected error ocurred.</summary>
-        public InternalError(string message):
+        /// <param name="message">Diagnostic text about the internal error.</param>
+        internal InternalError(string message):
             base("Internal error. Please report an issue at: https://github.com/cosinekitty/astronomy/issues. Diagnostic: " + message)
             {}
     }
@@ -860,7 +862,7 @@ namespace CosineKitty
         /// <param name="dec">Declination in degrees.</param>
         /// <param name="dist">Distance to the celestial body in AU.</param>
         /// <param name="vec">Equatorial coordinates in vector form.</param>
-        public Equatorial(double ra, double dec, double dist, AstroVector vec)
+        internal Equatorial(double ra, double dec, double dist, AstroVector vec)
         {
             this.ra = ra;
             this.dec = dec;
@@ -902,7 +904,7 @@ namespace CosineKitty
         /// <param name="vec">ecliptic vector</param>
         /// <param name="elat">ecliptic latitude</param>
         /// <param name="elon">ecliptic longitude</param>
-        public Ecliptic(AstroVector vec, double elat, double elon)
+        internal Ecliptic(AstroVector vec, double elat, double elon)
         {
             this.vec = vec;
             this.elat = elat;
@@ -947,7 +949,7 @@ namespace CosineKitty
         /// <param name="altitude">Angle in degrees above (positive) or below (negative) the observer's horizon.</param>
         /// <param name="ra">Right ascension in sidereal hours.</param>
         /// <param name="dec">Declination in degrees.</param>
-        public Topocentric(double azimuth, double altitude, double ra, double dec)
+        internal Topocentric(double azimuth, double altitude, double ra, double dec)
         {
             this.azimuth = azimuth;
             this.altitude = altitude;
@@ -1057,7 +1059,7 @@ namespace CosineKitty
         /// </summary>
         /// <param name="time">The date and time when the body crosses the specified hour angle.</param>
         /// <param name="hor">Apparent coordinates of the body at the time it crosses the specified hour angle.</param>
-        public HourAngleInfo(AstroTime time, Topocentric hor)
+        internal HourAngleInfo(AstroTime time, Topocentric hor)
         {
             this.time = time;
             this.hor = hor;
@@ -1090,7 +1092,7 @@ namespace CosineKitty
         /// <param name="visibility">Whether the body is best seen in the morning or the evening.</param>
         /// <param name="elongation">The angle in degrees between the body and the Sun, as seen from the Earth.</param>
         /// <param name="ecliptic_separation">The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.</param>
-        public ElongationInfo(AstroTime time, Visibility visibility, double elongation, double ecliptic_separation)
+        internal ElongationInfo(AstroTime time, Visibility visibility, double elongation, double ecliptic_separation)
         {
             this.time = time;
             this.visibility = visibility;

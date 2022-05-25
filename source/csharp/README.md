@@ -2254,6 +2254,8 @@ point is called *apogee*. The closest approach of a planet to the Sun is called
 This data structure is returned by [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) and [`Astronomy.NextLunarApsis`](#Astronomy.NextLunarApsis)
 to iterate through consecutive alternating perigees and apogees.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the apsis. |
@@ -2279,6 +2281,40 @@ to iterate through consecutive alternating perigees and apogees.
 ## `class AstroTime`
 
 **A date and time used for astronomical calculations.**
+
+### constructors
+
+### new AstroTime(ut)
+
+**Creates an `AstroTime` object from a Universal Time day value.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `ut` | The number of days after the J2000 epoch. |
+
+### new AstroTime(d)
+
+**Creates an `AstroTime` object from a .NET `DateTime` object.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `DateTime` | `d` | The date and time to be converted to AstroTime format. |
+
+### new AstroTime(year, month, day, hour, minute, second)
+
+**Creates an `AstroTime` object from a UTC year, month, day, hour, minute and second.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `year` | The UTC year value. |
+| `int` | `month` | The UTC month value 1..12. |
+| `int` | `day` | The UTC day of the month 1..31. |
+| `int` | `hour` | The UTC hour value 0..23. |
+| `int` | `minute` | The UTC minute value 0..59. |
+| `int` | `second` | The UTC second value 0..59. |
+
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2345,6 +2381,22 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 
 **A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).**
 
+### constructors
+
+### new AstroVector(x, y, z, t)
+
+**Creates an AstroVector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `x` | A Cartesian x-coordinate expressed in AU. |
+| `double` | `y` | A Cartesian y-coordinate expressed in AU. |
+| `double` | `z` | A Cartesian z-coordinate expressed in AU. |
+| [`AstroTime`](#AstroTime) | `t` | The date and time at which this vector is valid. |
+
+
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `x` | The Cartesian x-coordinate of the vector in AU. |
@@ -2390,6 +2442,8 @@ The fields `ra`, `dec`, and `spin` correspond to the variables
 The field `north` is a unit vector pointing in the direction of the body's north pole.
 It is expressed in the equatorial J2000 system (EQJ).
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `ra` | The J2000 right ascension of the body's north pole direction, in sidereal hours. |
@@ -2433,6 +2487,8 @@ to report which constellation corresponds with a given point in the sky.
 Constellations are defined with respect to the B1875 equatorial system
 per IAU standard. Although `Astronomy.Constellation` requires J2000 equatorial
 coordinates, the struct contains converted B1875 coordinates for reference.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2499,6 +2555,8 @@ visible if the Earth were transparent, but the observer cannot actually see it.
 If `altitude` is positive but less than a few degrees, visibility will be impaired by
 atmospheric interference (sunrise or sunset conditions).
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the event. |
@@ -2529,6 +2587,8 @@ atmospheric interference (sunrise or sunset conditions).
 Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
 oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroVector`](#AstroVector) | `vec` | Cartesian ecliptic vector, with components as follows: x: the direction of the equinox along the ecliptic plane. y: in the ecliptic plane 90 degrees prograde from the equinox. z: perpendicular to the ecliptic plane. Positive is north. |
@@ -2543,6 +2603,8 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 **Contains information about the visibility of a celestial body at a given date and time.
 See [`Astronomy.Elongation`](#Astronomy.Elongation) for more detailed information about the members of this structure.
 See also [`Astronomy.SearchMaxElongation`](#Astronomy.SearchMaxElongation) for how to search for maximum elongation events.**
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2587,6 +2649,8 @@ Coordinates of a celestial body as seen from the Earth
 (geocentric or topocentric, depending on context),
 oriented with respect to the projection of the Earth's equator onto the sky.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `ra` | Right ascension in sidereal hours. |
@@ -2621,6 +2685,8 @@ onto the daytime side of the Earth at the instant of the eclipse's peak.
 If `kind` has any other value, `latitude` and `longitude` are undefined and should
 not be used.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
@@ -2644,9 +2710,18 @@ list of initial positions and velocities for the small bodies.
 Then the class can update the positions and velocities over small
 time steps.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `OriginBody` | The origin of the reference frame. See constructor for more info. |
+
+### properties
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `int` | `NumSmallBodies` | The number of small bodies that are included in this gravity simulation. |
+| [`AstroTime`](#AstroTime) | `Time` | The time represented by the current step of the gravity simulation. |
 
 ### member functions
 
@@ -2724,6 +2799,8 @@ to the `originBody` that was used to construct this simulator.
 Returned by the function [`Astronomy.SearchHourAngle`](#Astronomy.SearchHourAngle) to report information about
 a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time when the body crosses the specified hour angle. |
@@ -2738,6 +2815,8 @@ a celestial body crossing a certain hour angle as seen by a specified topocentri
 
 Returned by the functions [`Astronomy.Illumination`](#Astronomy.Illumination) and [`Astronomy.SearchPeakMagnitude`](#Astronomy.SearchPeakMagnitude)
 to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2780,6 +2859,8 @@ the EQJ system (that is, using Earth's equator at the J2000 epoch).
 The positions are expressed in astronomical units (AU),
 and the velocities in AU/day.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`StateVector`](#StateVector) | `io` | The position and velocity of Jupiter's moon Io. |
@@ -2793,6 +2874,8 @@ and the velocities in AU/day.
 ## `struct LibrationInfo`
 
 **Lunar libration angles, returned by [`Astronomy.Libration`](#Astronomy.Libration).**
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2832,6 +2915,8 @@ When an event field is valid, the caller must also check its `altitude` field to
 see whether the Sun is above the horizon at the time indicated by the `time` field.
 See [`EclipseEvent`](#EclipseEvent) for more information.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
@@ -2867,6 +2952,8 @@ phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
 By converting from minutes to days, and subtracting/adding with `peak`, the caller
 may determine the date and time of the beginning/end of each eclipse phase.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of lunar eclipse found. |
@@ -2882,6 +2969,8 @@ may determine the date and time of the beginning/end of each eclipse phase.
 
 **A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.**
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `int` | `quarter` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. |
@@ -2896,6 +2985,8 @@ may determine the date and time of the beginning/end of each eclipse phase.
 
 This structure is returned by [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) and [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode)
 to report information about the center of the Moon passing through the ecliptic plane.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2925,6 +3016,21 @@ to report information about the center of the Moon passing through the ecliptic 
 This structure is passed to functions that calculate phenomena as observed
 from a particular place on the Earth.
 
+### constructors
+
+### new Observer(latitude, longitude, height)
+
+**Creates an Observer object.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `latitude` | Geographic latitude in degrees north (positive) or south (negative) of the equator. |
+| `double` | `longitude` | Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England. |
+| `double` | `height` | The height above (positive) or below (negative) sea level, expressed in meters. |
+
+
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `latitude` | Geographic latitude in degrees north (positive) or south (negative) of the equator. |
@@ -2950,6 +3056,8 @@ from a particular place on the Earth.
 ## `struct RotationMatrix`
 
 **A rotation matrix that can be used to transform one coordinate system to another.**
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2984,6 +3092,8 @@ See [`Astronomy.Search`](#Astronomy.Search).**
 **The dates and times of changes of season for a given calendar year.
 Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure for a given year.**
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `mar_equinox` | The date and time of the March equinox for the specified year. |
@@ -2997,6 +3107,21 @@ Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure 
 ## `struct Spherical`
 
 **Spherical coordinates: latitude, longitude, distance.**
+
+### constructors
+
+### new Spherical(lat, lon, dist)
+
+**Creates a set of spherical coordinates.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `lat` | The latitude angle: -90..+90 degrees. |
+| `double` | `lon` | The longitude angle: 0..360 degrees. |
+| `double` | `dist` | Distance in AU. |
+
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -3014,6 +3139,35 @@ Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure 
 A state vector represents the dynamic state of a point at a given moment.
 It includes the position vector of the point, expressed in Astronomical Units (AU)
 along with the velocity vector of the point, expressed in AU/day.
+
+### constructors
+
+### new StateVector(x, y, z, vx, vy, vz, t)
+
+**Creates an AstroVector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `x` | A position x-coordinate expressed in AU. |
+| `double` | `y` | A position y-coordinate expressed in AU. |
+| `double` | `z` | A position z-coordinate expressed in AU. |
+| `double` | `vx` | A velocity x-component expressed in AU/day. |
+| `double` | `vy` | A velocity y-component expressed in AU/day. |
+| `double` | `vz` | A velocity z-component expressed in AU/day. |
+| [`AstroTime`](#AstroTime) | `t` | The date and time at which this state vector is valid. |
+
+### new StateVector(pos, vel, time)
+
+**Combines a position vector and a velocity vector into a single state vector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroVector`](#AstroVector) | `pos` | A position vector. |
+| [`AstroVector`](#AstroVector) | `vel` | A velocity vector. |
+| [`AstroTime`](#AstroTime) | `time` | The common time that represents the given position and velocity. |
+
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -3048,6 +3202,8 @@ Contains horizontal and equatorial coordinates seen by an observer on or near
 the surface of the Earth (a topocentric observer).
 Optionally corrected for atmospheric refraction.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `azimuth` | Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West. |
@@ -3075,6 +3231,8 @@ The `finish` field reports the last moment when the planet is visible
 against the Sun in its background.
 
 The calculations are performed from the point of view of a geocentric observer.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |

@@ -76,6 +76,8 @@ namespace csdown
 
         private static void AppendTypeMarkdown(StringBuilder sb, CodeInfo cinfo, Type type)
         {
+            var temp_sb = new StringBuilder();
+
             string kind;
             if (type.IsClass)
                 kind = "class";
@@ -119,33 +121,63 @@ namespace csdown
             }
             else
             {
-                // Dump struct/class fields.
-                FieldInfo[] fields = type.GetFields();
-                if (fields.Length > 0)
+                // Dump constructor(s).
+                temp_sb.Clear();
+                ConstructorInfo[] ctors = type.GetConstructors();
+                foreach (ConstructorInfo c in ctors)
+                    AppendConstructorMarkdown(temp_sb, cinfo, c);
+                if (temp_sb.Length > 0)
                 {
-                    sb.AppendLine("| Type | Name | Description |");
-                    sb.AppendLine("| --- | --- | --- |");
-                    foreach (FieldInfo f in fields)
-                        if (f.DeclaringType == type)
-                            AppendMemberVariableMarkdown(sb, cinfo, f);
+                    sb.AppendLine("### constructors");
+                    sb.AppendLine();
+                    sb.Append(temp_sb);
                     sb.AppendLine();
                 }
-            }
 
-            // Member functions
+                // Dump struct/class fields.
+                temp_sb.Clear();
+                FieldInfo[] fields = type.GetFields();
+                foreach (FieldInfo f in fields)
+                    if (f.DeclaringType == type)
+                        AppendMemberVariableMarkdown(temp_sb, cinfo, f);
+                if (temp_sb.Length > 0)
+                {
+                    sb.AppendLine("### member variables");
+                    sb.AppendLine();
+                    sb.AppendLine("| Type | Name | Description |");
+                    sb.AppendLine("| --- | --- | --- |");
+                    sb.Append(temp_sb);
+                    sb.AppendLine();
+                }
 
-            MethodInfo[] funcs = type.GetMethods()
-                .Where(m => m.IsPublic && m.DeclaringType == type)
-                .OrderBy(m => m.Name.ToUpperInvariant())
-                .ToArray();
+                temp_sb.Clear();
+                PropertyInfo[] props = type.GetProperties();
+                foreach (PropertyInfo p in props)
+                    if (p.DeclaringType == type)
+                        AppendPropertyMarkdown(temp_sb, cinfo, p);
+                if (temp_sb.Length > 0)
+                {
+                    sb.AppendLine("### properties");
+                    sb.AppendLine();
+                    sb.AppendLine("| Type | Name | Description |");
+                    sb.AppendLine("| --- | --- | --- |");
+                    sb.Append(temp_sb);
+                    sb.AppendLine();
+                }
 
-            if (funcs.Length > 0)
-            {
-                sb.AppendLine("### member functions");
-                sb.AppendLine();
+                // Member functions
+                MethodInfo[] funcs = type.GetMethods()
+                    .Where(m => m.IsPublic && m.DeclaringType == type)
+                    .OrderBy(m => m.Name.ToUpperInvariant())
+                    .ToArray();
 
-                foreach (MethodInfo f in funcs)
-                    AppendFunctionMarkdown(sb, cinfo, f);
+                if (funcs.Length > 0)
+                {
+                    sb.AppendLine("### member functions");
+                    sb.AppendLine();
+                    foreach (MethodInfo f in funcs)
+                        AppendFunctionMarkdown(sb, cinfo, f);
+                }
             }
 
             sb.AppendLine("---");
@@ -159,6 +191,18 @@ namespace csdown
             sb.Append(TypeMarkdown(f.FieldType));
             sb.Append(" | `");
             sb.Append(f.Name);
+            sb.Append("` | ");
+            sb.Append(CodeInfo.Linear(item.Summary));
+            sb.AppendLine(" |");
+        }
+
+        private static void AppendPropertyMarkdown(StringBuilder sb, CodeInfo cinfo, PropertyInfo p)
+        {
+            CodeItem item = cinfo.FindProperty(p);
+            sb.Append("| ");
+            sb.Append(TypeMarkdown(p.PropertyType));
+            sb.Append(" | `");
+            sb.Append(p.Name);
             sb.Append("` | ");
             sb.Append(CodeInfo.Linear(item.Summary));
             sb.AppendLine(" |");
@@ -223,20 +267,48 @@ namespace csdown
             sb.AppendLine();
         }
 
+        private static void AppendConstructorMarkdown(StringBuilder sb, CodeInfo cinfo, ConstructorInfo c)
+        {
+            CodeItem item = cinfo.FindConstructor(c);
+            if (item != null)
+            {
+                AppendCallableMarkdown(
+                    sb,
+                    item,
+                    c.GetParameters(),
+                    null,   // not so easy to create an anchor for multiple constructors, and not yet needed
+                    "new " + c.DeclaringType.Name,
+                    null
+                );
+            }
+        }
+
         private static void AppendFunctionMarkdown(StringBuilder sb, CodeInfo cinfo, MethodInfo f)
         {
             CodeItem item = cinfo.FindMethod(f);
-            if (item == null)
-                return;
+            if (item != null)
+            {
+                string name = f.DeclaringType.Name + "." + f.Name;
+                AppendCallableMarkdown(sb, item, f.GetParameters(), name, name, f.ReturnType);
+            }
+        }
 
-            ParameterInfo[] parms = f.GetParameters();
-            string parentClassName = f.DeclaringType.Name;
 
-            sb.AppendFormat("<a name=\"{0}.{1}\"></a>", parentClassName, f.Name);
-            sb.AppendLine();
-            sb.AppendFormat("### {0}.{1}(", parentClassName, f.Name);
+        private static void AppendCallableMarkdown(
+            StringBuilder sb,
+            CodeItem item,
+            ParameterInfo[] parms,
+            string anchor,
+            string display,
+            Type returnType)
+        {
+            if (anchor != null)
+                sb.AppendLine($"<a name=\"{anchor}\"></a>");
+            sb.Append($"### {display}(");
             sb.Append(string.Join(", ", parms.Select(p => p.Name)));
-            sb.AppendFormat(") &#8658; {0}", TypeMarkdown(f.ReturnType));
+            sb.Append(")");
+            if (returnType != null)     // constructors don't have return types (not even `void`)
+                sb.AppendFormat(" &#8658; {0}", TypeMarkdown(returnType));
             sb.AppendLine();
             sb.AppendLine();
             if (!string.IsNullOrWhiteSpace(item.Summary))
