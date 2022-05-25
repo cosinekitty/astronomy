@@ -2848,10 +2848,8 @@ static void GravSimDuplicate(astro_grav_sim_t *sim)
  * @param bodyStateArray
  *      An array of initial state vectors (positions and velocities) of the small bodies to be simulated.
  *      The caller must know the positions and velocities of the small bodies at an initial moment in time.
- *      Their positions and velocities are expressed with respect to the Solar System Barycenter (SSB)
- *      using equatorial J2000 orientation (EQJ).
- *      Positions are expressed in astronomical units (AU).
- *      Velocities are expressed in AU/day.
+ *      Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ).
+ *      Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day.
  *      All the times embedded within the state vectors must be exactly equal to `time`,
  *      or this function will fail with the error `ASTRO_INCONSISTENT_TIMES`.
  *

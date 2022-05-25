@@ -39,7 +39,6 @@ namespace CosineKitty
     /// </summary>
     public class EarthNotAllowedException: ArgumentException
     {
-        /// <summary>Creates an exception indicating that the Earth is not allowed as a target body.</summary>
         internal EarthNotAllowedException():
             base("The Earth is not allowed as the body parameter.")
             {}
@@ -51,8 +50,6 @@ namespace CosineKitty
     /// </summary>
     public class InvalidBodyException: ArgumentException
     {
-        /// <summary>Creates an exception indicating that the given body is not valid for this operation.</summary>
-        /// <param name="body">The body that was invalid.</param>
         internal InvalidBodyException(Body body):
             base("Invalid body: " + body)
             {}
@@ -65,8 +62,6 @@ namespace CosineKitty
     /// </summary>
     public class InternalError: Exception
     {
-        /// <summary>Creates an exception indicating that an unexpected error ocurred.</summary>
-        /// <param name="message">Diagnostic text about the internal error.</param>
         internal InternalError(string message):
             base("Internal error. Please report an issue at: https://github.com/cosinekitty/astronomy/issues. Diagnostic: " + message)
             {}
@@ -855,13 +850,6 @@ namespace CosineKitty
         /// </summary>
         public readonly AstroVector vec;
 
-        /// <summary>
-        /// Creates an equatorial coordinates object.
-        /// </summary>
-        /// <param name="ra">Right ascension in sidereal hours.</param>
-        /// <param name="dec">Declination in degrees.</param>
-        /// <param name="dist">Distance to the celestial body in AU.</param>
-        /// <param name="vec">Equatorial coordinates in vector form.</param>
         internal Equatorial(double ra, double dec, double dist, AstroVector vec)
         {
             this.ra = ra;
@@ -898,12 +886,6 @@ namespace CosineKitty
         /// </summary>
         public readonly double elon;
 
-        /// <summary>
-        /// Creates an object that holds Cartesian and angular ecliptic coordinates.
-        /// </summary>
-        /// <param name="vec">ecliptic vector</param>
-        /// <param name="elat">ecliptic latitude</param>
-        /// <param name="elon">ecliptic longitude</param>
         internal Ecliptic(AstroVector vec, double elat, double elon)
         {
             this.vec = vec;
@@ -942,13 +924,6 @@ namespace CosineKitty
         /// </summary>
         public readonly double dec;
 
-        /// <summary>
-        /// Creates a topocentric position object.
-        /// </summary>
-        /// <param name="azimuth">Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West.</param>
-        /// <param name="altitude">Angle in degrees above (positive) or below (negative) the observer's horizon.</param>
-        /// <param name="ra">Right ascension in sidereal hours.</param>
-        /// <param name="dec">Declination in degrees.</param>
         internal Topocentric(double azimuth, double altitude, double ra, double dec)
         {
             this.azimuth = azimuth;
@@ -1054,11 +1029,6 @@ namespace CosineKitty
         /// <summary>Apparent coordinates of the body at the time it crosses the specified hour angle.</summary>
         public readonly Topocentric hor;
 
-        /// <summary>
-        /// Creates a struct that represents a celestial body crossing a specific hour angle.
-        /// </summary>
-        /// <param name="time">The date and time when the body crosses the specified hour angle.</param>
-        /// <param name="hor">Apparent coordinates of the body at the time it crosses the specified hour angle.</param>
         internal HourAngleInfo(AstroTime time, Topocentric hor)
         {
             this.time = time;
@@ -1085,13 +1055,6 @@ namespace CosineKitty
         /// <summary>The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.</summary>
         public readonly double ecliptic_separation;
 
-        /// <summary>
-        /// Creates a structure that represents an elongation event.
-        /// </summary>
-        /// <param name="time">The date and time of the observation.</param>
-        /// <param name="visibility">Whether the body is best seen in the morning or the evening.</param>
-        /// <param name="elongation">The angle in degrees between the body and the Sun, as seen from the Earth.</param>
-        /// <param name="ecliptic_separation">The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.</param>
         internal ElongationInfo(AstroTime time, Visibility visibility, double elongation, double ecliptic_separation)
         {
             this.time = time;
@@ -2121,11 +2084,10 @@ $ASTRO_ADDSOL()
     /// <remarks>
     /// This class calculates the movement of arbitrary small bodies,
     /// such as asteroids or comets, that move through the Solar System.
-    /// It does so by calculating the gravitational forces on the bodies
-    /// from the Sun and planets. The user of this class supplies a
-    /// list of initial positions and velocities for the small bodies.
-    /// Then the class can update the positions and velocities over small
-    /// time steps.
+    /// It does so by calculating the gravitational forces on the small bodies
+    /// from the Sun and planets. The user of this class supplies an enumeration
+    /// of initial positions and velocities for the small bodies.
+    /// Then the class can update the positions and velocities over small time steps.
     /// </remarks>
     public class GravitySimulator
     {

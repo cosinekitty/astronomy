@@ -6,7 +6,7 @@ class [GravitySimulator](index.md)
 
 A simulation of zero or more small bodies moving through the Solar System.
 
-This class calculates the movement of arbitrary small bodies, such as asteroids or comets, that move through the Solar System. It does so by calculating the gravitational forces on the bodies from the Sun and planets. The user of this class supplies a list of initial positions and velocities for the bodies. Then the class can update the positions and velocities over small time steps. The gravity simulator also provides access to the positions and velocities of the Sun and planets used in the simulation.
+This class calculates the movement of arbitrary small bodies, such as asteroids or comets, that move through the Solar System. It does so by calculating the gravitational forces on the bodies from the Sun and planets. The user of this class supplies a list of initial positions and velocities for the small bodies. Then the class can update the positions and velocities over small time steps. The gravity simulator also provides access to the positions and velocities of the Sun and planets used in the simulation.
 
 ## Constructors
 

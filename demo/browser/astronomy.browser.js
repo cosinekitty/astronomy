@@ -8772,7 +8772,7 @@ exports.LagrangePointFast = LagrangePointFast;
  *
  * This class calculates the movement of arbitrary small bodies,
  * such as asteroids or comets, that move through the Solar System.
- * It does so by calculating the gravitational forces on the bodies
+ * It does so by calculating the gravitational forces on the small bodies
  * from the Sun and planets. The user of this class supplies a
  * list of initial positions and velocities for the small bodies.
  * Then the class can update the positions and velocities over small

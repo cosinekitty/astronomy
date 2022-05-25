@@ -454,7 +454,7 @@ This class calculates the movement of arbitrary small bodies,
 such as asteroids or comets, that move through the Solar System.
 It does so by calculating the gravitational forces on the bodies
 from the Sun and planets. The user of this class supplies a
-list of initial positions and velocities for the bodies.
+list of initial positions and velocities for the small bodies.
 Then the class can update the positions and velocities over small
 time steps.
 
@@ -467,9 +467,9 @@ time steps.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `originBody` | Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStates` parameter of this function, along with all output vectors returned by [`GravitySimulator`](#GravitySimulator).Update. Most callers will want to provide one of the following: `Body.Sun` for heliocentric coordinates, `Body.SSB` for solar system barycentric coordinates, or `Body.Earth` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. |
+| [`Body`](#Body) | `originBody` | Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStates` parameter of this function, along with all output vectors returned by [`GravitySimulator.Update`](#GravitySimulator.Update). Most callers will want to provide one of the following: `Body.Sun` for heliocentric coordinates, `Body.SSB` for solar system barycentric coordinates, or `Body.Earth` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. |
 | [`Time`](#Time) | `time` | The initial time at which to start the simulation. |
-| [`StateVector[]`](#StateVector[]) | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
+| [`StateVector`](#StateVector)`[]` | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
 
 <a name="GravitySimulator.OriginBody"></a>
 ### GravitySimulator.OriginBody(self)
@@ -513,14 +513,14 @@ wants to leave the simulation in its original state.
 This function allows a single "undo" of a simulation, and does so
 very efficiently.
 Usually this function will be called immediately after a matching
-call to [`GravitySimulator`](#GravitySimulator).Update. It has the effect of rolling
+call to [`GravitySimulator.Update`](#GravitySimulator.Update). It has the effect of rolling
 back the most recent update. If called twice in a row, it reverts
 the swap and thus has no net effect.
 The constructor initializes the current state and previous
 state to be identical. Both states represent the `time` parameter that was
 passed into the constructor. Therefore, `Swap` will
 have no effect from the caller's point of view when passed a simulator
-that has not yet been updated by a call to [`GravitySimulator`](#GravitySimulator).Update.
+that has not yet been updated by a call to [`GravitySimulator.Update`](#GravitySimulator.Update).
 
 <a name="GravitySimulator.Time"></a>
 ### GravitySimulator.Time(self)
@@ -547,7 +547,7 @@ this simulator.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | A time that is a small increment away from the current simulation time. It is up to the developer to figure out an appropriate time increment. Depending on the trajectories, a smaller or larger increment may be needed for the desired accuracy. Some experimentation may be needed. Generally, bodies that stay in the outer Solar System and move slowly can use larger time steps. Bodies that pass into the inner Solar System and move faster will need a smaller time step to maintain accuracy. The `time` value may be after or before the current simulation time to move forward or backward in time. |
 
-### Returns: [`StateVector[]`](#StateVector[])
+### Returns: [`StateVector`](#StateVector)`[]`
 An array of state vectors, one for each small body.
 
 ---
@@ -873,7 +873,7 @@ The value of the calling object is not modified. This function creates a brand n
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`The number of days after the J2000 epoch.`](#The number of days after the J2000 epoch.) | `tt` |  |
+| `float` | `tt` | The number of days after the J2000 epoch. |
 
 ### Returns: [`Time`](#Time)
 
