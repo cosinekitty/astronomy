@@ -2786,7 +2786,7 @@ to the `originBody` that was used to construct this simulator.
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | A time that is a small increment away from the current simulation time. It is up to the developer to figure out an appropriate time increment. Depending on the trajectories, a smaller or larger increment may be needed for the desired accuracy. Some experimentation may be needed. Generally, bodies that stay in the outer Solar System and move slowly can use larger time steps. Bodies that pass into the inner Solar System and move faster will need a smaller time step to maintain accuracy. The `time` value may be after or before the current simulation time to move forward or backward in time. |
-| [`StateVector[]`](#StateVector[]) | `bodyStates` | If this array is not null, it must contain exactly the same number of elements as the number of small bodies that were added when this simulator was created. The non-null array receives updated state vectors for the simulated small bodies. If `bodyStates` is null, the simulation is updated but without returning the state vectors. |
+| [`StateVector`](#StateVector)`[]` | `bodyStates` | If this array is not null, it must contain exactly the same number of elements as the number of small bodies that were added when this simulator was created. The non-null array receives updated state vectors for the simulated small bodies. If `bodyStates` is null, the simulation is updated but without returning the state vectors. |
 
 ---
 

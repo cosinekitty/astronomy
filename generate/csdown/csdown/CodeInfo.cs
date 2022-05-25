@@ -69,6 +69,8 @@ namespace csdown
 
         internal static string InternalLink(string s)
         {
+            if (s.EndsWith("[]"))
+                return InternalLink(s.Substring(0, s.Length-2)) + "`[]`";
             return string.Format("[`{0}`](#{0})", s);
         }
 
