@@ -174,7 +174,7 @@ class DocInfo:
         md += self.Table(self.attributes, 'Attribute')
         md += self.EnumTable()
         if self.returns or self.returnType:
-            md += '### Returns'
+            md += '\n**Returns**'
             if self.returnType:
                 md += ': ' + SymbolLink(self.returnType)
             md += '\n'
