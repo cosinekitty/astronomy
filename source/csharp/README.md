@@ -2709,6 +2709,19 @@ from the Sun and planets. The user of this class supplies an enumeration
 of initial positions and velocities for the small bodies.
 Then the class can update the positions and velocities over small time steps.
 
+### constructors
+
+### new GravitySimulator(originBody, time, bodyStates)
+
+**Creates a gravity simulation object.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `originBody` | Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStates` parameter of this function, along with all output vectors returned by [`GravitySimulator.Update`](#GravitySimulator.Update). Most callers will want to provide one of the following: `Body.Sun` for heliocentric coordinates, `Body.SSB` for solar system barycentric coordinates, or `Body.Earth` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. |
+| [`AstroTime`](#AstroTime) | `time` | The initial time at which to start the simulation. |
+| `IEnumerable<`[`StateVector`](#StateVector)`>` | `bodyStates` | An enumeration of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must be exactly equal to `time`, or this constructor will throw an exception. If `bodyStates` is null, the gravity simulator will contain zero small bodies. |
+
+
 ### member variables
 
 | Type | Name | Description |

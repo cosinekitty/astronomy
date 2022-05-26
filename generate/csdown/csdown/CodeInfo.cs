@@ -131,12 +131,33 @@ namespace csdown
             return "";
         }
 
+        private static string TypeSignature(Type t)
+        {
+            if (t.IsGenericType)
+            {
+                // "System.Collections.Generic.IEnumerable{CosineKitty.StateVector}"
+                // t.Name = "IEnumerable`1"
+                // t.Namespace = "System.Collections.Generic"
+                // t.GenericTypeArguments = [ CosineKitty.StateVector ]
+                string shortName = t.Name;
+                int bqIndex = t.Name.IndexOf("`");
+                if (bqIndex < 1)
+                    throw new Exception($"Missing backquote from generic type: {t}");
+                string name = t.Name.Substring(0, bqIndex);
+                return t.Namespace + "." + name + "{" + string.Join(",", t.GenericTypeArguments.Select(a => TypeSignature(a))) + "}";
+            }
+
+            return t.FullName;
+        }
+
         public CodeItem FindConstructor(ConstructorInfo c)
         {
+            // CosineKitty.GravitySimulator.#ctor(CosineKitty.Body,CosineKitty.AstroTime,System.Collections.Generic.IEnumerable{CosineKitty.StateVector})
+            // CosineKitty.GravitySimulator.#ctor(CosineKitty.Body,CosineKitty.AstroTime,System.Collections.Generic.IEnumerable`1[[CosineKitty.StateVector, astronomy, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]])
             string id = c.DeclaringType.FullName + ".#ctor";
             ParameterInfo[] parms = c.GetParameters();
             if (parms.Length > 0)
-                id += "(" + string.Join(",", parms.Select(p => p.ParameterType.FullName)) + ")";
+                id += "(" + string.Join(",", parms.Select(p => TypeSignature(p.ParameterType))) + ")";
             CodeItem item;
             table.TryGetValue(id, out item);
             return item;
