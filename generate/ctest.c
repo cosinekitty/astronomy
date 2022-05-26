@@ -37,6 +37,8 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 
 #define PI      3.14159265358979323846
 
+#define SECONDS_PER_DAY     (24 * 3600)
+
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
 #define FAIL(...)       do{printf(__VA_ARGS__); error = 1; goto fail;}while(0)
 #define FAILRET(...)    do{printf(__VA_ARGS__); return 1;}while(0)
@@ -192,6 +194,7 @@ static int ConstellationTest(void);
 static int LunarEclipseIssue78(void);
 static int LunarEclipseTest(void);
 static int GlobalSolarEclipseTest(void);
+static int GravitySimulatorTest(void);
 static int PlotDeltaT(const char *outFileName);
 static double AngleDiff(double alat, double alon, double blat, double blon);
 static int LocalSolarEclipseTest(void);
@@ -239,6 +242,7 @@ static unit_test_t UnitTests[] =
     {"elongation",              ElongationTest},
     {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
+    {"gravsim",                 GravitySimulatorTest},
     {"heliostate",              HelioStateTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
@@ -4789,7 +4793,7 @@ static int VerifyStateBody(
         }
     }
 
-    DEBUG("C VerifyStateBody(%s): PASS - Tested %d cases. max rdiff=%0.3le, vdiff=%0.3le\n", filename, count, max_rdiff, max_vdiff);
+    DEBUG("C VerifyStateBody(%-22s): PASS - Tested %d cases. max rdiff=%0.3le, vdiff=%0.3le\n", filename, count, max_rdiff, max_vdiff);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -6313,6 +6317,264 @@ static int SiderealTimeTest(void)
 
     printf("C SiderealTimeTest: PASS\n");
     error = 0;
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static double ArcminPosError(astro_state_vector_t correct, astro_state_vector_t calc)
+{
+    double dx = V(calc.x - correct.x);
+    double dy = V(calc.y - correct.y);
+    double dz = V(calc.z - correct.z);
+    double diff_squared = dx*dx + dy*dy + dz*dz;
+    double mag_squared = correct.x*correct.x + correct.y*correct.y + correct.z*correct.z;
+    double radians = V(sqrt(diff_squared / mag_squared));
+    double arcmin = (RAD2DEG * 60.0) * radians;
+    return arcmin;
+}
+
+static double ArcminVelError(astro_state_vector_t correct, astro_state_vector_t calc)
+{
+    double dx = V(calc.vx - correct.vx);
+    double dy = V(calc.vy - correct.vy);
+    double dz = V(calc.vz - correct.vz);
+    double diff_squared = dx*dx + dy*dy + dz*dz;
+    double mag_squared = correct.vx*correct.vx + correct.vy*correct.vy + correct.vz*correct.vz;
+    double radians = V(sqrt(diff_squared / mag_squared));
+    double arcmin = (RAD2DEG * 60.0) * radians;
+    return arcmin;
+}
+
+
+static double SSB_ArcminPosError(astro_state_vector_t correct, astro_state_vector_t calc)
+{
+    /* Scale the SSB based on 1 AU, not on its absolute magnitude, which can become very close to zero. */
+    double dx = V(calc.x - correct.x);
+    double dy = V(calc.y - correct.y);
+    double dz = V(calc.z - correct.z);
+    double diff_squared = dx*dx + dy*dy + dz*dz;
+    double radians = V(sqrt(diff_squared));
+    double arcmin = (RAD2DEG * 60.0) * radians;
+    return arcmin;
+}
+
+
+static int GravSimFile(
+    const char *filename,
+    astro_body_t originBody,
+    int nsteps,
+    double *r_score,
+    double *v_score,
+    double r_thresh,
+    double v_thresh)
+{
+    int error;
+    int i, k;
+    double rdiff, vdiff, tdiff;
+    double max_rdiff = 0.0, max_vdiff = 0.0;
+    astro_grav_sim_t *sim = NULL;
+    astro_state_vector_t state;
+    astro_status_t status;
+    state_vector_batch_t batch = EmptyStateVectorBatch();
+    astro_time_t time, checkTime;
+    astro_body_t checkOrigin;
+
+    if (nsteps < 1)
+        FAIL("C GravSimFile(%s): invalid nsteps=%d\n", filename, nsteps);
+
+    CHECK(LoadStateVectors(&batch, filename));
+
+    if (batch.length <= 0)
+        FAIL("C GravSimFile(%s): batch.length = %d is invalid.\n", filename, batch.length);
+
+    /* Use the state vector and time in the batch to initialize the gravity simulator. */
+    state = batch.array[0];
+
+    status = Astronomy_GravSimInit(&sim, originBody, state.t, 1, &state);
+    if (status != ASTRO_SUCCESS)
+        FAIL("C GravSimFile(%s): Astronomy_GravSimInit returned error %d\n", filename, status);
+
+    i = Astronomy_GravSimNumBodies(sim);
+    if (i != 1)
+        FAIL("C GravSimFile(%s): expected 1 body, found %d\n", filename, i);
+
+    checkOrigin = Astronomy_GravSimOrigin(sim);
+    if (checkOrigin != originBody)
+        FAIL("C GravSimFile(%s): expected body %d, found %d\n", filename, originBody, checkOrigin);
+
+    time = state.t;
+    for (i = 1; i < batch.length; ++i)
+    {
+        /* Split each entry of the input batch into `nsteps` simulation steps. */
+        double tt1 = batch.array[i-1].t.tt;
+        double tt2 = batch.array[i].t.tt;
+        double dt = (tt2 - tt1) / nsteps;
+        for (k = 1; k <= nsteps; ++k)
+        {
+            time = Astronomy_TerrestrialTime(tt1 + k*dt);
+            status = Astronomy_GravSimUpdate(sim, time, 1, &state);
+            if (status != ASTRO_SUCCESS)
+                FAIL("C GravSimFile(%s : i=%d): Astronomy_GravSimInit returned error %d\n", filename, i, status);
+
+            checkTime = Astronomy_GravSimTime(sim);
+            if (checkTime.tt != time.tt)
+                FAIL("C GravSimFile(%s): Expected tt=%0.16lf, found tt=%0.16lf", filename, time.tt, checkTime.tt);
+        }
+
+        tdiff = SECONDS_PER_DAY * ABS(time.tt - batch.array[i].t.tt);
+        if (tdiff > 1.0e-15)
+            FAIL("C GravSimFile(%s): terrestrial time error = %0.16lf seconds.\n", filename, tdiff);
+
+        /* Compare the simulated state with the reference state. */
+        rdiff = ArcminPosError(batch.array[i], state);
+        if (rdiff > max_rdiff)
+            max_rdiff = rdiff;
+
+        if (rdiff > r_thresh)
+            FAIL("C GravSimFile(%s : i=%d): EXCESSIVE position error = %0.4lf arcmin\n", filename, i, rdiff);
+
+        vdiff = ArcminVelError(batch.array[i], state);
+        if (vdiff > max_vdiff)
+            max_vdiff = vdiff;
+
+        if (vdiff > v_thresh)
+            FAIL("C GravSimFile(%s : i=%d): EXCESSIVE velocity error = %0.4lf arcmin\n", filename, i, vdiff);
+    }
+
+    if (max_rdiff > *r_score)
+        *r_score = max_rdiff;
+
+    if (max_vdiff > *v_score)
+        *v_score = max_vdiff;
+
+    DEBUG("C GravSimFile(%-22s): PASS (count = %d, pos error = %7.4lf arcmin, vel error = %7.4lf arcmin)\n", filename, batch.length, max_rdiff, max_vdiff);
+    error = 0;
+fail:
+    Astronomy_GravSimFree(sim);
+    FreeStateVectorBatch(&batch);
+    return error;
+}
+
+
+static int GravSimEmpty(
+    const char *filename,
+    astro_body_t origin,
+    astro_body_t body,
+    double limit_rdiff,
+    double limit_vdiff)
+{
+    int error;
+    int i;
+    astro_body_t checkOrigin;
+    astro_status_t status;
+    astro_grav_sim_t *sim = NULL;
+    state_vector_batch_t batch = EmptyStateVectorBatch();
+    astro_state_vector_t calc;
+    double rdiff, vdiff;
+    double max_rdiff = 0.0;
+    double max_vdiff = 0.0;
+
+    CHECK(LoadStateVectors(&batch, filename));
+    if (batch.length < 1)
+        FAIL("C GravSimEmpty(%s): invalid number of entries = %d\n", filename, batch.length);
+
+    /* Verify that we can create an empty simulator, and that we can calculate the SSB from it. */
+    status = Astronomy_GravSimInit(&sim, origin, batch.array[0].t, 0, NULL);
+    if (status != ASTRO_SUCCESS)
+        FAIL("C GravSimEmpty(%s): Astronomy_GravSimInit returned %d\n", filename, status);
+
+    i = Astronomy_GravSimNumBodies(sim);
+    if (i != 0)
+        FAIL("C GravSimEmpty(%s): expected 0 bodies, found %d\n", filename, i);
+
+    checkOrigin = Astronomy_GravSimOrigin(sim);
+    if (checkOrigin != origin)
+        FAIL("C GravSimEmpty(%s): expected body %d, found %d\n", filename, origin, checkOrigin);
+
+    for (i = 0; i < batch.length; ++i)
+    {
+        status = Astronomy_GravSimUpdate(sim, batch.array[i].t, 0, NULL);
+        if (status != ASTRO_SUCCESS)
+            FAIL("C GravSimEmpty(%s): i=%d, Astronomy_GravSimUpdate returned %d\n", filename, i, status);
+
+        calc = Astronomy_GravSimBodyState(sim, body);
+        CHECK_STATUS(calc);
+
+        if (origin==BODY_SSB && body==BODY_SUN)
+            rdiff = SSB_ArcminPosError(batch.array[i], calc);
+        else
+            rdiff = ArcminPosError(batch.array[i], calc);
+
+        if (rdiff > limit_rdiff)
+            FAIL("C GravSimEmpty(%s): excessive position error = %0.6lf arcmin\n", filename, rdiff);
+
+        if (rdiff > max_rdiff)
+            max_rdiff = rdiff;
+
+        vdiff = ArcminVelError(batch.array[i], calc);
+        if (vdiff > max_vdiff)
+            max_vdiff = vdiff;
+
+        if (vdiff > limit_vdiff)
+            FAIL("C GravSimEmpty(%s): excessive velocity error = %0.6lf arcmin\n", filename, vdiff);
+    }
+
+    DEBUG("C GravSimEmpty(%-22s): PASS - %d cases, pos error = %0.4lf arcmin, vel error = %0.4lf arcmin\n", filename, batch.length, max_rdiff, max_vdiff);
+    error = 0;
+fail:
+    Astronomy_GravSimFree(sim);
+    return error;
+}
+
+
+static int GravitySimulatorTest(void)
+{
+    int error;
+    const int nsteps = 20;
+    double rscore = 0.0;
+    double vscore = 0.0;
+
+    CHECK(GravSimEmpty("barystate/Sun.txt",      BODY_SSB, BODY_SUN,      0.0269, 1.9635));
+    CHECK(GravSimEmpty("barystate/Mercury.txt",  BODY_SSB, BODY_MERCURY,  0.5725, 0.9332));
+    CHECK(GravSimEmpty("barystate/Venus.txt",    BODY_SSB, BODY_VENUS,    0.1433, 0.1458));
+    CHECK(GravSimEmpty("barystate/Earth.txt",    BODY_SSB, BODY_EARTH,    0.0651, 0.2098));
+    CHECK(GravSimEmpty("barystate/Mars.txt",     BODY_SSB, BODY_MARS,     0.1150, 0.1896));
+    CHECK(GravSimEmpty("barystate/Jupiter.txt",  BODY_SSB, BODY_JUPITER,  0.2546, 0.8831));
+    CHECK(GravSimEmpty("barystate/Saturn.txt",   BODY_SSB, BODY_SATURN,   0.3660, 1.0818));
+    CHECK(GravSimEmpty("barystate/Uranus.txt",   BODY_SSB, BODY_URANUS,   0.3107, 0.9321));
+    CHECK(GravSimEmpty("barystate/Neptune.txt",  BODY_SSB, BODY_NEPTUNE,  0.3382, 1.5586));
+
+    CHECK(GravSimEmpty("heliostate/Mercury.txt", BODY_SUN, BODY_MERCURY,  0.5088, 0.9473));
+    CHECK(GravSimEmpty("heliostate/Venus.txt",   BODY_SUN, BODY_VENUS,    0.1214, 0.1543));
+    CHECK(GravSimEmpty("heliostate/Earth.txt",   BODY_SUN, BODY_EARTH,    0.0508, 0.2099));
+    CHECK(GravSimEmpty("heliostate/Mars.txt",    BODY_SUN, BODY_MARS,     0.1085, 0.1927));
+    CHECK(GravSimEmpty("heliostate/Jupiter.txt", BODY_SUN, BODY_JUPITER,  0.2564, 0.8805));
+    CHECK(GravSimEmpty("heliostate/Saturn.txt",  BODY_SUN, BODY_SATURN,   0.3664, 1.0826));
+    CHECK(GravSimEmpty("heliostate/Uranus.txt",  BODY_SUN, BODY_URANUS,   0.3106, 0.9322));
+    CHECK(GravSimEmpty("heliostate/Neptune.txt", BODY_SUN, BODY_NEPTUNE,  0.3381, 1.5584));
+
+    DEBUG("\n");
+
+    CHECK(GravSimFile("barystate/Ceres.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 0.6640, 0.6226));
+    CHECK(GravSimFile("barystate/Pallas.txt",   BODY_SSB,   nsteps, &rscore, &vscore, 0.4687, 0.3474));
+    CHECK(GravSimFile("barystate/Vesta.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 0.5806, 0.5462));
+    CHECK(GravSimFile("barystate/Juno.txt",     BODY_SSB,   nsteps, &rscore, &vscore, 0.6760, 0.5750));
+    CHECK(GravSimFile("barystate/Bennu.txt",    BODY_SSB,   nsteps, &rscore, &vscore, 3.7444, 2.6581));
+    CHECK(GravSimFile("barystate/Halley.txt",   BODY_SSB,   nsteps, &rscore, &vscore, 0.0539, 0.0825));
+
+    CHECK(GravSimFile("heliostate/Ceres.txt",   BODY_SUN,   nsteps, &rscore, &vscore, 0.0445, 0.0355));
+    CHECK(GravSimFile("heliostate/Pallas.txt",  BODY_SUN,   nsteps, &rscore, &vscore, 0.1062, 0.0854));
+    CHECK(GravSimFile("heliostate/Vesta.txt",   BODY_SUN,   nsteps, &rscore, &vscore, 0.1432, 0.1308));
+    CHECK(GravSimFile("heliostate/Juno.txt",    BODY_SUN,   nsteps, &rscore, &vscore, 0.1554, 0.1328));
+
+    CHECK(GravSimFile("geostate/Ceres.txt",     BODY_EARTH, nsteps, &rscore, &vscore, 6.5689, 6.4797));
+    CHECK(GravSimFile("geostate/Pallas.txt",    BODY_EARTH, nsteps, &rscore, &vscore, 9.3288, 7.3533));
+    CHECK(GravSimFile("geostate/Vesta.txt",     BODY_EARTH, nsteps, &rscore, &vscore, 3.2980, 3.8863));
+    CHECK(GravSimFile("geostate/Juno.txt",      BODY_EARTH, nsteps, &rscore, &vscore, 6.0962, 7.7147));
+
+    printf("C GravitySimulatorTest: PASS (pos score = %0.4lf arcmin, vel score = %0.4lf arcmin)\n", rscore, vscore);
 fail:
     return error;
 }

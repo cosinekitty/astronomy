@@ -171,6 +171,15 @@ these are used in function and type names.
 | [Rotation_EQJ_GAL](#Rotation_EQJ_GAL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL). |
 | [Rotation_GAL_EQJ](#Rotation_GAL_EQJ) | Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ). |
 
+### Gravitational simulation of small bodies
+
+Astronomy Engine provides a [GravitySimulator](#GravitySimulator) class
+that allows you to model the trajectories of one or more small bodies like asteroids,
+comets, or coasting spacecraft. If you know an initial position vector
+and velocity vector for a small body, the gravity simulator can incrementally
+simulate the pull of gravity on it from the Sun and planets, to calculate its
+movement through the Solar System.
+
 ---
 
 ---
@@ -433,6 +442,113 @@ not be used.
 | `float` | `distance` | The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
 | `float` | `latitude` | The geographic latitude at the center of the peak eclipse shadow. |
 | `float` | `longitude` | The geographic longitude at the center of the peak eclipse shadow. |
+
+---
+
+<a name="GravitySimulator"></a>
+### class GravitySimulator
+
+**A simulation of zero or more small bodies moving through the Solar System.**
+
+This class calculates the movement of arbitrary small bodies,
+such as asteroids or comets, that move through the Solar System.
+It does so by calculating the gravitational forces on the bodies
+from the Sun and planets. The user of this class supplies a
+list of initial positions and velocities for the small bodies.
+Then the class can update the positions and velocities over small
+time steps.
+
+#### member functions
+
+<a name="GravitySimulator.__init__"></a>
+### GravitySimulator.__init__(self, originBody, time, bodyStates)
+
+**Creates a gravity simulation object.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `originBody` | Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStates` parameter of this function, along with all output vectors returned by [`GravitySimulator.Update`](#GravitySimulator.Update). Most callers will want to provide one of the following: `Body.Sun` for heliocentric coordinates, `Body.SSB` for solar system barycentric coordinates, or `Body.Earth` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. |
+| [`Time`](#Time) | `time` | The initial time at which to start the simulation. |
+| [`StateVector`](#StateVector)`[]` | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
+
+<a name="GravitySimulator.OriginBody"></a>
+### GravitySimulator.OriginBody(self)
+
+**The origin of the reference frame. See constructor for more info.**
+
+**Returns**: [`Body`](#Body)
+
+<a name="GravitySimulator.SolarSystemBodyState"></a>
+### GravitySimulator.SolarSystemBodyState(self, body)
+
+**Get the position and velocity of a Solar System body included in the simulation.**
+
+In order to simulate the movement of small bodies through the Solar System,
+the simulator needs to calculate the state vectors for the Sun and planets.
+If an application wants to know the positions of one or more of the planets
+in addition to the small bodies, this function provides a way to obtain
+their state vectors. This is provided for the sake of efficiency, to avoid
+redundant calculations.
+The state vector is returned relative to the position and velocity
+of the `originBody` parameter that was passed to this object's constructor.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune. |
+
+**Returns**: [`StateVector`](#StateVector)
+The state vector of the requested Solar System body.
+
+<a name="GravitySimulator.Swap"></a>
+### GravitySimulator.Swap(self)
+
+**Exchange the current time step with the previous time step.**
+
+Sometimes it is helpful to "explore" various times near a given
+simulation time step, while repeatedly returning to the original
+time step. For example, when backdating a position for light travel
+time, the caller may wish to repeatedly try different amounts of
+backdating. When the backdating solver has converged, the caller
+wants to leave the simulation in its original state.
+This function allows a single "undo" of a simulation, and does so
+very efficiently.
+Usually this function will be called immediately after a matching
+call to [`GravitySimulator.Update`](#GravitySimulator.Update). It has the effect of rolling
+back the most recent update. If called twice in a row, it reverts
+the swap and thus has no net effect.
+The constructor initializes the current state and previous
+state to be identical. Both states represent the `time` parameter that was
+passed into the constructor. Therefore, `Swap` will
+have no effect from the caller's point of view when passed a simulator
+that has not yet been updated by a call to [`GravitySimulator.Update`](#GravitySimulator.Update).
+
+<a name="GravitySimulator.Time"></a>
+### GravitySimulator.Time(self)
+
+**The time represented by the current step of the gravity simulation.**
+
+**Returns**: [`Time`](#Time)
+
+<a name="GravitySimulator.Update"></a>
+### GravitySimulator.Update(self, time)
+
+**Advances the gravity simulation by a small time step.**
+
+Updates the simulation of the user-supplied small bodies
+to the time indicated by the `time` parameter.
+Returns an array of state vectors for the simulated bodies.
+The array is in the same order as the original array that
+was used to construct this simulator object.
+The positions and velocities in the returned array are
+referenced to the `originBody` that was used to construct
+this simulator.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | A time that is a small increment away from the current simulation time. It is up to the developer to figure out an appropriate time increment. Depending on the trajectories, a smaller or larger increment may be needed for the desired accuracy. Some experimentation may be needed. Generally, bodies that stay in the outer Solar System and move slowly can use larger time steps. Bodies that pass into the inner Solar System and move faster will need a smaller time step to maintain accuracy. The `time` value may be after or before the current simulation time to move forward or backward in time. |
+
+**Returns**: [`StateVector`](#StateVector)`[]`
+An array of state vectors, one for each small body.
 
 ---
 
@@ -748,7 +864,7 @@ The value of the calling object is not modified. This function creates a brand n
 | --- | --- | --- |
 | `float` | `days` | A floating point number of days by which to adjust `time`. May be negative, 0, or positive. |
 
-### Returns: [`Time`](#Time)
+**Returns**: [`Time`](#Time)
 
 <a name="Time.FromTerrestrialTime"></a>
 ### Time.FromTerrestrialTime(tt)
@@ -757,9 +873,9 @@ The value of the calling object is not modified. This function creates a brand n
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`The number of days after the J2000 epoch.`](#The number of days after the J2000 epoch.) | `tt` |  |
+| `float` | `tt` | The number of days after the J2000 epoch. |
 
-### Returns: [`Time`](#Time)
+**Returns**: [`Time`](#Time)
 
 <a name="Time.Make"></a>
 ### Time.Make(year, month, day, hour, minute, second)
@@ -775,7 +891,7 @@ The value of the calling object is not modified. This function creates a brand n
 | `int` | `minute` | The UTC minute, in the range 0..59. |
 | `float` | `second` | The real-valued UTC second, in the range [0, 60). |
 
-### Returns: [`Time`](#Time)
+**Returns**: [`Time`](#Time)
 
 <a name="Time.Now"></a>
 ### Time.Now()
@@ -787,7 +903,7 @@ Converts that date and time to a [`Time`](#Time) value and returns the result.
 Callers can pass this value to other Astronomy Engine functions to
 calculate current observational conditions.
 
-### Returns: [`Time`](#Time)
+**Returns**: [`Time`](#Time)
 
 <a name="Time.Parse"></a>
 ### Time.Parse(text)
@@ -805,7 +921,7 @@ and a 'Z' at the end of the time.
 | --- | --- | --- |
 | `string` | `text` | A string of the following formats: `yyyy-mm-dd` `yyyy-mm-ddThh:mmZ` `yyyy-mm-ddThh:mm:ssZ` `yyyy-mm-ddThh:mm:ss.sssZ` |
 
-### Returns: [`Time`](#Time)
+**Returns**: [`Time`](#Time)
 
 <a name="Time.Utc"></a>
 ### Time.Utc(self)
@@ -815,7 +931,7 @@ and a 'Z' at the end of the time.
 Uses the standard [`datetime`](https://docs.python.org/3/library/datetime.html) class
 to represent the date and time in this Time object.
 
-### Returns: `datetime`
+**Returns**: `datetime`
 
 ---
 
@@ -1076,7 +1192,7 @@ The angle is measured in the plane that contains both vectors.
 | [`Vector`](#Vector) | `a` | The first of a pair of vectors between which to measure an angle. |
 | [`Vector`](#Vector) | `b` | The second of a pair of vectors between which to measure an angle. |
 
-### Returns: `float`
+**Returns**: `float`
 The angle between the two vectors expressed in degrees.
 The value is in the range [0, 180].
 
@@ -1096,7 +1212,7 @@ easy it is to see the body away from the glare of the Sun.
 | [`Body`](#Body) | `body` | The celestial body whose angle from the Sun is to be measured. Not allowed to be `Body.Earth`. |
 | [`Time`](#Time) | `time` | The time at which the observation is made. |
 
-### Returns: `float`
+**Returns**: `float`
 A numeric value indicating the angle in degrees between the Sun
 and the specified body as seen from the center of the Earth.
 
@@ -1116,7 +1232,7 @@ The vectors are expressed in equatorial J2000 coordinates (EQJ).
 | [`Body`](#Body) | `body` | The celestial body whose barycentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.SSB`, `Body.Moon`, `Body.EMB`, and all planets: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
 | [`Time`](#Time) | `time` | The date and time for which to calculate position and velocity. |
 
-### Returns: [`StateVector`](#StateVector)
+**Returns**: [`StateVector`](#StateVector)
 An object that contains barycentric position and velocity vectors.
 
 ---
@@ -1135,7 +1251,7 @@ An object that contains barycentric position and velocity vectors.
 | --- | --- | --- |
 | `str` | `name` | The common English name of a supported celestial body. |
 
-### Returns: [`Body`](#Body)
+**Returns**: [`Body`](#Body)
 If `name` is a valid body name, returns the enumeration
 value associated with that body.
 Otherwise, returns `Body.Invalid`.
@@ -1155,7 +1271,7 @@ equivalent to rotating based on the first matrix, followed by the second.
 | [`RotationMatrix`](#RotationMatrix) | `a` | The first rotation to apply. |
 | [`RotationMatrix`](#RotationMatrix) | `b` | The second rotation to apply. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 The combined rotation matrix.
 
 ---
@@ -1173,7 +1289,7 @@ constellation that contains that point.
 | `float` | `ra` | The right ascension (RA) of a point in the sky, using the J2000 equatorial system. |
 | `float` | `dec` | The declination (DEC) of a point in the sky, using the J2000 equatorial system. |
 
-### Returns: [`ConstellationInfo`](#ConstellationInfo)
+**Returns**: [`ConstellationInfo`](#ConstellationInfo)
 A structure that contains the 3-letter abbreviation and full name
 of the constellation that contains the given (ra,dec), along with
 the converted B1875 (ra,dec) for that point.
@@ -1194,7 +1310,7 @@ This is the default Delta T function used by Astronomy Engine.
 | --- | --- | --- |
 | `float` | `ut` | The floating point number of days since noon UTC on January 1, 2000. |
 
-### Returns: `float`
+**Returns**: `float`
 The estimated difference TT-UT on the given date, expressed in seconds.
 
 ---
@@ -1212,7 +1328,7 @@ which are relative to the plane of the Earth's orbit around the Sun.
 | --- | --- | --- |
 | [`Equatorial`](#Equatorial) | `equ` | Equatorial coordinates in the J2000 frame of reference. |
 
-### Returns: [`EclipticCoordinates`](#EclipticCoordinates)
+**Returns**: [`EclipticCoordinates`](#EclipticCoordinates)
 Ecliptic coordinates in the J2000 frame of reference.
 
 ---
@@ -1237,7 +1353,7 @@ To calculate an equatorial J2000 vector instead, use [`GeoMoon`](#GeoMoon).
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position. |
 
-### Returns: [`Spherical`](#Spherical)
+**Returns**: [`Spherical`](#Spherical)
 The Moon's position as a distance, ecliptic latitude, and ecliptic longitude.
 
 ---
@@ -1257,7 +1373,7 @@ in degrees from the J2000 equinox. The ecliptic longitude is always in the range
 | [`Body`](#Body) | `body` | A body other than the Sun. |
 | [`Time`](#Time) | `time` | The date and time at which the body's ecliptic longitude is to be calculated. |
 
-### Returns: `float`
+**Returns**: `float`
 An angular value in degrees indicating the ecliptic longitude of the body.
 
 ---
@@ -1286,7 +1402,7 @@ information about the given celestial body at the given time:
 | [`Body`](#Body) | `body` | The celestial body whose visibility is to be calculated. |
 | [`Time`](#Time) | `time` | The date and time of the observation. |
 
-### Returns: [`ElongationEvent`](#ElongationEvent)
+**Returns**: [`ElongationEvent`](#ElongationEvent)
 
 ---
 
@@ -1314,7 +1430,7 @@ Correction for aberration is optional, using the `aberration` parameter.
 | `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. If `True`, returns coordinates using the equator and equinox of date. If `False`, returns coordinates converted to the J2000 system. |
 | `bool` | `aberration` | If `True`, corrects for aberration of light based on the motion of the Earth with respect to the heliocentric origin. If `False`, does not correct for aberration. |
 
-### Returns: [`Equatorial`](#Equatorial)
+**Returns**: [`Equatorial`](#Equatorial)
 Equatorial coordinates in the specified frame of reference.
 
 ---
@@ -1328,7 +1444,7 @@ Equatorial coordinates in the specified frame of reference.
 | --- | --- | --- |
 | [`Vector`](#Vector) | `vec` | A vector in an equatorial coordinate system. |
 
-### Returns: [`Equatorial`](#Equatorial)
+**Returns**: [`Equatorial`](#Equatorial)
 Angular coordinates expressed in the same equatorial system as `vec`.
 
 ---
@@ -1347,7 +1463,7 @@ The velocity (vx, vy, vz) components are expressed in AU/day.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the EMB's geocentric state. |
 
-### Returns: [`StateVector`](#StateVector)
+**Returns**: [`StateVector`](#StateVector)
 The EMB's position and velocity vectors in J2000 equatorial coordinates.
 
 ---
@@ -1372,7 +1488,7 @@ by Montenbruck and Pfleger.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position. |
 
-### Returns: [`Vector`](#Vector)
+**Returns**: [`Vector`](#Vector)
 The Moon's position as a vector in J2000 Cartesian equatorial coordinates (EQJ).
 
 ---
@@ -1395,7 +1511,7 @@ it is much more efficient to use [`GeoMoon`](#GeoMoon) instead.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's position and velocity. |
 
-### Returns: [`StateVector`](#StateVector)
+**Returns**: [`StateVector`](#StateVector)
 The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
 
 ---
@@ -1424,7 +1540,7 @@ movement of the Earth with respect to the rays of light coming from that body.
 | [`Time`](#Time) | `time` | The date and time for which to calculate the position. |
 | `bool` | `aberration` | A boolean value indicating whether to correct for aberration. |
 
-### Returns: [`Vector`](#Vector)
+**Returns**: [`Vector`](#Vector)
 A geocentric position vector of the center of the given body.
 
 ---
@@ -1445,7 +1561,7 @@ of the resulting vector.
 | [`Body`](#Body) | `body` | A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets. |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the heliocentric distance. |
 
-### Returns: `float`
+**Returns**: `float`
 The heliocentric distance in AU.
 
 ---
@@ -1470,7 +1586,7 @@ of reference, consider using [`BaryState`](#BaryState) instead.
 | [`Body`](#Body) | `body` | The celestial body whose heliocentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.SSB`, `Body.Moon`, `Body.EMB`, and all planets: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
 | [`Time`](#Time) | `time` | The date and time for which to calculate position and velocity. |
 
-### Returns: [`StateVector`](#StateVector)
+**Returns**: [`StateVector`](#StateVector)
 An object that contains heliocentric position and velocity vectors.
 
 ---
@@ -1493,7 +1609,7 @@ If given an invalid value for `body`, this function raises an exception.
 | [`Body`](#Body) | `body` | The celestial body whose heliocentric position is to be calculated: The Sun, Moon, EMB, SSB, or any of the planets. |
 | [`Time`](#Time) | `time` | The time at which to calculate the heliocentric position. |
 
-### Returns: [`Vector`](#Vector)
+**Returns**: [`Vector`](#Vector)
 A heliocentric position vector of the center of the given body
 at the given time.
 
@@ -1533,7 +1649,7 @@ to the respective `ra` and `dec` values passed in.
 | `float` | `dec` | Declination in degrees of the celestial object, referred to the mean equator of date for the J2000 epoch. Positive values are north of the celestial equator and negative values are south of it. |
 | [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.None`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. |
 
-### Returns: [`HorizontalCoordinates`](#HorizontalCoordinates)
+**Returns**: [`HorizontalCoordinates`](#HorizontalCoordinates)
 The horizontal coordinates (altitude and azimuth), along with
 equatorial coordinates (right ascension and declination), all
 optionally corrected for atmospheric refraction. See remarks above
@@ -1577,7 +1693,7 @@ This matrix can be the starting point for other operations,
 such as using a series of calls to [`Pivot`](#Pivot) to
 create a custom rotation matrix.
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 The identity rotation matrix.
 
 ---
@@ -1608,7 +1724,7 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 | [`Body`](#Body) | `body` | The Sun, Moon, or any planet other than the Earth. |
 | [`Time`](#Time) | `time` | The date and time of the observation. |
 
-### Returns: [`IlluminationInfo`](#IlluminationInfo)
+**Returns**: [`IlluminationInfo`](#IlluminationInfo)
 
 ---
 
@@ -1628,7 +1744,7 @@ but refraction first must be removed from the observed position.
 | [`Refraction`](#Refraction) | `refraction` | `Refraction.Normal` - corrects for atmospheric refraction (recommended). `Refraction.Airless` - no correction is performed. `Refraction.JplHorizons` - For JPL Horizons compatibility testing only. |
 | `float` | `bent_altitude` | The apparent altitude that includes atmospheric refraction. |
 
-### Returns: `float`
+**Returns**: `float`
 The angular adjustment in degrees, to be added to the
 altitude angle to correct for atmospheric lensing.
 This will be less than or equal to zero.
@@ -1647,7 +1763,7 @@ this function returns the matrix that reverses that transform.
 | --- | --- | --- |
 | [`RotationMatrix`](#RotationMatrix) | `rotation` | The rotation matrix to be inverted. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 The inverse rotation matrix.
 
 ---
@@ -1672,7 +1788,7 @@ to convert to geocentric vectors.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate Jupiter's moons. |
 
-### Returns: [`JupiterMoonsInfo`](#JupiterMoonsInfo)
+**Returns**: [`JupiterMoonsInfo`](#JupiterMoonsInfo)
 The positions and velocities of Jupiter's 4 largest moons.
 
 ---
@@ -1711,7 +1827,7 @@ for some other purpose.
 | [`Body`](#Body) | `major_body` | The more massive of the co-orbiting bodies: `Body.Sun` or `Body.Earth`. |
 | [`Body`](#Body) | `minor_body` | The less massive of the co-orbiting bodies. See main remarks. |
 
-### Returns: [`StateVector`](#StateVector)
+**Returns**: [`StateVector`](#StateVector)
 The position and velocity of the selected Lagrange point with respect to the major body's center.
 
 ---
@@ -1749,7 +1865,7 @@ Consider calling [`LagrangePoint`](#LagrangePoint), instead of this function, fo
 | [`StateVector`](#StateVector) | `minor_state` | The state vector of the minor (less massive) of the pair of bodies. |
 | `float` | `minor_mass` | The mass product GM of the minor body. |
 
-### Returns: [`StateVector`](#StateVector)
+**Returns**: [`StateVector`](#StateVector)
 The position and velocity of the selected Lagrange point with respect to the major body's center.
 
 ---
@@ -1775,7 +1891,7 @@ and the apparent angular diameter of the Moon `diam_deg`.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Moon's libration angles. |
 
-### Returns: [`LibrationInfo`](#LibrationInfo)
+**Returns**: [`LibrationInfo`](#LibrationInfo)
 
 ---
 
@@ -1796,7 +1912,7 @@ The values come from page 10 of a
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The body for which to find the GM product. Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet. Any other value will cause an exception to be thrown. |
 
-### Returns: `float`
+**Returns**: `float`
 The mass product of the given body in au^3/day^2.
 
 ---
@@ -1818,7 +1934,7 @@ Certain values of the angle have conventional definitions:
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time of the observation. |
 
-### Returns: `float`
+**Returns**: `float`
 
 ---
 
@@ -1837,7 +1953,7 @@ to find the next solar eclipse.
 | --- | --- | --- |
 | [`Time`](#Time) | `prevEclipseTime` | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
 
-### Returns: [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
+**Returns**: [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
 
 ---
 
@@ -1857,7 +1973,7 @@ to find the next solar eclipse.
 | [`Time`](#Time) | `prevEclipseTime` | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
 | [`Observer`](#Observer) | `observer` | The geographic location of the observer. |
 
-### Returns: [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo)
+**Returns**: [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo)
 
 ---
 
@@ -1876,7 +1992,7 @@ See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 | --- | --- | --- |
 | [`Apsis`](#Apsis) | `apsis` |  |
 
-### Returns: [`Apsis`](#Apsis)
+**Returns**: [`Apsis`](#Apsis)
 
 ---
 
@@ -1895,7 +2011,7 @@ See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 | --- | --- | --- |
 | [`Time`](#Time) | `prevEclipseTime` | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
 
-### Returns: [`LunarEclipseInfo`](#LunarEclipseInfo)
+**Returns**: [`LunarEclipseInfo`](#LunarEclipseInfo)
 
 ---
 
@@ -1911,7 +2027,7 @@ Then call `NextMoonNode` to find as many more consecutive nodes as desired.
 | --- | --- | --- |
 | [`NodeEventInfo`](#NodeEventInfo) | `prevNode` | The previous node find from calling [`SearchMoonNode`](#SearchMoonNode) or `NextMoonNode`. |
 
-### Returns: [`NodeEventInfo`](#NodeEventInfo)
+**Returns**: [`NodeEventInfo`](#NodeEventInfo)
 
 ---
 
@@ -1929,7 +2045,7 @@ the one passed in as the parameter `mq`.
 | --- | --- | --- |
 | [`MoonQuarter`](#MoonQuarter) | `mq` | A value returned by a prior call to [`SearchMoonQuarter`](#SearchMoonQuarter) or [`NextMoonQuarter`](#NextMoonQuarter). |
 
-### Returns: [`MoonQuarter`](#MoonQuarter)
+**Returns**: [`MoonQuarter`](#MoonQuarter)
 
 ---
 
@@ -1948,7 +2064,7 @@ See [`SearchPlanetApsis`](#SearchPlanetApsis) for more details.
 | [`Body`](#Body) | `body` | The planet for which to find the next perihelion/aphelion event. Not allowed to be `Body.Sun` or `Body.Moon`. Must match the body passed into the call that produced the `apsis` parameter. |
 | [`Apsis`](#Apsis) | `apsis` | An apsis event obtained from a call to [`SearchPlanetApsis`](#SearchPlanetApsis) or `NextPlanetApsis`. |
 
-### Returns: [`Apsis`](#Apsis)
+**Returns**: [`Apsis`](#Apsis)
 
 ---
 
@@ -1966,7 +2082,7 @@ Keep calling this function as many times as you want to keep finding more transi
 | [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
 | [`Time`](#Time) | `prevTransitTime` | A date and time near the previous transit. |
 
-### Returns: [`TransitInfo`](#TransitInfo)
+**Returns**: [`TransitInfo`](#TransitInfo)
 
 ---
 
@@ -1989,7 +2105,7 @@ on the Earth.
 | `float` | `latitude` | The latitude of the observer in degrees north or south of the equator. By formula symmetry, positive latitudes give the same answer as negative latitudes, so the sign does not matter. |
 | `float` | `height` | The height above the sea level geoid in meters. No range checking is done; however, accuracy is only valid in the range 0 to 100000 meters. |
 
-### Returns: `float`
+**Returns**: `float`
 The effective gravitational acceleration expressed in meters per second squared [m/s^2].
 
 ---
@@ -2016,7 +2132,7 @@ The returned velocity vector has components expressed in AU/day.
 | [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
 | `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may pass `true` to use the Earth's equator at `time` as the orientation. |
 
-### Returns: [`StateVector`](#StateVector)
+**Returns**: [`StateVector`](#StateVector)
 An equatorial position vector and velocity vector relative to the center of the Earth.
 
 ---
@@ -2043,7 +2159,7 @@ The inverse of this function is also available: [`VectorObserver`](#VectorObserv
 | [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
 | `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may pass `true` to use the Earth's equator at `time` as the orientation. |
 
-### Returns: [`Vector`](#Vector)
+**Returns**: [`Vector`](#Vector)
 An equatorial vector from the center of the Earth to the specified location
 on (or near) the Earth's surface.
 
@@ -2074,7 +2190,7 @@ If this happens, the function throws an exception.
 | [`Body`](#Body) | `body2` | The second body, relative to which the longitude of the first body is to be found. |
 | [`Time`](#Time) | `time` | The date and time of the observation. |
 
-### Returns: `float`
+**Returns**: `float`
 An angle in degrees in the range [0, 360).
 
 ---
@@ -2099,7 +2215,7 @@ reorient ECL coordinates to the orientation of your telescope camera.
 | `int` | `axis` | An integer that selects which coordinate axis to rotate around: 0 = x, 1 = y, 2 = z. Any other value will cause an exception. |
 | `float` | `angle` | An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A pivoted matrix object.
 
 ---
@@ -2119,7 +2235,7 @@ due to lensing of the Earth's atmosphere.
 | [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.Airless`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. Any other value raises an exception. |
 | `float` | `altitude` | The number of degrees above (positive) or below (negative) the horizon an object is, before being corrected for refraction. |
 
-### Returns: `float`
+**Returns**: `float`
 The number of additional degrees of altitude an object appears
 to have, due to atmospheric refraction, depending on the
 option selected by the `refraction` parameter.
@@ -2140,7 +2256,7 @@ vectors are rotated the same way.
 | [`RotationMatrix`](#RotationMatrix) | `rotation` | A rotation matrix that specifies how the orientation of the vector is to be changed. |
 | [`StateVector`](#StateVector) | `state` | The state vector whose orientation is to be changed. |
 
-### Returns: [`StateVector`](#StateVector)
+**Returns**: [`StateVector`](#StateVector)
 A state vector in the orientation specified by `rotation`.
 
 ---
@@ -2158,7 +2274,7 @@ in another orientation.
 | [`RotationMatrix`](#RotationMatrix) | `rotation` | A rotation matrix that specifies how the orientation of the vector is to be changed. |
 | [`Vector`](#Vector) | `vector` | The vector whose orientation is to be changed. |
 
-### Returns: [`Vector`](#Vector)
+**Returns**: [`Vector`](#Vector)
 A vector in the orientation specified by `rotation`.
 
 ---
@@ -2181,7 +2297,7 @@ See [`AxisInfo`](#AxisInfo) for more detailed information.
 | [`Body`](#Body) | `body` | One of the following values: `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
 | [`Time`](#Time) | `time` | The time at which to calculate the body's rotation axis. |
 
-### Returns: [`AxisInfo`](#AxisInfo)
+**Returns**: [`AxisInfo`](#AxisInfo)
 The body's north pole direction and angle of its prime meridian.
 
 ---
@@ -2200,7 +2316,7 @@ Target: EQD = equatorial system, using equator of date.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time of the desired equator. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts ECL to EQD.
 
 ---
@@ -2215,7 +2331,7 @@ for converting from one orientation to another.
 Source: ECL = ecliptic system, using equator at J2000 epoch.
 Target: EQJ = equatorial system, using equator at J2000 epoch.
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts ECL to EQJ.
 
 ---
@@ -2237,7 +2353,7 @@ to a traditional altitude/azimuth pair.
 | [`Time`](#Time) | `time` | The date and time of the desired horizontal orientation. |
 | [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts ECL to HOR at `time` and for `observer`.
 The components of the horizontal vector are:
 x = north, y = west, z = zenith (straight up from the observer).
@@ -2260,7 +2376,7 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time of the source equator. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQD to ECL.
 
 ---
@@ -2279,7 +2395,7 @@ Target: EQJ = equatorial system, using equator at J2000 epoch.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time at which the Earth's equator defines the source orientation. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQD at `time` to EQJ.
 
 ---
@@ -2301,7 +2417,7 @@ to a traditional altitude/azimuth pair.
 | [`Time`](#Time) | `time` | The date and time at which the Earth's equator applies. |
 | [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's location. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQD to HOR at `time` and for `observer`.
 The components of the horizontal vector are:
 x = north, y = west, z = zenith (straight up from the observer).
@@ -2320,7 +2436,7 @@ for converting from one orientation to another.
 Source: EQJ = equatorial system, using equator at J2000 epoch.
 Target: ECL = ecliptic system, using equator at J2000 epoch.
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQJ to ECL.
 
 ---
@@ -2339,7 +2455,7 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time at which the Earth's equator defines the target orientation. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQJ to EQD at `time`.
 
 ---
@@ -2354,7 +2470,7 @@ for converting from one orientation to another.
 Source: EQJ = equatorial system, using the equator at the J2000 epoch.
 Target: GAL = galactic system (IAU 1958 definition).
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQJ to GAL.
 
 ---
@@ -2376,7 +2492,7 @@ a traditional altitude/azimuth pair.
 | [`Time`](#Time) | `time` | The date and time of the desired horizontal orientation. |
 | [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQJ to HOR at `time` and for `observer`.
 The components of the horizontal vector are:
 x = north, y = west, z = zenith (straight up from the observer).
@@ -2395,7 +2511,7 @@ for converting from one orientation to another.
 Source: GAL = galactic system (IAU 1958 definition).
 Target: EQJ = equatorial system, using the equator at the J2000 epoch.
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts GAL to EQJ.
 
 ---
@@ -2415,7 +2531,7 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 | [`Time`](#Time) | `time` | The date and time of the horizontal observation. |
 | [`Observer`](#Observer) | `observer` | The location of the horizontal observer. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts HOR to ECL.
 
 ---
@@ -2435,7 +2551,7 @@ Target: EQD = equatorial system, using equator of the specified date/time.
 | [`Time`](#Time) | `time` | The date and time at which the Earth's equator applies. |
 | [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that defines the observer's horizon. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts HOR to EQD at `time` and for `observer`.
 
 ---
@@ -2455,7 +2571,7 @@ Target: EQJ = equatorial system, using equator at the J2000 epoch.
 | [`Time`](#Time) | `time` | The date and time of the observation. |
 | [`Observer`](#Observer) | `observer` | A location near the Earth's mean sea level that define's the observer's horizon. |
 
-### Returns: [`RotationMatrix`](#RotationMatrix)
+**Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
 
 ---
@@ -2507,7 +2623,7 @@ an [`Error`](#Error) exception.
 | `float` | `t2` | The upper time bound of the search window. See remarks above for more details. |
 | `float` | `dt_tolerance_seconds` | Specifies an amount of time in seconds within which a bounded ascending root is considered accurate enough to stop. A typical value is 1 second. |
 
-### Returns: [`Time`](#Time) or `None`
+**Returns**: [`Time`](#Time) or `None`
 If the search is successful, returns a #Time object that is within
 `dt_tolerance_seconds` of an ascending root.
 In this case, the returned time value will always be within the
@@ -2543,7 +2659,7 @@ Astronomical twilight uses -18 degrees as the `altitude` value.
 | `float` | `limitDays` | The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number. |
 | `float` | `altitude` | The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90]. |
 
-### Returns: [`Time`](#Time) or `None`
+**Returns**: [`Time`](#Time) or `None`
 If the altitude event time is found within the specified time window,
 this function returns that time. Otherwise, it returns `None`.
 
@@ -2565,7 +2681,7 @@ passing in the `peak` value returned from the previous call.
 | --- | --- | --- |
 | [`Time`](#Time) | `startTime` | The date and time for starting the search for a solar eclipse. |
 
-### Returns: [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
+**Returns**: [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
 
 ---
 
@@ -2599,7 +2715,7 @@ of the body at that time, as seen by the given observer.
 | `float` | `hourAngle` | An hour angle value in the range [0.0, 24.0) indicating the number of sidereal hours after the body's most recent culmination. |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 
-### Returns: [`HourAngleEvent`](#HourAngleEvent)
+**Returns**: [`HourAngleEvent`](#HourAngleEvent)
 
 ---
 
@@ -2622,7 +2738,7 @@ See [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo) for more information about
 | [`Time`](#Time) | `startTime` | The date and time for starting the search for a solar eclipse. |
 | [`Observer`](#Observer) | `observer` | The geographic location of the observer. |
 
-### Returns: [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo)
+**Returns**: [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo)
 
 ---
 
@@ -2647,7 +2763,7 @@ another call of `NextLunarApsis` as many times as desired.
 | --- | --- | --- |
 | [`Time`](#Time) | `startTime` | The date and time at which to start searching for the next perigee or apogee. |
 
-### Returns: [`Apsis`](#Apsis)
+**Returns**: [`Apsis`](#Apsis)
 
 ---
 
@@ -2667,7 +2783,7 @@ passing in the `peak` value returned from the previous call.
 | --- | --- | --- |
 | [`Time`](#Time) | `startTime` | The date and time for starting the search for a lunar eclipse. |
 
-### Returns: [`LunarEclipseInfo`](#LunarEclipseInfo)
+**Returns**: [`LunarEclipseInfo`](#LunarEclipseInfo)
 
 ---
 
@@ -2690,7 +2806,7 @@ observed in the morning or evening. See [`ElongationEvent`](#ElongationEvent) fo
 | [`Body`](#Body) | `body` | Either `Body.Mercury` or `Body.Venus`. Any other value will result in an exception. To find the best viewing opportunities for planets farther from the Sun than the Earth is (Mars through Pluto), use [`SearchRelativeLongitude`](#SearchRelativeLongitude) to find the next opposition event. |
 | [`Time`](#Time) | `startTime` | The date and time at which to begin the search. The maximum elongation event found will always be the first one that occurs after this date and time. |
 
-### Returns: [`ElongationEvent`](#ElongationEvent)
+**Returns**: [`ElongationEvent`](#ElongationEvent)
 
 ---
 
@@ -2712,7 +2828,7 @@ Then call [`NextMoonNode`](#NextMoonNode) to find as many more consecutive nodes
 | --- | --- | --- |
 | [`Time`](#Time) | `startTime` | The date and time for starting the search for an ascending or descending node of the Moon. |
 
-### Returns: [`NodeEventInfo`](#NodeEventInfo)
+**Returns**: [`NodeEventInfo`](#NodeEventInfo)
 
 ---
 
@@ -2737,7 +2853,7 @@ This function is useful for finding general phase angles outside those four quar
 | [`Time`](#Time) | `startTime` | The beginning of the time window in which to search for the Moon reaching the specified phase. |
 | `float` | `limitDays` | The number of days after `startTime` that limits the time window for the search. |
 
-### Returns: [`Time`](#Time) or `None`
+**Returns**: [`Time`](#Time) or `None`
 
 ---
 
@@ -2757,7 +2873,7 @@ followed by calls to [`NextMoonQuarter`](#NextMoonQuarter) as many times as desi
 | --- | --- | --- |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 
-### Returns: [`MoonQuarter`](#MoonQuarter)
+**Returns**: [`MoonQuarter`](#MoonQuarter)
 
 ---
 
@@ -2782,7 +2898,7 @@ However, the difference is minor and has little practical value.
 | [`Body`](#Body) | `body` | Currently only `Body.Venus` is allowed. Any other value results in an exception. See remarks above for more details. |
 | [`Time`](#Time) | `startTime` | The date and time to start searching for the next peak magnitude event. |
 
-### Returns: [`IlluminationInfo`](#IlluminationInfo)
+**Returns**: [`IlluminationInfo`](#IlluminationInfo)
 
 ---
 
@@ -2806,7 +2922,7 @@ into another call of `NextPlanetApsis` as many times as desired.
 | [`Body`](#Body) | `body` | The planet for which to find the next perihelion/aphelion event. Not allowed to be `Body.Sun` or `Body.Moon`. |
 | [`Time`](#Time) | `startTime` | The date and time at which to start searching for the next perihelion or aphelion. |
 
-### Returns: [`Apsis`](#Apsis)
+**Returns**: [`Apsis`](#Apsis)
 
 ---
 
@@ -2849,7 +2965,7 @@ the Earth and another planet:
 | `float` | `targetRelLon` | The desired relative longitude, expressed in degrees. Must be in the range [0, 360). |
 | [`Time`](#Time) | `startTime` | The date and time at which to begin the search. |
 
-### Returns: [`Time`](#Time)
+**Returns**: [`Time`](#Time)
 The date and time of the relative longitude event.
 
 ---
@@ -2882,7 +2998,7 @@ Therefore callers must not assume that the function will always succeed.
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 | `float` | `limitDays` | Limits how many days to search for a rise or set time. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
 
-### Returns: [`Time`](#Time) or `None`
+**Returns**: [`Time`](#Time) or `None`
 If the rise or set time is found within the specified time window,
 this function returns that time. Otherwise, it returns `None`.
 
@@ -2909,7 +3025,7 @@ It is recommended to keep the window smaller than 10 days when possible.
 | [`Time`](#Time) | `startTime` | The date and time for starting the search for the desired longitude event. |
 | `float` | `limitDays` | The real-valued number of days, which when added to `startTime`, limits the range of time over which the search looks. It is recommended to keep this value between 1 and 10 days. See remarks above for more details. |
 
-### Returns: [`Time`](#Time) or `None`
+**Returns**: [`Time`](#Time) or `None`
 
 ---
 
@@ -2929,7 +3045,7 @@ To continue the search, pass the `finish` time in the returned structure to
 | [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
 | [`Time`](#Time) | `startTime` | The date and time for starting the search for a transit. |
 
-### Returns: [`TransitInfo`](#TransitInfo)
+**Returns**: [`TransitInfo`](#TransitInfo)
 
 ---
 
@@ -2960,7 +3076,7 @@ of winter in the southern hemisphere.
 | --- | --- | --- |
 | `int` | `year` | The calendar year number for which to calculate equinoxes and solstices. The value may be any integer, but only the years 1800 through 2100 have been validated for accuracy: unit testing against data from the United States Naval Observatory confirms that all equinoxes and solstices for that range of years are within 2 minutes of the correct time. |
 
-### Returns: [`SeasonInfo`](#SeasonInfo)
+**Returns**: [`SeasonInfo`](#SeasonInfo)
 
 ---
 
@@ -2988,7 +3104,7 @@ To convert to degrees, multiply the return value by 15.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to find GAST. As an optimization, this function caches the sideral time value in `time`, unless it has already been cached, in which case the cached value is reused. |
 
-### Returns: `float`
+**Returns**: `float`
 GAST expressed in sidereal hours.
 
 ---
@@ -3004,7 +3120,7 @@ Given a Cartesian vector, returns latitude, longitude, and distance.
 | --- | --- | --- |
 | [`Vector`](#Vector) | `vector` | Cartesian vector to be converted to spherical coordinates. |
 
-### Returns: [`Spherical`](#Spherical)
+**Returns**: [`Spherical`](#Spherical)
 Spherical coordinates that are equivalent to the given vector.
 
 ---
@@ -3031,7 +3147,7 @@ In fact, the function [`Seasons`](#Seasons) does use this function for that purp
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the Sun's position. |
 
-### Returns: [`EclipticCoordinates`](#EclipticCoordinates)
+**Returns**: [`EclipticCoordinates`](#EclipticCoordinates)
 The ecliptic coordinates of the Sun using the Earth's true equator of date.
 
 ---
@@ -3047,7 +3163,7 @@ The ecliptic coordinates of the Sun using the Earth's true equator of date.
 | [`Time`](#Time) | `time` | The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. |
 | [`Refraction`](#Refraction) | `refraction` | See remarks in function [`RefractionAngle`](#RefractionAngle). |
 
-### Returns: [`Vector`](#Vector)
+**Returns**: [`Vector`](#Vector)
 A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up).
 
 ---
@@ -3066,7 +3182,7 @@ includes the time, as required by all `Time` objects.
 | [`Spherical`](#Spherical) | `sphere` | Spherical coordinates to be converted. |
 | [`Time`](#Time) | `time` | The time that should be included in the returned vector. |
 
-### Returns: [`Vector`](#Vector)
+**Returns**: [`Vector`](#Vector)
 The vector form of the supplied spherical coordinates.
 
 ---
@@ -3085,7 +3201,7 @@ latitude, longitude, and elevation for that vector.
 | [`Vector`](#Vector) | `vector` | The geocentric equatorial position vector for which to find geographic coordinates. The components are expressed in astronomical units (AU). The time `vector.t` determines the Earth's rotation. |
 | `bool` | `ofdate` | Selects the date of the Earth's equator in which `vector` is expressed. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the the time `vector.t`. Or the caller may pass `True` to use the Earth's equator at `vector.t` as the orientation. |
 
-### Returns: [`Observer`](#Observer)
+**Returns**: [`Observer`](#Observer)
 The geographic latitude, longitude, and elevation above sea level
 that corresponds to the given equatorial vector.
 

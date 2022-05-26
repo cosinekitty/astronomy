@@ -36,6 +36,7 @@ For other build tools support have a look at [this](https://jitpack.io/#cosineki
 ## Contents
 
 - [Coordinate Transforms](#coords)
+- [Gravity Simulator](#gravsim)
 - [Types](#types)
 - [Functions](#functions)
 - [Properties](#properties)
@@ -56,6 +57,16 @@ these are used in function and type names.
 - **ECL = Ecliptic**: Uses the mean plane of the Earth's orbit around the Sun. The x-axis is referenced against the J2000 equinox.
 - **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
 - **GAL = Galactic**: Based on the IAU 1958 definition of galactic coordinates.
+
+<a name="gravsim"></a>
+## Gravity Simulator
+
+Astronomy Engine provides a [GravitySimulator](doc/-gravity-simulator/index.md) class
+that allows you to model the trajectories of one or more small bodies like asteroids,
+comets, or coasting spacecraft. If you know an initial position vector
+and velocity vector for a small body, the gravity simulator can incrementally
+simulate the pull of gravity on it from the Sun and planets, to calculate its
+movement through the Solar System.
 
 ---
 
@@ -79,6 +90,7 @@ these are used in function and type names.
 | [EquatorEpoch](doc/-equator-epoch/index.md)<br>enum [EquatorEpoch](doc/-equator-epoch/index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[EquatorEpoch](doc/-equator-epoch/index.md)&gt; <br>Selects the date for which the Earth's equator is to be used for representing equatorial coordinates. |
 | [Equatorial](doc/-equatorial/index.md)<br>class [Equatorial](doc/-equatorial/index.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), vec: [Vector](doc/-vector/index.md))<br>Equatorial angular and cartesian coordinates. |
 | [GlobalSolarEclipseInfo](doc/-global-solar-eclipse-info/index.md)<br>class [GlobalSolarEclipseInfo](doc/-global-solar-eclipse-info/index.md)(kind: [EclipseKind](doc/-eclipse-kind/index.md), peak: [Time](doc/-time/index.md), distance: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))<br>Reports the time and geographic location of the peak of a solar eclipse. |
+| [GravitySimulator](doc/-gravity-simulator/index.md)<br>class [GravitySimulator](doc/-gravity-simulator/index.md)<br>A simulation of zero or more small bodies moving through the Solar System. |
 | [HourAngleInfo](doc/-hour-angle-info/index.md)<br>class [HourAngleInfo](doc/-hour-angle-info/index.md)(time: [Time](doc/-time/index.md), hor: [Topocentric](doc/-topocentric/index.md))<br>Information about a celestial body crossing a specific hour angle. |
 | [IlluminationInfo](doc/-illumination-info/index.md)<br>class [IlluminationInfo](doc/-illumination-info/index.md)(time: [Time](doc/-time/index.md), mag: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), phaseFraction: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), helioDist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), ringTilt: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))<br>Information about the brightness and illuminated shape of a celestial body. |
 | [InternalError](doc/-internal-error/index.md)<br>class [InternalError](doc/-internal-error/index.md)(message: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)) : [Exception](https://docs.oracle.com/javase/8/docs/api/java/lang/Exception.html)<br>An unexpected internal error occurred in Astronomy Engine |
