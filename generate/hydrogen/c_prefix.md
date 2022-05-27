@@ -177,5 +177,25 @@ these are used in function and type names.
 | [Rotation_EQJ_GAL](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from J2000 equatorial (EQJ) to galactic (GAL). |
 | [Rotation_GAL_EQJ](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from galactic (GAL) to J2000 equatorial (EQJ). |
 
+### Gravitational simulation of small bodies
+
+Astronomy Engine provides a generic gravity simulator that allows you to
+model the trajectories of one or more small bodies like asteroids,
+comets, or coasting spacecraft. If you know an initial position vector
+and velocity vector for a small body, the gravity simulator can incrementally
+simulate the pull of gravity on it from the Sun and planets, to calculate its
+movement through the Solar System.
+
+| Function | Description |
+| -------- | ----------- |
+| [GravSimInit](#Astronomy_GravSimInit) | Creates a gravity simulator object. |
+| [GravSimFree](#Astronomy_GravSimFree) | Releases memory allocated to a gravity simulator object. |
+| [GravSimUpdate](#Astronomy_GravSimUpdate) | Advances the gravity simulation by a small time step. |
+| [GravSimSwap](#Astronomy_GravSimSwap) | Exchanges the current time step with the previous time step. |
+| [GravSimTime](#Astronomy_GravSimTime) | Returns the time of the current simulation step. |
+| [GravSimBodyState](#Astronomy_GravSimBodyState) | Get the position and velocity of a Solar System body included in the simulation. |
+| [GravSimNumBodies](#Astronomy_GravSimNumBodies) | Returns the number of small bodies represented in this simulation. |
+| [GravSimOrigin](#Astronomy_GravSimOrigin) | Returns the body whose center is the coordinate origin that small bodies are referenced to. |
+
 ---
 

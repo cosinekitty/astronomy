@@ -8,6 +8,8 @@ Continues searching for lunar quarters from a previous search.
 
 After calling [searchMoonQuarter](search-moon-quarter.md), this function can be called one or more times to continue finding consecutive lunar quarters. This function finds the next consecutive moon quarter event after the one passed in as the parameter mq.
 
+See [moonQuartersAfter](moon-quarters-after.md) for convenient iteration of consecutive quarter phases.
+
 #### Return
 
 The moon quarter that occurs next in time after the one passed in mq.

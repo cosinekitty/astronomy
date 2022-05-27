@@ -154,6 +154,15 @@ these are used in function and type names.
 | [Rotation_EQJ_GAL](#Astronomy.Rotation_EQJ_GAL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL). |
 | [Rotation_GAL_EQJ](#Astronomy.Rotation_GAL_EQJ) | Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ). |
 
+### Gravitational simulation of small bodies
+
+Astronomy Engine provides a [GravitySimulator](#GravitySimulator) class
+that allows you to model the trajectories of one or more small bodies like asteroids,
+comets, or coasting spacecraft. If you know an initial position vector
+and velocity vector for a small body, the gravity simulator can incrementally
+simulate the pull of gravity on it from the Sun and planets, to calculate its
+movement through the Solar System.
+
 ---
 
 <a name="constants"></a>
@@ -568,6 +577,18 @@ movement of the Earth with respect to the rays of light coming from that body.
 
 **Returns:** A geocentric position vector of the center of the given body.
 
+<a name="Astronomy.GlobalSolarEclipsesAfter"></a>
+### Astronomy.GlobalSolarEclipsesAfter(startTime) &#8658; `IEnumerable<`[`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)`>`
+
+**Enumerates a series of global solar eclipses that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchGlobalSolarEclipse`](#Astronomy.SearchGlobalSolarEclipse) and [`Astronomy.NextGlobalSolarEclipse`](#Astronomy.NextGlobalSolarEclipse).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive solar eclipses. |
+
 <a name="Astronomy.HelioDistance"></a>
 ### Astronomy.HelioDistance(body, time) &#8658; `double`
 
@@ -903,6 +924,43 @@ and the apparent angular diameter of the Moon `diam_deg`.
 
 **Returns:** The Moon's ecliptic position and libration angles as seen from the Earth.
 
+<a name="Astronomy.LocalSolarEclipsesAfter"></a>
+### Astronomy.LocalSolarEclipsesAfter(startTime, observer) &#8658; `IEnumerable<`[`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo)`>`
+
+**Enumerates a series of local solar eclipses that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchLocalSolarEclipse`](#Astronomy.SearchLocalSolarEclipse) and [`Astronomy.NextLocalSolarEclipse`](#Astronomy.NextLocalSolarEclipse).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive solar eclipses. |
+| [`Observer`](#Observer) | `observer` | The geographic location of the observer. |
+
+<a name="Astronomy.LunarApsidesAfter"></a>
+### Astronomy.LunarApsidesAfter(startTime) &#8658; `IEnumerable<`[`ApsisInfo`](#ApsisInfo)`>`
+
+**Enumerates a series of apogees/perigees that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) and [`Astronomy.NextLunarApsis`](#Astronomy.NextLunarApsis).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive lunar apsides. |
+
+<a name="Astronomy.LunarEclipsesAfter"></a>
+### Astronomy.LunarEclipsesAfter(startTime) &#8658; `IEnumerable<`[`LunarEclipseInfo`](#LunarEclipseInfo)`>`
+
+**Enumerates a series of lunar eclipses that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchLunarEclipse`](#Astronomy.SearchLunarEclipse) and [`Astronomy.NextLunarEclipse`](#Astronomy.NextLunarEclipse).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive lunar eclipses. |
+
 <a name="Astronomy.MassProduct"></a>
 ### Astronomy.MassProduct(body) &#8658; `double`
 
@@ -921,6 +979,18 @@ The values come from page 10 of a
 | [`Body`](#Body) | `body` | The body for which to find the GM product. Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet. Any other value will cause an exception to be thrown. |
 
 **Returns:** The mass product of the given body in au^3/day^2.
+
+<a name="Astronomy.MoonNodesAfter"></a>
+### Astronomy.MoonNodesAfter(startTime) &#8658; `IEnumerable<`[`NodeEventInfo`](#NodeEventInfo)`>`
+
+**Enumerates a series of ascending/descending nodes of the Moon that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) and [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive lunar apsides. |
 
 <a name="Astronomy.MoonPhase"></a>
 ### Astronomy.MoonPhase(time) &#8658; `double`
@@ -942,6 +1012,18 @@ Certain values of the angle have conventional definitions:
 
 **Returns:** The angle as described above, a value in the range 0..360 degrees.
 
+<a name="Astronomy.MoonQuartersAfter"></a>
+### Astronomy.MoonQuartersAfter(startTime) &#8658; `IEnumerable<`[`MoonQuarterInfo`](#MoonQuarterInfo)`>`
+
+**Enumerates a series of lunar quarter phases that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter) and [`Astronomy.NextMoonQuarter`](#Astronomy.NextMoonQuarter).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive lunar quarter phases. |
+
 <a name="Astronomy.NextGlobalSolarEclipse"></a>
 ### Astronomy.NextGlobalSolarEclipse(prevEclipseTime) &#8658; [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo)
 
@@ -952,6 +1034,8 @@ in a series, you can call this function to find the next consecutive solar eclip
 Pass in the `peak` value from the [`GlobalSolarEclipseInfo`](#GlobalSolarEclipseInfo) returned by the
 previous call to `Astronomy.SearchGlobalSolarEclipse` or `Astronomy.NextGlobalSolarEclipse`
 to find the next solar eclipse.
+
+See [`Astronomy.GlobalSolarEclipsesAfter`](#Astronomy.GlobalSolarEclipsesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -968,6 +1052,8 @@ Pass in the `peak` value from the [`LocalSolarEclipseInfo`](#LocalSolarEclipseIn
 previous call to `Astronomy.SearchLocalSolarEclipse` or `Astronomy.NextLocalSolarEclipse`
 to find the next solar eclipse.
 
+See [`Astronomy.LocalSolarEclipsesAfter`](#Astronomy.LocalSolarEclipsesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `prevEclipseTime` | A date and time near a new moon. Solar eclipse search will start at the next new moon. |
@@ -983,6 +1069,7 @@ to [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) or `Astronomy.Nex
 an apogee event, this function finds the next perigee event, and vice versa.
 
 See [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) for more details.
+See [`Astronomy.LunarApsidesAfter`](#Astronomy.LunarApsidesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1001,6 +1088,8 @@ Pass in the `center` value from the [`LunarEclipseInfo`](#LunarEclipseInfo) retu
 previous call to `Astronomy.SearchLunarEclipse` or `Astronomy.NextLunarEclipse`
 to find the next lunar eclipse.
 
+See [`Astronomy.LunarEclipsesAfter`](#Astronomy.LunarEclipsesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `prevEclipseTime` | A date and time near a full moon. Lunar eclipse search will start at the next full moon. |
@@ -1014,6 +1103,8 @@ to find the next lunar eclipse.
 
 Call [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) to find the first of a series of nodes.
 Then call `Astronomy.NextMoonNode` to find as many more consecutive nodes as desired.
+
+See [`Astronomy.MoonNodesAfter`](#Astronomy.MoonNodesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1029,6 +1120,8 @@ one or more times to continue finding consecutive lunar quarters.
 This function finds the next consecutive moon quarter event after
 the one passed in as the parameter `mq`.
 
+See [`Astronomy.MoonQuartersAfter`](#Astronomy.MoonQuartersAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`MoonQuarterInfo`](#MoonQuarterInfo) | `mq` | The previous moon quarter found by a call to [`Astronomy.SearchMoonQuarter`](#Astronomy.SearchMoonQuarter) or `Astronomy.NextMoonQuarter`. |
@@ -1043,7 +1136,9 @@ the one passed in as the parameter `mq`.
 This function requires an [`ApsisInfo`](#ApsisInfo) value obtained from a call
 to [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) or `Astronomy.NextPlanetApsis`.
 Given an aphelion event, this function finds the next perihelion event, and vice versa.
+
 See [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) for more details.
+See [`Astronomy.PlanetApsidesAfter`](#Astronomy.PlanetApsidesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1060,6 +1155,8 @@ See [`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) for more detai
 After calling [`Astronomy.SearchTransit`](#Astronomy.SearchTransit) to find a transit of Mercury or Venus,
 this function finds the next transit after that.
 Keep calling this function as many times as you want to keep finding more transits.
+
+See [`Astronomy.TransitsAfter`](#Astronomy.TransitsAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1195,6 +1292,19 @@ reorient ECL coordinates to the orientation of your telescope camera.
 | `double` | `angle` | An angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping `angle` in the range [-360, +360]. |
 
 **Returns:** A pivoted matrix object.
+
+<a name="Astronomy.PlanetApsidesAfter"></a>
+### Astronomy.PlanetApsidesAfter(body, startTime) &#8658; `IEnumerable<`[`ApsisInfo`](#ApsisInfo)`>`
+
+**Enumerates a series of planet aphelia/perihelia that occur after a specified time.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchPlanetApsis`](#Astronomy.SearchPlanetApsis) and [`Astronomy.NextPlanetApsis`](#Astronomy.NextPlanetApsis).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet for which to find a series of consecutive aphelia/perihelia. Not allowed to be `Body.Sun` or `Body.Moon`. |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive planetary apsides. |
 
 <a name="Astronomy.RefractionAngle"></a>
 ### Astronomy.RefractionAngle(refraction, altitude) &#8658; `double`
@@ -1571,6 +1681,8 @@ To find a series of solar eclipses, call this function once,
 then keep calling [`Astronomy.NextGlobalSolarEclipse`](#Astronomy.NextGlobalSolarEclipse) as many times as desired,
 passing in the `peak` value returned from the previous call.
 
+See [`Astronomy.GlobalSolarEclipsesAfter`](#Astronomy.GlobalSolarEclipsesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for a solar eclipse. |
@@ -1625,7 +1737,9 @@ passing in the `peak` value returned from the previous call.
 
 IMPORTANT: An eclipse reported by this function might be partly or
 completely invisible to the observer due to the time of day.
+
 See [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo) for more information about this topic.
+See [`Astronomy.LocalSolarEclipsesAfter`](#Astronomy.LocalSolarEclipsesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1651,6 +1765,8 @@ once, then use the return value to call [`Astronomy.NextLunarApsis`](#Astronomy.
 keep feeding the previous return value from `Astronomy.NextLunarApsis` into another
 call of `Astronomy.NextLunarApsis` as many times as desired.
 
+See [`Astronomy.LunarApsidesAfter`](#Astronomy.LunarApsidesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start searching for the next perigee or apogee. |
@@ -1668,6 +1784,8 @@ See [`LunarEclipseInfo`](#LunarEclipseInfo) for more information.
 To find a series of lunar eclipses, call this function once,
 then keep calling [`Astronomy.NextLunarEclipse`](#Astronomy.NextLunarEclipse) as many times as desired,
 passing in the `center` value returned from the previous call.
+
+See [`Astronomy.LunarEclipsesAfter`](#Astronomy.LunarEclipsesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1711,6 +1829,8 @@ if the Moon also happens to be in the correct phase (new or full, respectively).
 Call `Astronomy.SearchMoonNode` to find the first of a series of nodes.
 Then call [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode) to find as many more consecutive nodes as desired.
 
+See [`Astronomy.MoonNodesAfter`](#Astronomy.MoonNodesAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for an ascending or descending node of the Moon. |
@@ -1752,6 +1872,8 @@ after the specified date and time.
 
 To continue iterating through consecutive lunar quarters, call this function once,
 followed by calls to [`Astronomy.NextMoonQuarter`](#Astronomy.NextMoonQuarter) as many times as desired.
+
+See [`Astronomy.MoonQuartersAfter`](#Astronomy.MoonQuartersAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1801,6 +1923,8 @@ call `Astronomy.SearchPlanetApsis` once, then use the return value to call
 [`Astronomy.NextPlanetApsis`](#Astronomy.NextPlanetApsis). After that, keep feeding the previous return value
 from `Astronomy.NextPlanetApsis` into another call of `Astronomy.NextPlanetApsis`
 as many times as desired.
+
+See [`Astronomy.PlanetApsidesAfter`](#Astronomy.PlanetApsidesAfter) for a convenient enumerator.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1917,6 +2041,8 @@ so that the silhouette of the planet is visible against the Sun in the backgroun
 To continue the search, pass the `finish` time in the returned structure to
 [`Astronomy.NextTransit`](#Astronomy.NextTransit).
 
+See [`Astronomy.TransitsAfter`](#Astronomy.TransitsAfter) for a convenient enumerator.
+
 | Type | Parameter | Description |
 | --- | --- | --- |
 | [`Body`](#Body) | `body` | The planet whose transit is to be found. Must be `Body.Mercury` or `Body.Venus`. |
@@ -2018,6 +2144,19 @@ In fact, the function [`Astronomy.Seasons`](#Astronomy.Seasons) does use this fu
 
 **Returns:** The ecliptic coordinates of the Sun using the Earth's true equator of date.
 
+<a name="Astronomy.TransitsAfter"></a>
+### Astronomy.TransitsAfter(body, startTime) &#8658; `IEnumerable<`[`TransitInfo`](#TransitInfo)`>`
+
+**Enumerates a series of transits of Mercury or Venus.**
+
+This is a convenience wrapper around the functions
+[`Astronomy.SearchTransit`](#Astronomy.SearchTransit) and [`Astronomy.NextTransit`](#Astronomy.NextTransit).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The planet whose transits are to be enumerated. Must be `Body.Mercury` or `Body.Venus`. |
+| [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive transits. |
+
 <a name="Astronomy.VectorFromHorizon"></a>
 ### Astronomy.VectorFromHorizon(sphere, time, refraction) &#8658; [`AstroVector`](#AstroVector)
 
@@ -2115,6 +2254,8 @@ point is called *apogee*. The closest approach of a planet to the Sun is called
 This data structure is returned by [`Astronomy.SearchLunarApsis`](#Astronomy.SearchLunarApsis) and [`Astronomy.NextLunarApsis`](#Astronomy.NextLunarApsis)
 to iterate through consecutive alternating perigees and apogees.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the apsis. |
@@ -2140,6 +2281,40 @@ to iterate through consecutive alternating perigees and apogees.
 ## `class AstroTime`
 
 **A date and time used for astronomical calculations.**
+
+### constructors
+
+### new AstroTime(ut)
+
+**Creates an `AstroTime` object from a Universal Time day value.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `ut` | The number of days after the J2000 epoch. |
+
+### new AstroTime(d)
+
+**Creates an `AstroTime` object from a .NET `DateTime` object.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `DateTime` | `d` | The date and time to be converted to AstroTime format. |
+
+### new AstroTime(year, month, day, hour, minute, second)
+
+**Creates an `AstroTime` object from a UTC year, month, day, hour, minute and second.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `int` | `year` | The UTC year value. |
+| `int` | `month` | The UTC month value 1..12. |
+| `int` | `day` | The UTC day of the month 1..31. |
+| `int` | `hour` | The UTC hour value 0..23. |
+| `int` | `minute` | The UTC minute value 0..59. |
+| `int` | `second` | The UTC second value 0..59. |
+
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2206,6 +2381,22 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 
 **A 3D Cartesian vector whose components are expressed in Astronomical Units (AU).**
 
+### constructors
+
+### new AstroVector(x, y, z, t)
+
+**Creates an AstroVector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `x` | A Cartesian x-coordinate expressed in AU. |
+| `double` | `y` | A Cartesian y-coordinate expressed in AU. |
+| `double` | `z` | A Cartesian z-coordinate expressed in AU. |
+| [`AstroTime`](#AstroTime) | `t` | The date and time at which this vector is valid. |
+
+
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `x` | The Cartesian x-coordinate of the vector in AU. |
@@ -2251,6 +2442,8 @@ The fields `ra`, `dec`, and `spin` correspond to the variables
 The field `north` is a unit vector pointing in the direction of the body's north pole.
 It is expressed in the equatorial J2000 system (EQJ).
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `ra` | The J2000 right ascension of the body's north pole direction, in sidereal hours. |
@@ -2294,6 +2487,8 @@ to report which constellation corresponds with a given point in the sky.
 Constellations are defined with respect to the B1875 equatorial system
 per IAU standard. Although `Astronomy.Constellation` requires J2000 equatorial
 coordinates, the struct contains converted B1875 coordinates for reference.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2360,6 +2555,8 @@ visible if the Earth were transparent, but the observer cannot actually see it.
 If `altitude` is positive but less than a few degrees, visibility will be impaired by
 atmospheric interference (sunrise or sunset conditions).
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the event. |
@@ -2390,6 +2587,8 @@ atmospheric interference (sunrise or sunset conditions).
 Coordinates of a celestial body as seen from the center of the Sun (heliocentric),
 oriented with respect to the plane of the Earth's orbit around the Sun (the ecliptic).
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroVector`](#AstroVector) | `vec` | Cartesian ecliptic vector, with components as follows: x: the direction of the equinox along the ecliptic plane. y: in the ecliptic plane 90 degrees prograde from the equinox. z: perpendicular to the ecliptic plane. Positive is north. |
@@ -2404,6 +2603,8 @@ oriented with respect to the plane of the Earth's orbit around the Sun (the ecli
 **Contains information about the visibility of a celestial body at a given date and time.
 See [`Astronomy.Elongation`](#Astronomy.Elongation) for more detailed information about the members of this structure.
 See also [`Astronomy.SearchMaxElongation`](#Astronomy.SearchMaxElongation) for how to search for maximum elongation events.**
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2448,6 +2649,8 @@ Coordinates of a celestial body as seen from the Earth
 (geocentric or topocentric, depending on context),
 oriented with respect to the projection of the Earth's equator onto the sky.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `ra` | Right ascension in sidereal hours. |
@@ -2482,6 +2685,8 @@ onto the daytime side of the Earth at the instant of the eclipse's peak.
 If `kind` has any other value, `latitude` and `longitude` are undefined and should
 not be used.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
@@ -2492,6 +2697,112 @@ not be used.
 
 ---
 
+<a name="GravitySimulator"></a>
+## `class GravitySimulator`
+
+**A simulation of zero or more small bodies moving through the Solar System.**
+
+This class calculates the movement of arbitrary small bodies,
+such as asteroids or comets, that move through the Solar System.
+It does so by calculating the gravitational forces on the small bodies
+from the Sun and planets. The user of this class supplies an enumeration
+of initial positions and velocities for the small bodies.
+Then the class can update the positions and velocities over small time steps.
+
+### constructors
+
+### new GravitySimulator(originBody, time, bodyStates)
+
+**Creates a gravity simulation object.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `originBody` | Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStates` parameter of this function, along with all output vectors returned by [`GravitySimulator.Update`](#GravitySimulator.Update). Most callers will want to provide one of the following: `Body.Sun` for heliocentric coordinates, `Body.SSB` for solar system barycentric coordinates, or `Body.Earth` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. |
+| [`AstroTime`](#AstroTime) | `time` | The initial time at which to start the simulation. |
+| `IEnumerable<`[`StateVector`](#StateVector)`>` | `bodyStates` | An enumeration of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must be exactly equal to `time`, or this constructor will throw an exception. If `bodyStates` is null, the gravity simulator will contain zero small bodies. |
+
+
+### member variables
+
+| Type | Name | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `OriginBody` | The origin of the reference frame. See constructor for more info. |
+
+### properties
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `int` | `NumSmallBodies` | The number of small bodies that are included in this gravity simulation. |
+| [`AstroTime`](#AstroTime) | `Time` | The time represented by the current step of the gravity simulation. |
+
+### member functions
+
+<a name="GravitySimulator.SolarSystemBodyState"></a>
+### GravitySimulator.SolarSystemBodyState(body) &#8658; [`StateVector`](#StateVector)
+
+**Get the position and velocity of a Solar System body included in the simulation.**
+
+In order to simulate the movement of small bodies through the Solar System,
+the simulator needs to calculate the state vectors for the Sun and planets.
+
+If an application wants to know the positions of one or more of the planets
+in addition to the small bodies, this function provides a way to obtain
+their state vectors. This is provided for the sake of efficiency, to avoid
+redundant calculations.
+
+The state vector is returned relative to the position and velocity
+of the `originBody` parameter that was passed to this object's constructor.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune. |
+
+<a name="GravitySimulator.Swap"></a>
+### GravitySimulator.Swap() &#8658; `void`
+
+**Exchange the current time step with the previous time step.**
+
+Sometimes it is helpful to "explore" various times near a given
+simulation time step, while repeatedly returning to the original
+time step. For example, when backdating a position for light travel
+time, the caller may wish to repeatedly try different amounts of
+backdating. When the backdating solver has converged, the caller
+wants to leave the simulation in its original state.
+
+This function allows a single "undo" of a simulation, and does so
+very efficiently.
+
+Usually this function will be called immediately after a matching
+call to [`GravitySimulator.Update`](#GravitySimulator.Update). It has the effect of rolling
+back the most recent update. If called twice in a row, it reverts
+the swap and thus has no net effect.
+
+The constructor initializes the current state and previous
+state to be identical. Both states represent the `time` parameter that was
+passed into the constructor. Therefore, `Swap` will
+have no effect from the caller's point of view when passed a simulator
+that has not yet been updated by a call to [`GravitySimulator.Update`](#GravitySimulator.Update).
+
+<a name="GravitySimulator.Update"></a>
+### GravitySimulator.Update(time, bodyStates) &#8658; `void`
+
+**Advances a gravity simulation by a small time step.**
+
+Updates the simulation of the user-supplied small bodies
+to the time indicated by the `time` parameter.
+Updates the supplied array `bodyStates` of state vectors for the small bodies.
+This array must be the same size as the number of bodies supplied
+to the constructor of this object.
+The positions and velocities in the returned array are referenced
+to the `originBody` that was used to construct this simulator.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | A time that is a small increment away from the current simulation time. It is up to the developer to figure out an appropriate time increment. Depending on the trajectories, a smaller or larger increment may be needed for the desired accuracy. Some experimentation may be needed. Generally, bodies that stay in the outer Solar System and move slowly can use larger time steps. Bodies that pass into the inner Solar System and move faster will need a smaller time step to maintain accuracy. The `time` value may be after or before the current simulation time to move forward or backward in time. |
+| [`StateVector`](#StateVector)`[]` | `bodyStates` | If this array is not null, it must contain exactly the same number of elements as the number of small bodies that were added when this simulator was created. The non-null array receives updated state vectors for the simulated small bodies. If `bodyStates` is null, the simulation is updated but without returning the state vectors. |
+
+---
+
 <a name="HourAngleInfo"></a>
 ## `struct HourAngleInfo`
 
@@ -2499,6 +2810,8 @@ not be used.
 
 Returned by the function [`Astronomy.SearchHourAngle`](#Astronomy.SearchHourAngle) to report information about
 a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2514,6 +2827,8 @@ a celestial body crossing a certain hour angle as seen by a specified topocentri
 
 Returned by the functions [`Astronomy.Illumination`](#Astronomy.Illumination) and [`Astronomy.SearchPeakMagnitude`](#Astronomy.SearchPeakMagnitude)
 to report the visual magnitude and illuminated fraction of a celestial body at a given date and time.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2556,6 +2871,8 @@ the EQJ system (that is, using Earth's equator at the J2000 epoch).
 The positions are expressed in astronomical units (AU),
 and the velocities in AU/day.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`StateVector`](#StateVector) | `io` | The position and velocity of Jupiter's moon Io. |
@@ -2569,6 +2886,8 @@ and the velocities in AU/day.
 ## `struct LibrationInfo`
 
 **Lunar libration angles, returned by [`Astronomy.Libration`](#Astronomy.Libration).**
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2608,6 +2927,8 @@ When an event field is valid, the caller must also check its `altitude` field to
 see whether the Sun is above the horizon at the time indicated by the `time` field.
 See [`EclipseEvent`](#EclipseEvent) for more information.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
@@ -2643,6 +2964,8 @@ phase (expressed in minutes), or 0 if the eclipse never reaches that phase.
 By converting from minutes to days, and subtracting/adding with `peak`, the caller
 may determine the date and time of the beginning/end of each eclipse phase.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of lunar eclipse found. |
@@ -2658,6 +2981,8 @@ may determine the date and time of the beginning/end of each eclipse phase.
 
 **A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.**
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `int` | `quarter` | 0=new moon, 1=first quarter, 2=full moon, 3=third quarter. |
@@ -2672,6 +2997,8 @@ may determine the date and time of the beginning/end of each eclipse phase.
 
 This structure is returned by [`Astronomy.SearchMoonNode`](#Astronomy.SearchMoonNode) and [`Astronomy.NextMoonNode`](#Astronomy.NextMoonNode)
 to report information about the center of the Moon passing through the ecliptic plane.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2701,6 +3028,21 @@ to report information about the center of the Moon passing through the ecliptic 
 This structure is passed to functions that calculate phenomena as observed
 from a particular place on the Earth.
 
+### constructors
+
+### new Observer(latitude, longitude, height)
+
+**Creates an Observer object.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `latitude` | Geographic latitude in degrees north (positive) or south (negative) of the equator. |
+| `double` | `longitude` | Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England. |
+| `double` | `height` | The height above (positive) or below (negative) sea level, expressed in meters. |
+
+
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `latitude` | Geographic latitude in degrees north (positive) or south (negative) of the equator. |
@@ -2726,6 +3068,8 @@ from a particular place on the Earth.
 ## `struct RotationMatrix`
 
 **A rotation matrix that can be used to transform one coordinate system to another.**
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2760,6 +3104,8 @@ See [`Astronomy.Search`](#Astronomy.Search).**
 **The dates and times of changes of season for a given calendar year.
 Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure for a given year.**
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | [`AstroTime`](#AstroTime) | `mar_equinox` | The date and time of the March equinox for the specified year. |
@@ -2773,6 +3119,21 @@ Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure 
 ## `struct Spherical`
 
 **Spherical coordinates: latitude, longitude, distance.**
+
+### constructors
+
+### new Spherical(lat, lon, dist)
+
+**Creates a set of spherical coordinates.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `lat` | The latitude angle: -90..+90 degrees. |
+| `double` | `lon` | The longitude angle: 0..360 degrees. |
+| `double` | `dist` | Distance in AU. |
+
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2790,6 +3151,35 @@ Call [`Astronomy.Seasons`](#Astronomy.Seasons) to calculate this data structure 
 A state vector represents the dynamic state of a point at a given moment.
 It includes the position vector of the point, expressed in Astronomical Units (AU)
 along with the velocity vector of the point, expressed in AU/day.
+
+### constructors
+
+### new StateVector(x, y, z, vx, vy, vz, t)
+
+**Creates an AstroVector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `x` | A position x-coordinate expressed in AU. |
+| `double` | `y` | A position y-coordinate expressed in AU. |
+| `double` | `z` | A position z-coordinate expressed in AU. |
+| `double` | `vx` | A velocity x-component expressed in AU/day. |
+| `double` | `vy` | A velocity y-component expressed in AU/day. |
+| `double` | `vz` | A velocity z-component expressed in AU/day. |
+| [`AstroTime`](#AstroTime) | `t` | The date and time at which this state vector is valid. |
+
+### new StateVector(pos, vel, time)
+
+**Combines a position vector and a velocity vector into a single state vector.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroVector`](#AstroVector) | `pos` | A position vector. |
+| [`AstroVector`](#AstroVector) | `vel` | A velocity vector. |
+| [`AstroTime`](#AstroTime) | `time` | The common time that represents the given position and velocity. |
+
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
@@ -2824,6 +3214,8 @@ Contains horizontal and equatorial coordinates seen by an observer on or near
 the surface of the Earth (a topocentric observer).
 Optionally corrected for atmospheric refraction.
 
+### member variables
+
 | Type | Name | Description |
 | --- | --- | --- |
 | `double` | `azimuth` | Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West. |
@@ -2851,6 +3243,8 @@ The `finish` field reports the last moment when the planet is visible
 against the Sun in its background.
 
 The calculations are performed from the point of view of a geocentric observer.
+
+### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |

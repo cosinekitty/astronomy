@@ -3305,8 +3305,16 @@ class TerseVector {
         public z: number)
         {}
 
+    clone(): TerseVector {
+        return new TerseVector(this.x, this.y, this.z);
+    }
+
     ToAstroVector(t: AstroTime) {
         return new Vector(this.x, this.y, this.z, t);
+    }
+
+    public static zero(): TerseVector {
+        return new TerseVector(0, 0, 0);
     }
 
     quadrature() {
@@ -3348,6 +3356,10 @@ class TerseVector {
             (this.z + other.z) / 2
         );
     }
+
+    neg(): TerseVector {
+        return new TerseVector(-this.x, -this.y, -this.z);
+    }
 }
 
 class body_state_t {
@@ -3356,6 +3368,14 @@ class body_state_t {
         public r: TerseVector,
         public v: TerseVector)
         {}
+
+    clone(): body_state_t {
+        return new body_state_t(this.tt, this.r, this.v);
+    }
+
+    sub(other: body_state_t): body_state_t {
+        return new body_state_t(this.tt, this.r.sub(other.r), this.v.sub(other.v));
+    }
 }
 
 type BodyStateTableEntry = [number, ArrayVector, ArrayVector];
@@ -3454,6 +3474,10 @@ class body_grav_calc_t {
         public v: TerseVector,
         public a: TerseVector)
         {}
+
+    clone(): body_grav_calc_t {
+        return new body_grav_calc_t(this.tt, this.r.clone(), this.v.clone(), this.a.clone());
+    }
 }
 
 class grav_sim_t {
@@ -9171,4 +9195,354 @@ export function LagrangePointFast(
         p = new StateVector(scale*dx, scale*dy, scale*dz, scale*vx, scale*vy, scale*vz, major_state.t);
     }
     return p;
+}
+
+
+/**
+ * @brief A simulation of zero or more small bodies moving through the Solar System.
+ *
+ * This class calculates the movement of arbitrary small bodies,
+ * such as asteroids or comets, that move through the Solar System.
+ * It does so by calculating the gravitational forces on the small bodies
+ * from the Sun and planets. The user of this class supplies a
+ * list of initial positions and velocities for the small bodies.
+ * Then the class can update the positions and velocities over small
+ * time steps.
+ */
+export class GravitySimulator {
+    private originBody: Body;
+    private prev: GravSimEndpoint;
+    private curr: GravSimEndpoint;
+
+    /**
+     * @brief Creates a gravity simulation object.
+     *
+     * @param {Body} originBody
+     *      Specifies the origin of the reference frame.
+     *      All position vectors and velocity vectors will use `originBody`
+     *      as the origin of the coordinate system.
+     *      This origin applies to all the input vectors provided in the
+     *      `bodyStates` parameter of this function, along with all
+     *      output vectors returned by {@link GravitySimulator#Update}.
+     *      Most callers will want to provide one of the following:
+     *      `Body.Sun` for heliocentric coordinates,
+     *      `Body.SSB` for solar system barycentric coordinates,
+     *      or `Body.Earth` for geocentric coordinates. Note that the
+     *      gravity simulator does not correct for light travel time;
+     *      all state vectors are tied to a Newtonian "instantaneous" time.
+     *
+     * @param {FlexibleDateTime} date
+     *      The initial time at which to start the simulation.
+     *
+     * @param {StateVector[]} bodyStates
+     *      An array of zero or more initial state vectors (positions and velocities)
+     *      of the small bodies to be simulated.
+     *      The caller must know the positions and velocities of the small bodies at an initial moment in time.
+     *      Their positions and velocities are expressed with respect to `originBody`, using equatorial
+     *      J2000 orientation (EQJ).
+     *      Positions are expressed in astronomical units (AU).
+     *      Velocities are expressed in AU/day.
+     *      All the times embedded within the state vectors must exactly match `date`,
+     *      or this constructor will throw an exception.
+     */
+    constructor(
+        originBody: Body,
+        date: FlexibleDateTime,
+        bodyStates: StateVector[])
+    {
+        const time = MakeTime(date);
+        this.originBody = originBody;
+
+        // Verify that the state vectors have matching times.
+        for (let b of bodyStates) {
+            if (b.t.tt !== time.tt) {
+                throw 'Inconsistent times in bodyStates';
+            }
+        }
+
+        // Create a stub list that we append to later.
+        // We just need the stub to put into `this.curr`.
+        const smallBodyList: body_grav_calc_t[] = [];
+
+        // Calculate the states of the Sun and planets.
+        const largeBodyDict = GravitySimulator.CalcSolarSystem(time);
+        this.curr = new GravSimEndpoint(time, largeBodyDict, smallBodyList);
+
+        // Convert origin-centric bodyStates vectors into barycentric body_grav_calc_t array.
+        const o = this.InternalBodyState(originBody);
+        for (let b of bodyStates) {
+            const r = new TerseVector(b.x + o.r.x, b.y + o.r.y, b.z + o.r.z);
+            const v = new TerseVector(b.vx + o.v.x, b.vy + o.v.y, b.vz + o.v.z);
+            const a = TerseVector.zero();
+            smallBodyList.push(new body_grav_calc_t(time.tt, r, v, a));
+        }
+
+        // Calculate the net acceleration experienced by the small bodies.
+        this.CalcBodyAccelerations();
+
+        // To prepare for a possible swap operation, duplicate the current state into the previous state.
+        this.prev = this.Duplicate();
+    }
+
+    /**
+     * @brief The body that was selected as the coordinate origin when this simulator was created.
+     */
+    public get OriginBody(): Body {
+        return this.originBody;
+    }
+
+    /**
+     * @brief The time represented by the current step of the gravity simulation.
+     */
+    public get Time(): AstroTime {
+        return this.curr.time;
+    }
+
+    /**
+     * Advances the gravity simulation by a small time step.
+     *
+     * Updates the simulation of the user-supplied small bodies
+     * to the time indicated by the `date` parameter.
+     * Returns an array of state vectors for the simulated bodies.
+     * The array is in the same order as the original array that
+     * was used to construct this simulator object.
+     * The positions and velocities in the returned array are
+     * referenced to the `originBody` that was used to construct
+     * this simulator.
+     *
+     * @param {FlexibleDateTime} date
+     *      A time that is a small increment away from the current simulation time.
+     *      It is up to the developer to figure out an appropriate time increment.
+     *      Depending on the trajectories, a smaller or larger increment
+     *      may be needed for the desired accuracy. Some experimentation may be needed.
+     *      Generally, bodies that stay in the outer Solar System and move slowly can
+     *      use larger time steps. Bodies that pass into the inner Solar System and
+     *      move faster will need a smaller time step to maintain accuracy.
+     *      The `date` value may be after or before the current simulation time
+     *      to move forward or backward in time.
+     *
+     * @return {StateVector[]}
+     *      An array of state vectors, one for each simulated small body.
+     */
+    public Update(date: FlexibleDateTime): StateVector[] {
+        const time = MakeTime(date);
+        const dt = time.tt - this.curr.time.tt;
+        if (dt === 0.0) {
+            // Special case: the time has not changed, so skip the usual physics calculations.
+            // This allows another way for the caller to query the current body states.
+            // It is also necessary to avoid dividing by `dt` if `dt` is zero.
+            // To prepare for a possible swap operation, duplicate the current state into the previous state.
+            this.prev = this.Duplicate();
+        } else {
+            // Exchange the current state with the previous state. Then calculate the new current state.
+            this.Swap();
+
+            // Update the current time.
+            this.curr.time = time;
+
+            // Calculate the positions and velocities of the Sun and planets at the given time.
+            this.curr.gravitators = GravitySimulator.CalcSolarSystem(time);
+
+            // Estimate the positions of the small bodies as if their existing
+            // accelerations apply across the whole time interval.
+            for (let i = 0; i < this.curr.bodies.length; ++i) {
+                const p = this.prev.bodies[i];
+                this.curr.bodies[i].r = UpdatePosition(dt, p.r, p.v, p.a);
+            }
+
+            // Calculate the acceleration experienced by the small bodies at
+            // their respective approximate next locations.
+            this.CalcBodyAccelerations();
+
+            for (let i = 0; i < this.curr.bodies.length; ++i) {
+                // Calculate the average of the acceleration vectors
+                // experienced by the previous body positions and
+                // their estimated next positions.
+                // These become estimates of the mean effective accelerations
+                // over the whole interval.
+                const p = this.prev.bodies[i];
+                const c = this.curr.bodies[i];
+                const acc = p.a.mean(c.a);
+
+                // Refine the estimates of position and velocity at the next time step,
+                // using the mean acceleration as a better approximation of the
+                // continuously changing acceleration acting on each body.
+                c.tt = time.tt;
+                c.r = UpdatePosition(dt, p.r, p.v, acc);
+                c.v = UpdateVelocity(dt, p.v, acc);
+            }
+
+            // Re-calculate accelerations experienced by each body.
+            // These will be needed for the next simulation step (if any).
+            // Also, they will be potentially useful if some day we add
+            // a function to query the acceleration vectors for the bodies.
+            this.CalcBodyAccelerations();
+        }
+
+        // Translate our internal calculations of body positions and velocities
+        // into state vectors that the caller can understand.
+        // We have to convert the internal type body_grav_calc_t to the public type StateVector.
+        // Also convert from barycentric coordinates to coordinates based on the selected origin body.
+        const bodyStates: StateVector[] = [];
+        const ostate = this.InternalBodyState(this.originBody);
+        for (let bcalc of this.curr.bodies) {
+            bodyStates.push(new StateVector(
+                bcalc.r.x - ostate.r.x,
+                bcalc.r.y - ostate.r.y,
+                bcalc.r.z - ostate.r.z,
+                bcalc.v.x - ostate.v.x,
+                bcalc.v.y - ostate.v.y,
+                bcalc.v.z - ostate.v.z,
+                time
+            ));
+        }
+        return bodyStates;
+    }
+
+    /**
+     * Exchange the current time step with the previous time step.
+     *
+     * Sometimes it is helpful to "explore" various times near a given
+     * simulation time step, while repeatedly returning to the original
+     * time step. For example, when backdating a position for light travel
+     * time, the caller may wish to repeatedly try different amounts of
+     * backdating. When the backdating solver has converged, the caller
+     * wants to leave the simulation in its original state.
+     *
+     * This function allows a single "undo" of a simulation, and does so
+     * very efficiently.
+     *
+     * Usually this function will be called immediately after a matching
+     * call to {@link GravitySimulator#Update}. It has the effect of rolling
+     * back the most recent update. If called twice in a row, it reverts
+     * the swap and thus has no net effect.
+     *
+     * The constructor initializes the current state and previous
+     * state to be identical. Both states represent the `time` parameter that was
+     * passed into the constructor. Therefore, `Swap` will
+     * have no effect from the caller's point of view when passed a simulator
+     * that has not yet been updated by a call to {@link GravitySimulator#Update}.
+     */
+    public Swap(): void {
+        const swap = this.curr;
+        this.curr = this.prev;
+        this.prev = swap;
+    }
+
+    /**
+     * Get the position and velocity of a Solar System body included in the simulation.
+     *
+     * In order to simulate the movement of small bodies through the Solar System,
+     * the simulator needs to calculate the state vectors for the Sun and planets.
+     *
+     * If an application wants to know the positions of one or more of the planets
+     * in addition to the small bodies, this function provides a way to obtain
+     * their state vectors. This is provided for the sake of efficiency, to avoid
+     * redundant calculations.
+     *
+     * The state vector is returned relative to the position and velocity
+     * of the `originBody` parameter that was passed to this object's constructor.
+     *
+     * @param {Body} body
+     *      The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune.
+     */
+    public SolarSystemBodyState(body: Body): StateVector {
+        const bstate = this.InternalBodyState(body);
+        const ostate = this.InternalBodyState(this.originBody);
+        return ExportState(bstate.sub(ostate), this.curr.time);
+    }
+
+    private InternalBodyState(body: Body): body_state_t {
+        if (body === Body.SSB)
+            return new body_state_t(this.curr.time.tt, TerseVector.zero(), TerseVector.zero());
+
+        const bstate = this.curr.gravitators[body];
+        if (bstate)
+            return bstate;
+
+        throw `Invalid body: ${body}`;
+    }
+
+    private static CalcSolarSystem(time: AstroTime): BodyStateTable {
+        const dict: BodyStateTable = {};
+
+        // Start with the SSB at zero position and velocity.
+        const ssb = new body_state_t(time.tt, TerseVector.zero(), TerseVector.zero());
+
+        // Calculate the heliocentric position of each planet, and adjust the SSB
+        // based each planet's pull on the Sun.
+        dict[Body.Mercury] = AdjustBarycenterPosVel(ssb, time.tt, Body.Mercury, MERCURY_GM);
+        dict[Body.Venus  ] = AdjustBarycenterPosVel(ssb, time.tt, Body.Venus,   VENUS_GM);
+        dict[Body.Earth  ] = AdjustBarycenterPosVel(ssb, time.tt, Body.Earth,   EARTH_GM + MOON_GM);
+        dict[Body.Mars   ] = AdjustBarycenterPosVel(ssb, time.tt, Body.Mars,    MARS_GM);
+        dict[Body.Jupiter] = AdjustBarycenterPosVel(ssb, time.tt, Body.Jupiter, JUPITER_GM);
+        dict[Body.Saturn ] = AdjustBarycenterPosVel(ssb, time.tt, Body.Saturn,  SATURN_GM);
+        dict[Body.Uranus ] = AdjustBarycenterPosVel(ssb, time.tt, Body.Uranus,  URANUS_GM);
+        dict[Body.Neptune] = AdjustBarycenterPosVel(ssb, time.tt, Body.Neptune, NEPTUNE_GM);
+
+        // Convert planet states from heliocentric to barycentric.
+        for (let body in dict) {
+            dict[body].r.decr(ssb.r);
+            dict[body].v.decr(ssb.v);
+        }
+
+        // Convert heliocentric SSB to barycentric Sun.
+        dict[Body.Sun] = new body_state_t(time.tt, ssb.r.neg(), ssb.v.neg());
+
+        return dict;
+    }
+
+    private CalcBodyAccelerations(): void {
+        // Calculate the gravitational acceleration experienced by the simulated small bodies.
+        for (let b of this.curr.bodies) {
+            b.a = TerseVector.zero();
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Sun    ].r,  SUN_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Mercury].r,  MERCURY_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Venus  ].r,  VENUS_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Earth  ].r,  EARTH_GM + MOON_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Mars   ].r,  MARS_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Jupiter].r,  JUPITER_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Saturn ].r,  SATURN_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Uranus ].r,  URANUS_GM);
+            GravitySimulator.AddAcceleration(b.a, b.r, this.curr.gravitators[Body.Neptune].r,  NEPTUNE_GM);
+        }
+    }
+
+    private static AddAcceleration(acc: TerseVector, smallPos: TerseVector, majorPos: TerseVector, gm: number): void {
+        const dx = majorPos.x - smallPos.x;
+        const dy = majorPos.y - smallPos.y;
+        const dz = majorPos.z - smallPos.z;
+        const r2 = dx*dx + dy*dy + dz*dz;
+        const pull = gm / (r2 * Math.sqrt(r2));
+        acc.x += dx * pull;
+        acc.y += dy * pull;
+        acc.z += dz * pull;
+    }
+
+    private Duplicate(): GravSimEndpoint {
+        // Copy the current state into the previous state, so that both become the same moment in time.
+        const gravitators: BodyStateTable = {};
+        for (let body in this.curr.gravitators) {
+            gravitators[body] = this.curr.gravitators[body].clone();
+        }
+
+        const bodies: body_grav_calc_t[] = [];
+        for (let b of this.curr.bodies) {
+            bodies.push(b.clone());
+        }
+
+        return new GravSimEndpoint(this.curr.time, gravitators, bodies);
+    }
+}
+
+interface BodyStateTable {
+    [body: string]: body_state_t;
+}
+
+class GravSimEndpoint {
+    constructor(
+        public time: AstroTime,
+        public gravitators: BodyStateTable,
+        public bodies: body_grav_calc_t[]
+    ) {}
 }

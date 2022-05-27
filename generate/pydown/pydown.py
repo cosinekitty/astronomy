@@ -38,15 +38,24 @@ def SymbolLink(name):
     m = re.match(r'^\s*([a-zA-Z0-9_]+)\s+or\s+`None`\s*$', name)
     if m:
         return SymbolLink(m.group(1)) + ' or `None`'
+
     if 'a' <= name[0] <= 'z':
         # Assume built-in Python identifier, so do not link
         return '`{0}`'.format(name)
+
+    # Other links look like `StateVector[]`. We need to link to StateVector, but exclude the [].
+    m = re.match(r'^\s*([a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)*)([^a-zA-Z0-9_\s]+)', name)
+    if m:
+        return SymbolLink(m.group(1)) + '`' + m.group(3) + '`'
+
     # [`astro_time_t`](#astro_time_t)
     return '[`{0}`](#{0})'.format(name)
 
 def FixText(s):
     # Expand "#Body" to "[`Body`](#Body)".
-    return re.sub(r'#([A-Z][A-Za-z0-9_]*)', r'[`\1`](#\1)', s)
+    # Tricky: also need to find "#GravitySimulator.Update",
+    # but NOT "#GravitySimulator. Blah blah...".
+    return re.sub(r'#([A-Z][A-Za-z0-9_]*(\.[A-Z][A-Za-z0-9_]*)*)', r'[`\1`](#\1)', s)
 
 class ParmInfo:
     def __init__(self, name, type):
@@ -165,7 +174,7 @@ class DocInfo:
         md += self.Table(self.attributes, 'Attribute')
         md += self.EnumTable()
         if self.returns or self.returnType:
-            md += '### Returns'
+            md += '\n**Returns**'
             if self.returnType:
                 md += ': ' + SymbolLink(self.returnType)
             md += '\n'
@@ -190,6 +199,9 @@ def MdFunction(func, parent=None):
     md = ''
     doc = inspect.getdoc(func)
     if doc:
+        if doc.startswith('Initialize self.'):
+            # Special case: skip trivial constructors that have no documentation.
+            return ''
         sig = inspect.signature(func)
         md += '\n'
         if parent:
@@ -219,14 +231,15 @@ def MdClass(c):
         info = DocInfo(doc)
         md += info.Markdown()
         md += '\n'
-
-        firstMemberFunc = True
+        func_md = ''
+        for name, obj in inspect.getmembers(c):
+            if name == '__init__':
+                func_md += MdFunction(obj, parent=c)
         for name, obj in inspect.getmembers(c):
             if not name.startswith('_'):
-                if firstMemberFunc:
-                    firstMemberFunc = False
-                    md += '#### member functions\n\n'
-                md += MdFunction(obj, parent=c)
+                func_md += MdFunction(obj, parent=c)
+        if func_md:
+            md += '#### member functions\n\n' + func_md
     else:
         Fail('No documentation for class ' + c.__name__)
     return md

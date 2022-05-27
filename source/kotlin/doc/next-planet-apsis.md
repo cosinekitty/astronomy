@@ -6,7 +6,9 @@ fun [nextPlanetApsis](next-planet-apsis.md)(body: [Body](-body/index.md), apsis:
 
 Finds the next planetary perihelion or aphelion event in a series.
 
-This function requires an [ApsisInfo](-apsis-info/index.md) value obtained from a call to [searchPlanetApsis](search-planet-apsis.md) or nextPlanetApsis. Given an aphelion event, this function finds the next perihelion event, and vice versa. See [searchPlanetApsis](search-planet-apsis.md) for more details.
+This function requires an [ApsisInfo](-apsis-info/index.md) value obtained from a call to [searchPlanetApsis](search-planet-apsis.md) or nextPlanetApsis. Given an aphelion event, this function finds the next perihelion event, and vice versa.
+
+See [searchPlanetApsis](search-planet-apsis.md) for more details. See [planetApsidesAfter](planet-apsides-after.md) for convenient iteration of consecutive apsides.
 
 ## Parameters
 

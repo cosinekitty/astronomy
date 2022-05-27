@@ -14,9 +14,9 @@ public class LunarEclipse {
     public static int run(Time startTime) {
         LunarEclipseInfo e = Astronomy.searchLunarEclipse(startTime);
         Stream.iterate(e, x -> Astronomy.nextLunarEclipse(x.getPeak()))
-                .filter(x -> x.getKind() != EclipseKind.Penumbral)
-                .limit(10)
-                .forEach(LunarEclipse::printEclipse);
+            .filter(x -> x.getKind() != EclipseKind.Penumbral)
+            .limit(10)
+            .forEach(LunarEclipse::printEclipse);
         return 0;
     }
 

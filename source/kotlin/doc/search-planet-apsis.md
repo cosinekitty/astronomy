@@ -12,6 +12,8 @@ The closest point is called *perihelion* and the farthest point is called *aphel
 
 To iterate through consecutive alternating perihelion and aphelion events, call searchPlanetApsis once, then use the return value to call [nextPlanetApsis](next-planet-apsis.md). After that, keep feeding the previous return value from nextPlanetApsis into another call of nextPlanetApsis as many times as desired.
 
+See [planetApsidesAfter](planet-apsides-after.md) for convenient iteration of consecutive apsides.
+
 ## Parameters
 
 | | |

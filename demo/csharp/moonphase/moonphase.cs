@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using demo_helper;
 using CosineKitty;
 
@@ -58,13 +59,9 @@ namespace moonphase
             /* Find the next 10 lunar quarter phases. */
             Console.WriteLine();
             Console.WriteLine("The next 10 lunar quarters are:");
-            MoonQuarterInfo mq = Astronomy.SearchMoonQuarter(time);
-            for (int i=0; i < 10; ++i)
-            {
-                if (i > 0)
-                    mq = Astronomy.NextMoonQuarter(mq);
+            foreach (MoonQuarterInfo mq in Astronomy.MoonQuartersAfter(time).Take(10))
                 Console.WriteLine("{0} : {1}", mq.time, QuarterName(mq.quarter));
-            }
+
             return 0;
         }
     }

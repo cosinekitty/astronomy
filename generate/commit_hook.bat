@@ -11,7 +11,7 @@ echo.commit_hook: Repo root = %cd%
 echo.commit_hook: Installing Doxygen.
 md bin
 cd bin
-curl -o doxygen.zip https://www.doxygen.nl/files/doxygen-1.9.3.windows.x64.bin.zip || exit /b 1
+curl -o doxygen.zip https://www.doxygen.nl/files/doxygen-1.9.4.windows.x64.bin.zip || exit /b 1
 7z x doxygen.zip || exit /b 1
 del doxygen.zip
 

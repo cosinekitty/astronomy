@@ -1948,13 +1948,18 @@ def VerifyState(func, stats, filename, lnum, time, pos, vel, r_thresh, v_thresh)
     return 0
 
 
-def VerifyStateBody(func, filename, r_thresh, v_thresh):
+class JplStateRecord:
+    def __init__(self, lnum, state):
+        self.lnum = lnum
+        self.state = state
+
+
+def JplHorizonsStateVectors(filename):
+    stateList = []
     with open(filename, 'rt') as infile:
         lnum = 0
         part = 0
-        count = 0
         found_begin = False
-        stats = _bary_stats_t()
         for line in infile:
             line = line.rstrip()
             lnum += 1
@@ -1972,22 +1977,32 @@ def VerifyStateBody(func, filename, r_thresh, v_thresh):
                     # X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
                     match = re.match(r'\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)', line)
                     if not match:
-                        print('PY VerifyStateBody({} line {}): cannot parse position vector.'.format(filename, lnum))
+                        print('PY JplHorizonsStateVectors({} line {}): cannot parse position vector.'.format(filename, lnum))
                         return 1
-                    pos = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
+                    rx, ry, rz = float(match.group(1)), float(match.group(2)), float(match.group(3))
                 else:   # part == 2
                     # VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
                     match = re.match(r'\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)', line)
                     if not match:
-                        print('PY VerifyStateBody({} line {}): cannot parse velocity vector.'.format(filename, lnum))
+                        print('PY JplHorizonsStateVectors({} line {}): cannot parse velocity vector.'.format(filename, lnum))
                         return 1
-                    vel = [ float(match.group(1)), float(match.group(2)), float(match.group(3)) ]
-                    if VerifyState(func, stats, filename, lnum, time, pos, vel, r_thresh, v_thresh):
-                        print('PY VerifyStateBody({} line {}): FAILED VERIFICATION.'.format(filename, lnum))
-                        return 1
-                    count += 1
+                    vx, vy, vz = float(match.group(1)), float(match.group(2)), float(match.group(3))
+                    yield JplStateRecord(lnum, astronomy.StateVector(rx, ry, rz, vx, vy, vz, time))
                 part = (part + 1) % 3
-        Debug('PY VerifyStateBody({}): PASS - Tested {} cases. max rdiff={:0.3e}, vdiff={:0.3e}'.format(filename, count, stats.max_rdiff, stats.max_vdiff))
+
+
+def VerifyStateBody(func, filename, r_thresh, v_thresh):
+    stats = _bary_stats_t()
+    count = 0
+    for rec in JplHorizonsStateVectors(filename):
+        time = rec.state.t
+        pos = [rec.state.x, rec.state.y, rec.state.z]
+        vel = [rec.state.vx, rec.state.vy, rec.state.vz]
+        if VerifyState(func, stats, filename, rec.lnum, time, pos, vel, r_thresh, v_thresh):
+            print('PY VerifyStateBody({} line {}): FAILED VERIFICATION.'.format(filename, rec.lnum))
+            return 1
+        count += 1
+    Debug('PY VerifyStateBody({}): PASS - Tested {} cases. max rdiff={:0.3e}, vdiff={:0.3e}'.format(filename, count, stats.max_rdiff, stats.max_vdiff))
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -2508,6 +2523,151 @@ def Repr():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def GravSimTest():
+    Debug("")
+
+    if 0 != GravSimEmpty("barystate/Sun.txt",      astronomy.Body.SSB, astronomy.Body.Sun,      0.0269, 1.9635): return 1
+    if 0 != GravSimEmpty("barystate/Mercury.txt",  astronomy.Body.SSB, astronomy.Body.Mercury,  0.5725, 0.9332): return 1
+    if 0 != GravSimEmpty("barystate/Venus.txt",    astronomy.Body.SSB, astronomy.Body.Venus,    0.1433, 0.1458): return 1
+    if 0 != GravSimEmpty("barystate/Earth.txt",    astronomy.Body.SSB, astronomy.Body.Earth,    0.0651, 0.2098): return 1
+    if 0 != GravSimEmpty("barystate/Mars.txt",     astronomy.Body.SSB, astronomy.Body.Mars,     0.1150, 0.1896): return 1
+    if 0 != GravSimEmpty("barystate/Jupiter.txt",  astronomy.Body.SSB, astronomy.Body.Jupiter,  0.2546, 0.8831): return 1
+    if 0 != GravSimEmpty("barystate/Saturn.txt",   astronomy.Body.SSB, astronomy.Body.Saturn,   0.3660, 1.0818): return 1
+    if 0 != GravSimEmpty("barystate/Uranus.txt",   astronomy.Body.SSB, astronomy.Body.Uranus,   0.3107, 0.9321): return 1
+    if 0 != GravSimEmpty("barystate/Neptune.txt",  astronomy.Body.SSB, astronomy.Body.Neptune,  0.3382, 1.5586): return 1
+    if 0 != GravSimEmpty("heliostate/Mercury.txt", astronomy.Body.Sun, astronomy.Body.Mercury,  0.5087, 0.9473): return 1
+    if 0 != GravSimEmpty("heliostate/Venus.txt",   astronomy.Body.Sun, astronomy.Body.Venus,    0.1214, 0.1543): return 1
+    if 0 != GravSimEmpty("heliostate/Earth.txt",   astronomy.Body.Sun, astronomy.Body.Earth,    0.0508, 0.2099): return 1
+    if 0 != GravSimEmpty("heliostate/Mars.txt",    astronomy.Body.Sun, astronomy.Body.Mars,     0.1085, 0.1927): return 1
+    if 0 != GravSimEmpty("heliostate/Jupiter.txt", astronomy.Body.Sun, astronomy.Body.Jupiter,  0.2564, 0.8805): return 1
+    if 0 != GravSimEmpty("heliostate/Saturn.txt",  astronomy.Body.Sun, astronomy.Body.Saturn,   0.3664, 1.0826): return 1
+    if 0 != GravSimEmpty("heliostate/Uranus.txt",  astronomy.Body.Sun, astronomy.Body.Uranus,   0.3106, 0.9322): return 1
+    if 0 != GravSimEmpty("heliostate/Neptune.txt", astronomy.Body.Sun, astronomy.Body.Neptune,  0.3381, 1.5584): return 1
+
+    Debug("")
+    nsteps = 20
+
+    if 0 != GravSimFile("barystate/Ceres.txt",    astronomy.Body.SSB,   nsteps, 0.6640, 0.6226): return 1
+    if 0 != GravSimFile("barystate/Pallas.txt",   astronomy.Body.SSB,   nsteps, 0.4687, 0.3474): return 1
+    if 0 != GravSimFile("barystate/Vesta.txt",    astronomy.Body.SSB,   nsteps, 0.5806, 0.5462): return 1
+    if 0 != GravSimFile("barystate/Juno.txt",     astronomy.Body.SSB,   nsteps, 0.6760, 0.5750): return 1
+    if 0 != GravSimFile("barystate/Bennu.txt",    astronomy.Body.SSB,   nsteps, 3.7444, 2.6581): return 1
+    if 0 != GravSimFile("barystate/Halley.txt",   astronomy.Body.SSB,   nsteps, 0.0539, 0.0825): return 1
+    if 0 != GravSimFile("heliostate/Ceres.txt",   astronomy.Body.Sun,   nsteps, 0.0445, 0.0355): return 1
+    if 0 != GravSimFile("heliostate/Pallas.txt",  astronomy.Body.Sun,   nsteps, 0.1062, 0.0854): return 1
+    if 0 != GravSimFile("heliostate/Vesta.txt",   astronomy.Body.Sun,   nsteps, 0.1432, 0.1308): return 1
+    if 0 != GravSimFile("heliostate/Juno.txt",    astronomy.Body.Sun,   nsteps, 0.1554, 0.1328): return 1
+    if 0 != GravSimFile("geostate/Ceres.txt",     astronomy.Body.Earth, nsteps, 6.5689, 6.4797): return 1
+    if 0 != GravSimFile("geostate/Pallas.txt",    astronomy.Body.Earth, nsteps, 9.3288, 7.3533): return 1
+    if 0 != GravSimFile("geostate/Vesta.txt",     astronomy.Body.Earth, nsteps, 3.2980, 3.8863): return 1
+    if 0 != GravSimFile("geostate/Juno.txt",      astronomy.Body.Earth, nsteps, 6.0962, 7.7147): return 1
+
+    Debug("")
+    print("PY GravSimTest: PASS")
+
+    return 0
+
+
+def GravSimEmpty(filename, origin, body, rthresh, vthresh):
+    max_rdiff = 0.0
+    max_vdiff = 0.0
+    sim = None
+    for rec in JplHorizonsStateVectors(filename):
+        if sim is None:
+            sim = astronomy.GravitySimulator(origin, rec.state.t, [])
+        sim.Update(rec.state.t)
+        calc = sim.SolarSystemBodyState(body)
+        if origin == astronomy.Body.SSB and body == astronomy.Body.Sun:
+            rdiff = SsbArcminPosError(rec.state, calc)
+        else:
+            rdiff = ArcminPosError(rec.state, calc)
+        if rdiff > rthresh:
+            print('PY GravSimEmpty({} line {}): excessive position error = {} arcmin.'.format(filename, rec.lnum, rdiff))
+            return 1
+        if rdiff > max_rdiff:
+            max_rdiff = rdiff
+
+        vdiff = ArcminVelError(rec.state, calc)
+        if vdiff > vthresh:
+            print('PY GravSimEmpty({} line {}): excessive velocity error = {} arcmin.'.format(filename, rec.lnum, vdiff))
+            return 1
+        if vdiff > max_vdiff:
+            max_vdiff = vdiff
+    Debug('PY GravSimEmpty({:22s}): PASS - max pos error = {:0.4f} arcmin, max vel error = {:0.4f} arcmin.'.format(filename, max_rdiff, max_vdiff))
+    return 0
+
+
+def GravSimFile(filename, originBody, nsteps, rthresh, vthresh):
+    sim = None
+    max_rdiff = 0.0
+    max_vdiff = 0.0
+    for rec in JplHorizonsStateVectors(filename):
+        if sim == None:
+            sim = astronomy.GravitySimulator(originBody, rec.state.t, [rec.state])
+            time = rec.state.t
+            smallBodyArray = sim.Update(time)
+        else:
+            tt1 = prev.state.t.tt
+            tt2 = rec.state.t.tt
+            dt = (tt2 - tt1) / nsteps
+            for k in range(1, nsteps+1):
+                time = astronomy.Time.FromTerrestrialTime(tt1 + k*dt)
+                smallBodyArray = sim.Update(time)
+                if len(smallBodyArray) != 1:
+                    print('PY GravSimFile({} line {}): unexpected smallBodyArray.length = {}'.format(filename, rec.lnum, len(smallBodyArray)))
+                    return 1
+                if time.tt != sim.Time().tt:
+                    print('PY GravSimFile({} line {}): expected {} but simulator reports {}'.format(filename, rec.lnum, time, sim.Time()))
+                    return 1
+        rdiff = ArcminPosError(rec.state, smallBodyArray[0])
+        if rdiff > rthresh:
+            print('PY GravSimFile({} line {}): excessive position error = {}'.format(filename, rec.lnum, rdiff))
+            return 1
+        if rdiff > max_rdiff:
+            max_rdiff = rdiff
+        vdiff = ArcminVelError(rec.state, smallBodyArray[0])
+        if vdiff > vthresh:
+            print('PY GravSimFile({} line {}): excessive position error = {}'.format(filename, rec.lnum, vdiff))
+            return 1
+        if vdiff > max_vdiff:
+            max_vdiff = vdiff
+        prev = rec
+    Debug('PY GravSimFile({:22s}): PASS - max pos error = {:0.4f} arcmin, max vel error = {:0.4f} arcmin.'.format(filename, max_rdiff, max_vdiff))
+    return 0
+
+
+def SsbArcminPosError(correct, calc):
+    # Scale the SSB based on 1 AU, not on its absolute magnitude, which can become very close to zero.
+    dx = calc.x - correct.x
+    dy = calc.y - correct.y
+    dz = calc.z - correct.z
+    diffSquared = dx*dx + dy*dy + dz*dz
+    radians = sqrt(diffSquared)
+    return 60.0 * math.degrees(radians)
+
+
+def ArcminPosError(correct, calc):
+    dx = calc.x - correct.x
+    dy = calc.y - correct.y
+    dz = calc.z - correct.z
+    diffSquared = dx*dx + dy*dy + dz*dz
+    magSquared = correct.x*correct.x + correct.y*correct.y + correct.z*correct.z
+    radians = sqrt(diffSquared / magSquared)
+    return 60.0 * math.degrees(radians)
+
+
+def ArcminVelError(correct, calc):
+    dx = calc.vx - correct.vx
+    dy = calc.vy - correct.vy
+    dz = calc.vz - correct.vz
+    diffSquared = dx*dx + dy*dy + dz*dz
+    magSquared = correct.vx*correct.vx + correct.vy*correct.vy + correct.vz*correct.vz
+    radians = sqrt(diffSquared / magSquared)
+    return 60.0 * math.degrees(radians)
+
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'axis':                     Axis,
@@ -2516,6 +2676,7 @@ UnitTests = {
     'elongation':               Elongation,
     'geoid':                    Geoid,
     'global_solar_eclipse':     GlobalSolarEclipse,
+    'gravsim':                  GravSimTest,
     'heliostate':               HelioState,
     'issue_103':                Issue103,
     'jupiter_moons':            JupiterMoons,

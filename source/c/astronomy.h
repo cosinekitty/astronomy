@@ -256,7 +256,8 @@ typedef enum
     ASTRO_INVALID_PARAMETER,        /**< A parameter value passed to a function was not valid. */
     ASTRO_FAIL_APSIS,               /**< Special-case logic for finding Neptune/Pluto apsis failed. */
     ASTRO_BUFFER_TOO_SMALL,         /**< A provided buffer's size is too small to receive the requested data. */
-    ASTRO_OUT_OF_MEMORY             /**< An attempt to allocate memory failed. */
+    ASTRO_OUT_OF_MEMORY,            /**< An attempt to allocate memory failed. */
+    ASTRO_INCONSISTENT_TIMES        /**< The provided initial state vectors did not have matching times. */
 }
 astro_status_t;
 
@@ -1093,6 +1094,16 @@ typedef struct
 astro_node_event_t;
 
 
+/**
+ * @brief A data type used for managing simulation of the gravitational forces on a small body.
+ *
+ * This is an opaque data type used to hold the internal state of
+ * a numeric integrator used to calculate the trajectory of a small
+ * body moving through the Solar System.
+ */
+typedef struct astro_grav_sim_s astro_grav_sim_t;
+
+
 /*---------- functions ----------*/
 
 void Astronomy_Reset(void);
@@ -1275,6 +1286,32 @@ double Astronomy_Refraction(astro_refraction_t refraction, double altitude);
 double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude);
 
 astro_constellation_t Astronomy_Constellation(double ra, double dec);
+
+astro_status_t Astronomy_GravSimInit(
+    astro_grav_sim_t **simOut,
+    astro_body_t originBody,
+    astro_time_t time,
+    int numBodies,
+    const astro_state_vector_t *bodyStateArray
+);
+
+astro_status_t Astronomy_GravSimUpdate(
+    astro_grav_sim_t *sim,
+    astro_time_t time,
+    int numBodies,
+    astro_state_vector_t *bodyStateArray
+);
+
+astro_state_vector_t Astronomy_GravSimBodyState(
+    astro_grav_sim_t *sim,
+    astro_body_t body
+);
+
+astro_time_t Astronomy_GravSimTime(astro_grav_sim_t *sim);
+int Astronomy_GravSimNumBodies(astro_grav_sim_t *sim);
+astro_body_t Astronomy_GravSimOrigin(astro_grav_sim_t *sim);
+void Astronomy_GravSimSwap(astro_grav_sim_t *sim);
+void Astronomy_GravSimFree(astro_grav_sim_t *sim);
 
 #ifdef __cplusplus
 }

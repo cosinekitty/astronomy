@@ -693,6 +693,24 @@ internal data class TerseVector(var x: Double, var y: Double, var z: Double) {
         z = (1.0 - ramp)*z + ramp*other.z
     }
 
+    fun setToZero() {
+        x = 0.0
+        y = 0.0
+        z = 0.0
+    }
+
+    fun negate() {
+        x = -x
+        y = -y
+        z = -z
+    }
+
+    fun copyFrom(other: TerseVector) {
+        x = other.x
+        y = other.y
+        z = other.z
+    }
+
     companion object {
         @JvmStatic
         fun zero() = TerseVector(0.0, 0.0, 0.0)
@@ -2235,6 +2253,8 @@ internal fun planetTransitBoundary(body: Body, planetRadiusKm: Double, t1: Time,
  * then keep calling [nextLunarEclipse] as many times as desired,
  * passing in the `center` value returned from the previous call.
  *
+ * See [lunarEclipsesAfter] for convenient iteration of consecutive lunar eclipses.
+ *
  * @param startTime
  * The date and time for starting the search for a lunar eclipse.
  *
@@ -2297,6 +2317,8 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
  * previous call to `searchLunarEclipse` or `nextLunarEclipse`
  * to find the next lunar eclipse.
  *
+ * See [lunarEclipsesAfter] for convenient iteration of consecutive lunar eclipses.
+ *
  * @param prevEclipseTime
  * A time near a full moon. Lunar eclipse search will start at the next full moon.
  *
@@ -2305,6 +2327,22 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
  */
 fun nextLunarEclipse(prevEclipseTime: Time) =
     searchLunarEclipse(prevEclipseTime.addDays(10.0))
+
+
+/**
+ * Enumerates a series of consecutive lunar eclipses that occur after a given time.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive lunar eclipses starting at a given time.
+ *
+ * This is a convenience wrapper around [searchLunarEclipse] and [nextLunarEclipse].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of lunar eclipses.
+ */
+fun lunarEclipsesAfter(startTime: Time): Sequence<LunarEclipseInfo> =
+    generateSequence(searchLunarEclipse(startTime)) { nextLunarEclipse(it.peak) }
+
 
 internal fun moonEclipticLatitudeDegrees(time: Time) = eclipticGeoMoon(time).lat
 
@@ -2409,6 +2447,8 @@ internal fun geoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
  * then keep calling [nextGlobalSolarEclipse] as many times as desired,
  * passing in the `peak` value returned from the previous call.
  *
+ * See [globalSolarEclipsesAfter] for convenient iteration of consecutive eclipses.
+ *
  * @param startTime
  * The date and time for starting the search for a solar eclipse.
  *
@@ -2451,6 +2491,8 @@ fun searchGlobalSolarEclipse(startTime: Time): GlobalSolarEclipseInfo {
  * previous call to `searchGlobalSolarEclipse` or `nextGlobalSolarEclipse`
  * to find the next solar eclipse.
  *
+ * See [globalSolarEclipsesAfter] for convenient iteration of consecutive eclipses.
+ *
  * @param prevEclipseTime
  * A date and time near a new moon. Solar eclipse search will start at the next new moon.
  *
@@ -2458,6 +2500,20 @@ fun searchGlobalSolarEclipse(startTime: Time): GlobalSolarEclipseInfo {
  */
 fun nextGlobalSolarEclipse(prevEclipseTime: Time) =
     searchGlobalSolarEclipse(prevEclipseTime.addDays(10.0))
+
+
+/**
+ * Enumerates a series of consecutive global solar eclipses that occur after a given time.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive global solar eclipses starting at a given time.
+ * This is a convenience wrapper around [searchGlobalSolarEclipse] and [nextGlobalSolarEclipse].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of global solar eclipses.
+ */
+fun globalSolarEclipsesAfter(startTime: Time): Sequence<GlobalSolarEclipseInfo> =
+    generateSequence(searchGlobalSolarEclipse(startTime)) { nextGlobalSolarEclipse(it.peak) }
 
 
 /**
@@ -2474,6 +2530,8 @@ fun nextGlobalSolarEclipse(prevEclipseTime: Time) =
  * IMPORTANT: An eclipse reported by this function might be partly or
  * completely invisible to the observer due to the time of day.
  * See [LocalSolarEclipseInfo] for more information about this topic.
+ *
+ * See [localSolarEclipsesAfter] for convenient iteration of consecutive eclipses.
  *
  * @param startTime
  * The date and time for starting the search for a solar eclipse.
@@ -2571,6 +2629,8 @@ internal fun calcEvent(observer: Observer, time: Time): EclipseEvent {
  * previous call to `searchLocalSolarEclipse` or `nextLocalSolarEclipse`
  * to find the next solar eclipse.
  *
+ * See [localSolarEclipsesAfter] for convenient iteration of consecutive eclipses.
+ *
  * @param prevEclipseTime
  * A date and time near a new moon. Solar eclipse search will start at the next new moon.
  *
@@ -2581,6 +2641,23 @@ internal fun calcEvent(observer: Observer, time: Time): EclipseEvent {
  */
 fun nextLocalSolarEclipse(prevEclipseTime: Time, observer: Observer) =
     searchLocalSolarEclipse(prevEclipseTime.addDays(10.0), observer)
+
+
+/**
+ * Enumerates a series of consecutive local solar eclipses that occur after a given time.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive local solar eclipses starting at a given time.
+ * This is a convenience wrapper around [searchLocalSolarEclipse] and [nextLocalSolarEclipse].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of local solar eclipses.
+ *
+ * @param observer
+ * The geographic location of the observer.
+ */
+fun localSolarEclipsesAfter(startTime: Time, observer: Observer): Sequence<LocalSolarEclipseInfo> =
+    generateSequence(searchLocalSolarEclipse(startTime, observer)) { nextLocalSolarEclipse(it.peak.time, observer) }
 
 
 /**
@@ -2869,14 +2946,28 @@ private fun vsopDerivCalc(formula: VsopFormula, t: Double): Double {
 }
 
 internal class BodyState(
-    val tt: Double,
+    var tt: Double,
     val r: TerseVector,
     val v: TerseVector
 ) {
+    fun increment(other: BodyState) {
+        r.increment(other.r)
+        v.increment(other.v)
+    }
+
     fun decrement(other: BodyState) {
         r.decrement(other.r)
         v.decrement(other.v)
     }
+
+    fun copyFrom(other: BodyState) {
+        tt = other.tt
+        r.copyFrom(other.r)
+        v.copyFrom(other.v)
+    }
+
+    operator fun minus(other: BodyState) =
+        BodyState(tt, r - other.r, v - other.v)
 }
 
 
@@ -2884,6 +2975,14 @@ private fun exportState(bodyState: BodyState, time: Time) =
     StateVector(
         bodyState.r.x,  bodyState.r.y,  bodyState.r.z,
         bodyState.v.x,  bodyState.v.y,  bodyState.v.z,
+        time
+    )
+
+
+private fun exportGravCalc(calc: BodyGravCalc, time: Time) =
+    StateVector(
+        calc.r.x, calc.r.y, calc.r.z,
+        calc.v.x, calc.v.y, calc.v.z,
         time
     )
 
@@ -3160,11 +3259,18 @@ private class MoonContext(time: Time) {
 // Pluto/SSB gravitation simulator
 
 private class BodyGravCalc(
-    val tt: Double,         // J2000 terrestrial time [days]
-    val r: TerseVector,     // position [au]
-    val v: TerseVector,     // velocity [au/day]
-    val a: TerseVector      // acceleration [au/day]
-)
+    var tt: Double,         // J2000 terrestrial time [days]
+    var r: TerseVector,     // position [au]
+    var v: TerseVector,     // velocity [au/day]
+    var a: TerseVector      // acceleration [au/day]
+) {
+    fun copyFrom(other: BodyGravCalc) {
+        tt = other.tt
+        r.copyFrom(other.r)
+        v.copyFrom(other.v)
+        a.copyFrom(other.a)
+    }
+}
 
 private class MajorBodies(
     val sun:        BodyState,
@@ -5108,6 +5214,8 @@ fun searchRelativeLongitude(body: Body, targetRelativeLongitude: Double, startTi
  * so that the silhouette of the planet is visible against the Sun in the background.
  * To continue the search, pass the `finish` time in the returned object to [nextTransit].
  *
+ * See [transitsAfter] for convenient iteration of consecutive transits.
+ *
  * @param body
  * The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
  *
@@ -5168,6 +5276,8 @@ fun searchTransit(body: Body, startTime: Time): TransitInfo {
  * this function finds the next transit after that.
  * Keep calling this function as many times as you want to keep finding more transits.
  *
+ * See [transitsAfter] for convenient iteration of consecutive transits.
+ *
  * @param body
  * The planet whose transit is to be found. Must be [Body.Mercury] or [Body.Venus].
  *
@@ -5176,6 +5286,25 @@ fun searchTransit(body: Body, startTime: Time): TransitInfo {
  */
 fun nextTransit(body: Body, prevTransitTime: Time) =
     searchTransit(body, prevTransitTime.addDays(100.0))
+
+
+/**
+ * Enumerates a series of consecutive transits of Mercury or Venus.
+ *
+ * This function enables iteration through a series of consecutive
+ * transits of Mercury or Venus that occur after a specified time.
+ *
+ * This is a convenience wrapper around [searchTransit] and [nextTransit].
+ *
+ * @param body
+ * The planet for which to enumerate transits. Must be [Body.Mercury] or [Body.Venus].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of transits.
+ */
+fun transitsAfter(body: Body, startTime: Time): Sequence<TransitInfo> =
+    generateSequence(searchTransit(body, startTime)) { nextTransit(body, it.finish) }
+
 
 
 /**
@@ -5669,6 +5798,8 @@ fun searchMoonPhase(targetLon: Double, startTime: Time, limitDays: Double): Time
  * To continue iterating through consecutive lunar quarters, call this function once,
  * followed by calls to #NextMoonQuarter as many times as desired.
  *
+ * See [moonQuartersAfter] for convenient iteration of consecutive quarter phases.
+ *
  * @param startTime
  * The date and time at which to start the search.
  *
@@ -5691,6 +5822,8 @@ fun searchMoonQuarter(startTime: Time): MoonQuarterInfo {
  * This function finds the next consecutive moon quarter event after
  * the one passed in as the parameter `mq`.
  *
+ * See [moonQuartersAfter] for convenient iteration of consecutive quarter phases.
+ *
  * @param mq
  * The previous moon quarter found by a call to [searchMoonQuarter] or `nextMoonQuarter`.
  *
@@ -5709,6 +5842,20 @@ fun nextMoonQuarter(mq: MoonQuarterInfo): MoonQuarterInfo {
         throw InternalError("Expected to find next quarter $expected, but found ${nextMoonQuarter.quarter}")
     return nextMoonQuarter
 }
+
+/**
+ * Enumerates a series of consecutive moon quarter phase events.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive lunar quarter phases starting at a given time.
+ * This is a convenience wrapper around [searchMoonQuarter] and [nextMoonQuarter].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of quarter phases.
+ */
+fun moonQuartersAfter(startTime: Time): Sequence<MoonQuarterInfo> =
+    generateSequence(searchMoonQuarter(startTime)) { nextMoonQuarter(it) }
+
 
 /**
  * Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
@@ -6055,6 +6202,8 @@ internal fun moonRadialSpeed(time: Time): Double {
  * keep feeding the previous return value from `Astronomy.NextLunarApsis` into another
  * call of `Astronomy.NextLunarApsis` as many times as desired.
  *
+ * See [lunarApsidesAfter] for convenient iteration of consecutive lunar apsides.
+ *
  * @param startTime
  * The date and time at which to start searching for the next perigee or apogee.
  */
@@ -6115,9 +6264,10 @@ fun searchLunarApsis(startTime: Time): ApsisInfo {
 /**
  * Finds the next lunar perigee or apogee event in a series.
  *
- * Finds the next consecutive time the Moon is closest
- * or farthest from the Earth in its orbit.
+ * Finds the next consecutive time the Moon is closest or farthest from the Earth in its orbit.
+ *
  * See [searchLunarApsis] for more details.
+ * See [lunarApsidesAfter] for convenient iteration of consecutive lunar apsides.
  *
  * @param apsis
  * An [ApsisInfo] value obtained from a call to [searchLunarApsis] or [nextLunarApsis].
@@ -6129,6 +6279,20 @@ fun nextLunarApsis(apsis: ApsisInfo): ApsisInfo {
         throw InternalError("Found ${next.kind} for two consecutive apsis events: ${apsis.time} and ${next.time}.")
     return next
 }
+
+
+/**
+ * Enumerates a series of consecutive lunar apsides that occur after a given time.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive lunar perigees/apogees starting at a given time.
+ * This is a convenience wrapper around [searchLunarApsis] and [nextLunarApsis].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of lunar apsides.
+ */
+fun lunarApsidesAfter(startTime: Time): Sequence<ApsisInfo> =
+    generateSequence(searchLunarApsis(startTime)) { nextLunarApsis(it) }
 
 
 /**
@@ -7031,6 +7195,8 @@ private const val moonNodeStepDays = 10.0     // a safe number of days to step w
  * Call `searchMoonNode` to find the first of a series of nodes.
  * Then call [nextMoonNode] to find as many more consecutive nodes as desired.
  *
+ * See [moonNodesAfter] for convenient iteration of consecutive nodes.
+ *
  * @param startTime
  * The date and time for starting the search for an ascending or descending node of the Moon.
  */
@@ -7070,6 +7236,8 @@ fun searchMoonNode(startTime: Time): NodeEventInfo {
  * Call [searchMoonNode] to find the first of a series of nodes.
  * Then call `nextMoonNode` to find as many more consecutive nodes as desired.
  *
+ * See [moonNodesAfter] for convenient iteration of consecutive nodes.
+ *
  * @param prevNode
  * The previous node found from calling [searchMoonNode] or `nextMoonNode`.
  */
@@ -7080,6 +7248,21 @@ fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
         throw InternalError("Invalid repeated moon node kind: ${node.kind}")
     return node
 }
+
+
+/**
+ * Enumerates a series of consecutive ascending/descending nodes of the Moon.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive lunar nodes starting at a given time.
+ * This is a convenience wrapper around [searchMoonNode] and [nextMoonNode].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of ascending/descending nodes of the Moon.
+ */
+fun moonNodesAfter(startTime: Time): Sequence<NodeEventInfo> =
+    generateSequence(searchMoonNode(startTime)) { nextMoonNode(it) }
+
 
 
 /**
@@ -7098,6 +7281,8 @@ fun nextMoonNode(prevNode: NodeEventInfo): NodeEventInfo {
  * [nextPlanetApsis]. After that, keep feeding the previous return value
  * from `nextPlanetApsis` into another call of `nextPlanetApsis`
  * as many times as desired.
+ *
+ * See [planetApsidesAfter] for convenient iteration of consecutive apsides.
  *
  * @param body
  * The planet for which to find the next perihelion/aphelion event.
@@ -7166,7 +7351,9 @@ fun searchPlanetApsis(body: Body, startTime: Time): ApsisInfo {
  * This function requires an [ApsisInfo] value obtained from a call
  * to [searchPlanetApsis] or `nextPlanetApsis`.
  * Given an aphelion event, this function finds the next perihelion event, and vice versa.
+ *
  * See [searchPlanetApsis] for more details.
+ * See [planetApsidesAfter] for convenient iteration of consecutive apsides.
  *
  * @param body
  * The planet for which to find the next perihelion/aphelion event.
@@ -7185,6 +7372,25 @@ fun nextPlanetApsis(body: Body, apsis: ApsisInfo): ApsisInfo {
         throw InternalError("Found ${next.kind} twice in a row.")
     return next
 }
+
+
+/**
+ * Enumerates a series of consecutive planetary perihelia/aphelia events.
+ *
+ * This function enables iteration through an unlimited number
+ * of consecutive planetary apsides.
+ * This is a convenience wrapper around [searchPlanetApsis] and [nextPlanetApsis].
+ *
+ * @param body
+ * The planet for which to find a series of perihelia/aphelia events.
+ * Not allowed to be [Body.Sun] or [Body.Moon].
+ *
+ * @param startTime
+ * The date and time for starting the search for a series of apsides.
+ */
+fun planetApsidesAfter(body: Body, startTime: Time): Sequence<ApsisInfo> =
+    generateSequence(searchPlanetApsis(body, startTime)) { nextPlanetApsis(body, it) }
+
 
 
 internal fun planetOrbitalPeriod(body: Body): Double =
@@ -7642,6 +7848,383 @@ fun constellation(ra: Double, dec: Double): ConstellationInfo {
     // This should never happen! If it does, please report to: https://github.com/cosinekitty/astronomy/issues
     throw InternalError("Unable to find constellation for coordinates RA=$ra, DEC=$dec")
 }
+
+//=======================================================================================
+// Generic gravity simulator
+
+/**
+ * A simulation of zero or more small bodies moving through the Solar System.
+ *
+ * This class calculates the movement of arbitrary small bodies,
+ * such as asteroids or comets, that move through the Solar System.
+ * It does so by calculating the gravitational forces on the bodies
+ * from the Sun and planets. The user of this class supplies a
+ * list of initial positions and velocities for the small bodies.
+ * Then the class can update the positions and velocities over small
+ * time steps. The gravity simulator also provides access to the
+ * positions and velocities of the Sun and planets used in the simulation.
+ */
+class GravitySimulator {
+    /**
+     * The origin of the reference frame. See constructor for more info.
+     */
+    val originBody: Body
+
+    private var prev: GravSimEndpoint;
+    private var curr: GravSimEndpoint;
+
+    /**
+     * Creates a gravity simulation object.
+     *
+     * @param originBody
+     * Specifies the origin of the reference frame.
+     * All position vectors and velocity vectors will use `originBody`
+     * as the origin of the coordinate system.
+     * This origin applies to all the input vectors provided in the
+     * `bodyStates` parameter of this function, along with all
+     * output vectors returned by [GravitySimulator.update].
+     * Most callers will want to provide one of the following:
+     * [Body.Sun] for heliocentric coordinates,
+     * [Body.SSB] for solar system barycentric coordinates,
+     * or [Body.Earth] for geocentric coordinates. Note that the
+     * gravity simulator does not correct for light travel time;
+     * all state vectors are tied to a Newtonian "instantaneous" time.
+     *
+     * @param time
+     * The initial time at which to start the simulation.
+     *
+     * @param bodyStates
+     * An array of initial state vectors (positions and velocities) of the small bodies to be simulated.
+     * The caller must know the positions and velocities of the small bodies at an initial moment in time.
+     * Their positions and velocities are expressed with respect to `originBody`, using equatorial
+     * J2000 orientation (EQJ).
+     * Positions are expressed in astronomical units (AU).
+     * Velocities are expressed in AU/day.
+     * All the times embedded within the state vectors must be exactly equal to `time`,
+     * or this constructor will throw an exception.
+     */
+    constructor(
+        originBody: Body,
+        time: Time,
+        bodyStates: List<StateVector>
+    ) {
+        this.originBody = originBody
+
+        // Verify that all the state vectors have matching times.
+        for (b in bodyStates) {
+            if (b.t.tt != time.tt) {
+                throw IllegalArgumentException("Inconsistent time(s) in bodyStates array.")
+            }
+        }
+
+        curr = initialEndpoint(time, bodyStates)
+        prev = initialEndpoint(time, bodyStates)
+
+        // Calculate the states of the Sun and planets.
+        calcSolarSystem()
+
+        // We need to do all the physics calculations in barycentric coordinates.
+        // But the caller provides the input vectors with respect to `originBody`.
+        // Correct the input body state vectors for the specified origin.
+        if (originBody != Body.SSB) {
+            // Determine the barycentric state of the origin body.
+            val ostate = internalBodyState(originBody)
+
+            // Add barycentric origin to origin-centric bodies to obtain barycentric bodies.
+            for (bstate in curr.bodies) {
+                bstate.r.x += ostate.r.x
+                bstate.r.y += ostate.r.y
+                bstate.r.z += ostate.r.z
+                bstate.v.x += ostate.v.x
+                bstate.v.y += ostate.v.y
+                bstate.v.z += ostate.v.z
+            }
+        }
+
+        // Calculate the net acceleration experienced by the small bodies.
+        calcBodyAccelerations()
+
+        // To prepare for a possible swap operation, duplicate the current state into the previous state.
+        duplicate()
+    }
+
+    /**
+     * Returns the time of the current simulation step.
+     */
+    fun time(): Time = curr.time
+
+
+    /**
+     * Advances the gravity simulation by a small time step.
+     *
+     * Updates the simulation of the user-supplied small bodies
+     * to the time indicated by the `time` parameter.
+     * Retuns an updated array of state vectors for the small bodies.
+     * The positions and velocities in the returned array are referenced
+     * to the `originBody` that was used to construct this simulator.
+     *
+     * @param time
+     * A time that is a small increment away from the current simulation time.
+     * It is up to the developer to figure out an appropriate time increment.
+     * Depending on the trajectories, a smaller or larger increment
+     * may be needed for the desired accuracy. Some experimentation may be needed.
+     * Generally, bodies that stay in the outer Solar System and move slowly can
+     * use larger time steps.  Bodies that pass into the inner Solar System and
+     * move faster will need a smaller time step to maintain accuracy.
+     * The `time` value may be after or before the current simulation time
+     * to move forward or backward in time.
+     */
+    fun update(time: Time): Array<StateVector> {
+        val dt = time.tt - curr.time.tt
+        if (dt == 0.0) {
+            // Special case: the time has not changed, so skip the usual physics calculations.
+            // This allows another way for the caller to query the current body states.
+            // It is also necessary to avoid dividing by `dt` if `dt` is zero.
+            // To prepare for a possible swap operation, duplicate the current state into the previous state.
+            duplicate()
+        } else {
+            // Exchange the current state with the previous state. Then calculate the new current state.
+            swap()
+
+            // Update the current time.
+            curr.time = time
+
+            // Now that the time is set, it is safe to update the Solar System.
+            calcSolarSystem()
+
+            // Estimate the positions of the small bodies as if their existing
+            // accelerations apply across the whole time interval.
+            prev.bodies.forEachIndexed { i, p ->
+                curr.bodies[i].r = updatePosition(dt, p.r, p.v, p.a)
+            }
+
+            // Calculate the acceleration experienced by the small bodies
+            // at their respective approximate next locations.
+            calcBodyAccelerations()
+
+            prev.bodies.forEachIndexed { i, p ->
+                val c = curr.bodies[i]
+
+                // Calculate the average of the acceleration vectors
+                // experienced by the previous body positions and
+                // their estimated next positions.
+                // These become estimates of the mean effective accelerations over the whole interval.
+                val acc = p.a.mean(c.a)
+
+                // Refine the estimates of position and velocity at the next time step,
+                // using the mean acceleration as a better approximation of the
+                // continuously changing acceleration acting on each body.
+                c.tt = time.tt
+                c.r = updatePosition(dt, p.r, p.v, acc)
+                c.v = updateVelocity(dt, p.v, acc)
+            }
+
+            // Re-calculate accelerations experienced by each body.
+            // These will be needed for the next simulation step (if any).
+            // Also, they will be potentially useful if some day we add
+            // a function to query the acceleration vectors for the bodies.
+            calcBodyAccelerations()
+        }
+
+        // Translate our internal calculations of body positions
+        // and velocities into state vectors that the caller can understand.
+        // We have to convert the internal type BodyGravCalc to the public
+        // type StateVector.
+        val bodyStateArray = curr.bodies.map { exportGravCalc(it, time) }.toTypedArray()
+
+        if (originBody != Body.SSB) {
+            // Now we have to convert the coordinate system to the caller's chosen origin body.
+            // Determine the barycentric state of the origin body.
+            val ostate = internalBodyState(originBody)
+
+            // Subtract vectors to convert barycentric states to origin-centric states.
+            for (i in bodyStateArray.indices) {
+                bodyStateArray[i] = StateVector(
+                    bodyStateArray[i].x  - ostate.r.x,
+                    bodyStateArray[i].y  - ostate.r.y,
+                    bodyStateArray[i].z  - ostate.r.z,
+                    bodyStateArray[i].vx - ostate.v.x,
+                    bodyStateArray[i].vy - ostate.v.y,
+                    bodyStateArray[i].vz - ostate.v.z,
+                    time
+                )
+            }
+        }
+
+        return bodyStateArray
+    }
+
+    /**
+     * Exchange the current time step with the previous time step.
+     *
+     * Sometimes it is helpful to "explore" various times near a given
+     * simulation time step, while repeatedly returning to the original
+     * time step. For example, when backdating a position for light travel
+     * time, the caller may wish to repeatedly try different amounts of
+     * backdating. When the backdating solver has converged, the caller
+     * wants to leave the simulation in its original state.
+     *
+     * This function allows a single "undo" of a simulation, and does so
+     * very efficiently.
+     *
+     * Usually this function will be called immediately after a matching
+     * call to [GravitySimulator.update]. It has the effect of rolling
+     * back the most recent update. If called twice in a row, it reverts
+     * the swap and thus has no net effect.
+     *
+     * The constructor initializes the current state and previous
+     * state to be identical. Both states represent the `time` parameter that was
+     * passed into the constructor. Therefore, `swap` will
+     * have no effect from the caller's point of view when passed a simulator
+     * that has not yet been updated by a call to [GravitySimulator.update].
+     */
+    fun swap() {
+        val s = curr
+        curr = prev
+        prev = s
+    }
+
+
+    /**
+     * Get the position and velocity of a Solar System body included in the simulation.
+     *
+     * In order to simulate the movement of small bodies through the Solar System,
+     * the simulator needs to calculate the state vectors for the Sun and planets.
+     *
+     * If an application wants to know the positions of one or more of the planets
+     * in addition to the small bodies, this function provides a way to obtain
+     * their state vectors. This is provided for the sake of efficiency, to avoid
+     * redundant calculations.
+     *
+     * The state vector is returned relative to the position and velocity
+     * of the `originBody` parameter that was passed to this object's constructor.
+     *
+     * @param body
+     * The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune.
+     */
+    fun solarSystemBodyState(body: Body): StateVector {
+        // Subtract the origin's state from the body's barycentric state
+        // to get the body in the desired reference frame.
+        val bstate = internalBodyState(body)
+        val ostate = internalBodyState(originBody)
+        return exportState(bstate - ostate, curr.time)
+    }
+
+    private fun internalBodyState(body: Body): BodyState =
+        // Return the barycentric state of the given solar system body.
+        if (body == Body.Sun || (body.ordinal >= Body.Mercury.ordinal && body.ordinal <= Body.Neptune.ordinal))
+            curr.gravitators[body.ordinal]
+        else if (body == Body.SSB)
+            BodyState(curr.time.tt, TerseVector.zero(), TerseVector.zero())
+        else
+            throw InvalidBodyException(body)
+
+    private fun initialEndpoint(time: Time, bodyStates: List<StateVector>): GravSimEndpoint {
+        // Create an initial "endpoint" data structure, but without correcting
+        // the coordinate system yet for the caller's chosen originBody.
+        // That has to wait until after we have called `calcSolarSystem`
+        // to know the positions of the planets.
+        // We also make placeholders for the Sun and planet body states,
+        // which are calculated later by `calcSolarSystem`.
+
+        val gravitators = Array<BodyState>(Body.Sun.ordinal + 1) {
+            BodyState(
+                time.tt,
+                TerseVector(0.0, 0.0, 0.0),
+                TerseVector(0.0, 0.0, 0.0)
+            )
+        }
+
+        val bodies = bodyStates.map {
+            BodyGravCalc(
+                time.tt,
+                TerseVector(it.x, it.y, it.z),
+                TerseVector(it.vx, it.vy, it.vz),
+                TerseVector(0.0, 0.0, 0.0)
+            )
+        }.toTypedArray()
+
+        return GravSimEndpoint(time, gravitators, bodies)
+    }
+
+    private fun calcSolarSystem() {
+        val tt = curr.time.tt
+
+        // Initialize the Sun's position/velocity as zero vectors, then adjust from pulls from the planets.
+        val sun: BodyState = curr.gravitators[Body.Sun.ordinal]
+        sun.tt = tt
+        sun.r.setToZero()
+        sun.v.setToZero()
+
+        // Calculate the state of each planet, and adjust the SSB state accordingly.
+        curr.gravitators[Body.Mercury.ordinal] = adjustBarycenterPosVel(sun, tt, Body.Mercury, MERCURY_GM)
+        curr.gravitators[Body.Venus.ordinal  ] = adjustBarycenterPosVel(sun, tt, Body.Venus,   VENUS_GM)
+        curr.gravitators[Body.Earth.ordinal  ] = adjustBarycenterPosVel(sun, tt, Body.Earth,   EARTH_GM + MOON_GM)
+        curr.gravitators[Body.Mars.ordinal   ] = adjustBarycenterPosVel(sun, tt, Body.Mars,    MARS_GM)
+        curr.gravitators[Body.Jupiter.ordinal] = adjustBarycenterPosVel(sun, tt, Body.Jupiter, JUPITER_GM)
+        curr.gravitators[Body.Saturn.ordinal ] = adjustBarycenterPosVel(sun, tt, Body.Saturn,  SATURN_GM)
+        curr.gravitators[Body.Uranus.ordinal ] = adjustBarycenterPosVel(sun, tt, Body.Uranus,  URANUS_GM)
+        curr.gravitators[Body.Neptune.ordinal] = adjustBarycenterPosVel(sun, tt, Body.Neptune, NEPTUNE_GM)
+
+        // Convert planet states from heliocentric to barycentric.
+        for (bindex in Body.Mercury.ordinal .. Body.Neptune.ordinal) {
+            curr.gravitators[bindex].r.decrement(sun.r)
+            curr.gravitators[bindex].v.decrement(sun.v)
+        }
+
+        // Convert heliocentric SSB to barycentric Sun.
+        sun.r.negate()
+        sun.v.negate()
+    }
+
+    private fun calcBodyAccelerations() {
+        // Calculate the gravitational acceleration experienced by the simulated bodies.
+        for (calc in curr.bodies) {
+            calc.a.setToZero()
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Sun.ordinal    ].r, SUN_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Mercury.ordinal].r, MERCURY_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Venus.ordinal  ].r, VENUS_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Earth.ordinal  ].r, EARTH_GM + MOON_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Mars.ordinal   ].r, MARS_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Jupiter.ordinal].r, JUPITER_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Saturn.ordinal ].r, SATURN_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Uranus.ordinal ].r, URANUS_GM)
+            addAcceleration(calc.a, calc.r, curr.gravitators[Body.Neptune.ordinal].r, NEPTUNE_GM)
+        }
+    }
+
+    private fun addAcceleration(acc: TerseVector, smallPos: TerseVector, majorPos: TerseVector, gm: Double) {
+        val dx = majorPos.x - smallPos.x
+        val dy = majorPos.y - smallPos.y
+        val dz = majorPos.z - smallPos.z
+        val r2 = dx*dx + dy*dy + dz*dz
+        val pull = gm / (r2 * sqrt(r2))
+        acc.x += dx * pull
+        acc.y += dy * pull
+        acc.z += dz * pull
+    }
+
+    private fun duplicate() {
+        // Copy the current state into the previous state, so that both become the same moment in time.
+
+        prev.time = curr.time
+
+        for (i in curr.gravitators.indices) {
+            prev.gravitators[i].copyFrom(curr.gravitators[i])
+        }
+
+        for (i in curr.bodies.indices) {
+            prev.bodies[i].copyFrom(curr.bodies[i])
+        }
+    }
+}
+
+
+private class GravSimEndpoint(
+    var time: Time,
+    var gravitators: Array<BodyState>,
+    var bodies: Array<BodyGravCalc>
+)
 
 //=======================================================================================
 // Generated code goes to the bottom of the source file,

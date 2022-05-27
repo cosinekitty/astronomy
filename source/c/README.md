@@ -177,6 +177,26 @@ these are used in function and type names.
 | [Rotation_EQJ_GAL](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from J2000 equatorial (EQJ) to galactic (GAL). |
 | [Rotation_GAL_EQJ](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from galactic (GAL) to J2000 equatorial (EQJ). |
 
+### Gravitational simulation of small bodies
+
+Astronomy Engine provides a generic gravity simulator that allows you to
+model the trajectories of one or more small bodies like asteroids,
+comets, or coasting spacecraft. If you know an initial position vector
+and velocity vector for a small body, the gravity simulator can incrementally
+simulate the pull of gravity on it from the Sun and planets, to calculate its
+movement through the Solar System.
+
+| Function | Description |
+| -------- | ----------- |
+| [GravSimInit](#Astronomy_GravSimInit) | Creates a gravity simulator object. |
+| [GravSimFree](#Astronomy_GravSimFree) | Releases memory allocated to a gravity simulator object. |
+| [GravSimUpdate](#Astronomy_GravSimUpdate) | Advances the gravity simulation by a small time step. |
+| [GravSimSwap](#Astronomy_GravSimSwap) | Exchanges the current time step with the previous time step. |
+| [GravSimTime](#Astronomy_GravSimTime) | Returns the time of the current simulation step. |
+| [GravSimBodyState](#Astronomy_GravSimBodyState) | Get the position and velocity of a Solar System body included in the simulation. |
+| [GravSimNumBodies](#Astronomy_GravSimNumBodies) | Returns the number of small bodies represented in this simulation. |
+| [GravSimOrigin](#Astronomy_GravSimOrigin) | Returns the body whose center is the coordinate origin that small bodies are referenced to. |
+
 ---
 
 
@@ -740,6 +760,194 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 | [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the position.  | 
 | [`astro_aberration_t`](#astro_aberration_t) | `aberration` |  `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimBodyState"></a>
+### Astronomy_GravSimBodyState(sim, body) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
+
+**Get the position and velocity of a Solar System body included in the simulation.** 
+
+
+
+In order to simulate the movement of small bodies through the Solar System, the simulator needs to calculate the state vectors for the Sun and planets.
+
+If an application wants to know the positions of one or more of the planets in addition to the small bodies, this function provides a way to obtain their state vectors. This is provided for the sake of efficiency, to avoid redundant calculations.
+
+
+
+**Returns:**  If the given body is part of the set of calculated bodies (Sun and planets), returns the current time step's state vector for that body, expressed in the coordinate system that was specified by the `originBody` parameter to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit). Success is indicated by the returned structure's `status` field holding `ASTRO_SUCCESS`. Any other `status` value indicates an error, meaning the returned state vector is invalid. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object created by a successful call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit). | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune. | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimFree"></a>
+### Astronomy_GravSimFree(sim) &#8658; `void`
+
+**Releases memory allocated to a gravity simulator object.** 
+
+
+
+To avoid memory leaks, any successful call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit) must be paired with a matching call to `Astronomy_GravSimFree`.
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimInit"></a>
+### Astronomy_GravSimInit(simOut, originBody, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
+
+**Allocate and initialize a gravity step simulator.** 
+
+
+
+Prepares to simulate a series of incremental time steps, simulating the movement of zero or more small bodies through the Solar System acting under gravitational attraction from the Sun and planets.
+
+After calling this function, you can call [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate) as many times as desired to advance the simulation by small time steps.
+
+If this function succeeds (returns `ASTRO_SUCCESS`), `sim` will be set to a dynamically allocated object. The caller is then responsible for eventually calling [`Astronomy_GravSimFree`](#Astronomy_GravSimFree) to release the memory.
+
+
+
+**Returns:**  `ASTRO_SUCCESS` on success, with `*sim` set to a non-NULL value. Otherwise an error code with `*sim` set to NULL. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> **</code> | `simOut` |  The address of a pointer to store the newly allocated simulation object. The type [`astro_grav_sim_t`](#astro_grav_sim_t) is an opaque type, so its internal structure is not documented. | 
+| [`astro_body_t`](#astro_body_t) | `originBody` |  Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStateArray` parameter of this function, along with all output vectors returned by [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate). Most callers will want to provide one of the following: `BODY_SUN` for heliocentric coordinates, `BODY_SSB` for solar system barycentric coordinates, or `BODY_EARTH` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The initial time at which to start the simulation. | 
+| `int` | `numBodies` |  The number of small bodies to be simulated. This may be any non-negative integer. | 
+| `const astro_state_vector_t *` | `bodyStateArray` |  An array of initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must be exactly equal to `time`, or this function will fail with the error `ASTRO_INCONSISTENT_TIMES`. | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimNumBodies"></a>
+### Astronomy_GravSimNumBodies(sim) &#8658; `int`
+
+**Returns the number of small bodies represented in this simulation.** 
+
+
+
+When a simulation is created by a call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit), the caller specifies the number of small bodies. This function returns that same number, which may be convenient for a caller, so that it does not need to track the body count separately.
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimOrigin"></a>
+### Astronomy_GravSimOrigin(sim) &#8658; [`astro_body_t`](#astro_body_t)
+
+**Returns the body whose center is the coordinate origin that small bodies are referenced to.** 
+
+
+
+When a simulation is created by a call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit), the caller specifies an `originBody` to indicate the coordinate origin used to represent the small bodies being simulated. This function returns that same [`astro_body_t`](#astro_body_t) value.
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimSwap"></a>
+### Astronomy_GravSimSwap(sim) &#8658; `void`
+
+**Exchange the current time step with the previous time step.** 
+
+
+
+Sometimes it is helpful to "explore" various times near a given simulation time step, while repeatedly returning to the original time step. For example, when backdating a position for light travel time, the caller may wish to repeatedly try different amounts of backdating. When the backdating solver has converged, the caller wants to leave the simulation in its original state.
+
+This function allows a single "undo" of a simulation, and does so very efficiently.
+
+Usually this function will be called immediately after a matching call to [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate). It has the effect of rolling back the most recent update. If called twice in a row, it reverts the swap and thus has no net effect.
+
+[`Astronomy_GravSimInit`](#Astronomy_GravSimInit) initializes the current state and previous state to be identical. Both states represent the `time` parameter that was passed into the initializer. Therefore, `Astronomy_GravSimSwap` will have no effect from the caller's point of view when passed a simulator that has not yet been updated by a call to [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate).
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimTime"></a>
+### Astronomy_GravSimTime(sim) &#8658; [`astro_time_t`](#astro_time_t)
+
+**Returns the time of the current simulation step.** 
+
+
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+
+
+
+
+---
+
+<a name="Astronomy_GravSimUpdate"></a>
+### Astronomy_GravSimUpdate(sim, time, numBodies, bodyStateArray) &#8658; [`astro_status_t`](#astro_status_t)
+
+**Advances a gravity simulation by a small time step.** 
+
+
+
+
+
+**Returns:**  `ASTRO_SUCCESS` if the calculation was successful. Otherwise, an error code if something went wrong, in which case the simulation should be considered "broken". This means there is no reliable output in `bodyStateArray` and that no more calculations can be performed with `sim`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A simulation object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit). | 
+| [`astro_time_t`](#astro_time_t) | `time` |  A time that is a small increment away from the current simulation time. It is up to the developer to figure out an appropriate time increment. Depending on the trajectories, a smaller or larger increment may be needed for the desired accuracy. Some experimentation may be needed. Generally, bodies that stay in the outer Solar System and move slowly can use larger time steps. Bodies that pass into the inner Solar System and move faster will need a smaller time step to maintain accuracy. The `time` value may be after or before the current simulation time to move forward or backward in time. | 
+| `int` | `numBodies` |  The number of bodies whose state vectors are to be updated. This is the number of elements in the `bodyStateArray`. This parameter is passed as a sanity check, and must be equal to the value passed to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit) when `sim` was created. | 
+| <code><a href="#astro_state_vector_t">astro_state_vector_t</a> *</code> | `bodyStateArray` |  An array big enough to hold `numBodies` state vectors, to receive the updated positions and velocities of the simulated small bodies. Alternatively, `bodyStateArray` may be NULL if the output of this simulation step is not needed. This makes the call slightly faster. | 
 
 
 
@@ -3502,6 +3710,7 @@ For some other purposes, it is more helpful to represent coordinates using the E
 | `ASTRO_FAIL_APSIS` |  Special-case logic for finding Neptune/Pluto apsis failed.  |
 | `ASTRO_BUFFER_TOO_SMALL` |  A provided buffer's size is too small to receive the requested data.  |
 | `ASTRO_OUT_OF_MEMORY` |  An attempt to allocate memory failed.  |
+| `ASTRO_INCONSISTENT_TIMES` |  The provided initial state vectors did not have matching times.  |
 
 
 
@@ -4149,6 +4358,19 @@ The calculations are performed from the point of view of a geocentric observer.
 
 
 Delta T is the discrepancy between times measured using an atomic clock and times based on observations of the Earth's rotation, which is gradually slowing down over time. Delta T = TT - UT, where TT = Terrestrial Time, based on atomic time, and UT = Universal Time, civil time based on the Earth's rotation. Astronomy Engine defaults to using a Delta T function defined by Espenak and Meeus in their "Five Millennium Canon of Solar Eclipses". See: [https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html](https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html)
+
+---
+
+<a name="astro_grav_sim_t"></a>
+### `astro_grav_sim_t`
+
+`typedef struct astro_grav_sim_s astro_grav_sim_t;`
+
+**A data type used for managing simulation of the gravitational forces on a small body.** 
+
+
+
+This is an opaque data type used to hold the internal state of a numeric integrator used to calculate the trajectory of a small body moving through the Solar System. 
 
 ---
 

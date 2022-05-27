@@ -12,6 +12,8 @@ The closest point is called *perigee* and the farthest point is called *apogee*.
 
 To iterate through consecutive alternating perigee and apogee events, call searchLunarApsis once, then use the return value to call [nextLunarApsis](next-lunar-apsis.md). After that, keep feeding the previous return value from Astronomy.NextLunarApsis into another call of Astronomy.NextLunarApsis as many times as desired.
 
+See [lunarApsidesAfter](lunar-apsides-after.md) for convenient iteration of consecutive lunar apsides.
+
 ## Parameters
 
 | | |

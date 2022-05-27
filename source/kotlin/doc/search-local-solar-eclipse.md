@@ -12,6 +12,8 @@ To find a series of solar eclipses, call this function once, then keep calling #
 
 IMPORTANT: An eclipse reported by this function might be partly or completely invisible to the observer due to the time of day. See [LocalSolarEclipseInfo](-local-solar-eclipse-info/index.md) for more information about this topic.
 
+See [localSolarEclipsesAfter](local-solar-eclipses-after.md) for convenient iteration of consecutive eclipses.
+
 #### Return
 
 Information about the first solar eclipse visible at the specified observer location.

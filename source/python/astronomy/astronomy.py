@@ -643,7 +643,8 @@ class Time:
 
         Parameters
         ----------
-        tt : The number of days after the J2000 epoch.
+        tt : float
+            The number of days after the J2000 epoch.
 
         Returns
         -------
@@ -3461,6 +3462,13 @@ class _body_state_t:
         self.r = r
         self.v = v
 
+    def clone(self):
+        '''Make a copy of this body state.'''
+        return _body_state_t(self.tt, self.r.clone(), self.v.clone())
+
+    def __sub__(self, other):
+        return _body_state_t(self.tt, self.r - other.r, self.v - other.v)
+
 def _CalcVsopPosVel(model, tt):
     t = tt / _DAYS_PER_MILLENNIUM
 
@@ -3602,6 +3610,15 @@ class _TerseVector:
         self.y = y
         self.z = z
 
+    def clone(self):
+        '''Create a copy of this vector.'''
+        return _TerseVector(self.x, self.y, self.z)
+
+    @staticmethod
+    def zero():
+        '''Return a zero vector.'''
+        return _TerseVector(0.0, 0.0, 0.0)
+
     def ToAstroVector(self, time):
         '''Convert _TerseVector object to Vector object.'''
         return Vector(self.x, self.y, self.z, time)
@@ -3686,6 +3703,10 @@ class _body_grav_calc_t:
         self.r = r      # position [au]
         self.v = v      # velocity [au/day]
         self.a = a      # acceleration [au/day^2]
+
+    def clone(self):
+        '''Creates a copy of this gravity simulation state.'''
+        return _body_grav_calc_t(self.tt, self.r.clone(), self.v.clone(), self.a.clone())
 
 
 class _grav_sim_t:
@@ -9834,3 +9855,325 @@ def LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass):
             break
     scale = (x - r1) / R
     return StateVector(scale*dx, scale*dy, scale*dz, scale*vx, scale*vy, scale*vz, major_state.t)
+
+#--------------------------------------------------------------------------------------------------
+
+class GravitySimulator:
+    """A simulation of zero or more small bodies moving through the Solar System.
+
+    This class calculates the movement of arbitrary small bodies,
+    such as asteroids or comets, that move through the Solar System.
+    It does so by calculating the gravitational forces on the bodies
+    from the Sun and planets. The user of this class supplies a
+    list of initial positions and velocities for the small bodies.
+    Then the class can update the positions and velocities over small
+    time steps.
+    """
+
+    def __init__(self, originBody, time, bodyStates):
+        """Creates a gravity simulation object.
+
+        Parameters
+        ----------
+        originBody: Body
+            Specifies the origin of the reference frame.
+            All position vectors and velocity vectors will use `originBody`
+            as the origin of the coordinate system.
+            This origin applies to all the input vectors provided in the
+            `bodyStates` parameter of this function, along with all
+            output vectors returned by #GravitySimulator.Update.
+            Most callers will want to provide one of the following:
+            `Body.Sun` for heliocentric coordinates,
+            `Body.SSB` for solar system barycentric coordinates,
+            or `Body.Earth` for geocentric coordinates. Note that the
+            gravity simulator does not correct for light travel time;
+            all state vectors are tied to a Newtonian "instantaneous" time.
+        time: Time
+            The initial time at which to start the simulation.
+        bodyStates: StateVector[]
+            An array of zero or more initial state vectors (positions and velocities)
+            of the small bodies to be simulated.
+            The caller must know the positions and velocities of the small bodies at an initial moment in time.
+            Their positions and velocities are expressed with respect to `originBody`,
+            using equatorial J2000 orientation (EQJ).
+            Positions are expressed in astronomical units (AU).
+            Velocities are expressed in AU/day.
+            All the times embedded within the state vectors must exactly match `time`,
+            or this constructor will throw an exception.
+        """
+        self._originBody = originBody
+        # Verify that the state vectors have matching times.
+        for b in bodyStates:
+            if b.t.tt != time.tt:
+                raise Error('Inconsistent times in bodyStates')
+
+        # Create a stub list of small body states that we will append to later.
+        # We just need the stub to put into `self.curr`
+        smallBodyList = []
+
+        # Calculate the states of the Sun and planets at the initial time.
+        largeBodyDict = _CalcSolarSystem(time)
+
+        # Create a simulation endpoint for the initial time.
+        self.curr = _GravSimEndpoint(time, largeBodyDict, smallBodyList)
+
+        # Convert origin-centric bodyStates vectors into a barycentric `_body_grav_calc_t` array.
+        o = self._InternalBodyState(originBody)
+        for b in bodyStates:
+            r = _TerseVector(b.x + o.r.x, b.y + o.r.y, b.z + o.r.z)
+            v = _TerseVector(b.vx + o.v.x, b.vy + o.v.y, b.vz + o.v.z)
+            a = _TerseVector.zero()
+            smallBodyList.append(_body_grav_calc_t(time.tt, r, v, a))
+
+        # Calculate the net acceleration experienced by the small bodies.
+        self._CalcBodyAccelerations()
+
+        # To prepare for a possible swap operation, duplicate the current state into the previous state.
+        self.prev = self._Duplicate()
+
+    def Time(self):
+        """The time represented by the current step of the gravity simulation.
+
+        Returns
+        -------
+        Time
+        """
+        return self.curr.time
+
+    def OriginBody(self):
+        """The origin of the reference frame. See constructor for more info.
+
+        Returns
+        -------
+        Body
+        """
+        return self._originBody
+
+    def Update(self, time):
+        """Advances the gravity simulation by a small time step.
+
+        Updates the simulation of the user-supplied small bodies
+        to the time indicated by the `time` parameter.
+        Returns an array of state vectors for the simulated bodies.
+        The array is in the same order as the original array that
+        was used to construct this simulator object.
+        The positions and velocities in the returned array are
+        referenced to the `originBody` that was used to construct
+        this simulator.
+
+        Parameters
+        ----------
+        time : Time
+            A time that is a small increment away from the current simulation time.
+            It is up to the developer to figure out an appropriate time increment.
+            Depending on the trajectories, a smaller or larger increment
+            may be needed for the desired accuracy. Some experimentation may be needed.
+            Generally, bodies that stay in the outer Solar System and move slowly can
+            use larger time steps. Bodies that pass into the inner Solar System and
+            move faster will need a smaller time step to maintain accuracy.
+            The `time` value may be after or before the current simulation time
+            to move forward or backward in time.
+
+        Returns
+        -------
+        StateVector[]
+            An array of state vectors, one for each small body.
+        """
+        dt = time.tt - self.curr.time.tt
+        if dt == 0.0:
+            # Special case: the time has not changed, so skip the usual physics calculations.
+            # This allows another way for the caller to query the current body states.
+            # It is also necessary to avoid dividing by `dt` if `dt` is zero.
+            # To prepare for a possible swap operation, duplicate the current state into the previous state.
+            self.prev = self._Duplicate()
+        else:
+            # Exchange the current state with the previous state. Then calculate the new current state.
+            self.Swap()
+
+            # Update the current time
+            self.curr.time = time
+
+            # Calculate the positions and velocities of the Sun and planets at the given time.
+            self.curr.gravitators = _CalcSolarSystem(time)
+
+            # Estimate the positions of the small bodies as if their existing
+            # existing accelerations apply across the whole time interval.
+            nbodies = len(self.curr.bodies)
+            for i in range(nbodies):
+                p = self.prev.bodies[i]
+                c = self.curr.bodies[i]
+                c.r = _UpdatePosition(dt, p.r, p.v, p.a)
+
+            # Calculate the acceleration experienced by the small bodies at
+            # their respective approximate next locations.
+            self._CalcBodyAccelerations()
+
+            for i in range(nbodies):
+                # Calculate the average of the acceleration vectors
+                # experienced by the previous body positions and
+                # their estimated next positions.
+                # These become estimates of the mean effective accelerations
+                # over the whole interval.
+                p = self.prev.bodies[i]
+                c = self.curr.bodies[i]
+                acc = p.a.mean(c.a)
+                # Refine the estimates of position and velocity at the next time step,
+                # using the mean acceleration as a better approximation of the
+                # continuously changing acceleration acting on each body.
+                c.tt = time.tt
+                c.r = _UpdatePosition(dt, p.r, p.v, acc)
+                c.v = _UpdateVelocity(dt, p.v, acc)
+
+            # Re-calculate accelerations experienced by each body.
+            # These will be needed for the next simulation step (if any).
+            # Also, they will be potentially useful if some day we add
+            # a function to query the acceleration vectors for the bodies.
+            self._CalcBodyAccelerations()
+
+        # Translate our internal calculations of body positions and velocities
+        # into state vectors that the caller can understand.
+        # We have to convert the internal type _body_grav_calc_t to the public type StateVector.
+        # Also convert from barycentric coordinates to coordinates based on the selected origin body.
+        bodyStates = []
+        ostate = self._InternalBodyState(self._originBody)
+        for bcalc in self.curr.bodies:
+            bodyStates.append(StateVector(
+                bcalc.r.x - ostate.r.x,
+                bcalc.r.y - ostate.r.y,
+                bcalc.r.z - ostate.r.z,
+                bcalc.v.x - ostate.v.x,
+                bcalc.v.y - ostate.v.y,
+                bcalc.v.z - ostate.v.z,
+                time
+            ))
+        return bodyStates
+
+
+    def Swap(self):
+        """Exchange the current time step with the previous time step.
+
+        Sometimes it is helpful to "explore" various times near a given
+        simulation time step, while repeatedly returning to the original
+        time step. For example, when backdating a position for light travel
+        time, the caller may wish to repeatedly try different amounts of
+        backdating. When the backdating solver has converged, the caller
+        wants to leave the simulation in its original state.
+
+        This function allows a single "undo" of a simulation, and does so
+        very efficiently.
+
+        Usually this function will be called immediately after a matching
+        call to #GravitySimulator.Update. It has the effect of rolling
+        back the most recent update. If called twice in a row, it reverts
+        the swap and thus has no net effect.
+
+        The constructor initializes the current state and previous
+        state to be identical. Both states represent the `time` parameter that was
+        passed into the constructor. Therefore, `Swap` will
+        have no effect from the caller's point of view when passed a simulator
+        that has not yet been updated by a call to #GravitySimulator.Update.
+        """
+        (self.curr, self.prev) = (self.prev, self.curr)
+
+    def SolarSystemBodyState(self, body):
+        """Get the position and velocity of a Solar System body included in the simulation.
+
+        In order to simulate the movement of small bodies through the Solar System,
+        the simulator needs to calculate the state vectors for the Sun and planets.
+
+        If an application wants to know the positions of one or more of the planets
+        in addition to the small bodies, this function provides a way to obtain
+        their state vectors. This is provided for the sake of efficiency, to avoid
+        redundant calculations.
+
+        The state vector is returned relative to the position and velocity
+        of the `originBody` parameter that was passed to this object's constructor.
+
+        Parameters
+        ----------
+        body : Body
+            The Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, or Neptune.
+
+        Returns
+        -------
+        StateVector
+            The state vector of the requested Solar System body.
+        """
+        bstate = self._InternalBodyState(body)
+        ostate = self._InternalBodyState(self._originBody)
+        return _ExportState(bstate - ostate, self.curr.time)
+
+    def _InternalBodyState(self, body):
+        if body == Body.SSB:
+            return _body_state_t(self.curr.time.tt, _TerseVector.zero(), _TerseVector.zero())
+        if body in self.curr.gravitators:
+            return self.curr.gravitators[body]
+        raise Error('Invalid body: {}'.format(body))
+
+    def _CalcBodyAccelerations(self):
+        for b in self.curr.bodies:
+            b.a = _TerseVector.zero()
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Sun    ].r, _SUN_GM)
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Mercury].r, _MERCURY_GM)
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Venus  ].r, _VENUS_GM)
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Earth  ].r, _EARTH_GM + _MOON_GM)
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Mars   ].r, _MARS_GM)
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Jupiter].r, _JUPITER_GM)
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Saturn ].r, _SATURN_GM)
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Uranus ].r, _URANUS_GM)
+            _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Neptune].r, _NEPTUNE_GM)
+
+    def _Duplicate(self):
+        # Copy the current stateinto the previous state, so that both become the same moment in time.
+        gravitators = {}
+        for body, grav in self.curr.gravitators.items():
+            gravitators[body] = grav.clone()
+
+        bodies = []
+        for b in self.curr.bodies:
+            bodies.append(b.clone())
+
+        return _GravSimEndpoint(self.curr.time, gravitators, bodies)
+
+class _GravSimEndpoint:
+    def __init__(self, time, gravitators, bodies):
+        self.time = time
+        self.gravitators = gravitators
+        self.bodies = bodies
+
+def _CalcSolarSystem(time):
+    d = {}
+    # Start with the SSB at zero position and velocity.
+    ssb = _body_state_t(time.tt, _TerseVector.zero(), _TerseVector.zero())
+
+    # Calculate the heliocentric position of each planet, and adjust the SSB
+    # based on each planet's pull on the Sun.
+    d[Body.Mercury] = _AdjustBarycenterPosVel(ssb, time.tt, Body.Mercury, _MERCURY_GM)
+    d[Body.Venus  ] = _AdjustBarycenterPosVel(ssb, time.tt, Body.Venus,   _VENUS_GM)
+    d[Body.Earth  ] = _AdjustBarycenterPosVel(ssb, time.tt, Body.Earth,   _EARTH_GM + _MOON_GM)
+    d[Body.Mars   ] = _AdjustBarycenterPosVel(ssb, time.tt, Body.Mars,    _MARS_GM)
+    d[Body.Jupiter] = _AdjustBarycenterPosVel(ssb, time.tt, Body.Jupiter, _JUPITER_GM)
+    d[Body.Saturn ] = _AdjustBarycenterPosVel(ssb, time.tt, Body.Saturn,  _SATURN_GM)
+    d[Body.Uranus ] = _AdjustBarycenterPosVel(ssb, time.tt, Body.Uranus,  _URANUS_GM)
+    d[Body.Neptune] = _AdjustBarycenterPosVel(ssb, time.tt, Body.Neptune, _NEPTUNE_GM)
+
+    # Convert planet states from heliocentric to barycentric.
+    for b in d.values():
+        b.r -= ssb.r
+        b.v -= ssb.v
+
+    # Convert heliocentric SSB to barycentric Sun.
+    d[Body.Sun] = _body_state_t(time.tt, -1.0 * ssb.r, -1.0 * ssb.v)
+    return d
+
+def _AddAcceleration(acc, smallPos, majorPos, gm):
+    dx = majorPos.x - smallPos.x
+    dy = majorPos.y - smallPos.y
+    dz = majorPos.z - smallPos.z
+    r2 = dx*dx + dy*dy + dz*dz
+    pull = gm / (r2 * math.sqrt(r2))
+    acc.x += dx * pull
+    acc.y += dy * pull
+    acc.z += dz * pull
+
+#--------------------------------------------------------------------------------------------------
