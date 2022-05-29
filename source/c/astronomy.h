@@ -1313,6 +1313,31 @@ astro_body_t Astronomy_GravSimOrigin(astro_grav_sim_t *sim);
 void Astronomy_GravSimSwap(astro_grav_sim_t *sim);
 void Astronomy_GravSimFree(astro_grav_sim_t *sim);
 
+/**
+ * @brief A function for which to solve a light-travel time problem.
+ *
+ * The function #Astronomy_CorrectLightTravel solves a generalized
+ * problem of deducing how far in the past light must have left
+ * a target object to be seen by an observer at a specified time.
+ * This function pointer type expresses an arbitrary state vector
+ * function of time. Such a function must be passed to
+ * `Astronomy_CorrectLightTravel`.
+ */
+typedef astro_vector_t (* astro_position_func_t) (void *context, astro_time_t time);
+
+astro_vector_t Astronomy_CorrectLightTravel(
+    void *context,
+    astro_position_func_t func,
+    astro_time_t time
+);
+
+astro_vector_t Astronomy_BackdatePosition(
+    astro_time_t time,
+    astro_body_t observerBody,
+    astro_body_t targetBody,
+    astro_aberration_t aberration
+);
+
 #ifdef __cplusplus
 }
 #endif

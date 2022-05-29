@@ -286,6 +286,37 @@ This function calculates the angular separation between the given body and the S
 
 ---
 
+<a name="Astronomy_BackdatePosition"></a>
+### Astronomy_BackdatePosition(time, observerBody, targetBody, aberration) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Solve for light travel time correction of apparent position.** 
+
+
+
+When observing a distant object, for example Jupiter as seen from Earth, the amount of time it takes for light to travel from the object to the observer can significantly affect the object's apparent position.
+
+This function solves the light travel time correction for both apparent relative position and relative velocity of a target body as seen by an observer body at a given observation time.
+
+For a more generalized light travel correction solver, see [`Astronomy_CorrectLightTravel`](#Astronomy_CorrectLightTravel).
+
+
+
+**Returns:**  On success, the position vector at the solved backdated time. The returned vector will hold `ASTRO_SUCCESS` in its `status` field, the backdated time in its `t` field, along with the apparent relative position. If an error occurs, `status` will hold an error code and the remaining fields should be ignored. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_time_t`](#astro_time_t) | `time` |  The time of observation.  | 
+| [`astro_body_t`](#astro_body_t) | `observerBody` |  The body to be used as the observation location.  | 
+| [`astro_body_t`](#astro_body_t) | `targetBody` |  The body to be observed.  | 
+| [`astro_aberration_t`](#astro_aberration_t) | `aberration` |  `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected. | 
+
+
+
+
+---
+
 <a name="Astronomy_BaryState"></a>
 ### Astronomy_BaryState(body, time) &#8658; [`astro_state_vector_t`](#astro_state_vector_t)
 
@@ -399,6 +430,36 @@ Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the c
 | --- | --- | --- |
 | `double` | `ra` |  The right ascension (RA) of a point in the sky, using the J2000 equatorial system. | 
 | `double` | `dec` |  The declination (DEC) of a point in the sky, using the J2000 equatorial system. | 
+
+
+
+
+---
+
+<a name="Astronomy_CorrectLightTravel"></a>
+### Astronomy_CorrectLightTravel(context, func, time) &#8658; [`astro_vector_t`](#astro_vector_t)
+
+**Solve for light travel time of a vector function.** 
+
+
+
+When observing a distant object, for example Jupiter as seen from Earth, the amount of time it takes for light to travel from the object to the observer can significantly affect the object's apparent position. This function is a generic solver that figures out how long in the past light must have left the observed object to reach the observer at the specified observation time. It uses a context/function pair as a generic interface that expresses an arbitrary state vector as a function of time.
+
+This function repeatedly calls `func`, passing `context` and a series of time estimates in the past. The `func` must return a relative state vector between the observer and the target. `Astronomy_CorrectLightTravel` keeps calling `func` with more and more refined estimates of the time light must have left the target to arrive at the observer.
+
+For common use cases, it is simpler to use [`Astronomy_BackdatePosition`](#Astronomy_BackdatePosition) for calculating the light travel time correction of one body observing another body.
+
+
+
+**Returns:**  The position vector return by `func` at the solved backdated time. On success, the vector will hold `ASTRO_SUCCESS` in its `status` field, the backdated time in its `t` field, along with the apparent relative position. If an error occurs, `status` will hold an error code and the remaining fields should be ignored. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `void *` | `context` |  Holds any parameters needed by `func`.  | 
+| [`astro_position_func_t`](#astro_position_func_t) | `func` |  Pointer to a function that returns a relative position vector as a function of time.  | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The observation time for which to solve for light travel delay.  | 
 
 
 
@@ -4371,6 +4432,19 @@ Delta T is the discrepancy between times measured using an atomic clock and time
 
 
 This is an opaque data type used to hold the internal state of a numeric integrator used to calculate the trajectory of a small body moving through the Solar System. 
+
+---
+
+<a name="astro_position_func_t"></a>
+### `astro_position_func_t`
+
+`typedef astro_vector_t(* astro_position_func_t) (void *context, astro_time_t time);`
+
+**A function for which to solve a light-travel time problem.** 
+
+
+
+The function [`Astronomy_CorrectLightTravel`](#Astronomy_CorrectLightTravel) solves a generalized problem of deducing how far in the past light must have left a target object to be seen by an observer at a specified time. This function pointer type expresses an arbitrary state vector function of time. Such a function must be passed to `Astronomy_CorrectLightTravel`. 
 
 ---
 

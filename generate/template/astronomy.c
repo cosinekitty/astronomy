@@ -3752,6 +3752,177 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
 
 
 /**
+ * @brief Solve for light travel time of a vector function.
+ *
+ * When observing a distant object, for example Jupiter as seen from Earth,
+ * the amount of time it takes for light to travel from the object to the
+ * observer can significantly affect the object's apparent position.
+ * This function is a generic solver that figures out how long in the
+ * past light must have left the observed object to reach the observer
+ * at the specified observation time. It uses a context/function pair
+ * as a generic interface that expresses an arbitrary state vector
+ * as a function of time.
+ *
+ * This function repeatedly calls `func`, passing `context` and a series of time
+ * estimates in the past. The `func` must return a relative state vector between
+ * the observer and the target. `Astronomy_CorrectLightTravel` keeps calling
+ * `func` with more and more refined estimates of the time light must have
+ * left the target to arrive at the observer.
+ *
+ * For common use cases, it is simpler to use #Astronomy_BackdatePosition
+ * for calculating the light travel time correction of one body observing another body.
+ *
+ * @param context   Holds any parameters needed by `func`.
+ * @param func      Pointer to a function that returns a relative position vector as a function of time.
+ * @param time      The observation time for which to solve for light travel delay.
+ * @return
+ *      The position vector return by `func` at the solved backdated time.
+ *      On success, the vector will hold `ASTRO_SUCCESS` in its `status` field,
+ *      the backdated time in its `t` field, along with the apparent relative position.
+ *      If an error occurs, `status` will hold an error code and the remaining fields
+ *      should be ignored.
+ */
+astro_vector_t Astronomy_CorrectLightTravel(
+    void *context,
+    astro_position_func_t func,
+    astro_time_t time)
+{
+    int iter;
+    astro_time_t ltime, ltime2;
+    astro_vector_t pos;
+    double distance, dt;
+
+    ltime = time;
+    for (iter = 0; iter < 10; ++iter)
+    {
+        pos = func(context, ltime);
+        if (pos.status != ASTRO_SUCCESS)
+            return pos;
+
+        distance = Astronomy_VectorLength(pos);
+        ltime2 = Astronomy_AddDays(time, -distance/C_AUDAY);
+        dt = fabs(ltime2.tt - ltime.tt);
+        if (dt < 1.0e-9)        /* 86.4 microseconds */
+            return pos;
+
+        ltime = ltime2;
+    }
+    return VecError(ASTRO_NO_CONVERGE, time);   /* light travel time solver did not converge */
+}
+
+
+/** @cond DOXYGEN_SKIP */
+typedef struct
+{
+    astro_body_t        observerBody;
+    astro_body_t        targetBody;
+    astro_aberration_t  aberration;
+    astro_vector_t      observerPos;          /* used only when aberration == NO_ABERRATION */
+}
+backdate_context_t;
+/** @endcond */
+
+
+static astro_vector_t BodyPosition(void *context, astro_time_t time)
+{
+    const backdate_context_t *b = (const backdate_context_t *)context;
+    astro_vector_t observerPos, pos;
+
+    if (b->aberration == NO_ABERRATION)
+    {
+        /* No aberration, so use the pre-calculated initial position of the observer body. */
+        observerPos = b->observerPos;
+    }
+    else
+    {
+        /*
+            The following assumes the observer body is the Earth, which is usually the case.
+            However, the same reasoning applies to any observer body.
+
+            To include aberration, make a good first-order approximation
+            by backdating the Earth's position also.
+            This is confusing, but it works for objects within the Solar System
+            because the distance the Earth moves in that small amount of light
+            travel time (a few minutes to a few hours) is well approximated
+            by a line segment that substends the angle seen from the remote
+            body viewing Earth. That angle is pretty close to the aberration
+            angle of the moving Earth viewing the remote body.
+            In other words, both of the following approximate the aberration angle:
+                (transverse distance Earth moves) / (distance to body)
+                (transverse speed of Earth) / (speed of light).
+        */
+        observerPos = Astronomy_HelioVector(b->observerBody, time);
+    }
+
+    if (observerPos.status != ASTRO_SUCCESS)
+        return observerPos;
+
+    pos = Astronomy_HelioVector(b->targetBody, time);
+    if (pos.status == ASTRO_SUCCESS)
+    {
+        /* Convert heliocentric body position to observer-centric position. */
+        pos.x -= observerPos.x;
+        pos.y -= observerPos.y;
+        pos.z -= observerPos.z;
+    }
+    return pos;
+}
+
+
+/**
+ * @brief Solve for light travel time correction of apparent position.
+ *
+ * When observing a distant object, for example Jupiter as seen from Earth,
+ * the amount of time it takes for light to travel from the object to the
+ * observer can significantly affect the object's apparent position.
+ *
+ * This function solves the light travel time correction for both apparent
+ * relative position and relative velocity of a target body as seen by an
+ * observer body at a given observation time.
+ *
+ * For a more generalized light travel correction solver, see #Astronomy_CorrectLightTravel.
+ *
+ * @param time          The time of observation.
+ * @param observerBody  The body to be used as the observation location.
+ * @param targetBody    The body to be observed.
+ * @param aberration    `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.
+ *
+ * @return
+ *      On success, the position vector at the solved backdated time.
+ *      The returned vector will hold `ASTRO_SUCCESS` in its `status` field,
+ *      the backdated time in its `t` field, along with the apparent relative position.
+ *      If an error occurs, `status` will hold an error code and the remaining fields should be ignored.
+ */
+astro_vector_t Astronomy_BackdatePosition(
+    astro_time_t time,
+    astro_body_t observerBody,
+    astro_body_t targetBody,
+    astro_aberration_t aberration)
+{
+    backdate_context_t context;
+
+    context.observerBody = observerBody;
+    context.targetBody   = targetBody;
+    context.aberration   = aberration;
+    if (aberration == NO_ABERRATION)
+    {
+        /* Without aberration, we need the observer body position at the observation time only. */
+        /* For efficiency, calculate it once and hold onto it, so `BodyPosition` can keep using it. */
+        context.observerPos = Astronomy_HelioVector(observerBody, time);
+    }
+    else
+    {
+        /* With aberration, `BackdatePosition` will calculate the observer body state at different times. */
+        /* Therefore, do not waste time calculating it at the observation time. */
+        /* Initialize the memory with an explicitly invalid value. */
+        context.observerPos = VecError(ASTRO_NOT_INITIALIZED, time);
+    }
+
+    return Astronomy_CorrectLightTravel(&context, BodyPosition, time);
+}
+
+
+/**
  * @brief Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
  *
  * This function calculates the position of the given celestial body as a vector,
@@ -3780,11 +3951,6 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration)
 {
     astro_vector_t vector;
-    astro_vector_t earth;
-    astro_time_t ltime;
-    astro_time_t ltime2;
-    double dt;
-    int iter;
 
     if (aberration != ABERRATION && aberration != NO_ABERRATION)
         return VecError(ASTRO_INVALID_PARAMETER, time);
@@ -3800,64 +3966,17 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_a
         break;
 
     case BODY_MOON:
+        /* The moon is so close, aberration and light travel time don't matter. */
         vector = Astronomy_GeoMoon(time);
         break;
 
     default:
         /* For all other bodies, apply light travel time correction. */
-
-        if (aberration == NO_ABERRATION)
-        {
-            /* No aberration, so calculate Earth's position once, at the time of observation. */
-            earth = CalcEarth(time);
-            if (earth.status != ASTRO_SUCCESS)
-                return earth;
-        }
-
-        ltime = time;
-        for (iter=0; iter < 10; ++iter)
-        {
-            vector = Astronomy_HelioVector(body, ltime);
-            if (vector.status != ASTRO_SUCCESS)
-                return vector;
-
-            if (aberration == ABERRATION)
-            {
-                /*
-                    Include aberration, so make a good first-order approximation
-                    by backdating the Earth's position also.
-                    This is confusing, but it works for objects within the Solar System
-                    because the distance the Earth moves in that small amount of light
-                    travel time (a few minutes to a few hours) is well approximated
-                    by a line segment that substends the angle seen from the remote
-                    body viewing Earth. That angle is pretty close to the aberration
-                    angle of the moving Earth viewing the remote body.
-                    In other words, both of the following approximate the aberration angle:
-                        (transverse distance Earth moves) / (distance to body)
-                        (transverse speed of Earth) / (speed of light).
-                */
-                earth = CalcEarth(ltime);
-                if (earth.status != ASTRO_SUCCESS)
-                    return earth;
-            }
-
-            /* Convert heliocentric vector to geocentric vector. */
-            vector.x -= earth.x;
-            vector.y -= earth.y;
-            vector.z -= earth.z;
-
-            ltime2 = Astronomy_AddDays(time, -Astronomy_VectorLength(vector) / C_AUDAY);
-            dt = fabs(ltime2.tt - ltime.tt);
-            if (dt < 1.0e-9)
-                goto finished;  /* Ensures we patch 'vector.t' with current time, not ante-dated time. */
-
-            ltime = ltime2;
-        }
-        return VecError(ASTRO_NO_CONVERGE, time);   /* light travel time solver did not converge */
+        vector = Astronomy_BackdatePosition(time, BODY_EARTH, body, aberration);
+        break;
     }
 
-finished:
-    vector.t = time;
+    vector.t = time;        /* quirk: return the observation time, not the backdated time */
     return vector;
 }
 
