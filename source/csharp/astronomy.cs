@@ -5580,7 +5580,7 @@ namespace CosineKitty
             throw new InternalError("Light travel time correction did not converge.");
         }
 
-        internal class BodyPosition: IPositionFunction
+        internal struct BodyPosition: IPositionFunction
         {
             private Body observerBody;
             private Body targetBody;
