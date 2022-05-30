@@ -311,6 +311,30 @@ easy it is to see the body away from the glare of the Sun.
 
 **Returns:** Returns the angle in degrees between the Sun and the specified body as seen from the center of the Earth.
 
+<a name="Astronomy.BackdatePosition"></a>
+### Astronomy.BackdatePosition(time, observerBody, targetBody, aberration) &#8658; [`AstroVector`](#AstroVector)
+
+**Solve for light travel time correction of apparent position.**
+
+When observing a distant object, for example Jupiter as seen from Earth,
+the amount of time it takes for light to travel from the object to the
+observer can significantly affect the object's apparent position.
+
+This function solves the light travel time correction for the apparent
+relative position vector of a target body as seen by an observer body
+at a given observation time.
+
+For a more generalized light travel correction solver, see [`Astronomy.CorrectLightTravel`](#Astronomy.CorrectLightTravel).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The time of observation. |
+| [`Body`](#Body) | `observerBody` | The body to be used as the observation location. |
+| [`Body`](#Body) | `targetBody` | The body to be observed. |
+| [`Aberration`](#Aberration) | `aberration` | `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected. |
+
+**Returns:** The position vector at the solved backdated time. The `t` field holds the time that light left the observed body to arrive at the observer at the observation time.
+
 <a name="Astronomy.BaryState"></a>
 ### Astronomy.BaryState(body, time) &#8658; [`StateVector`](#StateVector)
 
@@ -356,6 +380,35 @@ constellation that contains that point.
 | `double` | `dec` | The declination (DEC) of a point in the sky, using the J2000 equatorial system (EQJ). |
 
 **Returns:** A structure that contains the 3-letter abbreviation and full name of the constellation that contains the given (ra,dec), along with the converted B1875 (ra,dec) for that point.
+
+<a name="Astronomy.CorrectLightTravel"></a>
+### Astronomy.CorrectLightTravel(func, time) &#8658; [`AstroVector`](#AstroVector)
+
+**Solve for light travel time of a vector function.**
+
+When observing a distant object, for example Jupiter as seen from Earth,
+the amount of time it takes for light to travel from the object to the
+observer can significantly affect the object's apparent position.
+This function is a generic solver that figures out how long in the
+past light must have left the observed object to reach the observer
+at the specified observation time. It uses [`IPositionFunction`](#IPositionFunction)
+to expresses an arbitrary position vector as a function of time.
+
+This function repeatedly calls `func.Position`, passing a series of time
+estimates in the past. Then `func.Position` must return a relative state vector between
+the observer and the target. `CorrectLightTravel` keeps calling
+`func.Position` with more and more refined estimates of the time light must have
+left the target to arrive at the observer.
+
+For common use cases, it is simpler to use [`Astronomy.BackdatePosition`](#Astronomy.BackdatePosition)
+for calculating the light travel time correction of one body observing another body.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`IPositionFunction`](#IPositionFunction) | `func` | An arbitrary position vector as a function of time. |
+| [`AstroTime`](#AstroTime) | `time` | The observation time for which to solve for light travel delay. |
+
+**Returns:** The position vector at the solved backdated time. The `t` field holds the time that light left the observed body to arrive at the observer at the observation time.
 
 <a name="Astronomy.DeltaT_EspenakMeeus"></a>
 ### Astronomy.DeltaT_EspenakMeeus(ut) &#8658; `double`
@@ -560,7 +613,7 @@ of the Earth at noon UTC on 1 January 2000.
 
 If given an invalid value for `body`, this function will throw an exception.
 
-Unlike [`Astronomy.HelioVector`](#Astronomy.HelioVector), this function always corrects for light travel time.
+Unlike [`Astronomy.HelioVector`](#Astronomy.HelioVector), this function corrects for light travel time.
 This means the position of the body is "back-dated" by the amount of time it takes
 light to travel from that body to an observer on the Earth.
 
@@ -2855,6 +2908,30 @@ https://github.com/cosinekitty/astronomy/issues**
 
 **This exception is thrown by certain Astronomy Engine functions
 when a body is specified that is not appropriate for the given operation.**
+
+---
+
+<a name="IPositionFunction"></a>
+## `struct IPositionFunction`
+
+**A function for which to solve a light-travel time problem.**
+
+The function [`Astronomy.CorrectLightTravel`](#Astronomy.CorrectLightTravel) solves a generalized
+problem of deducing how far in the past light must have left
+a target object to be seen by an observer at a specified time.
+This interface expresses an arbitrary position vector as
+function of time that is passed to [`Astronomy.CorrectLightTravel`](#Astronomy.CorrectLightTravel).
+
+### member functions
+
+<a name="IPositionFunction.Position"></a>
+### IPositionFunction.Position(time) &#8658; [`AstroVector`](#AstroVector)
+
+**Returns a relative position vector for a given time.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The time at which to evaluate a relative position vector. |
 
 ---
 

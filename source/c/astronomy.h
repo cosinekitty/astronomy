@@ -1319,8 +1319,8 @@ void Astronomy_GravSimFree(astro_grav_sim_t *sim);
  * The function #Astronomy_CorrectLightTravel solves a generalized
  * problem of deducing how far in the past light must have left
  * a target object to be seen by an observer at a specified time.
- * This function pointer type expresses an arbitrary state vector
- * function of time. Such a function must be passed to
+ * This function pointer type expresses an arbitrary position vector
+ * as function of time. Such a function must be passed to
  * `Astronomy_CorrectLightTravel`.
  */
 typedef astro_vector_t (* astro_position_func_t) (void *context, astro_time_t time);

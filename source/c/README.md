@@ -295,7 +295,7 @@ This function calculates the angular separation between the given body and the S
 
 When observing a distant object, for example Jupiter as seen from Earth, the amount of time it takes for light to travel from the object to the observer can significantly affect the object's apparent position.
 
-This function solves the light travel time correction for both apparent relative position and relative velocity of a target body as seen by an observer body at a given observation time.
+This function solves the light travel time correction for the apparent relative position vector of a target body as seen by an observer body at a given observation time.
 
 For a more generalized light travel correction solver, see [`Astronomy_CorrectLightTravel`](#Astronomy_CorrectLightTravel).
 
@@ -443,15 +443,15 @@ Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the c
 
 
 
-When observing a distant object, for example Jupiter as seen from Earth, the amount of time it takes for light to travel from the object to the observer can significantly affect the object's apparent position. This function is a generic solver that figures out how long in the past light must have left the observed object to reach the observer at the specified observation time. It uses a context/function pair as a generic interface that expresses an arbitrary state vector as a function of time.
+When observing a distant object, for example Jupiter as seen from Earth, the amount of time it takes for light to travel from the object to the observer can significantly affect the object's apparent position. This function is a generic solver that figures out how long in the past light must have left the observed object to reach the observer at the specified observation time. It uses a context/function pair as a generic interface that expresses an arbitrary position vector as a function of time.
 
-This function repeatedly calls `func`, passing `context` and a series of time estimates in the past. The `func` must return a relative state vector between the observer and the target. `Astronomy_CorrectLightTravel` keeps calling `func` with more and more refined estimates of the time light must have left the target to arrive at the observer.
+This function repeatedly calls `func`, passing `context` and a series of time estimates in the past. Then `func` must return a relative position vector between the observer and the target. `Astronomy_CorrectLightTravel` keeps calling `func` with more and more refined estimates of the time light must have left the target to arrive at the observer.
 
 For common use cases, it is simpler to use [`Astronomy_BackdatePosition`](#Astronomy_BackdatePosition) for calculating the light travel time correction of one body observing another body.
 
 
 
-**Returns:**  The position vector return by `func` at the solved backdated time. On success, the vector will hold `ASTRO_SUCCESS` in its `status` field, the backdated time in its `t` field, along with the apparent relative position. If an error occurs, `status` will hold an error code and the remaining fields should be ignored. 
+**Returns:**  The position vector returned by `func` at the solved backdated time. On success, the vector will hold `ASTRO_SUCCESS` in its `status` field, the backdated time in its `t` field, along with the apparent relative position. If an error occurs, `status` will hold an error code and the remaining fields should be ignored. 
 
 
 
@@ -806,7 +806,7 @@ This function calculates the position of the given celestial body as a vector, u
 
 If given an invalid value for `body`, this function will fail. The caller should always check the `status` field inside the returned [`astro_vector_t`](#astro_vector_t) for `ASTRO_SUCCESS` (success) or any other value (failure) before trusting the resulting vector.
 
-Unlike [`Astronomy_HelioVector`](#Astronomy_HelioVector), this function always corrects for light travel time. This means the position of the body is "back-dated" by the amount of time it takes light to travel from that body to an observer on the Earth.
+Unlike [`Astronomy_HelioVector`](#Astronomy_HelioVector), this function corrects for light travel time. This means the position of the body is "back-dated" by the amount of time it takes light to travel from that body to an observer on the Earth.
 
 Also, the position can optionally be corrected for [aberration](https://en.wikipedia.org/wiki/Aberration_of_light), an effect causing the apparent direction of the body to be shifted due to transverse movement of the Earth with respect to the rays of light coming from that body.
 
@@ -4444,7 +4444,7 @@ This is an opaque data type used to hold the internal state of a numeric integra
 
 
 
-The function [`Astronomy_CorrectLightTravel`](#Astronomy_CorrectLightTravel) solves a generalized problem of deducing how far in the past light must have left a target object to be seen by an observer at a specified time. This function pointer type expresses an arbitrary state vector function of time. Such a function must be passed to `Astronomy_CorrectLightTravel`. 
+The function [`Astronomy_CorrectLightTravel`](#Astronomy_CorrectLightTravel) solves a generalized problem of deducing how far in the past light must have left a target object to be seen by an observer at a specified time. This function pointer type expresses an arbitrary position vector as function of time. Such a function must be passed to `Astronomy_CorrectLightTravel`. 
 
 ---
 

@@ -2623,6 +2623,25 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// A function for which to solve a light-travel time problem.
+    /// </summary>
+    /// <remarks>
+    /// The function #Astronomy.CorrectLightTravel solves a generalized
+    /// problem of deducing how far in the past light must have left
+    /// a target object to be seen by an observer at a specified time.
+    /// This interface expresses an arbitrary position vector as
+    /// function of time that is passed to #Astronomy.CorrectLightTravel.
+    /// </remarks>
+    public interface IPositionFunction
+    {
+        /// <summary>
+        /// Returns a relative position vector for a given time.
+        /// </summary>
+        /// <param name="time">The time at which to evaluate a relative position vector.</param>
+        AstroVector Position(AstroTime time);
+    }
+
+    /// <summary>
     /// The wrapper class that holds Astronomy Engine functions.
     /// </summary>
     public static class Astronomy
@@ -5518,7 +5537,151 @@ namespace CosineKitty
             return CalcVsop(vsop[(int)Body.Earth], time);
         }
 
+        /// <summary>
+        /// Solve for light travel time of a vector function.
+        /// </summary>
+        /// <remarks>
+        /// When observing a distant object, for example Jupiter as seen from Earth,
+        /// the amount of time it takes for light to travel from the object to the
+        /// observer can significantly affect the object's apparent position.
+        /// This function is a generic solver that figures out how long in the
+        /// past light must have left the observed object to reach the observer
+        /// at the specified observation time. It uses #IPositionFunction
+        /// to expresses an arbitrary position vector as a function of time.
         ///
+        /// This function repeatedly calls `func.Position`, passing a series of time
+        /// estimates in the past. Then `func.Position` must return a relative state vector between
+        /// the observer and the target. `CorrectLightTravel` keeps calling
+        /// `func.Position` with more and more refined estimates of the time light must have
+        /// left the target to arrive at the observer.
+        ///
+        /// For common use cases, it is simpler to use #Astronomy.BackdatePosition
+        /// for calculating the light travel time correction of one body observing another body.
+        /// </remarks>
+        /// <param name="func">An arbitrary position vector as a function of time.</param>
+        /// <param name="time">The observation time for which to solve for light travel delay.</param>
+        /// <returns>
+        /// The position vector at the solved backdated time.
+        /// The `t` field holds the time that light left the observed
+        /// body to arrive at the observer at the observation time.
+        /// </returns>
+        public static AstroVector CorrectLightTravel(IPositionFunction func, AstroTime time)
+        {
+            AstroTime ltime = time;
+            for (int iter = 0; iter < 10; ++iter)
+            {
+                AstroVector pos = func.Position(ltime);
+                AstroTime ltime2 = time.AddDays(-pos.Length() / Astronomy.C_AUDAY);
+                double dt = Math.Abs(ltime2.tt - ltime.tt);
+                if (dt < 1.0e-9)        // 86.4 microseconds
+                    return pos;
+                ltime = ltime2;
+            }
+            throw new InternalError("Light travel time correction did not converge.");
+        }
+
+        internal class BodyPosition: IPositionFunction
+        {
+            private Body observerBody;
+            private Body targetBody;
+            private Aberration aberration;
+            private AstroVector observerPos;    // used only when aberration == Aberration.None
+
+            public BodyPosition(Body observerBody, Body targetBody, Aberration aberration, AstroVector observerPos)
+            {
+                this.observerBody = observerBody;
+                this.targetBody = targetBody;
+                this.aberration = aberration;
+                this.observerPos = observerPos;
+            }
+
+            public AstroVector Position(AstroTime time)
+            {
+                if (aberration == Aberration.None)
+                {
+                    // No aberration, so use the pre-calculated initial position of
+                    // the observer body that is already stored in `observerPos`.
+                    // To avoid an exception in the subtraction below, patch the time.
+                    observerPos.t = time;
+                }
+                else
+                {
+                    // The following discussion is worded with the observer body being the Earth,
+                    // which is often the case. However, the same reasoning applies to any observer body
+                    // without loss of generality.
+                    //
+                    // To include aberration, make a good first-order approximation
+                    // by backdating the Earth's position also.
+                    // This is confusing, but it works for objects within the Solar System
+                    // because the distance the Earth moves in that small amount of light
+                    // travel time (a few minutes to a few hours) is well approximated
+                    // by a line segment that substends the angle seen from the remote
+                    // body viewing Earth. That angle is pretty close to the aberration
+                    // angle of the moving Earth viewing the remote body.
+                    // In other words, both of the following approximate the aberration angle:
+                    //     (transverse distance Earth moves) / (distance to body)
+                    //     (transverse speed of Earth) / (speed of light).
+
+                    observerPos = Astronomy.HelioVector(observerBody, time);
+                }
+
+                // Subtract the bodies' heliocentric positions to obtain a relative position vector.
+                return Astronomy.HelioVector(targetBody, time) - observerPos;
+            }
+        }
+
+        /// <summary>
+        /// Solve for light travel time correction of apparent position.
+        /// </summary>
+        /// <remarks>
+        /// When observing a distant object, for example Jupiter as seen from Earth,
+        /// the amount of time it takes for light to travel from the object to the
+        /// observer can significantly affect the object's apparent position.
+        ///
+        /// This function solves the light travel time correction for the apparent
+        /// relative position vector of a target body as seen by an observer body
+        /// at a given observation time.
+        ///
+        /// For a more generalized light travel correction solver, see #Astronomy.CorrectLightTravel.
+        /// </remarks>
+        /// <param name="time">The time of observation.</param>
+        /// <param name="observerBody">The body to be used as the observation location.</param>
+        /// <param name="targetBody">The body to be observed.</param>
+        /// <param name="aberration">`Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.</param>
+        /// <returns>
+        /// The position vector at the solved backdated time.
+        /// The `t` field holds the time that light left the observed
+        /// body to arrive at the observer at the observation time.
+        /// </returns>
+        public static AstroVector BackdatePosition(
+            AstroTime time,
+            Body observerBody,
+            Body targetBody,
+            Aberration aberration)
+        {
+            AstroVector observerPos;
+            switch (aberration)
+            {
+                case Aberration.None:
+                    // Without aberration, we need the observer body position at the observation time only.
+                    // For efficiency, calculate it once and hold onto it, so `BodyPosition` can keep using it.
+                    observerPos = HelioVector(observerBody, time);
+                    break;
+
+                case Aberration.Corrected:
+                    // With aberration, `BackdatePosition` will calculate `observerPos` at different times.
+                    // Therefore, do not waste time calculating it now.
+                    // Provide a placeholder value.
+                    observerPos = new AstroVector();
+                    break;
+
+                default:
+                    throw new ArgumentException($"Unsupported aberration option: {aberration}");
+            }
+            var func = new BodyPosition(observerBody, targetBody, aberration, observerPos);
+            return CorrectLightTravel(func, time);
+        }
+
         /// <summary>
         /// Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
         /// </summary>
@@ -5530,7 +5693,7 @@ namespace CosineKitty
         ///
         /// If given an invalid value for `body`, this function will throw an exception.
         ///
-        /// Unlike #Astronomy.HelioVector, this function always corrects for light travel time.
+        /// Unlike #Astronomy.HelioVector, this function corrects for light travel time.
         /// This means the position of the body is "back-dated" by the amount of time it takes
         /// light to travel from that body to an observer on the Earth.
         ///
@@ -5548,66 +5711,21 @@ namespace CosineKitty
             AstroTime time,
             Aberration aberration)
         {
-            AstroVector vector;
-            AstroVector earth = new AstroVector(0.0, 0.0, 0.0, time);
-            AstroTime ltime;
-            AstroTime ltime2;
-            double dt;
-            int iter;
-
-            if (aberration != Aberration.Corrected && aberration != Aberration.None)
-                throw new ArgumentException(string.Format("Unsupported aberration option {0}", aberration));
-
             switch (body)
             {
             case Body.Earth:
-                /* The Earth's geocentric coordinates are always (0,0,0). */
+                // The Earth's geocentric coordinates are always (0,0,0).
                 return new AstroVector(0.0, 0.0, 0.0, time);
 
             case Body.Moon:
+                // The moon is so close, aberration and light travel time don't matter.
                 return GeoMoon(time);
 
             default:
-                /* For all other bodies, apply light travel time correction. */
-
-                if (aberration == Aberration.None)
-                {
-                    /* No aberration, so calculate Earth's position once, at the time of observation. */
-                    earth = CalcEarth(time);
-                }
-
-                ltime = time;
-                for (iter=0; iter < 10; ++iter)
-                {
-                    vector = HelioVector(body, ltime);
-                    if (aberration == Aberration.Corrected)
-                    {
-                        /*
-                            Include aberration, so make a good first-order approximation
-                            by backdating the Earth's position also.
-                            This is confusing, but it works for objects within the Solar System
-                            because the distance the Earth moves in that small amount of light
-                            travel time (a few minutes to a few hours) is well approximated
-                            by a line segment that substends the angle seen from the remote
-                            body viewing Earth. That angle is pretty close to the aberration
-                            angle of the moving Earth viewing the remote body.
-                            In other words, both of the following approximate the aberration angle:
-                                (transverse distance Earth moves) / (distance to body)
-                                (transverse speed of Earth) / (speed of light).
-                        */
-                        earth = CalcEarth(ltime);
-                    }
-
-                    /* Convert heliocentric vector to geocentric vector. */
-                    vector = new AstroVector(vector.x - earth.x, vector.y - earth.y, vector.z - earth.z, time);
-                    ltime2 = time.AddDays(-vector.Length() / C_AUDAY);
-                    dt = Math.Abs(ltime2.tt - ltime.tt);
-                    if (dt < 1.0e-9)
-                        return vector;
-
-                    ltime = ltime2;
-                }
-                throw new InternalError("Light travel time correction did not converge");
+                // For all other bodies, apply light travel time correction.
+                AstroVector vector = BackdatePosition(time, Body.Earth, body, aberration);
+                vector.t = time;    // tricky: return the observation time, not the backdated time.
+                return vector;
             }
         }
 

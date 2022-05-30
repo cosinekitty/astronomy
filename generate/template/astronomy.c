@@ -3760,11 +3760,11 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
  * This function is a generic solver that figures out how long in the
  * past light must have left the observed object to reach the observer
  * at the specified observation time. It uses a context/function pair
- * as a generic interface that expresses an arbitrary state vector
+ * as a generic interface that expresses an arbitrary position vector
  * as a function of time.
  *
  * This function repeatedly calls `func`, passing `context` and a series of time
- * estimates in the past. The `func` must return a relative state vector between
+ * estimates in the past. Then `func` must return a relative position vector between
  * the observer and the target. `Astronomy_CorrectLightTravel` keeps calling
  * `func` with more and more refined estimates of the time light must have
  * left the target to arrive at the observer.
@@ -3776,7 +3776,7 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
  * @param func      Pointer to a function that returns a relative position vector as a function of time.
  * @param time      The observation time for which to solve for light travel delay.
  * @return
- *      The position vector return by `func` at the solved backdated time.
+ *      The position vector returned by `func` at the solved backdated time.
  *      On success, the vector will hold `ASTRO_SUCCESS` in its `status` field,
  *      the backdated time in its `t` field, along with the apparent relative position.
  *      If an error occurs, `status` will hold an error code and the remaining fields
@@ -3836,8 +3836,9 @@ static astro_vector_t BodyPosition(void *context, astro_time_t time)
     else
     {
         /*
-            The following assumes the observer body is the Earth, which is usually the case.
-            However, the same reasoning applies to any observer body.
+            The following discussion is worded with the observer body being the Earth,
+            which is often the case. However, the same reasoning applies to any observer body
+            without loss of generality.
 
             To include aberration, make a good first-order approximation
             by backdating the Earth's position also.
@@ -3876,9 +3877,9 @@ static astro_vector_t BodyPosition(void *context, astro_time_t time)
  * the amount of time it takes for light to travel from the object to the
  * observer can significantly affect the object's apparent position.
  *
- * This function solves the light travel time correction for both apparent
- * relative position and relative velocity of a target body as seen by an
- * observer body at a given observation time.
+ * This function solves the light travel time correction for the apparent
+ * relative position vector of a target body as seen by an observer body
+ * at a given observation time.
  *
  * For a more generalized light travel correction solver, see #Astronomy_CorrectLightTravel.
  *
@@ -3904,18 +3905,23 @@ astro_vector_t Astronomy_BackdatePosition(
     context.observerBody = observerBody;
     context.targetBody   = targetBody;
     context.aberration   = aberration;
-    if (aberration == NO_ABERRATION)
+    switch (aberration)
     {
+    case NO_ABERRATION:
         /* Without aberration, we need the observer body position at the observation time only. */
         /* For efficiency, calculate it once and hold onto it, so `BodyPosition` can keep using it. */
         context.observerPos = Astronomy_HelioVector(observerBody, time);
-    }
-    else
-    {
+        break;
+
+    case ABERRATION:
         /* With aberration, `BackdatePosition` will calculate the observer body state at different times. */
         /* Therefore, do not waste time calculating it at the observation time. */
         /* Initialize the memory with an explicitly invalid value. */
         context.observerPos = VecError(ASTRO_NOT_INITIALIZED, time);
+        break;
+
+    default:
+        return VecError(ASTRO_INVALID_PARAMETER, time);
     }
 
     return Astronomy_CorrectLightTravel(&context, BodyPosition, time);
@@ -3934,7 +3940,7 @@ astro_vector_t Astronomy_BackdatePosition(
  * the `status` field inside the returned #astro_vector_t for `ASTRO_SUCCESS` (success)
  * or any other value (failure) before trusting the resulting vector.
  *
- * Unlike #Astronomy_HelioVector, this function always corrects for light travel time.
+ * Unlike #Astronomy_HelioVector, this function corrects for light travel time.
  * This means the position of the body is "back-dated" by the amount of time it takes
  * light to travel from that body to an observer on the Earth.
  *
@@ -3951,9 +3957,6 @@ astro_vector_t Astronomy_BackdatePosition(
 astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration)
 {
     astro_vector_t vector;
-
-    if (aberration != ABERRATION && aberration != NO_ABERRATION)
-        return VecError(ASTRO_INVALID_PARAMETER, time);
 
     switch (body)
     {
@@ -3976,7 +3979,7 @@ astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_a
         break;
     }
 
-    vector.t = time;        /* quirk: return the observation time, not the backdated time */
+    vector.t = time;    /* tricky: return the observation time, not the backdated time */
     return vector;
 }
 
