@@ -3580,6 +3580,142 @@ export function HelioDistance(body, date) {
     return HelioVector(body, time).Length();
 }
 /**
+ * @brief A function for which to solve a light-travel time problem.
+ *
+ * The function {@link CorrectLightTravel} solves a generalized
+ * problem of deducing how far in the past light must have left
+ * a target object to be seen by an observer at a specified time.
+ * This interface expresses an arbitrary position vector as
+ * function of time that is passed to {@link CorrectLightTravel}.
+ */
+export class PositionFunction {
+}
+/**
+ * Solve for light travel time of a vector function.
+ *
+ * When observing a distant object, for example Jupiter as seen from Earth,
+ * the amount of time it takes for light to travel from the object to the
+ * observer can significantly affect the object's apparent position.
+ * This function is a generic solver that figures out how long in the
+ * past light must have left the observed object to reach the observer
+ * at the specified observation time. It uses {@link PositionFunction}
+ * to express an arbitrary position vector as a function of time.
+ *
+ * This function repeatedly calls `func.Position`, passing a series of time
+ * estimates in the past. Then `func.Position` must return a relative state vector between
+ * the observer and the target. `CorrectLightTravel` keeps calling
+ * `func.Position` with more and more refined estimates of the time light must have
+ * left the target to arrive at the observer.
+ *
+ * For common use cases, it is simpler to use {@link BackdatePosition}
+ * for calculating the light travel time correction of one body observing another body.
+ *
+ * @param {PositionFunction} func
+ *      An arbitrary position vector as a function of time.
+ *
+ * @param {AstroTime} time
+ *      The observation time for which to solve for light travel delay.
+ *
+ * @returns {AstroVector}
+ *      The position vector at the solved backdated time.
+ *      The `t` field holds the time that light left the observed
+ *      body to arrive at the observer at the observation time.
+ */
+export function CorrectLightTravel(func, time) {
+    let ltime = time;
+    let dt;
+    for (let iter = 0; iter < 10; ++iter) {
+        const pos = func.Position(ltime);
+        const ltime2 = time.AddDays(-pos.Length() / C_AUDAY);
+        dt = Math.abs(ltime2.tt - ltime.tt);
+        if (dt < 1.0e-9) // 86.4 microseconds
+            return pos;
+        ltime = ltime2;
+    }
+    throw "Light-travel time solver did not converge.";
+}
+class BodyPosition extends PositionFunction {
+    constructor(observerBody, targetBody, aberration, observerPos) {
+        super();
+        this.observerBody = observerBody;
+        this.targetBody = targetBody;
+        this.aberration = aberration;
+        this.observerPos = observerPos;
+    }
+    Position(time) {
+        if (this.aberration) {
+            // The following discussion is worded with the observer body being the Earth,
+            // which is often the case. However, the same reasoning applies to any observer body
+            // without loss of generality.
+            //
+            // To include aberration, make a good first-order approximation
+            // by backdating the Earth's position also.
+            // This is confusing, but it works for objects within the Solar System
+            // because the distance the Earth moves in that small amount of light
+            // travel time (a few minutes to a few hours) is well approximated
+            // by a line segment that substends the angle seen from the remote
+            // body viewing Earth. That angle is pretty close to the aberration
+            // angle of the moving Earth viewing the remote body.
+            // In other words, both of the following approximate the aberration angle:
+            //     (transverse distance Earth moves) / (distance to body)
+            //     (transverse speed of Earth) / (speed of light).
+            this.observerPos = HelioVector(this.observerBody, time);
+        }
+        else {
+            // No aberration, so use the pre-calculated initial position of
+            // the observer body that is already stored in `observerPos`.
+        }
+        const targetPos = HelioVector(this.targetBody, time);
+        return new Vector(targetPos.x - this.observerPos.x, targetPos.y - this.observerPos.y, targetPos.z - this.observerPos.z, time);
+    }
+}
+/**
+ * @brief Solve for light travel time correction of apparent position.
+ *
+ * When observing a distant object, for example Jupiter as seen from Earth,
+ * the amount of time it takes for light to travel from the object to the
+ * observer can significantly affect the object's apparent position.
+ *
+ * This function solves the light travel time correction for the apparent
+ * relative position vector of a target body as seen by an observer body
+ * at a given observation time.
+ *
+ * For a more generalized light travel correction solver, see {@link CorrectLightTravel}.
+ *
+ * @param {FlexibleDateTime} date
+ *      The time of observation.
+ *
+ * @param {Body} observerBody
+ *      The body to be used as the observation location.
+ *
+ * @param {Body} targetBody
+ *      The body to be observed.
+ *
+ * @param {boolean} aberration
+ *      `true` to correct for aberration, or `false` to leave uncorrected.
+ *
+ * @returns {Vector}
+ *      The position vector at the solved backdated time.
+ *      The `t` field holds the time that light left the observed
+ *      body to arrive at the observer at the observation time.
+ */
+export function BackdatePosition(date, observerBody, targetBody, aberration) {
+    VerifyBoolean(aberration);
+    const time = MakeTime(date);
+    let observerPos;
+    if (aberration) {
+        // With aberration, `BackdatePosition` will calculate `observerPos` at different times.
+        // Therefore, do not waste time calculating it now.
+        // Create a placeholder value that will be ignored.
+        observerPos = new Vector(0, 0, 0, time);
+    }
+    else {
+        observerPos = HelioVector(observerBody, time);
+    }
+    const func = new BodyPosition(observerBody, targetBody, aberration, observerPos);
+    return CorrectLightTravel(func, time);
+}
+/**
  * @brief Calculates a vector from the center of the Earth to the given body at the given time.
  *
  * Calculates geocentric (i.e., with respect to the center of the Earth)
@@ -3601,7 +3737,7 @@ export function HelioDistance(body, date) {
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
  *
- * @param {bool} aberration
+ * @param {boolean} aberration
  *      Pass `true` to correct for
  *      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,
  *      or `false` to leave uncorrected.
@@ -3615,44 +3751,7 @@ export function GeoVector(body, date, aberration) {
         return GeoMoon(time);
     if (body === Body.Earth)
         return new Vector(0, 0, 0, time);
-    let earth = null;
-    let h;
-    let geo;
-    let dt = 0;
-    let ltime = time;
-    // Correct for light-travel time, to get position of body as seen from Earth's center.
-    for (let iter = 0; iter < 10; ++iter) {
-        h = HelioVector(body, ltime);
-        if (aberration) {
-            /*
-                Include aberration, so make a good first-order approximation
-                by backdating the Earth's position also.
-                This is confusing, but it works for objects within the Solar System
-                because the distance the Earth moves in that small amount of light
-                travel time (a few minutes to a few hours) is well approximated
-                by a line segment that substends the angle seen from the remote
-                body viewing Earth. That angle is pretty close to the aberration
-                angle of the moving Earth viewing the remote body.
-                In other words, both of the following approximate the aberration angle:
-                    (transverse distance Earth moves) / (distance to body)
-                    (transverse speed of Earth) / (speed of light).
-            */
-            earth = CalcVsop(vsop.Earth, ltime);
-        }
-        else {
-            if (!earth) {
-                // No aberration, so calculate Earth's position once, at the time of observation.
-                earth = CalcVsop(vsop.Earth, time);
-            }
-        }
-        geo = new Vector(h.x - earth.x, h.y - earth.y, h.z - earth.z, time);
-        let ltime2 = time.AddDays(-geo.Length() / C_AUDAY);
-        dt = Math.abs(ltime2.tt - ltime.tt);
-        if (dt < 1.0e-9)
-            return geo;
-        ltime = ltime2;
-    }
-    throw `Light-travel time solver did not converge: dt=${dt}`;
+    return BackdatePosition(time, Body.Earth, body, aberration);
 }
 function ExportState(terse, time) {
     return new StateVector(terse.r.x, terse.r.y, terse.r.z, terse.v.x, terse.v.y, terse.v.z, time);

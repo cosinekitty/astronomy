@@ -454,6 +454,20 @@ and the velocities in AU/day.
 
 * * *
 
+<a name="PositionFunction"></a>
+
+## PositionFunction
+**Kind**: global class  
+**Brief**: A function for which to solve a light-travel time problem.
+
+The function [CorrectLightTravel](#CorrectLightTravel) solves a generalized
+problem of deducing how far in the past light must have left
+a target object to be seen by an observer at a specified time.
+This interface expresses an arbitrary position vector as
+function of time that is passed to [CorrectLightTravel](#CorrectLightTravel).  
+
+* * *
+
 <a name="IlluminationInfo"></a>
 
 ## IlluminationInfo
@@ -1590,6 +1604,70 @@ of the resulting vector.
 
 * * *
 
+<a name="CorrectLightTravel"></a>
+
+## CorrectLightTravel(func, time) ⇒ <code>AstroVector</code>
+Solve for light travel time of a vector function.
+
+When observing a distant object, for example Jupiter as seen from Earth,
+the amount of time it takes for light to travel from the object to the
+observer can significantly affect the object's apparent position.
+This function is a generic solver that figures out how long in the
+past light must have left the observed object to reach the observer
+at the specified observation time. It uses [PositionFunction](#PositionFunction)
+to express an arbitrary position vector as a function of time.
+
+This function repeatedly calls `func.Position`, passing a series of time
+estimates in the past. Then `func.Position` must return a relative state vector between
+the observer and the target. `CorrectLightTravel` keeps calling
+`func.Position` with more and more refined estimates of the time light must have
+left the target to arrive at the observer.
+
+For common use cases, it is simpler to use [BackdatePosition](#BackdatePosition)
+for calculating the light travel time correction of one body observing another body.
+
+**Kind**: global function  
+**Returns**: <code>AstroVector</code> - The position vector at the solved backdated time.
+     The `t` field holds the time that light left the observed
+     body to arrive at the observer at the observation time.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| func | [<code>PositionFunction</code>](#PositionFunction) | An arbitrary position vector as a function of time. |
+| time | [<code>AstroTime</code>](#AstroTime) | The observation time for which to solve for light travel delay. |
+
+
+* * *
+
+<a name="BackdatePosition"></a>
+
+## BackdatePosition(date, observerBody, targetBody, aberration) ⇒ [<code>Vector</code>](#Vector)
+**Kind**: global function  
+**Returns**: [<code>Vector</code>](#Vector) - The position vector at the solved backdated time.
+     The `t` field holds the time that light left the observed
+     body to arrive at the observer at the observation time.  
+**Brief**: Solve for light travel time correction of apparent position.
+
+When observing a distant object, for example Jupiter as seen from Earth,
+the amount of time it takes for light to travel from the object to the
+observer can significantly affect the object's apparent position.
+
+This function solves the light travel time correction for the apparent
+relative position vector of a target body as seen by an observer body
+at a given observation time.
+
+For a more generalized light travel correction solver, see [CorrectLightTravel](#CorrectLightTravel).  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The time of observation. |
+| observerBody | [<code>Body</code>](#Body) | The body to be used as the observation location. |
+| targetBody | [<code>Body</code>](#Body) | The body to be observed. |
+| aberration | <code>boolean</code> | `true` to correct for aberration, or `false` to leave uncorrected. |
+
+
+* * *
+
 <a name="GeoVector"></a>
 
 ## GeoVector(body, date, aberration) ⇒ [<code>Vector</code>](#Vector)
@@ -1610,7 +1688,7 @@ coming from that body.
 | --- | --- | --- |
 | body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,      `Body.Uranus`, `Body.Neptune`, or `Body.Pluto`. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
-| aberration | <code>bool</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
+| aberration | <code>boolean</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
 
 
 * * *

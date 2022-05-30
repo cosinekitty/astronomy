@@ -5547,7 +5547,7 @@ namespace CosineKitty
         /// This function is a generic solver that figures out how long in the
         /// past light must have left the observed object to reach the observer
         /// at the specified observation time. It uses #IPositionFunction
-        /// to expresses an arbitrary position vector as a function of time.
+        /// to express an arbitrary position vector as a function of time.
         ///
         /// This function repeatedly calls `func.Position`, passing a series of time
         /// estimates in the past. Then `func.Position` must return a relative state vector between
