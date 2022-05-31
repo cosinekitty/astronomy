@@ -763,6 +763,36 @@ to report information about the center of the Moon passing through the ecliptic 
 
 ---
 
+<a name="PositionFunction"></a>
+### class PositionFunction
+
+**A function for which to solve a light-travel time problem.**
+
+This abstract class defines the contract for wrapping a
+position vector as a function of time. A class derived from
+`PositionFunction` must define a `Position` method that
+returns a position vector for a given time.
+The function [`CorrectLightTravel`](#CorrectLightTravel) solves a generalized
+problem of deducing how far in the past light must have
+left a target object to be seen by an observer at a
+specified time. It is passed an instance of `PositionFunction`
+that expresses a relative position vector function.
+
+#### member functions
+
+<a name="PositionFunction.Position"></a>
+### PositionFunction.Position(self, time)
+
+**Returns a relative position vector for a given time.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The time at which to evaluate a relative position vector. |
+
+**Returns**: [`Vector`](#Vector)
+
+---
+
 <a name="RotationMatrix"></a>
 ### class RotationMatrix
 
@@ -1218,6 +1248,33 @@ and the specified body as seen from the center of the Earth.
 
 ---
 
+<a name="BackdatePosition"></a>
+### BackdatePosition(time, observerBody, targetBody, aberration)
+
+**Solve for light travel time correction of apparent position.**
+
+When observing a distant object, for example Jupiter as seen from Earth,
+the amount of time it takes for light to travel from the object to the
+observer can significantly affect the object's apparent position.
+This function solves the light travel time correction for the apparent
+relative position vector of a target body as seen by an observer body
+at a given observation time.
+For a more generalized light travel correction solver, see [`CorrectLightTravel`](#CorrectLightTravel).
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The time of observation. |
+| [`Body`](#Body) | `observerBody` | The body to be used as the observation location. |
+| [`Body`](#Body) | `targetBody` | The body to be observed. |
+| `bool` | `aberration` | `True` to correct for aberration, or `False` to leave uncorrected. |
+
+**Returns**: [`Vector`](#Vector)
+The position vector at the solved backdated time.
+Its `t` field holds the time that light left the observed
+body to arrive at the observer at the observation time.
+
+---
+
 <a name="BaryState"></a>
 ### BaryState(body, time)
 
@@ -1293,6 +1350,39 @@ constellation that contains that point.
 A structure that contains the 3-letter abbreviation and full name
 of the constellation that contains the given (ra,dec), along with
 the converted B1875 (ra,dec) for that point.
+
+---
+
+<a name="CorrectLightTravel"></a>
+### CorrectLightTravel(func, time)
+
+**Solve for light travel time of a vector function.**
+
+When observing a distant object, for example Jupiter as seen from Earth,
+the amount of time it takes for light to travel from the object to the
+observer can significantly affect the object's apparent position.
+This function is a generic solver that figures out how long in the
+past light must have left the observed object to reach the observer
+at the specified observation time. It uses [`PositionFunction`](#PositionFunction)
+to express an arbitrary position vector as a function of time.
+This function repeatedly calls `func.Position`, passing a series of time
+estimates in the past. Then `func.Position` must return a relative state vector between
+the observer and the target. `CorrectLightTravel` keeps calling
+`func.Position` with more and more refined estimates of the time light must have
+left the target to arrive at the observer.
+For common use cases, it is simpler to use [`BackdatePosition`](#BackdatePosition)
+for calculating the light travel time correction of one body observing another body.
+time : Time
+    The observation time for which to solve for light travel delay.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`PositionFunction`](#PositionFunction) | `func` | An arbitrary position vector as a function of time. |
+
+**Returns**: [`Vector`](#Vector)
+The position vector at the solved backdated time.
+The `t` field holds the time that light left the observed
+body to arrive at the observer at the observation time.
 
 ---
 
@@ -1526,7 +1616,7 @@ using the center of the Earth as the origin.  The result is expressed as a Carte
 vector in the J2000 equatorial system: the coordinates are based on the mean equator
 of the Earth at noon UTC on 1 January 2000.
 If given an invalid value for `body`, this function will raise an exception.
-Unlike [`HelioVector`](#HelioVector), this function always corrects for light travel time.
+Unlike [`HelioVector`](#HelioVector), this function corrects for light travel time.
 This means the position of the body is "back-dated" by the amount of time it takes
 light to travel from that body to an observer on the Earth.
 Also, the position can optionally be corrected for

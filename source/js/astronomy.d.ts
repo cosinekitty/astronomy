@@ -965,7 +965,7 @@ export declare function HelioDistance(body: Body, date: FlexibleDateTime): numbe
 export declare abstract class PositionFunction {
     /**
      * @brief Returns a relative position vector for a given time.
-     * @param {Body} time
+     * @param {AstroTime} time
      *      The time at which to evaluate a relative position vector.
      */
     abstract Position(time: AstroTime): Vector;

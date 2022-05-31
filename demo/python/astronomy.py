@@ -35,6 +35,7 @@ import math
 import datetime
 import enum
 import re
+import abc
 
 def _cbrt(x):
     if x < 0.0:
@@ -4425,6 +4426,161 @@ def HelioDistance(body, time):
     return HelioVector(body, time).Length()
 
 
+class PositionFunction(abc.ABC):
+    """A function for which to solve a light-travel time problem.
+
+    This abstract class defines the contract for wrapping a
+    position vector as a function of time. A class derived from
+    `PositionFunction` must define a `Position` method that
+    returns a position vector for a given time.
+
+    The function #CorrectLightTravel solves a generalized
+    problem of deducing how far in the past light must have
+    left a target object to be seen by an observer at a
+    specified time. It is passed an instance of `PositionFunction`
+    that expresses a relative position vector function.
+    """
+    def __init__(self):
+        pass
+
+    @abc.abstractmethod
+    def Position(self, time):
+        """Returns a relative position vector for a given time.
+
+        Parameters
+        ----------
+        time : Time
+            The time at which to evaluate a relative position vector.
+
+        Returns
+        -------
+        Vector
+        """
+
+def CorrectLightTravel(func, time):
+    """Solve for light travel time of a vector function.
+
+    When observing a distant object, for example Jupiter as seen from Earth,
+    the amount of time it takes for light to travel from the object to the
+    observer can significantly affect the object's apparent position.
+    This function is a generic solver that figures out how long in the
+    past light must have left the observed object to reach the observer
+    at the specified observation time. It uses #PositionFunction
+    to express an arbitrary position vector as a function of time.
+
+    This function repeatedly calls `func.Position`, passing a series of time
+    estimates in the past. Then `func.Position` must return a relative state vector between
+    the observer and the target. `CorrectLightTravel` keeps calling
+    `func.Position` with more and more refined estimates of the time light must have
+    left the target to arrive at the observer.
+
+    For common use cases, it is simpler to use #BackdatePosition
+    for calculating the light travel time correction of one body observing another body.
+
+    Parameters
+    ----------
+    func : PositionFunction
+         An arbitrary position vector as a function of time.
+
+    time : Time
+        The observation time for which to solve for light travel delay.
+
+    Returns
+    -------
+    Vector
+        The position vector at the solved backdated time.
+        The `t` field holds the time that light left the observed
+        body to arrive at the observer at the observation time.
+    """
+    ltime = time
+    for _ in range(10):
+        pos = func.Position(ltime)
+        ltime2 = time.AddDays(-pos.Length() / C_AUDAY)
+        dt = abs(ltime2.tt - ltime.tt)
+        if dt < 1.0e-9:     # 86.4 microseconds
+            return pos
+        ltime = ltime2
+    raise NoConvergeError()
+
+
+class _BodyPosition(PositionFunction):
+    def __init__(self, observerBody, targetBody, aberration, observerPos):
+        super().__init__()
+        self.observerBody = observerBody
+        self.targetBody = targetBody
+        self.aberration = aberration
+        self.observerPos = observerPos
+
+    def Position(self, time):
+        if self.aberration:
+            # The following discussion is worded with the observer body being the Earth,
+            # which is often the case. However, the same reasoning applies to any observer body
+            # without loss of generality.
+            #
+            # To include aberration, make a good first-order approximation
+            # by backdating the Earth's position also.
+            # This is confusing, but it works for objects within the Solar System
+            # because the distance the Earth moves in that small amount of light
+            # travel time (a few minutes to a few hours) is well approximated
+            # by a line segment that substends the angle seen from the remote
+            # body viewing Earth. That angle is pretty close to the aberration
+            # angle of the moving Earth viewing the remote body.
+            # In other words, both of the following approximate the aberration angle:
+            #     (transverse distance Earth moves) / (distance to body)
+            #     (transverse speed of Earth) / (speed of light).
+            observerPos = HelioVector(self.observerBody, time)
+        else:
+            # No aberration, so use the pre-calculated initial position of
+            # the observer body that is already stored in this object.
+            observerPos = self.observerPos
+        # Subtract the bodies' heliocentric positions to obtain a relative position vector.
+        return HelioVector(self.targetBody, time) - observerPos
+
+
+def BackdatePosition(time, observerBody, targetBody, aberration):
+    """Solve for light travel time correction of apparent position.
+
+    When observing a distant object, for example Jupiter as seen from Earth,
+    the amount of time it takes for light to travel from the object to the
+    observer can significantly affect the object's apparent position.
+
+    This function solves the light travel time correction for the apparent
+    relative position vector of a target body as seen by an observer body
+    at a given observation time.
+
+    For a more generalized light travel correction solver, see #CorrectLightTravel.
+
+    Parameters
+    ----------
+    time : Time
+        The time of observation.
+    observerBody : Body
+        The body to be used as the observation location.
+    targetBody : Body
+        The body to be observed.
+    aberration : bool
+        `True` to correct for aberration, or `False` to leave uncorrected.
+
+    Returns
+    -------
+    Vector
+        The position vector at the solved backdated time.
+        Its `t` field holds the time that light left the observed
+        body to arrive at the observer at the observation time.
+    """
+    if aberration:
+        # With aberration, `BackdatePosition` will calculate `observerPos` at different times.
+        # Therefore, do not waste time calculating it now.
+        # Provide a placeholder value.
+        observerPos = None
+    else:
+        # Without aberration, we need the observer body position at the observation time only.
+        # For efficiency, calculate it once and hold onto it, so `BodyPosition` can keep using it.
+        observerPos = HelioVector(observerBody, time)
+    func = _BodyPosition(observerBody, targetBody, aberration, observerPos)
+    return CorrectLightTravel(func, time)
+
+
 def GeoVector(body, time, aberration):
     """Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
 
@@ -4435,7 +4591,7 @@ def GeoVector(body, time, aberration):
 
     If given an invalid value for `body`, this function will raise an exception.
 
-    Unlike #HelioVector, this function always corrects for light travel time.
+    Unlike #HelioVector, this function corrects for light travel time.
     This means the position of the body is "back-dated" by the amount of time it takes
     light to travel from that body to an observer on the Earth.
 
@@ -4464,37 +4620,8 @@ def GeoVector(body, time, aberration):
     if body == Body.Earth:
         return Vector(0.0, 0.0, 0.0, time)
 
-    if not aberration:
-        # No aberration, so calculate Earth's position once, at the time of observation.
-        earth = _CalcEarth(time)
-
     # Correct for light-travel time, to get position of body as seen from Earth's center.
-    ltime = time
-    for _ in range(10):
-        h = HelioVector(body, ltime)
-        if aberration:
-            # Include aberration, so make a good first-order approximation
-            # by backdating the Earth's position also.
-            # This is confusing, but it works for objects within the Solar System
-            # because the distance the Earth moves in that small amount of light
-            # travel time (a few minutes to a few hours) is well approximated
-            # by a line segment that substends the angle seen from the remote
-            # body viewing Earth. That angle is pretty close to the aberration
-            # angle of the moving Earth viewing the remote body.
-            # In other words, both of the following approximate the aberration angle:
-            #    (transverse distance Earth moves) / (distance to body)
-            #    (transverse speed of Earth) / (speed of light).
-            earth = _CalcEarth(ltime)
-
-        geo = Vector(h.x-earth.x, h.y-earth.y, h.z-earth.z, time)
-        ltime2 = time.AddDays(-geo.Length() / C_AUDAY)
-        dt = abs(ltime2.tt - ltime.tt)
-        if dt < 1.0e-9:
-            return geo
-
-        ltime = ltime2
-
-    raise Error('Light-travel time solver did not converge: dt={}'.format(dt))
+    return BackdatePosition(time, Body.Earth, body, aberration)
 
 
 def _ExportState(terse, time):

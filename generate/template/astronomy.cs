@@ -4438,7 +4438,7 @@ $ASTRO_IAU_DATA()
         /// <param name="aberration">`Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.</param>
         /// <returns>
         /// The position vector at the solved backdated time.
-        /// The `t` field holds the time that light left the observed
+        /// Its `t` field holds the time that light left the observed
         /// body to arrive at the observer at the observation time.
         /// </returns>
         public static AstroVector BackdatePosition(

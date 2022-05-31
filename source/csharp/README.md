@@ -333,7 +333,7 @@ For a more generalized light travel correction solver, see [`Astronomy.CorrectLi
 | [`Body`](#Body) | `targetBody` | The body to be observed. |
 | [`Aberration`](#Aberration) | `aberration` | `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected. |
 
-**Returns:** The position vector at the solved backdated time. The `t` field holds the time that light left the observed body to arrive at the observer at the observation time.
+**Returns:** The position vector at the solved backdated time. Its `t` field holds the time that light left the observed body to arrive at the observer at the observation time.
 
 <a name="Astronomy.BaryState"></a>
 ### Astronomy.BaryState(body, time) &#8658; [`StateVector`](#StateVector)
