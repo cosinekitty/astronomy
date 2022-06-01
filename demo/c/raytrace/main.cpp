@@ -273,13 +273,12 @@ static void AddMoonToScene(
 
 static void AddJupiterMoons(
     Imager::Scene &scene,
-    astro_vector_t geo_planet,
-    astro_time_t depart)
+    astro_vector_t geo_planet)
 {
     using namespace Imager;
 
     // Calculate the position of Jupiter's moons at the backdated time.
-    astro_jupiter_moons_t jm = Astronomy_JupiterMoons(depart);
+    astro_jupiter_moons_t jm = Astronomy_JupiterMoons(geo_planet.t);
 
     // Add Jupiter's moons to the scene.
     AddMoonToScene(scene, geo_planet, jm.io,       IO_RADIUS_KM,       "Io"      );
@@ -302,7 +301,10 @@ int PlanetImage(
     using namespace Imager;
 
     // Calculate the geocentric position of the planet, corrected for light travel time.
-    astro_vector_t geo_planet = Astronomy_GeoVector(body, time, ABERRATION);
+    // We use Astronomy_BackdatePosition instead of Astronomy_GeoVector because it
+    // returns the time light left the planet, not the time of observation.
+    // This backdated time is needed to calculate the apparent positions of Jupiter's moons.
+    astro_vector_t geo_planet = Astronomy_BackdatePosition(time, BODY_EARTH, body, ABERRATION);
     if (geo_planet.status != ASTRO_SUCCESS)
     {
         fprintf(stderr, "Error %d calculating planet geocentric position\n", geo_planet.status);
@@ -317,13 +319,10 @@ int PlanetImage(
         return 1;
     }
 
-    // Calculate the time light left the planet to be seen on Earth.
     double planet_distance_au = Astronomy_VectorLength(geo_planet);
-    double light_travel_time = planet_distance_au / C_AUDAY;
-    astro_time_t depart = Astronomy_AddDays(time, -light_travel_time);
 
     // Calculate the orientation of the planet's rotation axis.
-    astro_axis_t axis = Astronomy_RotationAxis(body, &depart);
+    astro_axis_t axis = Astronomy_RotationAxis(body, &geo_planet.t);
     if (axis.status != ASTRO_SUCCESS)
     {
         fprintf(stderr, "Error %d calculating planet's rotation axis.\n", axis.status);
@@ -350,7 +349,7 @@ int PlanetImage(
         break;
 
     case BODY_JUPITER:
-        AddJupiterMoons(scene, geo_planet, depart);
+        AddJupiterMoons(scene, geo_planet);
         break;
 
     default:
