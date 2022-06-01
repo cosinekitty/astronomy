@@ -3790,11 +3790,16 @@ exports.BackdatePosition = BackdatePosition;
 function GeoVector(body, date, aberration) {
     VerifyBoolean(aberration);
     const time = MakeTime(date);
-    if (body === Body.Moon)
-        return GeoMoon(time);
-    if (body === Body.Earth)
-        return new Vector(0, 0, 0, time);
-    return BackdatePosition(time, Body.Earth, body, aberration);
+    switch (body) {
+        case Body.Earth:
+            return new Vector(0, 0, 0, time);
+        case Body.Moon:
+            return GeoMoon(time);
+        default:
+            const vec = BackdatePosition(time, Body.Earth, body, aberration);
+            vec.t = time; // tricky: return the observation time, not the backdated time
+            return vec;
+    }
 }
 exports.GeoVector = GeoVector;
 function ExportState(terse, time) {

@@ -2579,7 +2579,11 @@ def GeoVector(body, time, aberration):
         return Vector(0.0, 0.0, 0.0, time)
 
     # Correct for light-travel time, to get position of body as seen from Earth's center.
-    return BackdatePosition(time, Body.Earth, body, aberration)
+    vec = BackdatePosition(time, Body.Earth, body, aberration)
+
+    # Tricky: return the observation time, not the backdated time.
+    vec.t = time
+    return vec
 
 
 def _ExportState(terse, time):

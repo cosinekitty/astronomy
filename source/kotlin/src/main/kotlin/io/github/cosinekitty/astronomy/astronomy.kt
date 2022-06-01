@@ -4967,7 +4967,7 @@ fun geoVector(body: Body, time: Time, aberration: Aberration): Vector =
     when (body) {
         Body.Earth -> Vector(0.0, 0.0, 0.0, time)
         Body.Moon  -> geoMoon(time)
-        else       -> backdatePosition(time, Body.Earth, body, aberration)
+        else       -> backdatePosition(time, Body.Earth, body, aberration).withTime(time)
     }
 
 
