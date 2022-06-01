@@ -10,6 +10,8 @@ When observing a distant object, for example Jupiter as seen from Earth, the amo
 
 This function solves the light travel time correction for the apparent relative position vector of a target body as seen by an observer body at a given observation time.
 
+For geocentric calculations, #geoVector also includes light travel time correction, but the time t embedded in its returned vector refers to the observation time, not the backdated time that light left the observed body. Thus backdatePosition provides direct access to the light departure time for callers that need it.
+
 For a more generalized light travel correction solver, see [correctLightTravel](correct-light-travel.md).
 
 #### Return

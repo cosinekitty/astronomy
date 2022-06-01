@@ -12,6 +12,8 @@ This function repeatedly calls func.Position, passing a series of time estimates
 
 For common use cases, it is simpler to use [backdatePosition](backdate-position.md) for calculating the light travel time correction of one body observing another body.
 
+For geocentric calculations, #geoVector also backdates the returned position vector for light travel time, only it returns the observation time in the returned vector's t field rather than the backdated time.
+
 #### Return
 
 The position vector at the solved backdated time. The t field holds the time that light left the observed body to arrive at the observer at the observation time.

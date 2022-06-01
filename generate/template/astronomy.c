@@ -3772,6 +3772,10 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
  * For common use cases, it is simpler to use #Astronomy_BackdatePosition
  * for calculating the light travel time correction of one body observing another body.
  *
+ * For geocentric calculations, #Astronomy_GeoVector also backdates the returned
+ * position vector for light travel time, only it returns the observation time in
+ * the returned vector's `t` field rather than the backdated time.
+ *
  * @param context   Holds any parameters needed by `func`.
  * @param func      Pointer to a function that returns a relative position vector as a function of time.
  * @param time      The observation time for which to solve for light travel delay.
@@ -3880,6 +3884,12 @@ static astro_vector_t BodyPosition(void *context, astro_time_t time)
  * This function solves the light travel time correction for the apparent
  * relative position vector of a target body as seen by an observer body
  * at a given observation time.
+ *
+ * For geocentric calculations, #Astronomy_GeoVector also includes light
+ * travel time correction, but the time `t` embedded in its returned vector
+ * refers to the observation time, not the backdated time that light left
+ * the observed body. Thus `Astronomy_BackdatePosition` provides direct
+ * access to the light departure time for callers that need it.
  *
  * For a more generalized light travel correction solver, see #Astronomy_CorrectLightTravel.
  *

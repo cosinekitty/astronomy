@@ -4345,6 +4345,11 @@ $ASTRO_IAU_DATA()
         ///
         /// For common use cases, it is simpler to use #Astronomy.BackdatePosition
         /// for calculating the light travel time correction of one body observing another body.
+        ///
+        /// For geocentric calculations, #Astronomy.GeoVector also backdates the returned
+        /// position vector for light travel time, only it returns the observation time in
+        /// the returned vector's `t` field rather than the backdated time.
+        ///
         /// </remarks>
         /// <param name="func">An arbitrary position vector as a function of time.</param>
         /// <param name="time">The observation time for which to solve for light travel delay.</param>
@@ -4429,6 +4434,12 @@ $ASTRO_IAU_DATA()
         /// This function solves the light travel time correction for the apparent
         /// relative position vector of a target body as seen by an observer body
         /// at a given observation time.
+        ///
+        /// For geocentric calculations, #Astronomy.GeoVector also includes light
+        /// travel time correction, but the time `t` embedded in its returned vector
+        /// refers to the observation time, not the backdated time that light left
+        /// the observed body. Thus `BackdatePosition` provides direct
+        /// access to the light departure time for callers that need it.
         ///
         /// For a more generalized light travel correction solver, see #Astronomy.CorrectLightTravel.
         /// </remarks>

@@ -1259,6 +1259,11 @@ observer can significantly affect the object's apparent position.
 This function solves the light travel time correction for the apparent
 relative position vector of a target body as seen by an observer body
 at a given observation time.
+For geocentric calculations, [`GeoVector`](#GeoVector) also includes light
+travel time correction, but the time `t` embedded in its returned vector
+refers to the observation time, not the backdated time that light left
+the observed body. Thus `BackdatePosition` provides direct
+access to the light departure time for callers that need it.
 For a more generalized light travel correction solver, see [`CorrectLightTravel`](#CorrectLightTravel).
 
 | Type | Parameter | Description |
@@ -1372,6 +1377,9 @@ the observer and the target. `CorrectLightTravel` keeps calling
 left the target to arrive at the observer.
 For common use cases, it is simpler to use [`BackdatePosition`](#BackdatePosition)
 for calculating the light travel time correction of one body observing another body.
+For geocentric calculations, [`GeoVector`](#GeoVector) also backdates the returned
+position vector for light travel time, only it returns the observation time in
+the returned vector's `t` field rather than the backdated time.
 time : Time
     The observation time for which to solve for light travel delay.
 

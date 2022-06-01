@@ -297,6 +297,8 @@ When observing a distant object, for example Jupiter as seen from Earth, the amo
 
 This function solves the light travel time correction for the apparent relative position vector of a target body as seen by an observer body at a given observation time.
 
+For geocentric calculations, [`Astronomy_GeoVector`](#Astronomy_GeoVector) also includes light travel time correction, but the time `t` embedded in its returned vector refers to the observation time, not the backdated time that light left the observed body. Thus `Astronomy_BackdatePosition` provides direct access to the light departure time for callers that need it.
+
 For a more generalized light travel correction solver, see [`Astronomy_CorrectLightTravel`](#Astronomy_CorrectLightTravel).
 
 
@@ -448,6 +450,8 @@ When observing a distant object, for example Jupiter as seen from Earth, the amo
 This function repeatedly calls `func`, passing `context` and a series of time estimates in the past. Then `func` must return a relative position vector between the observer and the target. `Astronomy_CorrectLightTravel` keeps calling `func` with more and more refined estimates of the time light must have left the target to arrive at the observer.
 
 For common use cases, it is simpler to use [`Astronomy_BackdatePosition`](#Astronomy_BackdatePosition) for calculating the light travel time correction of one body observing another body.
+
+For geocentric calculations, [`Astronomy_GeoVector`](#Astronomy_GeoVector) also backdates the returned position vector for light travel time, only it returns the observation time in the returned vector's `t` field rather than the backdated time.
 
 
 
