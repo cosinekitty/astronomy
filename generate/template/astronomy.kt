@@ -4774,6 +4774,166 @@ fun baryState(body: Body, time: Time): StateVector {
 }
 
 /**
+ * A function for which to solve a light-travel time problem.
+ *
+ * The function [correctLightTravel] solves a generalized
+ * problem of deducing how far in the past light must have left
+ * a target object to be seen by an observer at a specified time.
+ * This interface expresses an arbitrary position vector as
+ * function of time that is passed to [correctLightTravel].
+ */
+fun interface PositionFunction {
+    /**
+     * Returns a relative position vector for a given time.
+     *
+     * @param time
+     * The time at which to evaluate a relative position vector.
+     *
+     * @return The relative position vector at the specified time.
+     */
+    fun position(time: Time): Vector
+}
+
+
+/**
+ * Solve for light travel time of a vector function.
+ *
+ * When observing a distant object, for example Jupiter as seen from Earth,
+ * the amount of time it takes for light to travel from the object to the
+ * observer can significantly affect the object's apparent position.
+ * This function is a generic solver that figures out how long in the
+ * past light must have left the observed object to reach the observer
+ * at the specified observation time. It uses [PositionFunction]
+ * to express an arbitrary position vector as a function of time.
+ *
+ * This function repeatedly calls `func.Position`, passing a series of time
+ * estimates in the past. Then `func.Position` must return a relative state vector between
+ * the observer and the target. `correctLightTravel` keeps calling
+ * `func.Position` with more and more refined estimates of the time light must have
+ * left the target to arrive at the observer.
+ *
+ * For common use cases, it is simpler to use [backdatePosition]
+ * for calculating the light travel time correction of one body observing another body.
+ *
+ * @param func
+ * An arbitrary position vector as a function of time.
+ *
+ * @param time
+ * The observation time for which to solve for light travel delay.
+ *
+ * @return
+ * The position vector at the solved backdated time.
+ * The `t` field holds the time that light left the observed
+ * body to arrive at the observer at the observation time.
+ */
+fun correctLightTravel(func: PositionFunction, time: Time): Vector {
+    var ltime = time
+    for (iter in 0..10) {
+        val pos = func.position(ltime)
+        val ltime2 = time.addDays(-pos.length() / C_AUDAY)
+        val dt = abs(ltime2.tt - ltime.tt)
+        if (dt < 1.0e-9)        // 86.4 microseconds
+            return pos
+        ltime = ltime2
+    }
+    throw InternalError("Light travel time correction did not converge.")
+}
+
+
+internal class BodyPosition(
+    val observerBody: Body,
+    val targetBody: Body,
+    val aberration: Aberration,
+    val observerPos: Vector
+) : PositionFunction {
+    override fun position(time: Time): Vector {
+        val opos = when (aberration) {
+            Aberration.None ->
+                // No aberration, so use the pre-calculated initial position of
+                // the observer body that is already stored in `observerPos`.
+                // To avoid an exception in the subtraction below, patch the time.
+                observerPos.withTime(time)
+
+            Aberration.Corrected ->
+                // The following discussion is worded with the observer body being the Earth,
+                // which is often the case. However, the same reasoning applies to any observer body
+                // without loss of generality.
+                //
+                // To include aberration, make a good first-order approximation
+                // by backdating the Earth's position also.
+                // This is confusing, but it works for objects within the Solar System
+                // because the distance the Earth moves in that small amount of light
+                // travel time (a few minutes to a few hours) is well approximated
+                // by a line segment that substends the angle seen from the remote
+                // body viewing Earth. That angle is pretty close to the aberration
+                // angle of the moving Earth viewing the remote body.
+                // In other words, both of the following approximate the aberration angle:
+                //     (transverse distance Earth moves) / (distance to body)
+                //     (transverse speed of Earth) / (speed of light).
+                helioVector(observerBody, time)
+        }
+
+        // Subtract the bodies' heliocentric positions to obtain a relative position vector.
+        return helioVector(targetBody, time) - opos
+    }
+}
+
+
+/**
+ * Solve for light travel time correction of apparent position.
+ *
+ * When observing a distant object, for example Jupiter as seen from Earth,
+ * the amount of time it takes for light to travel from the object to the
+ * observer can significantly affect the object's apparent position.
+ *
+ * This function solves the light travel time correction for the apparent
+ * relative position vector of a target body as seen by an observer body
+ * at a given observation time.
+ *
+ * For a more generalized light travel correction solver, see [correctLightTravel].
+ *
+ * @param time
+ * The time of observation.
+ *
+ * @param observerBody
+ * The body to be used as the observation location.
+ *
+ * @param targetBody
+ * The body to be observed.
+ *
+ * @param aberration
+ * `Aberration.Corrected` to correct for aberration, or `Aberration.None` to leave uncorrected.
+ *
+ * @return
+ * The position vector at the solved backdated time.
+ * Its `t` field holds the time that light left the observed
+ * body to arrive at the observer at the observation time.
+ */
+fun backdatePosition(
+    time: Time,
+    observerBody: Body,
+    targetBody: Body,
+    aberration: Aberration
+): Vector {
+    val observerPos = when (aberration) {
+        Aberration.None ->
+            // Without aberration, we need the observer body position at the observation time only.
+            // For efficiency, calculate it once and hold onto it, so `BodyPosition` can keep using it.
+            helioVector(observerBody, time)
+
+        Aberration.Corrected ->
+            // With aberration, `backdatePosition` will calculate `observerPos` at different times.
+            // Therefore, do not waste time calculating it now.
+            // Provide a placeholder value, even though it will be ignored.
+            Vector(0.0, 0.0, 0.0, time)
+    }
+    val func = BodyPosition(observerBody, targetBody, aberration, observerPos)
+    val vec = correctLightTravel(func, time)
+    return vec.withTime(time)       // tricky: return the observation time, not the backdated time
+}
+
+
+/**
  * Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
  *
  * This function calculates the position of the given celestial body as a vector,
@@ -4803,69 +4963,13 @@ fun baryState(body: Body, time: Time): StateVector {
  *
  * @return A geocentric position vector of the center of the given body.
  */
-fun geoVector(body: Body, time: Time, aberration: Aberration): Vector {
-    if (body == Body.Earth)
-        return Vector(0.0, 0.0, 0.0, time)
-
-    if (body == Body.Moon)
-        return geoMoon(time)
-
-    // For all other bodies, apply light travel time correction.
-    // The intention is to find the apparent position of the body
-    // from the Earth's point of view.
-
-    var earth = helioEarthPos(time)
-
-    var ltime = time
-    for (iter in 0..9) {
-        val helio = helioVector(body, ltime)
-        if (aberration == Aberration.Corrected && iter > 0) {
-            // Include aberration, so make a good first-order approximation
-            // by backdating the Earth's position also.
-            // This is confusing, but it works for objects within the Solar System
-            // because the distance the Earth moves in that small amount of light
-            // travel time (a few minutes to a few hours) is well approximated
-            // by a line segment that substends the angle seen from the remote
-            // body viewing Earth. That angle is pretty close to the aberration
-            // angle of the moving Earth viewing the remote body.
-            // In other words, both of the following approximate the aberration angle:
-            //     (transverse distance Earth moves) / (distance to body)
-            //     (transverse speed of Earth) / (speed of light).
-            earth = helioEarthPos(ltime)
-        }
-
-        // Convert heliocentric vector to geocentric vector.
-        // Tricky: we cannot use the subtraction operator because
-        // it will get angry that we are using mismatching times!
-        // It is intentional here that the calculation time was backdated,
-        // but the observation time is not.
-        val geopos = Vector(
-            helio.x - earth.x,
-            helio.y - earth.y,
-            helio.z - earth.z,
-            time
-        )
-
-        // Calculate the time in the past when light left the body on its way toward Earth.
-        val ltime2 = time.addDays(-geopos.length() / C_AUDAY)
-
-        // Very quickly we should converge on a solution for how far
-        // in the past light must have left the planet in order to
-        // reach the Earth at the given time, even though the observed
-        // body was in a slightly different orbital position when
-        // light left it.
-        if ((ltime2.tt - ltime.tt).absoluteValue < 1.0e-9)
-            return geopos
-
-        // Otherwise we refine the estimate and try again.
-        ltime = ltime2
+fun geoVector(body: Body, time: Time, aberration: Aberration): Vector =
+    when (body) {
+        Body.Earth -> Vector(0.0, 0.0, 0.0, time)
+        Body.Moon  -> geoMoon(time)
+        else       -> backdatePosition(time, Body.Earth, body, aberration)
     }
 
-    // This should never happen. Usually the solver converges
-    // after 3 iterations. We allow for 10 iterations.
-    // Something is really wrong if this ever happens.
-    throw InternalError("Light travel time did not converge")
-}
 
 /**
  * Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
