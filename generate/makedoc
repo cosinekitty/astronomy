@@ -5,6 +5,15 @@ Fail()
     exit 1
 }
 
+VERSION=$(cat version.txt) || Fail "Could not set VERSION environment variable."
+[[ -z "${VERSION}" ]] && Fail "VERSION is blank."
+echo "Patching version numbers to: ${VERSION}"
+sed -i 's/2b-v[^\-]*-blue/2b-v'${VERSION}'-blue/' ../README.md || Fail "Cannot patch version in README.md"
+sed -i 's/"version": "[^"]*"/"version": "'${VERSION}'"/' ../source/js/package.json || Fail "Cannot patch version in package.json"
+sed -i 's+<PackageVersion>[^<]*</PackageVersion>+<PackageVersion>'${VERSION}'</PackageVersion>+' ../source/csharp/astronomy.csproj || Fail "Cannot patch version in astronomy.csproj"
+sed -i 's/version="[^"]*"/version="'${VERSION}'"/' ../source/python/setup.py || Fail "Cannot patch version in setup.py"
+sed -i 's/version = "[^"]*"/version = "'${VERSION}'"/' ../source/kotlin/build.gradle.kts || Fail "Cannot patch version in build.gradle.kts"
+
 echo "Trimming trailing whitespace in source code."
 for file in template/astronomy.{c,cs,ts,py} ../source/c/astronomy.h; do
     node trimspace.js ${file} || Fail "Cannot trim whitespace from template file: ${file}"
@@ -115,8 +124,8 @@ python3 pydown/pydown.py pydown/py_prefix.md ../source/python/astronomy/astronom
 ./check_internal_links.py ../source/python/README.md || exit 1
 
 echo "Making redundant copies of source in demo folders."
-cp -v ../source/js/astronomy.browser.js     ../demo/browser/ || exit $?
-cp -v ../source/js/astronomy.js     ../demo/nodejs/  || exit $?
+cp -v ../source/js/astronomy.browser.js ../demo/browser/ || exit $?
+cp -v ../source/js/astronomy.js ../demo/nodejs/  || exit $?
 cp -v ../source/python/astronomy/astronomy.py ../demo/python/  || exit $?
 
 exit 0
