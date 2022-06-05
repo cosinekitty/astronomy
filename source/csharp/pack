@@ -1,0 +1,10 @@
+#!/bin/bash
+Fail()
+{
+    echo "FATAL($0): $1"
+    exit 1
+}
+
+rm -rf nuget
+dotnet pack --configuration=Release --output nuget astronomy.csproj || Fail "dotnet pack"
+exit 0

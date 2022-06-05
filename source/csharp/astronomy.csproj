@@ -1,7 +1,67 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-      <TargetFramework>net6.0</TargetFramework>
+      <TargetFramework>netstandard2.0</TargetFramework>
       <GenerateDocumentationFile>true</GenerateDocumentationFile>
       <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+      <PackageId>CosineKitty.AstronomyEngine</PackageId>
+      <PackageVersion>2.1.2</PackageVersion>
+      <RepositoryUrl>https://github.com/cosinekitty/astronomy</RepositoryUrl>
+      <Authors>Don Cross</Authors>
+      <Title>Astronomy Engine</Title>
+      <Copyright>Copyright (c) 2019-2022 Don Cross &lt;cosinekitty@gmail.com&gt;</Copyright>
+      <PackageLicenseExpression>MIT</PackageLicenseExpression>
+      <Description>
+Astronomy Engine calculates Sun, Moon, and planet positions.
+It predicts lunar phases, eclipses, transits, oppositions, conjunctions, equinoxes, solstices,
+rise/set times, and other events. It provides vector and angular coordinate transforms among
+equatorial, ecliptic, horizontal, and galactic orientations.
+
+- Provides calculations for the Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto.
+
+- Calculates all supported objects for any calendar date and time for millennia before or after the present.
+
+- Provides heliocentric and geocentric Cartesian vectors of all the above bodies.
+
+- Determines apparent horizon-based positions for an observer anywhere on the Earth, given that observer's latitude, longitude, and elevation in meters. Optionally corrects for atmospheric refraction.
+
+- Calculates rise, set, and culmination times of Sun, Moon, and planets.
+
+- Finds civil, nautical, and astronomical twilight times (dusk and dawn).
+
+- Finds date and time of Moon phases: new, first quarter, full, third quarter (or anywhere in between as expressed in degrees of ecliptic longitude).
+
+- Predicts lunar and solar eclipses.
+
+- Predicts transits of Mercury and Venus.
+
+- Predicts lunar apogee and perigee dates, times, and distances.
+
+- Predicts date and time of equinoxes and solstices for a given calendar year.
+
+- Determines apparent visual magnitudes of all the supported celestial bodies.
+
+- Predicts dates of planetary conjunctions, oppositions, and apsides.
+
+- Predicts dates of Venus' peak visual magnitude.
+
+- Predicts dates of maximum elongation for Mercury and Venus.
+
+- Calculates the positions of Jupiter's four largest moons: Io, Europa, Ganymede, and Callisto.
+
+- Allows custom simulation of the movements of user-defined small bodies, such as asteroids and comets, through the Solar System.
+
+- Converts angular and vector coordinates among the following orientations:
+  Equatorial J2000,
+  Equatorial equator-of-date,
+  Ecliptic J2000,
+  Topocentric Horizontal,
+  Galactic (IAU 1958).
+
+- Determines which constellation contains a given point in the sky.
+
+- Calculates libration of the Moon.
+
+- Calculates axis orientation and rotation angles for the Sun, Moon, and planets.
+      </Description>
   </PropertyGroup>
 </Project>
