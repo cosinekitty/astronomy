@@ -5,14 +5,7 @@ Fail()
     exit 1
 }
 
-VERSION=$(cat version.txt) || Fail "Could not set VERSION environment variable."
-[[ -z "${VERSION}" ]] && Fail "VERSION is blank."
-echo "Patching version numbers to: ${VERSION}"
-sed -i 's/2b-v[^\-]*-blue/2b-v'${VERSION}'-blue/' ../README.md || Fail "Cannot patch version in README.md"
-sed -i 's/"version": "[^"]*"/"version": "'${VERSION}'"/' ../source/js/package.json || Fail "Cannot patch version in package.json"
-sed -i 's+<PackageVersion>[^<]*</PackageVersion>+<PackageVersion>'${VERSION}'</PackageVersion>+' ../source/csharp/astronomy.csproj || Fail "Cannot patch version in astronomy.csproj"
-sed -i 's/version="[^"]*"/version="'${VERSION}'"/' ../source/python/setup.py || Fail "Cannot patch version in setup.py"
-sed -i 's/version = "[^"]*"/version = "'${VERSION}'"/' ../source/kotlin/build.gradle.kts || Fail "Cannot patch version in build.gradle.kts"
+./patch_version_numbers.py || Fail "Error updating version numbers."
 
 echo "Trimming trailing whitespace in source code."
 for file in template/astronomy.{c,cs,ts,py} ../source/c/astronomy.h; do

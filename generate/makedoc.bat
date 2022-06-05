@@ -11,6 +11,8 @@ if not exist "!GENEXE!" (
     exit /b 1
 )
 
+patch_version_numbers.py || exit /b 1
+
 echo.Trimming trailing whitespace in source code.
 for %%f in (template\astronomy.c ..\source\c\astronomy.h) do (
     node trimspace.js %%f
