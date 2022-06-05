@@ -9242,12 +9242,11 @@ namespace CosineKitty
 
         private static double CubeRoot(double x)
         {
+            // Astronomy Engine is targeted at .NET Standard 2.0.
+            // That means it supports the older Framework 4+ platform
+            // as well as .NET Core 5+.
             // .NET Core has a Math.Cbrt function, but .NET Framework doesn't.
-#if NET
-            // Use the standard Math.Cbrt where available.
-            return Math.Cbrt(x);
-#else
-            // Provide a substitute cube root function when Math.Cbrt isn't available.
+            // Therefore, I have to implement my own cube root function.
 
             if (x < 0.0)
                 return -CubeRoot(-x);
@@ -9256,7 +9255,6 @@ namespace CosineKitty
                 return 0.0;
 
             return Math.Pow(x, (1.0 / 3.0));
-#endif
         }
 
         /// <summary>

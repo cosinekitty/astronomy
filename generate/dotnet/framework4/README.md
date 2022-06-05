@@ -1,6 +1,9 @@
 # .NET Framework 4+
 
-Astronomy Engine officially supports dotnet core (.NET 5+).
+The C# version of Astronomy Engine is targeted to
+[.NET Standard 2.0](https://docs.microsoft.com/en-us/dotnet/standard/net-standard?tabs=net-standard-2-0).
+Therefore, it supports .NET Framework 4+ and .NET Core 5+.
+
 Currently I do all unit testing and development under .NET 6.
 However, I make an effort to maintain backward compatibility
 with .NET Framework 4+, although issues may slip through.
