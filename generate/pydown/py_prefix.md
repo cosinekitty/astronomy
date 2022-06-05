@@ -7,6 +7,9 @@ See the [home page](https://github.com/cosinekitty/astronomy) for more info.
 ---
 
 ## Quick Start
+
+[![pypi](https://img.shields.io/pypi/v/astronomy-engine)](https://pypi.org/project/astronomy-engine/)
+
 To include Astronomy Engine in your own Python program,
 you can use the [astronomy-engine](https://pypi.org/project/astronomy-engine/) package:
 

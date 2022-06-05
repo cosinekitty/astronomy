@@ -1,7 +1,12 @@
 # Astronomy Engine (JavaScript / TypeScript)
+
+[![npm](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
+
 This is the complete programming reference for the JavaScript version
 of Astronomy Engine. It supports client side programming
 in the browser, and backend use of [Node.js](https://nodejs.org).
+
+[Astronomy Engine is available as an npm package](https://www.npmjs.com/package/astronomy-engine).
 
 Both the browser and backend versions of the JavaScript code are generated from
 [TypeScript](https://www.typescriptlang.org/) code in `astronomy.ts`,

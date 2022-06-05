@@ -7,8 +7,15 @@ See the [home page](https://github.com/cosinekitty/astronomy) for more info.
 ---
 
 ## Quick Start
-To include Astronomy Engine in your own C# program, all you need is the
-file `astronomy.cs` from this directory.
+
+[![NuGet](https://img.shields.io/nuget/v/CosineKitty.AstronomyEngine)](https://www.nuget.org/packages/CosineKitty.AstronomyEngine/)
+
+[Astronomy Engine is available as a NuGet package](https://www.nuget.org/packages/CosineKitty.AstronomyEngine/)
+that targets .NET Standard 2.0. This means you can use the same NuGet package in your
+.NET Framework 4+ or .NET Core 5+ projects.
+
+Alternatively, you can include Astronomy Engine in your own C# program
+by copying the source file `astronomy.cs` from this directory into your own project.
 
 To get started quickly, here are some [examples](../../demo/csharp/).
 

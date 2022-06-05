@@ -1,8 +1,5 @@
 <img src="https://raw.githubusercontent.com/cosinekitty/astronomy/master/astronomy_engine_logo.png" width="640">
 
-[![npm package](https://img.shields.io/npm/v/astronomy-engine.svg)](https://www.npmjs.com/package/astronomy-engine)
-[![PyPI version](https://badge.fury.io/py/astronomy-engine.svg)](https://badge.fury.io/py/astronomy-engine)
-
 ### Supported Programming Languages
 
 <table style="border-width: 0px;" cellspacing="0" cellpadding="10">
@@ -12,7 +9,10 @@
             <div><img src="source/c/c_language.svg" width="100" height="100" alt="C" /></div>
         </td>
         <td style="text-align: center;"><a href="demo/c/">Examples</a></td>
-        <td style="text-align: center;"><a href="source/c/">Code &amp; Docs</a></td>
+        <td style="text-align: center;">
+            <div><a href="source/c/"><img src="https://img.shields.io/badge/C%20%2f%20C%2b%2b-v2.1.2-blue" /></a></div>
+            <div><a href="source/c/">Code &amp; Docs</a></div>
+        </td>
     </tr>
     <tr>
         <td style="text-align: center;">
@@ -20,7 +20,10 @@
             <div><img src="source/csharp/csharp_language.svg" width="100" height="100" alt="C#" /></div>
         </td>
         <td style="text-align: center;"><a href="demo/csharp/">Examples</a></td>
-        <td style="text-align: center;"><a href="source/csharp/">Code &amp; Docs</a></td>
+        <td style="text-align: center;">
+            <div><a href="https://www.nuget.org/packages/CosineKitty.AstronomyEngine/" target="_blank"><img alt="NuGet" src="https://img.shields.io/nuget/v/CosineKitty.AstronomyEngine"></a></div>
+            <div><a href="source/csharp/">Code &amp; Docs</a></div>
+        </td>
     </tr>
     <tr>
         <td style="text-align: center;">
@@ -34,7 +37,10 @@
                 <li><a href="demo/nodejs/">Node.js</a></li>
             </ul>
         </td>
-        <td style="text-align: center;"><a href="source/js/">Code &amp; Docs</a></td>
+        <td style="text-align: center;">
+            <div><a href="https://www.npmjs.com/package/astronomy-engine" target="_blank"><img alt="npm" src="https://img.shields.io/npm/v/astronomy-engine.svg"></a></div>
+            <div><a href="source/js/">Code &amp; Docs</a></div>
+        </td>
     </tr>
     <tr>
         <td style="text-align: center;">
@@ -42,7 +48,10 @@
             <div><img src="source/python/python_language.svg" width="100" height="100" alt="Python" /></div>
         </td>
         <td style="text-align: center;"><a href="demo/python/">Examples</a></td>
-        <td style="text-align: center;"><a href="source/python/">Code &amp; Docs</a></td>
+        <td style="text-align: center;">
+            <div><a href="https://pypi.org/project/astronomy-engine/" target="_blank"><img alt="PyPI" src="https://img.shields.io/pypi/v/astronomy-engine"></a></div>
+            <div><a href="source/python/">Code &amp; Docs</a></div>
+        </td>
     </tr>
     <tr>
         <td style="text-align: center;">
@@ -56,7 +65,10 @@
                 <li><a href="demo/java/">Java</a></li>
             </ul>
         </td>
-        <td style="text-align: center;"><a href="source/kotlin/">Code &amp; Docs</a></td>
+        <td style="text-align: center;">
+            <div><a href="https://jitpack.io/#cosinekitty/astronomy" target="_blank"><img alt="JitPack" src="https://img.shields.io/jitpack/v/github/cosinekitty/astronomy" /></a></div>
+            <div><a href="source/kotlin/">Code &amp; Docs</a></div>
+        </td>
     </tr>
 </table>
 
