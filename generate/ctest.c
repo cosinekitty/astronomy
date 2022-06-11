@@ -1382,7 +1382,7 @@ static int TestPlanetLongitudes(
     const char *event;
     astro_search_result_t search_result;
     int count = 0;
-    double day_diff, min_diff = 1.0e+99, max_diff = 1.0e+99, sum_diff = 0.0;
+    double day_diff, min_diff = 1.0e+99, max_diff = 1.0e+99;
     astro_vector_t geo;
     double dist;
     FILE *outfile = NULL;
@@ -1412,7 +1412,6 @@ static int TestPlanetLongitudes(
             /* Check for consistent intervals. */
             /* Mainly I don't want to skip over an event! */
             day_diff = search_result.time.tt - time.tt;
-            sum_diff += day_diff;
             if (count == 2)
             {
                 min_diff = max_diff = day_diff;
