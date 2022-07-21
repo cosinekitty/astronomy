@@ -79,6 +79,7 @@ fi
 echo "Generating JS documentation in Markdown format."
 npm run docs:md || Fail "Error generating JS documentation."
 ./check_internal_links.py ../source/js/README.md || exit 1
+./sort_js_functions.py ../source/js/README.md || exit 1
 
 if [[ -d ../tutorials ]]; then
     if [[ -d html ]]; then
