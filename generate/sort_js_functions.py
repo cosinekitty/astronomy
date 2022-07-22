@@ -34,6 +34,7 @@ def SortFunctionNames(intext):
     # variable text that appears in each function blob is '<a name="FunctionName"></a>'.
     # If this changes some day, replace func_blobs with a list of tuples: (func_name, blob), then sort the tuple list.
     func_blobs.sort()
+    print('sort_js_functions.py: sorted {} functions.'.format(len(func_blobs)))
     return delim.join(blobs_before_funcs + func_blobs + blobs_after_funcs)
 
 if __name__ == '__main__':

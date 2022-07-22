@@ -122,13 +122,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+sort_js_functions.py ..\source\js\README.md
+if errorlevel 1 (exit /b 1)
+
 node eol_hack.js ..\source\js\README.md
 if errorlevel 1 (exit /b 1)
 
 check_internal_links.py ..\source\js\README.md
-if errorlevel 1 (exit /b 1)
-
-sort_js_functions.py ..\source\js\README.md
 if errorlevel 1 (exit /b 1)
 
 if exist ..\tutorials (
