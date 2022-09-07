@@ -1748,7 +1748,7 @@ to the respective `ra` and `dec` values passed in.
 | [`Observer`](#Observer) | `observer` | The location of the observer for which to find horizontal coordinates. |
 | `float` | `ra` | Right ascension in sidereal hours of the celestial object, referred to the mean equinox of date for the J2000 epoch. |
 | `float` | `dec` | Declination in degrees of the celestial object, referred to the mean equator of date for the J2000 epoch. Positive values are north of the celestial equator and negative values are south of it. |
-| [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.None`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. |
+| [`Refraction`](#Refraction) | `refraction` | The option for selecting whether to correct for atmospheric lensing. If `Refraction.Normal`, a well-behaved refraction model is used. If `Refraction.Airless`, no refraction correct is performed. `Refraction.JplHorizons` is used only for compatibility testing with the JPL Horizons online tool. |
 
 **Returns**: [`HorizontalCoordinates`](#HorizontalCoordinates)
 The horizontal coordinates (altitude and azimuth), along with

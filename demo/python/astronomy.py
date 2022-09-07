@@ -5097,7 +5097,7 @@ def Horizon(time, observer, ra, dec, refraction):
     refraction : Refraction
         The option for selecting whether to correct for atmospheric lensing.
         If `Refraction.Normal`, a well-behaved refraction model is used.
-        If `Refraction.None`, no refraction correct is performed.
+        If `Refraction.Airless`, no refraction correct is performed.
         `Refraction.JplHorizons` is used only for compatibility testing
         with the JPL Horizons online tool.
 
