@@ -249,26 +249,17 @@ private fun normalizeLongitude(lon: Double) = lon.withMinDegreeValue(0.0)
  */
 enum class Body(
     internal val massProduct: Double?,
-    internal val orbitalPeriod: Double?,
-    internal val vsopModel: VsopModel?
+    internal val orbitalPeriod: Double?
 ) {
     /**
      * The planet Mercury.
      */
-    Mercury(
-        MERCURY_GM,
-        87.969,
-        VsopModel(vsopLonMercury, vsopLatMercury, vsopRadMercury)
-    ),
+    Mercury(MERCURY_GM, 87.969),
 
     /**
      * The planet Venus.
      */
-    Venus(
-        VENUS_GM,
-        224.701,
-        VsopModel(vsopLonVenus, vsopLatVenus, vsopRadVenus)
-    ),
+    Venus(VENUS_GM, 224.701),
 
     /**
      * The planet Earth.
@@ -277,83 +268,47 @@ enum class Body(
      * because they assume that an observation is being made from the Earth,
      * and therefore the Earth is not a target of observation.
      */
-    Earth(
-        EARTH_GM,
-        EARTH_ORBITAL_PERIOD,
-        VsopModel(vsopLonEarth, vsopLatEarth, vsopRadEarth)
-    ),
+    Earth(EARTH_GM, EARTH_ORBITAL_PERIOD),
 
     /**
      * The planet Mars.
      */
-    Mars(
-        MARS_GM,
-        686.980,
-        VsopModel(vsopLonMars, vsopLatMars, vsopRadMars)
-    ),
+    Mars(MARS_GM, 686.980),
 
     /**
      * The planet Jupiter.
      */
-    Jupiter(
-        JUPITER_GM,
-        4332.589,
-        VsopModel(vsopLonJupiter, vsopLatJupiter, vsopRadJupiter)
-    ),
+    Jupiter(JUPITER_GM, 4332.589),
 
     /**
      * The planet Saturn.
      */
-    Saturn(
-        SATURN_GM,
-        10759.22,
-        VsopModel(vsopLonSaturn, vsopLatSaturn, vsopRadSaturn)
-    ),
+    Saturn(SATURN_GM, 10759.22),
 
     /**
      * The planet Uranus.
      */
-    Uranus(
-        URANUS_GM,
-        30685.4,
-        VsopModel(vsopLonUranus, vsopLatUranus, vsopRadUranus)
-    ),
+    Uranus(URANUS_GM, 30685.4),
 
     /**
      * The planet Neptune.
      */
-    Neptune(
-        NEPTUNE_GM,
-        NEPTUNE_ORBITAL_PERIOD,
-        VsopModel(vsopLonNeptune, vsopLatNeptune, vsopRadNeptune)
-    ),
+    Neptune(NEPTUNE_GM, NEPTUNE_ORBITAL_PERIOD),
 
     /**
      * The planet Pluto.
      */
-    Pluto(
-        PLUTO_GM,
-        90560.0,
-        null,
-    ),
+    Pluto(PLUTO_GM, 90560.0),
 
     /**
      * The Sun.
      */
-    Sun(
-        SUN_GM,
-        null,
-        null
-    ),
+    Sun(SUN_GM, null),
 
     /**
      * The Earth's natural satellite, the Moon.
      */
-    Moon(
-        MOON_GM,
-        MEAN_SYNODIC_MONTH,
-        null
-    ),
+    Moon(MOON_GM, MEAN_SYNODIC_MONTH),
 
     /**
      * The Earth/Moon Barycenter.
@@ -363,11 +318,7 @@ enum class Body(
      * away from the center of the Earth in the direction toward the Moon's center.
      * Thus the EMB is always inside the Earth.
      */
-    EMB(
-        EARTH_GM + MOON_GM,
-        MEAN_SYNODIC_MONTH,
-        null
-    ),
+    EMB(EARTH_GM + MOON_GM, MEAN_SYNODIC_MONTH),
 
     /**
      * The Solar System Barycenter.
@@ -379,11 +330,19 @@ enum class Body(
      * The SSB serves as an inertial reference point that is ideal for
      * simulating the movement of objects in the Solar System.
      */
-    SSB(
-        null,
-        null,
-        null
-    ),
+    SSB(null, null);
+
+    internal val vsopModel: VsopModel? get() = when (this) {
+        Mercury -> vsopModelMercury
+        Venus   -> vsopModelVenus
+        Earth   -> vsopModelEarth
+        Mars    -> vsopModelMars
+        Jupiter -> vsopModelJupiter
+        Saturn  -> vsopModelSaturn
+        Uranus  -> vsopModelUranus
+        Neptune -> vsopModelNeptune
+        else    -> null
+    }
 }
 
 
@@ -4640,9 +4599,10 @@ private fun solarSystemBarycenterState(time: Time): StateVector {
  *
  * @return The heliocentric position vector of the center of the given body.
  */
-fun helioVector(body: Body, time: Time): Vector =
-    if (body.vsopModel != null)
-        calcVsop(body.vsopModel, time)
+fun helioVector(body: Body, time: Time): Vector {
+    val vsopModel = body.vsopModel
+    return if (vsopModel != null)
+        calcVsop(vsopModel, time)
     else when (body) {
         Body.Sun     -> Vector(0.0, 0.0, 0.0, time)
         Body.Pluto   -> calcPluto(time, true).position()
@@ -4651,6 +4611,7 @@ fun helioVector(body: Body, time: Time): Vector =
         Body.SSB     -> solarSystemBarycenterPos(time)
         else -> throw InvalidBodyException(body)
     }
+}
 
 /**
  * Calculates the distance between a body and the Sun at a given time.
@@ -4670,12 +4631,14 @@ fun helioVector(body: Body, time: Time): Vector =
  *
  * @return The heliocentric distance in AU.
  */
-fun helioDistance(body: Body, time: Time): Double =
-    when {
+fun helioDistance(body: Body, time: Time): Double {
+    val vsopModel = body.vsopModel
+    return when {
         body == Body.Sun -> 0.0
-        body.vsopModel != null -> vsopDistance(body.vsopModel, time)
+        vsopModel != null -> vsopDistance(vsopModel, time)
         else -> helioVector(body, time).length()
     }
+}
 
 /**
  * Calculates heliocentric position and velocity vectors for the given body.
@@ -4704,9 +4667,10 @@ fun helioDistance(body: Body, time: Time): Double =
  * The positions are expressed in AU.
  * The velocities are expressed in AU/day.
  */
-fun helioState(body: Body, time: Time): StateVector =
-    if (body.vsopModel != null)
-        StateVector(calcVsopPosVel(body.vsopModel, time.tt), time)
+fun helioState(body: Body, time: Time): StateVector {
+    val vsopModel = body.vsopModel
+    return if (vsopModel != null)
+        StateVector(calcVsopPosVel(vsopModel, time.tt), time)
     else when (body) {
         Body.Sun   -> StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
         Body.Pluto -> calcPluto(time, true)
@@ -4715,6 +4679,7 @@ fun helioState(body: Body, time: Time): StateVector =
         Body.SSB   -> solarSystemBarycenterState(time)
         else -> throw InvalidBodyException(body)
     }
+}
 
 
 /**
@@ -9977,6 +9942,15 @@ internal val constelBounds: Array<ConstellationBoundary> = arrayOf(
 )
 
 //---------------------------------------------------------------------------------------
+
+internal val vsopModelMercury = VsopModel(vsopLonMercury, vsopLatMercury, vsopRadMercury)
+internal val vsopModelVenus = VsopModel(vsopLonVenus, vsopLatVenus, vsopRadVenus)
+internal val vsopModelEarth = VsopModel(vsopLonEarth, vsopLatEarth, vsopRadEarth)
+internal val vsopModelMars = VsopModel(vsopLonMars, vsopLatMars, vsopRadMars)
+internal val vsopModelJupiter = VsopModel(vsopLonJupiter, vsopLatJupiter, vsopRadJupiter)
+internal val vsopModelSaturn = VsopModel(vsopLonSaturn, vsopLatSaturn, vsopRadSaturn)
+internal val vsopModelUranus = VsopModel(vsopLonUranus, vsopLatUranus, vsopRadUranus)
+internal val vsopModelNeptune = VsopModel(vsopLonNeptune, vsopLatNeptune, vsopRadNeptune)
 
 // Create a rotation matrix for converting J2000 to B1875.
 // Need to calculate the B1875 epoch. Based on this:
