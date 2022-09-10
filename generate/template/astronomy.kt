@@ -330,19 +330,7 @@ enum class Body(
      * The SSB serves as an inertial reference point that is ideal for
      * simulating the movement of objects in the Solar System.
      */
-    SSB(null, null);
-
-    internal val vsopModel: VsopModel? get() = when (this) {
-        Mercury -> vsopModelMercury
-        Venus   -> vsopModelVenus
-        Earth   -> vsopModelEarth
-        Mars    -> vsopModelMars
-        Jupiter -> vsopModelJupiter
-        Saturn  -> vsopModelSaturn
-        Uranus  -> vsopModelUranus
-        Neptune -> vsopModelNeptune
-        else    -> null
-    }
+    SSB(null, null),
 }
 
 
@@ -2999,8 +2987,20 @@ private fun calcVsopPosVel(model: VsopModel, tt: Double): BodyState {
     return BodyState(tt, equPos, equVel)
 }
 
+private fun optionalVsopModel(body: Body): VsopModel? = when (body) {
+    Body.Mercury -> vsopModelMercury
+    Body.Venus   -> vsopModelVenus
+    Body.Earth   -> vsopModelEarth
+    Body.Mars    -> vsopModelMars
+    Body.Jupiter -> vsopModelJupiter
+    Body.Saturn  -> vsopModelSaturn
+    Body.Uranus  -> vsopModelUranus
+    Body.Neptune -> vsopModelNeptune
+    else         -> null
+}
+
 private fun vsopModel(body: Body): VsopModel =
-    body.vsopModel ?: throw InvalidBodyException(body)
+    optionalVsopModel(body) ?: throw InvalidBodyException(body)
 
 private fun vsopHelioVector(body: Body, time: Time) =
     calcVsop(vsopModel(body), time)
@@ -4599,19 +4599,15 @@ private fun solarSystemBarycenterState(time: Time): StateVector {
  *
  * @return The heliocentric position vector of the center of the given body.
  */
-fun helioVector(body: Body, time: Time): Vector {
-    val vsopModel = body.vsopModel
-    return if (vsopModel != null)
-        calcVsop(vsopModel, time)
-    else when (body) {
-        Body.Sun     -> Vector(0.0, 0.0, 0.0, time)
-        Body.Pluto   -> calcPluto(time, true).position()
-        Body.Moon    -> helioEarthPos(time) + geoMoon(time)
-        Body.EMB     -> helioEarthPos(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
-        Body.SSB     -> solarSystemBarycenterPos(time)
-        else -> throw InvalidBodyException(body)
+fun helioVector(body: Body, time: Time): Vector =
+    when (body) {
+        Body.Sun   -> Vector(0.0, 0.0, 0.0, time)
+        Body.Pluto -> calcPluto(time, true).position()
+        Body.Moon  -> helioEarthPos(time) + geoMoon(time)
+        Body.EMB   -> helioEarthPos(time) + (geoMoon(time) / (1.0 + EARTH_MOON_MASS_RATIO))
+        Body.SSB   -> solarSystemBarycenterPos(time)
+        else       -> calcVsop(vsopModel(body), time)
     }
-}
 
 /**
  * Calculates the distance between a body and the Sun at a given time.
@@ -4632,12 +4628,13 @@ fun helioVector(body: Body, time: Time): Vector {
  * @return The heliocentric distance in AU.
  */
 fun helioDistance(body: Body, time: Time): Double {
-    val vsopModel = body.vsopModel
-    return when {
-        body == Body.Sun -> 0.0
-        vsopModel != null -> vsopDistance(vsopModel, time)
-        else -> helioVector(body, time).length()
-    }
+    if (body == Body.Sun)
+        return 0.0
+    val vm = optionalVsopModel(body)
+    return if (vm != null)
+        vsopDistance(vm, time)
+    else
+        helioVector(body, time).length()
 }
 
 /**
@@ -4667,19 +4664,15 @@ fun helioDistance(body: Body, time: Time): Double {
  * The positions are expressed in AU.
  * The velocities are expressed in AU/day.
  */
-fun helioState(body: Body, time: Time): StateVector {
-    val vsopModel = body.vsopModel
-    return if (vsopModel != null)
-        StateVector(calcVsopPosVel(vsopModel, time.tt), time)
-    else when (body) {
+fun helioState(body: Body, time: Time): StateVector =
+    when (body) {
         Body.Sun   -> StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
         Body.Pluto -> calcPluto(time, true)
         Body.Moon  -> helioEarthState(time) + geoMoonState(time)
         Body.EMB   -> helioEarthState(time) + (geoMoonState(time) / (1.0 + EARTH_MOON_MASS_RATIO))
         Body.SSB   -> solarSystemBarycenterState(time)
-        else -> throw InvalidBodyException(body)
+        else       -> StateVector(calcVsopPosVel(vsopModel(body), time.tt), time)
     }
-}
 
 
 /**
