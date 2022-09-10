@@ -2231,7 +2231,7 @@ The returned velocity vector has components expressed in AU/day.
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the observer's position and velocity vectors. |
 | [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
-| `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may pass `true` to use the Earth's equator at `time` as the orientation. |
+| `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may pass `True` to use the Earth's equator at `time` as the orientation. |
 
 **Returns**: [`StateVector`](#StateVector)
 An equatorial position vector and velocity vector relative to the center of the Earth.
@@ -2258,7 +2258,7 @@ The inverse of this function is also available: [`VectorObserver`](#VectorObserv
 | --- | --- | --- |
 | [`Time`](#Time) | `time` | The date and time for which to calculate the observer's position vector. |
 | [`Observer`](#Observer) | `observer` | The geographic location of a point on or near the surface of the Earth. |
-| `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may pass `true` to use the Earth's equator at `time` as the orientation. |
+| `bool` | `ofdate` | Selects the date of the Earth's equator in which to express the equatorial coordinates. The caller may pass `False` to use the orientation of the Earth's equator at noon UTC on January 1, 2000, in which case this function corrects for precession and nutation of the Earth as it was at the moment specified by the `time` parameter. Or the caller may pass `True` to use the Earth's equator at `time` as the orientation. |
 
 **Returns**: [`Vector`](#Vector)
 An equatorial vector from the center of the Earth to the specified location

@@ -2832,7 +2832,7 @@ def ObserverVector(time, observer, ofdate):
         The caller may pass `False` to use the orientation of the Earth's equator
         at noon UTC on January 1, 2000, in which case this function corrects for precession
         and nutation of the Earth as it was at the moment specified by the `time` parameter.
-        Or the caller may pass `true` to use the Earth's equator at `time`
+        Or the caller may pass `True` to use the Earth's equator at `time`
         as the orientation.
 
     Returns
@@ -2875,7 +2875,7 @@ def ObserverState(time, observer, ofdate):
         The caller may pass `False` to use the orientation of the Earth's equator
         at noon UTC on January 1, 2000, in which case this function corrects for precession
         and nutation of the Earth as it was at the moment specified by the `time` parameter.
-        Or the caller may pass `true` to use the Earth's equator at `time`
+        Or the caller may pass `True` to use the Earth's equator at `time`
         as the orientation.
 
     Returns
