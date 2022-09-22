@@ -32,6 +32,10 @@
 #include <math.h>
 #include "astronomy.h"
 
+#ifdef __FAST_MATH__
+#error Astronomy Engine does not support "fast math" optimization because it causes incorrect behavior. See: https://github.com/cosinekitty/astronomy/issues/245
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
