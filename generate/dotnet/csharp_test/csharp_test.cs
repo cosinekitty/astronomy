@@ -13,6 +13,7 @@ namespace csharp_test
     class Program
     {
         static bool Verbose;
+        const double SECONDS_PER_DAY = 86400.0;
 
         static void Debug(string format, params object[] args)
         {
@@ -50,6 +51,7 @@ namespace csharp_test
             new Test("magnitude", MagnitudeTest),
             new Test("moonphase", MoonPhaseTest),
             new Test("moon_nodes", MoonNodesTest),
+            new Test("moon_reverse", MoonReverseTest),
             new Test("planet_apsis", PlanetApsisTest),
             new Test("pluto", PlutoCheck),
             new Test("refraction", RefractionTest),
@@ -482,7 +484,7 @@ namespace csharp_test
                     }
                     ++quarter_count;
                     /* Make sure the time matches what we expect. */
-                    double diff_seconds = abs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0);
+                    double diff_seconds = abs(mq.time.tt - expected_time.tt) * SECONDS_PER_DAY;
                     if (diff_seconds > threshold_seconds)
                     {
                         Console.WriteLine("C# MoonPhaseTest({0} line {1}): excessive time error {2:0.000} seconds", filename, lnum, diff_seconds);
@@ -625,6 +627,68 @@ namespace csharp_test
                 Console.WriteLine($"C# MoonNodesTest: PASS ({lnum} nodes, max equ error = {max_angle:F3}, max time error = {max_minutes:F3} minutes).");
                 return 0;
             }
+        }
+
+        static int MoonReverseTest()
+        {
+            // Verify that SearchMoonPhase works both forward and backward in time.
+
+            const int numNewMoons = 5000;
+            var utList = new double[numNewMoons];
+            double dtMin = 1000.0;
+            double dtMax = -1000.0;
+
+            // Search forward in time from 1800 to find consecutive new moon events.
+            var time = new AstroTime(1800, 1, 1, 0, 0, 0);
+            for (int i = 0; i < numNewMoons; ++i)
+            {
+                AstroTime result = Astronomy.SearchMoonPhase(0.0, time, +40.0);
+                if (result == null)
+                {
+                    Console.WriteLine($"C# MoonReverse(i={i}): failed to find new moon after {time}");
+                    return 1;
+                }
+                utList[i] = result.ut;
+                if (i > 0)
+                {
+                    // Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
+                    double dt = v(utList[i] - utList[i-1]);
+                    if (dt < dtMin) dtMin = dt;
+                    if (dt > dtMax) dtMax = dt;
+                }
+                time = result.AddDays(+0.1);
+            }
+
+            Debug($"C# MoonReverse: dtMin={dtMin:F3} days, dtMax={dtMax:F3} days.");
+            if (dtMin < 29.273 || dtMax > 29.832)
+            {
+                Console.WriteLine($"C# MoonReverse: Time between consecutive new moons is suspicious.");
+                return 1;
+            }
+
+            // Do a reverse chronological search and make sure the results are consistent with the forward search.
+            time = time.AddDays(20.0);
+            double maxDiff = 0.0;
+            for (int i = numNewMoons-1; i >= 0; --i)
+            {
+                AstroTime result = Astronomy.SearchMoonPhase(0.0, time, -40.0);
+                if (result == null)
+                {
+                    Console.WriteLine($"C# MoonReverse(i={i}): failed to find new moon before {time}");
+                    return 1;
+                }
+                double diff = SECONDS_PER_DAY * abs(result.ut - utList[i]);
+                if (diff > maxDiff) maxDiff = diff;
+                time = result.AddDays(-0.1);
+            }
+
+            Console.WriteLine($"C# MoonReverse: Maximum discrepancy in reverse search = {maxDiff:F3} seconds.");
+            if (maxDiff > 0.128)
+            {
+                Console.WriteLine("C# MoonReverse: EXCESSIVE DISCREPANCY in reverse search.");
+                return 1;
+            }
+            return 0;
         }
 
         static int RiseSetTest()
@@ -1983,7 +2047,7 @@ namespace csharp_test
         {
             LunarEclipseInfo eclipse = Astronomy.SearchLunarEclipse(new AstroTime(2020, 12, 19, 0, 0, 0));
             var expected_peak = new AstroTime(2021, 5, 26, 11, 18, 42);  // https://www.timeanddate.com/eclipse/lunar/2021-may-26
-            double dt_seconds = (24.0 * 3600.0) * abs(expected_peak.tt - eclipse.peak.tt);
+            double dt_seconds = SECONDS_PER_DAY * abs(expected_peak.tt - eclipse.peak.tt);
             if (dt_seconds > 40.0)
             {
                 Console.WriteLine("C# LunarEclipseIssue78: Excessive prediction error = {0} seconds.", dt_seconds);
@@ -3207,7 +3271,7 @@ namespace csharp_test
                     {
                         AstroTime correct = correctTimes[i];
                         AstroTime calc = calcTimes[i];
-                        double diff = 86400.0 * abs(calc.ut - correct.ut);
+                        double diff = SECONDS_PER_DAY * abs(calc.ut - correct.ut);
                         if (diff > tolerance_seconds)
                         {
                             Console.WriteLine($"C# TwilightTest({filename} line {lnum}): EXCESSIVE ERROR = {diff} seconds in test {i}.");

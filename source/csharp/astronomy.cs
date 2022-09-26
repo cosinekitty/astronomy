@@ -6860,7 +6860,9 @@ namespace CosineKitty
         /// The beginning of the time window in which to search for the Moon reaching the specified phase.
         /// </param>
         /// <param name="limitDays">
-        /// The number of days after `startTime` that limits the time window for the search.
+        /// The number of days away from `startTime` that limits the time window for the search.
+        /// If the value is negative, the search is performed into the past from `startTime`.
+        /// Otherwise, the search is performed into the future from `startTime`.
         /// </param>
         /// <returns>
         /// If successful, returns the date and time the moon reaches the phase specified by
@@ -6885,17 +6887,35 @@ namespace CosineKitty
             var moon_offset = new SearchContext_MoonOffset(targetLon);
 
             double ya = moon_offset.Eval(startTime);
-            if (ya > 0.0) ya -= 360.0;  /* force searching forward in time, not backward */
-            double est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
-            double dt1 = est_dt - uncertainty;
-            if (dt1 > limitDays)
-                return null;    /* not possible for moon phase to occur within specified window (too short) */
-            double dt2 = est_dt + uncertainty;
-            if (limitDays < dt2)
-                dt2 = limitDays;
+
+            double est_dt, dt1, dt2;
+            if (limitDays < 0.0)
+            {
+                // Search backward in time.
+                if (ya < 0.0) ya += 360.0;
+                est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
+                dt1 = est_dt - uncertainty;
+                dt2 = est_dt + uncertainty;
+                if (dt2 < limitDays)
+                    return null;    // not possible for moon phase to occur within specified window.
+                if (dt1 < limitDays)
+                    dt1 = limitDays;
+            }
+            else
+            {
+                // Search forward in time.
+                if (ya > 0.0) ya -= 360.0;
+                est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
+                dt1 = est_dt - uncertainty;
+                dt2 = est_dt + uncertainty;
+                if (dt1 > limitDays)
+                    return null;    // not possible for moon phase to occur within specified window.
+                if (dt2 > limitDays)
+                    dt2 = limitDays;
+            }
             AstroTime t1 = startTime.AddDays(dt1);
             AstroTime t2 = startTime.AddDays(dt2);
-            return Search(moon_offset, t1, t2, 1.0);
+            return Search(moon_offset, t1, t2, 0.1);
         }
 
         private static AstroTime InternalSearchAltitude(

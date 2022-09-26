@@ -1926,7 +1926,7 @@ This function is useful for finding general phase angles outside those four quar
 | --- | --- | --- |
 | `double` | `targetLon` | The difference in geocentric longitude between the Sun and Moon that specifies the lunar phase being sought. This can be any value in the range [0, 360). Certain values have conventional names: 0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter. |
 | [`AstroTime`](#AstroTime) | `startTime` | The beginning of the time window in which to search for the Moon reaching the specified phase. |
-| `double` | `limitDays` | The number of days after `startTime` that limits the time window for the search. |
+| `double` | `limitDays` | The number of days away from `startTime` that limits the time window for the search. If the value is negative, the search is performed into the past from `startTime`. Otherwise, the search is performed into the future from `startTime`. |
 
 **Returns:** If successful, returns the date and time the moon reaches the phase specified by `targetlon`. This function will return `null` if the phase does not occur within `limitDays` of `startTime`; that is, if the search window is too small.
 
