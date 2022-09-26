@@ -7198,7 +7198,9 @@ static astro_func_result_t moon_offset(void *context, astro_time_t time)
  *      The beginning of the time window in which to search for the Moon reaching the specified phase.
  *
  * @param limitDays
- *      The number of days after `startTime` that limits the time window for the search.
+ *      The number of days away from `startTime` that limits the time window for the search.
+ *      If the value is negative, the search is performed into the past from `startTime`.
+ *      Otherwise, the search is performed into the future from `startTime`.
  *
  * @return
  *      On success, the `status` field in the returned structure holds `ASTRO_SUCCESS` and
@@ -7232,17 +7234,33 @@ astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t s
         return SearchError(funcres.status);
 
     ya = funcres.value;
-    if (ya > 0.0) ya -= 360.0;  /* force searching forward in time, not backward */
-    est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
-    dt1 = est_dt - uncertainty;
-    if (dt1 > limitDays)
-        return SearchError(ASTRO_NO_MOON_QUARTER);    /* not possible for moon phase to occur within specified window (too short) */
-    dt2 = est_dt + uncertainty;
-    if (limitDays < dt2)
-        dt2 = limitDays;
+    if (limitDays < 0.0)
+    {
+        /* Search backward in time. */
+        if (ya < 0.0) ya += 360.0;
+        est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
+        dt1 = est_dt - uncertainty;
+        dt2 = est_dt + uncertainty;
+        if (dt2 < limitDays)
+            return SearchError(ASTRO_NO_MOON_QUARTER);    /* not possible for moon phase to occur within specified window (too short) */
+        if (dt1 < limitDays)
+            dt1 = limitDays;
+    }
+    else
+    {
+        /* Search forward in time. */
+        if (ya > 0.0) ya -= 360.0;
+        est_dt = -(MEAN_SYNODIC_MONTH * ya) / 360.0;
+        dt1 = est_dt - uncertainty;
+        dt2 = est_dt + uncertainty;
+        if (dt1 > limitDays)
+            return SearchError(ASTRO_NO_MOON_QUARTER);    /* not possible for moon phase to occur within specified window (too short) */
+        if (dt2 > limitDays)
+            dt2 = limitDays;
+    }
     t1 = Astronomy_AddDays(startTime, dt1);
     t2 = Astronomy_AddDays(startTime, dt2);
-    return Astronomy_Search(moon_offset, &targetLon, t1, t2, 1.0);
+    return Astronomy_Search(moon_offset, &targetLon, t1, t2, 0.1);
 }
 
 /**

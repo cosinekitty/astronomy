@@ -2574,7 +2574,7 @@ If you want to iterate through lunar quarters (new moon, first quarter, full moo
 | --- | --- | --- |
 | `double` | `targetLon` |  The difference in geocentric longitude between the Sun and Moon that specifies the lunar phase being sought. This can be any value in the range [0, 360). Certain values have conventional names: 0 = new moon, 90 = first quarter, 180 = full moon, 270 = third quarter. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The beginning of the time window in which to search for the Moon reaching the specified phase. | 
-| `double` | `limitDays` |  The number of days after `startTime` that limits the time window for the search. | 
+| `double` | `limitDays` |  The number of days away from `startTime` that limits the time window for the search. If the value is negative, the search is performed into the past from `startTime`. Otherwise, the search is performed into the future from `startTime`. | 
 
 
 

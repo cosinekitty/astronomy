@@ -176,6 +176,7 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
 static int SeasonsTest(void);
 static int SeasonsIssue187(void);
 static int MoonPhase(void);
+static int MoonReverse(void);
 static int MoonNodes(void);
 static int RiseSet(void);
 static int LunarApsis(void);
@@ -260,6 +261,7 @@ static unit_test_t UnitTests[] =
     {"moon_apsis",              LunarApsis},
     {"moon_nodes",              MoonNodes},
     {"moon_phase",              MoonPhase},
+    {"moon_reverse",            MoonReverse},
     {"planet_apsis",            PlanetApsis},
     {"pluto",                   PlutoCheck},
     {"refraction",              RefractionTest},
@@ -1134,6 +1136,67 @@ static int MoonPhase(void)
 
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int MoonReverse(void)
+{
+    const int numNewMoons = 5000;   /* approximately 400 years worth */
+    int error = 1;
+    int i;
+    astro_time_t time;
+    astro_search_result_t result;
+    double *utList = NULL;
+    double dtMin = 1000.0;
+    double dtMax = -1000.0;
+    double diff, maxDiff = 0.0;
+
+    /* Allocate memory to hold times of consecutive new moons. */
+    utList = (double *)calloc(numNewMoons, sizeof(utList[0]));
+    if (utList == NULL)
+        FAIL("C MoonReverse: cannot allocate memory\n");
+
+    /* Search forward in time from 1800 to find consecutive new moon events. */
+    time = Astronomy_MakeTime(1800, 1, 1, 0, 0, 0.0);
+    for (i = 0; i < numNewMoons; ++i)
+    {
+        result = Astronomy_SearchMoonPhase(0.0, time, 40.0);
+        CHECK_STATUS(result);
+        utList[i] = result.time.ut;
+        if (i > 0)
+        {
+            /* Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart. */
+            double dt = utList[i] - utList[i-1];
+            if (dt < dtMin) dtMin = dt;
+            if (dt > dtMax) dtMax = dt;
+        }
+        time = Astronomy_AddDays(result.time, 0.1);
+    }
+
+    DEBUG("C MoonReverse: dtMin=%0.3lf days, dtMax=%0.3lf days.\n", dtMin, dtMax);
+    if (dtMin < 29.273 || dtMax > 29.832)
+        FAIL("C MoonReverse: Time between consecutive new moons are suspicious.\n");
+
+    /* Do a reverse search and make sure the results are consistent with the forward search. */
+    time = Astronomy_AddDays(time, 20.0);
+    for (i = numNewMoons-1; i >= 0; --i)
+    {
+        result = Astronomy_SearchMoonPhase(0.0, time, -40.0);
+        CHECK_STATUS(result);
+        diff = SECONDS_PER_DAY * fabs(result.time.ut - utList[i]);
+        if (diff > maxDiff) maxDiff = diff;
+        time = Astronomy_AddDays(result.time, -0.1);
+    }
+
+    printf("C MoonReverse: Maximum discrepancy in reverse search = %0.3lf seconds.\n", maxDiff);
+    if (maxDiff > 0.128)
+        FAIL("C MoonReverse: EXCESSIVE DISCREPANCY in reverse search.\n");
+    error = 0;
+
+fail:
+    free(utList);
     return error;
 }
 
