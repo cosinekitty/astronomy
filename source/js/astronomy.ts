@@ -4399,7 +4399,13 @@ export function HelioState(body: Body, date: FlexibleDateTime): StateVector {
 }
 
 
-function QuadInterp(tm: number, dt: number, fa: number, fm: number, fb: number) {
+interface InterpResult {
+    t: number;
+    df_dt: number;
+}
+
+
+function QuadInterp(tm: number, dt: number, fa: number, fm: number, fb: number): InterpResult | null {
     let Q = (fb + fa)/2 - fm;
     let R = (fb - fa)/2;
     let S = fm;
@@ -4433,7 +4439,7 @@ function QuadInterp(tm: number, dt: number, fa: number, fm: number, fb: number) 
 
     let t = tm + x*dt;
     let df_dt = (2*Q*x + R) / dt;
-    return { x:x, t:t, df_dt:df_dt };
+    return { t:t, df_dt:df_dt };
 }
 
 // Quirk: for some reason, I need to put the interface declaration *before* its

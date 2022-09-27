@@ -270,7 +270,7 @@ static const double PLUTO_GM   = 0.2188699765425970e-11;
 static astro_ecliptic_t RotateEquatorialToEcliptic(const double pos[3], double obliq_radians, astro_time_t time);
 static int QuadInterp(
     double tm, double dt, double fa, double fm, double fb,
-    double *x, double *t, double *df_dt);
+    double *t, double *df_dt);
 
 static double LongitudeOffset(double diff)
 {
@@ -6562,7 +6562,7 @@ astro_search_result_t Astronomy_Search(
     astro_time_t tq;
     astro_func_result_t funcres;
     double f1, f2, fmid=0.0, fq, dt_days, dt, dt_guess;
-    double q_x, q_ut, q_df_dt;
+    double q_ut, q_df_dt;
     const int iter_limit = 20;
     int iter = 0;
     int calc_fmid = 1;
@@ -6595,7 +6595,7 @@ astro_search_result_t Astronomy_Search(
         /* Try to find a parabola that passes through the 3 points we have sampled: */
         /* (t1,f1), (tmid,fmid), (t2,f2) */
 
-        if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_x, &q_ut, &q_df_dt))
+        if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, &q_ut, &q_df_dt))
         {
             tq = Astronomy_TimeFromDays(q_ut);
             CALLFUNC(fq, tq);
@@ -6663,10 +6663,10 @@ astro_search_result_t Astronomy_Search(
 
 static int QuadInterp(
     double tm, double dt, double fa, double fm, double fb,
-    double *out_x, double *out_t, double *out_df_dt)
+    double *out_t, double *out_df_dt)
 {
     double Q, R, S;
-    double u, ru, x1, x2;
+    double x, u, ru, x1, x2;
 
     Q = (fb + fa)/2.0 - fm;
     R = (fb - fa)/2.0;
@@ -6677,8 +6677,8 @@ static int QuadInterp(
         /* This is a line, not a parabola. */
         if (R == 0.0)
             return 0;       /* This is a HORIZONTAL line... can't make progress! */
-        *out_x = -S / R;
-        if (*out_x < -1.0 || *out_x > +1.0)
+        x = -S / R;
+        if (x < -1.0 || x > +1.0)
             return 0;   /* out of bounds */
     }
     else
@@ -6695,16 +6695,16 @@ static int QuadInterp(
         {
             if (-1.0 <= x2 && x2 <= +1.0)
                 return 0;   /* two roots are within bounds; we require a unique zero-crossing. */
-            *out_x = x1;
+            x = x1;
         }
         else if (-1.0 <= x2 && x2 <= +1.0)
-            *out_x = x2;
+            x = x2;
         else
             return 0;   /* neither root is within bounds */
     }
 
-    *out_t = tm + (*out_x)*dt;
-    *out_df_dt = (2*Q*(*out_x) + R) / dt;
+    *out_t = tm + x*dt;
+    *out_df_dt = (2*Q*x + R) / dt;
     return 1;   /* success */
 }
 

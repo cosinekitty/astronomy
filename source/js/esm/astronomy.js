@@ -3915,7 +3915,7 @@ function QuadInterp(tm, dt, fa, fm, fb) {
     }
     let t = tm + x * dt;
     let df_dt = (2 * Q * x + R) / dt;
-    return { x: x, t: t, df_dt: df_dt };
+    return { t: t, df_dt: df_dt };
 }
 /**
  * @brief Options for the {@link Search} function.
