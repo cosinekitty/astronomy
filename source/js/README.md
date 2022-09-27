@@ -2794,10 +2794,9 @@ Then call [NextMoonNode](#NextMoonNode) to find as many more consecutive nodes a
 
 ## SearchMoonPhase(targetLon, dateStart, limitDays) ⇒ [<code>AstroTime</code>](#AstroTime) \| <code>null</code>
 **Kind**: global function  
-**Returns**: [<code>AstroTime</code>](#AstroTime) \| <code>null</code> - If the specified lunar phase occurs after `dateStart`
-     and before `limitDays` days after `dateStart`,
-     this function returns the date and time of the first such occurrence.
-     Otherwise, it returns `null`.  
+**Returns**: [<code>AstroTime</code>](#AstroTime) \| <code>null</code> - If successful, returns the date and time the moon reaches the phase specified by `targetlon`.
+     This function will return `null` if the phase does not occur within `limitDays` of `startTime`;
+     that is, if the search window is too small.  
 **Brief**: Searches for the date and time that the Moon reaches a specified phase.
 
 Lunar phases are defined in terms of geocentric ecliptic longitudes
@@ -2813,7 +2812,7 @@ necessary for finding other lunar phases than the usual quarter phases.
 | --- | --- | --- |
 | targetLon | <code>number</code> | The difference in geocentric ecliptic longitude between the Sun and Moon      that specifies the lunar phase being sought. This can be any value      in the range [0, 360). Here are some helpful examples:      0 = new moon,      90 = first quarter,      180 = full moon,      270 = third quarter. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The beginning of the window of time in which to search. |
-| limitDays | <code>number</code> | The floating point number of days after `dateStart`      that limits the window of time in which to search. |
+| limitDays | <code>number</code> | The floating point number of days away from `dateStart`      that limits the window of time in which to search.      If the value is negative, the search is performed into the past from `startTime`.      Otherwise, the search is performed into the future from `startTime`. |
 
 
 * * *

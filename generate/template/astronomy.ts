@@ -4115,14 +4115,15 @@ export function MoonPhase(date: FlexibleDateTime): number {
  *      The beginning of the window of time in which to search.
  *
  * @param {number} limitDays
- *      The floating point number of days after `dateStart`
+ *      The floating point number of days away from `dateStart`
  *      that limits the window of time in which to search.
+ *      If the value is negative, the search is performed into the past from `startTime`.
+ *      Otherwise, the search is performed into the future from `startTime`.
  *
  * @returns {AstroTime | null}
- *      If the specified lunar phase occurs after `dateStart`
- *      and before `limitDays` days after `dateStart`,
- *      this function returns the date and time of the first such occurrence.
- *      Otherwise, it returns `null`.
+ *      If successful, returns the date and time the moon reaches the phase specified by `targetlon`.
+ *      This function will return `null` if the phase does not occur within `limitDays` of `startTime`;
+ *      that is, if the search window is too small.
  */
 export function SearchMoonPhase(targetLon: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null {
     function moon_offset(t: AstroTime): number {
@@ -4144,18 +4145,29 @@ export function SearchMoonPhase(targetLon: number, dateStart: FlexibleDateTime, 
     // +/-1.5 days around it (a 3.0-day wide window).
     // But we must return null if the final result goes beyond limitDays after dateStart.
     const uncertainty = 1.5;
-
-    let ta = MakeTime(dateStart);
+    const ta = MakeTime(dateStart);
     let ya = moon_offset(ta);
-    if (ya > 0) ya -= 360;  // force searching forward in time, not backward
-    let est_dt = -(MEAN_SYNODIC_MONTH*ya)/360;
-    let dt1 = est_dt - uncertainty;
-    if (dt1 > limitDays)
-        return null;   // not possible for moon phase to occur within the specified window
-    let dt2 = Math.min(limitDays, est_dt + uncertainty);
-    let t1 = ta.AddDays(dt1);
-    let t2 = ta.AddDays(dt2);
-    return Search(moon_offset, t1, t2);
+    let est_dt: number, dt1: number, dt2: number;
+    if (limitDays < 0) {
+        // Search backward in time.
+        if (ya < 0) ya += 360;
+        est_dt = -(MEAN_SYNODIC_MONTH*ya)/360;
+        dt2 = est_dt + uncertainty;
+        if (dt2 < limitDays)
+            return null;   // not possible for moon phase to occur within the specified window
+        dt1 = Math.max(limitDays, est_dt - uncertainty);
+    } else {
+        // Search forward in time.
+        if (ya > 0) ya -= 360;
+        est_dt = -(MEAN_SYNODIC_MONTH*ya)/360;
+        dt1 = est_dt - uncertainty;
+        if (dt1 > limitDays)
+            return null;   // not possible for moon phase to occur within the specified window
+        dt2 = Math.min(limitDays, est_dt + uncertainty);
+    }
+    const t1 = ta.AddDays(dt1);
+    const t2 = ta.AddDays(dt2);
+    return Search(moon_offset, t1, t2, {dt_tolerance_seconds: 0.1});
 }
 
 /**

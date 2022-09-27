@@ -231,7 +231,7 @@
 2021-06-17T17:25:50.129Z Sun culminates 84.80 degrees above the horizon
 2021-06-17T23:27:30.140Z Moon culminates 67.88 degrees above the horizon
 2021-06-18T00:24:43.420Z sunset
-2021-06-18T03:54:56.040Z first quarter
+2021-06-18T03:54:55.152Z first quarter
 2021-06-18T05:50:37.111Z moonset
 2021-06-18T10:27:08.505Z sunrise
 2021-06-18T17:26:03.164Z Sun culminates 84.82 degrees above the horizon
@@ -835,7 +835,7 @@
 2021-09-20T17:18:03.510Z Sun culminates 62.22 degrees above the horizon
 2021-09-20T23:23:18.101Z sunset
 2021-09-20T23:36:12.459Z moonrise
-2021-09-20T23:55:22.162Z full moon
+2021-09-20T23:55:21.745Z full moon
 2021-09-21T05:35:19.912Z Moon culminates 57.30 degrees above the horizon
 2021-09-21T11:12:52.628Z sunrise
 2021-09-21T11:40:42.101Z moonset
@@ -1351,7 +1351,7 @@
 2021-12-10T17:42:50.994Z moonrise
 2021-12-10T22:28:36.532Z sunset
 2021-12-10T23:29:19.659Z Moon culminates 51.46 degrees above the horizon
-2021-12-11T01:36:15.345Z first quarter
+2021-12-11T01:36:15.986Z first quarter
 2021-12-11T05:21:46.045Z moonset
 2021-12-11T12:07:30.299Z sunrise
 2021-12-11T14:05:49.326Z Mercury moves from Ophiuchus to Sagittarius
@@ -1826,7 +1826,7 @@
 2022-02-23T11:55:42.936Z sunrise
 2022-02-23T16:19:27.121Z moonset
 2022-02-23T17:38:04.577Z Sun culminates 51.76 degrees above the horizon
-2022-02-23T22:32:59.625Z third quarter
+2022-02-23T22:33:00.612Z third quarter
 2022-02-23T23:20:49.717Z sunset
 2022-02-24T06:35:38.468Z moonrise
 2022-02-24T11:53:22.644Z Moon culminates 36.80 degrees above the horizon
@@ -1969,7 +1969,7 @@
 2022-03-17T23:10:14.850Z moonrise
 2022-03-17T23:34:29.542Z sunset
 2022-03-18T05:36:31.711Z Moon culminates 66.25 degrees above the horizon
-2022-03-18T07:18:12.780Z full moon
+2022-03-18T07:18:13.615Z full moon
 2022-03-18T11:30:56.018Z sunrise
 2022-03-18T11:55:37.203Z moonset
 2022-03-18T17:32:46.893Z Sun culminates 60.65 degrees above the horizon
@@ -2060,7 +2060,7 @@
 2022-03-31T17:28:53.712Z Sun culminates 65.75 degrees above the horizon
 2022-03-31T23:20:06.949Z moonset
 2022-03-31T23:42:20.067Z sunset
-2022-04-01T06:25:02.197Z new moon
+2022-04-01T06:25:02.406Z new moon
 2022-04-01T09:25:37.647Z Mercury moves from Cetus to Pisces
 2022-04-01T11:14:45.083Z sunrise
 2022-04-01T11:38:06.171Z moonrise
@@ -2394,7 +2394,7 @@
 2022-05-22T11:30:55.764Z Moon culminates 43.44 degrees above the horizon
 2022-05-22T17:05:31.389Z moonset
 2022-05-22T17:21:30.038Z Sun culminates 81.88 degrees above the horizon
-2022-05-22T18:43:41.547Z third quarter
+2022-05-22T18:43:40.825Z third quarter
 2022-05-23T00:12:46.837Z sunset
 2022-05-23T06:39:14.888Z moonrise
 2022-05-23T10:30:05.449Z sunrise
@@ -3468,7 +3468,7 @@
 2022-11-07T22:35:22.470Z sunset
 2022-11-08T04:56:41.880Z Moon culminates 76.81 degrees above the horizon
 2022-11-08T10:59:49.329Z total lunar eclipse
-2022-11-08T11:02:45.980Z full moon
+2022-11-08T11:02:46.365Z full moon
 2022-11-08T11:42:01.804Z sunrise
 2022-11-08T11:47:32.905Z moonset
 2022-11-08T16:23:20.867Z Mercury superior conjunction
@@ -4275,7 +4275,7 @@
 2023-03-14T16:01:07.723Z moonset
 2023-03-14T17:33:58.156Z Sun culminates 58.97 degrees above the horizon
 2023-03-14T23:32:35.668Z sunset
-2023-03-15T02:08:52.294Z third quarter
+2023-03-15T02:08:51.801Z third quarter
 2023-03-15T06:47:08.078Z moonrise
 2023-03-15T11:34:38.085Z sunrise
 2023-03-15T11:52:55.628Z Moon culminates 32.92 degrees above the horizon
@@ -4607,7 +4607,7 @@
 2023-05-05T10:40:58.630Z sunrise
 2023-05-05T17:21:30.238Z Sun culminates 77.73 degrees above the horizon
 2023-05-05T17:23:35.859Z penumbral lunar eclipse
-2023-05-05T17:34:38.196Z full moon
+2023-05-05T17:34:38.440Z full moon
 2023-05-06T00:02:24.889Z sunset
 2023-05-06T00:17:09.253Z moonrise
 2023-05-06T05:45:24.095Z Moon culminates 40.91 degrees above the horizon
@@ -6062,7 +6062,7 @@
 2023-12-19T12:12:06.397Z sunrise
 2023-12-19T17:21:51.262Z Sun culminates 38.00 degrees above the horizon
 2023-12-19T17:32:35.855Z moonrise
-2023-12-19T18:39:48.005Z first quarter
+2023-12-19T18:39:48.982Z first quarter
 2023-12-19T22:31:34.851Z sunset
 2023-12-19T23:36:23.783Z Moon culminates 59.35 degrees above the horizon
 2023-12-20T05:47:46.362Z moonset
@@ -6728,7 +6728,7 @@
 2024-04-01T16:03:11.744Z moonset
 2024-04-01T17:28:25.756Z Sun culminates 66.33 degrees above the horizon
 2024-04-01T23:43:09.301Z sunset
-2024-04-02T03:15:20.145Z third quarter
+2024-04-02T03:15:20.042Z third quarter
 2024-04-02T06:55:37.846Z moonrise
 2024-04-02T11:13:00.205Z sunrise
 2024-04-02T11:59:54.400Z Moon culminates 33.12 degrees above the horizon
@@ -7061,7 +7061,7 @@
 2024-05-23T09:00:51.292Z Uranus moves from Aries to Taurus
 2024-05-23T10:14:00.622Z moonset
 2024-05-23T10:29:52.298Z sunrise
-2024-05-23T13:53:43.846Z full moon
+2024-05-23T13:53:43.373Z full moon
 2024-05-23T17:21:37.044Z Sun culminates 82.17 degrees above the horizon
 2024-05-24T00:13:38.263Z sunset
 2024-05-24T00:43:24.814Z moonrise
@@ -7335,7 +7335,7 @@
 2024-07-05T10:32:31.960Z sunrise
 2024-07-05T17:19:06.886Z Moon culminates 89.33 degrees above the horizon
 2024-07-05T17:29:32.921Z Sun culminates 84.09 degrees above the horizon
-2024-07-05T22:57:58.688Z new moon
+2024-07-05T22:57:59.122Z new moon
 2024-07-06T00:26:24.505Z sunset
 2024-07-06T00:41:16.740Z moonset
 2024-07-06T10:32:58.415Z sunrise
@@ -7479,7 +7479,7 @@
 2024-07-27T17:18:46.613Z moonset
 2024-07-27T17:31:19.645Z Sun culminates 80.38 degrees above the horizon
 2024-07-28T00:18:26.316Z sunset
-2024-07-28T02:52:02.635Z third quarter
+2024-07-28T02:52:03.032Z third quarter
 2024-07-28T04:37:58.916Z moonrise
 2024-07-28T10:44:26.892Z sunrise
 2024-07-28T11:27:13.105Z Moon culminates 78.74 degrees above the horizon
@@ -8324,7 +8324,7 @@
 2024-12-07T22:56:09.529Z Moon culminates 49.97 degrees above the horizon
 2024-12-08T04:46:15.534Z moonset
 2024-12-08T12:05:38.605Z sunrise
-2024-12-08T15:27:13.435Z first quarter
+2024-12-08T15:27:12.956Z first quarter
 2024-12-08T17:16:59.445Z Sun culminates 38.60 degrees above the horizon
 2024-12-08T17:45:39.966Z moonrise
 2024-12-08T22:28:13.729Z sunset
@@ -8744,7 +8744,7 @@
 2025-02-12T05:27:08.412Z Moon culminates 79.20 degrees above the horizon
 2025-02-12T12:05:09.098Z sunrise
 2025-02-12T12:16:42.581Z moonset
-2025-02-12T13:54:03.646Z full moon
+2025-02-12T13:54:04.061Z full moon
 2025-02-12T17:38:58.243Z Sun culminates 47.98 degrees above the horizon
 2025-02-12T22:31:11.689Z Mercury moves from Capricornus to Aquarius
 2025-02-12T23:13:08.853Z sunset
@@ -10479,7 +10479,7 @@
 2025-11-11T17:51:44.048Z moonset
 2025-11-11T22:32:53.574Z sunset
 2025-11-12T04:52:15.683Z moonrise
-2025-11-12T05:28:44.744Z third quarter
+2025-11-12T05:28:44.381Z third quarter
 2025-11-12T11:43:15.669Z Moon culminates 76.73 degrees above the horizon
 2025-11-12T11:45:19.409Z sunrise
 2025-11-12T17:08:59.641Z Sun culminates 43.52 degrees above the horizon
@@ -11192,7 +11192,7 @@
 2026-03-02T23:25:27.822Z sunset
 2026-03-03T05:24:45.422Z Moon culminates 69.06 degrees above the horizon
 2026-03-03T11:34:20.156Z total lunar eclipse
-2026-03-03T11:38:30.941Z full moon
+2026-03-03T11:38:31.874Z full moon
 2026-03-03T11:47:34.728Z sunrise
 2026-03-03T11:49:46.727Z moonset
 2026-03-03T17:36:37.978Z Sun culminates 54.79 degrees above the horizon
@@ -11383,7 +11383,7 @@
 2026-04-01T17:28:33.992Z Sun culminates 66.15 degrees above the horizon
 2026-04-01T23:35:03.782Z moonrise
 2026-04-01T23:42:52.897Z sunset
-2026-04-02T02:12:34.792Z full moon
+2026-04-02T02:12:35.584Z full moon
 2026-04-02T05:29:35.997Z Moon culminates 52.53 degrees above the horizon
 2026-04-02T11:13:32.879Z sunrise
 2026-04-02T11:17:43.539Z moonset
@@ -12002,7 +12002,7 @@
 2026-07-07T10:58:00.441Z Moon culminates 68.45 degrees above the horizon
 2026-07-07T17:29:22.593Z moonset
 2026-07-07T17:29:47.219Z Sun culminates 83.93 degrees above the horizon
-2026-07-07T19:29:27.851Z third quarter
+2026-07-07T19:29:27.521Z third quarter
 2026-07-08T00:26:12.474Z sunset
 2026-07-08T05:06:20.203Z moonrise
 2026-07-08T10:33:39.058Z sunrise
@@ -12603,7 +12603,7 @@
 2026-10-09T23:01:23.828Z sunset
 2026-10-10T11:18:34.487Z moonrise
 2026-10-10T11:22:46.468Z sunrise
-2026-10-10T15:50:35.331Z new moon
+2026-10-10T15:50:35.166Z new moon
 2026-10-10T17:08:10.002Z Moon culminates 50.15 degrees above the horizon
 2026-10-10T17:11:44.330Z Sun culminates 54.57 degrees above the horizon
 2026-10-10T22:51:24.628Z moonset
@@ -12743,7 +12743,7 @@
 2026-11-01T11:36:52.913Z sunrise
 2026-11-01T17:08:22.215Z Sun culminates 46.83 degrees above the horizon
 2026-11-01T18:09:02.375Z moonset
-2026-11-01T20:29:00.052Z third quarter
+2026-11-01T20:28:59.228Z third quarter
 2026-11-01T22:39:31.107Z sunset
 2026-11-02T05:08:45.374Z moonrise
 2026-11-02T11:37:36.146Z sunrise
@@ -12789,7 +12789,7 @@
 2026-11-08T17:08:33.291Z Sun culminates 44.70 degrees above the horizon
 2026-11-08T21:58:32.863Z moonset
 2026-11-08T22:34:44.244Z sunset
-2026-11-09T07:02:40.250Z new moon
+2026-11-09T07:02:40.972Z new moon
 2026-11-09T11:42:49.542Z sunrise
 2026-11-09T12:04:49.211Z moonrise
 2026-11-09T17:08:38.262Z Sun culminates 44.42 degrees above the horizon
@@ -13117,7 +13117,7 @@
 2026-12-30T12:16:57.341Z sunrise
 2026-12-30T16:56:27.905Z moonset
 2026-12-30T17:27:23.799Z Sun culminates 38.29 degrees above the horizon
-2026-12-30T19:00:05.517Z third quarter
+2026-12-30T19:00:05.700Z third quarter
 2026-12-30T22:37:54.918Z sunset
 2026-12-31T05:56:52.940Z moonrise
 2026-12-31T11:45:14.860Z Moon culminates 49.71 degrees above the horizon
@@ -13406,7 +13406,7 @@
 2027-02-13T22:54:45.412Z Moon culminates 84.20 degrees above the horizon
 2027-02-13T23:13:33.122Z sunset
 2027-02-14T06:06:08.556Z moonset
-2027-02-14T07:59:01.344Z first quarter
+2027-02-14T07:59:01.003Z first quarter
 2027-02-14T12:03:56.487Z sunrise
 2027-02-14T16:35:47.504Z moonrise
 2027-02-14T17:38:56.255Z Sun culminates 48.49 degrees above the horizon
@@ -13970,7 +13970,7 @@
 2027-05-12T17:21:10.408Z Sun culminates 79.61 degrees above the horizon
 2027-05-12T23:28:39.519Z Moon culminates 75.93 degrees above the horizon
 2027-05-13T00:06:42.513Z sunset
-2027-05-13T04:44:27.525Z first quarter
+2027-05-13T04:44:28.046Z first quarter
 2027-05-13T06:11:04.046Z moonset
 2027-05-13T10:35:21.412Z sunrise
 2027-05-13T17:21:09.792Z Sun culminates 79.86 degrees above the horizon
@@ -14016,7 +14016,7 @@
 2027-05-20T05:04:20.545Z Moon culminates 36.63 degrees above the horizon
 2027-05-20T10:16:44.267Z moonset
 2027-05-20T10:31:30.118Z sunrise
-2027-05-20T10:59:38.751Z full moon
+2027-05-20T10:59:38.491Z full moon
 2027-05-20T17:21:20.817Z Sun culminates 81.44 degrees above the horizon
 2027-05-21T00:11:29.618Z sunset
 2027-05-21T00:48:03.387Z moonrise
@@ -14631,7 +14631,7 @@
 2027-08-24T17:27:10.057Z Sun culminates 72.40 degrees above the horizon
 2027-08-24T17:43:02.041Z moonset
 2027-08-24T23:55:04.961Z sunset
-2027-08-25T02:27:54.632Z third quarter
+2027-08-25T02:27:54.018Z third quarter
 2027-08-25T04:10:34.304Z moonrise
 2027-08-25T10:59:20.615Z sunrise
 2027-08-25T11:27:00.671Z Moon culminates 87.49 degrees above the horizon
@@ -14815,7 +14815,7 @@
 2027-09-22T23:21:26.186Z sunset
 2027-09-23T03:58:23.936Z moonrise
 2027-09-23T06:01:18.126Z September equinox
-2027-09-23T10:21:01.040Z third quarter
+2027-09-23T10:21:00.816Z third quarter
 2027-09-23T11:13:39.018Z sunrise
 2027-09-23T11:19:47.793Z Moon culminates 88.08 degrees above the horizon
 2027-09-23T17:17:09.477Z Sun culminates 61.23 degrees above the horizon
@@ -15234,7 +15234,7 @@
 2027-11-27T19:25:03.755Z Venus aphelion at 0.7282 AU
 2027-11-27T21:57:27.337Z moonset
 2027-11-27T22:27:46.262Z sunset
-2027-11-28T03:24:58.934Z new moon
+2027-11-28T03:24:58.659Z new moon
 2027-11-28T11:57:35.987Z sunrise
 2027-11-28T12:31:49.107Z moonrise
 2027-11-28T17:12:43.697Z Sun culminates 40.07 degrees above the horizon
@@ -15376,7 +15376,7 @@
 2027-12-19T17:21:50.962Z Sun culminates 38.01 degrees above the horizon
 2027-12-19T22:31:34.689Z sunset
 2027-12-20T05:14:31.195Z moonrise
-2027-12-20T09:11:25.118Z third quarter
+2027-12-20T09:11:25.747Z third quarter
 2027-12-20T11:20:42.358Z Moon culminates 57.09 degrees above the horizon
 2027-12-20T12:12:38.232Z sunrise
 2027-12-20T17:19:51.854Z moonset
@@ -17264,7 +17264,7 @@
 2028-10-11T04:13:25.004Z moonrise
 2028-10-11T11:22:05.837Z Moon culminates 83.48 degrees above the horizon
 2028-10-11T11:23:37.768Z sunrise
-2028-10-11T11:57:23.963Z third quarter
+2028-10-11T11:57:24.648Z third quarter
 2028-10-11T17:11:20.235Z Sun culminates 54.00 degrees above the horizon
 2028-10-11T18:25:53.758Z moonset
 2028-10-11T22:58:38.698Z sunset
@@ -17450,7 +17450,7 @@
 2028-11-09T11:43:13.028Z sunrise
 2028-11-09T17:08:41.013Z Sun culminates 44.27 degrees above the horizon
 2028-11-09T17:47:04.740Z moonset
-2028-11-09T21:26:25.477Z third quarter
+2028-11-09T21:26:24.501Z third quarter
 2028-11-09T22:33:50.824Z sunset
 2028-11-10T05:16:57.656Z moonrise
 2028-11-10T11:43:59.212Z sunrise
@@ -18680,7 +18680,7 @@
 2029-05-20T17:21:22.346Z Sun culminates 81.54 degrees above the horizon
 2029-05-20T23:22:38.996Z Moon culminates 69.49 degrees above the horizon
 2029-05-21T00:11:47.160Z sunset
-2029-05-21T04:16:41.904Z first quarter
+2029-05-21T04:16:41.252Z first quarter
 2029-05-21T05:49:56.679Z moonset
 2029-05-21T10:30:48.225Z sunrise
 2029-05-21T17:21:26.442Z Sun culminates 81.75 degrees above the horizon
@@ -19098,7 +19098,7 @@
 2029-07-25T05:11:38.097Z Moon culminates 42.26 degrees above the horizon
 2029-07-25T10:42:39.166Z sunrise
 2029-07-25T10:42:41.362Z moonset
-2029-07-25T13:36:19.377Z full moon
+2029-07-25T13:36:20.156Z full moon
 2029-07-25T17:31:20.640Z Sun culminates 80.87 degrees above the horizon
 2029-07-26T00:19:43.118Z sunset
 2029-07-26T00:25:22.200Z moonrise
@@ -19285,7 +19285,7 @@
 2029-08-23T17:27:17.494Z Sun culminates 72.57 degrees above the horizon
 2029-08-23T23:33:54.340Z moonrise
 2029-08-23T23:55:35.152Z sunset
-2029-08-24T01:51:50.126Z full moon
+2029-08-24T01:51:50.292Z full moon
 2029-08-24T05:27:25.282Z Moon culminates 54.61 degrees above the horizon
 2029-08-24T10:59:05.320Z sunrise
 2029-08-24T11:26:28.226Z moonset
@@ -19904,7 +19904,7 @@
 2029-11-28T17:12:54.284Z Sun culminates 39.98 degrees above the horizon
 2029-11-28T17:19:16.573Z moonset
 2029-11-28T22:27:37.318Z sunset
-2029-11-28T23:48:21.006Z third quarter
+2029-11-28T23:48:20.660Z third quarter
 2029-11-29T05:24:32.137Z moonrise
 2029-11-29T11:42:38.913Z Moon culminates 62.56 degrees above the horizon
 2029-11-29T11:58:46.671Z sunrise
@@ -20506,7 +20506,7 @@
 2030-03-03T17:36:38.175Z Sun culminates 54.80 degrees above the horizon
 2030-03-03T23:07:30.725Z moonset
 2030-03-03T23:26:08.098Z sunset
-2030-03-04T06:35:15.712Z new moon
+2030-03-04T06:35:14.885Z new moon
 2030-03-04T11:40:12.900Z moonrise
 2030-03-04T11:46:29.236Z sunrise
 2030-03-04T17:36:25.239Z Sun culminates 55.19 degrees above the horizon
@@ -21131,7 +21131,7 @@
 2030-06-08T17:23:57.445Z Sun culminates 84.29 degrees above the horizon
 2030-06-08T23:15:23.357Z Moon culminates 61.61 degrees above the horizon
 2030-06-09T00:21:31.470Z sunset
-2030-06-09T03:36:15.600Z first quarter
+2030-06-09T03:36:16.363Z first quarter
 2030-06-09T05:24:56.253Z moonset
 2030-06-09T10:26:29.529Z sunrise
 2030-06-09T10:28:33.686Z Uranus conjunction
@@ -21921,7 +21921,7 @@
 2030-10-10T22:24:21.021Z moonrise
 2030-10-10T23:00:15.346Z sunset
 2030-10-11T04:54:36.396Z Moon culminates 70.83 degrees above the horizon
-2030-10-11T10:47:22.748Z full moon
+2030-10-11T10:47:23.329Z full moon
 2030-10-11T11:23:20.746Z sunrise
 2030-10-11T11:30:20.884Z moonset
 2030-10-11T17:11:27.405Z Sun culminates 54.19 degrees above the horizon
@@ -22062,7 +22062,7 @@
 2030-11-01T22:55:12.998Z Moon culminates 45.35 degrees above the horizon
 2030-11-02T04:34:12.483Z moonset
 2030-11-02T11:37:37.144Z sunrise
-2030-11-02T11:56:29.643Z first quarter
+2030-11-02T11:56:28.903Z first quarter
 2030-11-02T17:08:21.184Z Sun culminates 46.50 degrees above the horizon
 2030-11-02T18:02:48.649Z moonrise
 2030-11-02T22:38:45.059Z sunset
@@ -22548,7 +22548,7 @@
 2031-01-16T10:15:20.653Z Neptune moves from Cetus to Pisces
 2031-01-16T11:10:39.369Z Moon culminates 47.87 degrees above the horizon
 2031-01-16T12:18:24.270Z sunrise
-2031-01-16T12:47:47.105Z third quarter
+2031-01-16T12:47:46.378Z third quarter
 2031-01-16T16:50:44.012Z moonset
 2031-01-16T17:34:32.140Z Sun culminates 40.55 degrees above the horizon
 2031-01-16T22:50:52.759Z sunset
@@ -23149,7 +23149,7 @@
 2031-04-20T23:53:31.010Z sunset
 2031-04-21T10:38:56.791Z moonrise
 2031-04-21T10:53:20.750Z sunrise
-2031-04-21T16:57:39.148Z new moon
+2031-04-21T16:57:39.421Z new moon
 2031-04-21T17:20:54.704Z Moon culminates 75.40 degrees above the horizon
 2031-04-21T17:23:30.660Z Sun culminates 73.37 degrees above the horizon
 2031-04-21T23:54:06.075Z sunset
@@ -23670,7 +23670,7 @@
 2031-07-11T04:40:03.257Z moonrise
 2031-07-11T10:35:00.254Z sunrise
 2031-07-11T11:12:06.556Z Moon culminates 71.36 degrees above the horizon
-2031-07-11T11:50:18.911Z third quarter
+2031-07-11T11:50:19.205Z third quarter
 2031-07-11T17:30:21.467Z Sun culminates 83.46 degrees above the horizon
 2031-07-11T17:49:26.606Z moonset
 2031-07-12T00:25:30.317Z sunset
@@ -24096,7 +24096,7 @@
 2031-09-16T11:10:13.447Z sunrise
 2031-09-16T17:09:58.455Z Moon culminates 59.84 degrees above the horizon
 2031-09-16T17:19:37.917Z Sun culminates 63.93 degrees above the horizon
-2031-09-16T18:47:24.486Z new moon
+2031-09-16T18:47:24.287Z new moon
 2031-09-16T23:15:37.977Z moonset
 2031-09-16T23:28:36.411Z sunset
 2031-09-17T11:10:42.760Z sunrise
@@ -24371,7 +24371,7 @@
 2031-10-29T22:18:35.216Z moonrise
 2031-10-29T22:42:02.858Z sunset
 2031-10-30T05:01:47.498Z Moon culminates 75.63 degrees above the horizon
-2031-10-30T07:33:15.331Z full moon
+2031-10-30T07:33:15.656Z full moon
 2031-10-30T07:45:59.979Z penumbral lunar eclipse
 2031-10-30T11:35:17.201Z sunrise
 2031-10-30T11:49:34.637Z moonset
@@ -24895,7 +24895,7 @@
 2032-01-18T22:49:42.116Z Moon culminates 71.45 degrees above the horizon
 2032-01-18T22:52:21.494Z sunset
 2032-01-19T05:27:41.933Z moonset
-2032-01-19T12:14:51.788Z first quarter
+2032-01-19T12:14:51.179Z first quarter
 2032-01-19T12:17:55.974Z sunrise
 2032-01-19T16:57:08.321Z moonrise
 2032-01-19T17:35:26.741Z Sun culminates 41.10 degrees above the horizon
@@ -25517,7 +25517,7 @@
 2032-04-25T05:02:01.483Z Moon culminates 48.36 degrees above the horizon
 2032-04-25T10:43:17.846Z moonset
 2032-04-25T10:48:48.801Z sunrise
-2032-04-25T15:10:11.605Z full moon
+2032-04-25T15:10:10.774Z full moon
 2032-04-25T15:14:09.915Z total lunar eclipse
 2032-04-25T17:22:39.288Z Sun culminates 74.94 degrees above the horizon
 2032-04-25T23:56:54.620Z sunset
@@ -26314,7 +26314,7 @@
 2032-08-27T11:00:45.619Z sunrise
 2032-08-27T17:26:05.198Z Sun culminates 71.09 degrees above the horizon
 2032-08-27T17:50:29.103Z moonset
-2032-08-27T19:33:54.029Z third quarter
+2032-08-27T19:33:54.906Z third quarter
 2032-08-27T23:50:59.059Z sunset
 2032-08-28T04:50:09.828Z moonrise
 2032-08-28T11:01:15.905Z sunrise
@@ -26597,7 +26597,7 @@
 2032-10-11T17:38:51.831Z moonrise
 2032-10-11T22:58:36.603Z sunset
 2032-10-11T23:10:16.527Z Moon culminates 43.42 degrees above the horizon
-2032-10-12T03:48:03.465Z first quarter
+2032-10-12T03:48:03.893Z first quarter
 2032-10-12T04:43:56.537Z moonset
 2032-10-12T11:24:12.929Z sunrise
 2032-10-12T17:11:04.547Z Sun culminates 53.62 degrees above the horizon
@@ -26640,7 +26640,7 @@
 2032-10-18T11:27:49.709Z sunrise
 2032-10-18T17:09:47.091Z Sun culminates 51.42 degrees above the horizon
 2032-10-18T18:58:38.150Z full moon
-2032-10-18T19:02:58.570Z total lunar eclipse
+2032-10-18T19:02:58.569Z total lunar eclipse
 2032-10-18T22:51:21.474Z sunset
 2032-10-18T22:54:10.296Z moonrise
 2032-10-19T05:32:43.520Z Moon culminates 73.25 degrees above the horizon
@@ -27018,7 +27018,7 @@
 2032-12-16T11:44:47.646Z moonset
 2032-12-16T12:10:48.945Z sunrise
 2032-12-16T17:20:44.656Z Sun culminates 38.07 degrees above the horizon
-2032-12-16T20:49:34.470Z full moon
+2032-12-16T20:49:34.955Z full moon
 2032-12-16T22:30:37.943Z sunset
 2032-12-16T22:42:34.202Z moonrise
 2032-12-17T05:40:24.998Z Moon culminates 80.22 degrees above the horizon

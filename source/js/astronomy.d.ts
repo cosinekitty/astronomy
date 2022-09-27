@@ -1455,14 +1455,15 @@ export declare function MoonPhase(date: FlexibleDateTime): number;
  *      The beginning of the window of time in which to search.
  *
  * @param {number} limitDays
- *      The floating point number of days after `dateStart`
+ *      The floating point number of days away from `dateStart`
  *      that limits the window of time in which to search.
+ *      If the value is negative, the search is performed into the past from `startTime`.
+ *      Otherwise, the search is performed into the future from `startTime`.
  *
  * @returns {AstroTime | null}
- *      If the specified lunar phase occurs after `dateStart`
- *      and before `limitDays` days after `dateStart`,
- *      this function returns the date and time of the first such occurrence.
- *      Otherwise, it returns `null`.
+ *      If successful, returns the date and time the moon reaches the phase specified by `targetlon`.
+ *      This function will return `null` if the phase does not occur within `limitDays` of `startTime`;
+ *      that is, if the search window is too small.
  */
 export declare function SearchMoonPhase(targetLon: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null;
 /**

@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
+const SECONDS_PER_DAY = 86400;
 let Verbose = false;
 
 function Debug(text) {
@@ -206,7 +207,7 @@ function MoonPhase() {
         let prev = null;
         for (let curr of data) {
             if (prev && curr.date.getUTCFullYear() === prev.date.getUTCFullYear()) {
-                let dt = (curr.date - prev.date) / (24 * 3600 * 1000);
+                let dt = (curr.date - prev.date) / (SECONDS_PER_DAY * 1000);
                 let s = stats[prev.quarter];
                 if (s) {
                     s.min = min(s.min, dt);
@@ -240,6 +241,60 @@ function MoonPhase() {
     if (TestLongitudes(TestData)) return 1;
     if (TestSearch(TestData)) return 1;
     console.log('JS MoonPhase: PASS');
+    return 0;
+}
+
+function MoonReverse() {
+    // Verify that SearchMoonPhase works both forward and backward in time.
+
+    const numNewMoons = 5000;
+    let utList = [];
+    let i, result;
+
+    let dtMin = +1000;
+    let dtMax = -1000;
+    let time = Astronomy.MakeTime(new Date('1800-01-01T00:00:00Z'));
+    for (i = 0; i < numNewMoons; ++i) {
+        result = Astronomy.SearchMoonPhase(0, time, +40);
+        if (result === null) {
+            console.error(`JS MoonReverse(i=${i}): failed to find new moon after ${time}`);
+            return 1;
+        }
+        utList.push(result.ut);
+        if (i > 0) {
+            // Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
+            const dt = v(utList[i] - utList[i-1]);
+            if (dt < dtMin) dtMin = dt;
+            if (dt > dtMax) dtMax = dt;
+        }
+        time = result.AddDays(+0.1);
+    }
+
+    Debug(`JS MoonReverse: dtMin=${dtMin.toFixed(3)} days, dtMax=${dtMax.toFixed(3)} days.`);
+    if (dtMin < 29.273 || dtMax > 29.832) {
+        console.error(`JS MoonReverse: Time between consecutive new moons is suspicious.`);
+        return 1;
+    }
+
+    // Do a reverse chronological search and make sure the results are consistent with the forward search.
+    time = time.AddDays(20);
+    let maxDiff = 0;
+    for (i = numNewMoons-1; i >= 0; --i) {
+        result = Astronomy.SearchMoonPhase(0, time, -40);
+        if (result === null) {
+            console.error(`JS MoonReverse(i=${i}): failed to find new moon before ${time}`);
+            return 1;
+        }
+        const diff = SECONDS_PER_DAY * abs(result.ut - utList[i]);
+        if (diff > maxDiff) maxDiff = diff;
+        time = result.AddDays(-0.1);
+    }
+
+    console.log(`JS MoonReverse: Maximum discrepancy in reverse search = ${maxDiff.toFixed(3)} seconds.`);
+    if (maxDiff > 0.128) {
+        console.error(`JS MoonReverse: EXCESSIVE DISCREPANCY in reverse search.`);
+        return 1;
+    }
     return 0;
 }
 
@@ -2455,7 +2510,7 @@ function TwilightTest() {
         for (let i = 0; i < correctTimes.length; ++i) {
             const correct = correctTimes[i];
             const calc = calcTimes[i];
-            const diff = 86400 * abs(calc.ut - correct.ut);
+            const diff = SECONDS_PER_DAY * abs(calc.ut - correct.ut);
             if (diff > tolerance_seconds) {
                 console.error(`JS TwilightTest(${filename} line ${lnum}): EXCESSIVE ERROR = ${diff} seconds for ${name[i]}`);
                 console.error(`Expected ${correct} but calculated ${calc}`);
@@ -2967,6 +3022,7 @@ const UnitTests = {
     magnitude:              Magnitude,
     moon_nodes:             MoonNodes,
     moon_phase:             MoonPhase,
+    moon_reverse:           MoonReverse,
     planet_apsis:           PlanetApsis,
     pluto:                  PlutoCheck,
     refraction:             Refraction,
