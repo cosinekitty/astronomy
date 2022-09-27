@@ -635,7 +635,7 @@ namespace csharp_test
 
             const int numNewMoons = 5000;
             var utList = new double[numNewMoons];
-            double dtMin = 1000.0;
+            double dtMin = +1000.0;
             double dtMax = -1000.0;
 
             // Search forward in time from 1800 to find consecutive new moon events.

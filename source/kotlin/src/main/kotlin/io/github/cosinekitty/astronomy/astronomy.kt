@@ -39,6 +39,7 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.log10
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.PI
 import kotlin.math.pow
@@ -5829,7 +5830,9 @@ fun moonPhase(time: Time): Double =
  * The beginning of the time window in which to search for the Moon reaching the specified phase.
  *
  * @param limitDays
- * The number of days after `startTime` that limits the time window for the search.
+ * The number of days away from `startTime` that limits the time window for the search.
+ * If the value is negative, the search is performed into the past from `startTime`.
+ * Otherwise, the search is performed into the future from `startTime`.
  *
  * @return
  * If successful, returns the date and time the moon reaches the phase specified by
@@ -5846,18 +5849,32 @@ fun searchMoonPhase(targetLon: Double, startTime: Time, limitDays: Double): Time
     // I have seen more than 0.9 days away from the simple prediction.
     // To be safe, we take the predicted time of the event and search
     // +/-1.5 days around it (a 3-day wide window).
-    val moonOffset = SearchContext { time -> longitudeOffset(moonPhase(time) - targetLon) }
-    var ya = moonOffset.eval(startTime)
-    if (ya > 0.0) ya -= 360.0  // force searching forward in time, not backward
     val uncertainty = 1.5
-    val estDt = -(MEAN_SYNODIC_MONTH * ya) / 360.0
-    val dt1 = estDt - uncertainty
-    if (dt1 > limitDays)
-        return null    // not possible for moon phase to occur within specified window (too short)
-    val dt2 = min(limitDays, estDt + uncertainty)
+    val moonOffset = SearchContext { time -> longitudeOffset(moonPhase(time) - targetLon) }
+    var estDt: Double
+    var dt1: Double
+    var dt2: Double
+    var ya = moonOffset.eval(startTime)
+    if (limitDays < 0.0) {
+        // Search backward in time.
+        if (ya < 0.0) ya += 360.0
+        estDt = -(MEAN_SYNODIC_MONTH * ya) / 360.0
+        dt2 = estDt + uncertainty
+        if (dt2 < limitDays)
+            return null    // not possible for moon phase to occur within specified window (too short)
+        dt1 = max(limitDays, estDt - uncertainty)
+    } else {
+        // Search forward in time
+        if (ya > 0.0) ya -= 360.0
+        estDt = -(MEAN_SYNODIC_MONTH * ya) / 360.0
+        dt1 = estDt - uncertainty
+        if (dt1 > limitDays)
+            return null    // not possible for moon phase to occur within specified window (too short)
+        dt2 = min(limitDays, estDt + uncertainty)
+    }
     val t1 = startTime.addDays(dt1)
     val t2 = startTime.addDays(dt2)
-    return search(t1, t2, 1.0, moonOffset)
+    return search(t1, t2, 0.1, moonOffset)
 }
 
 /**

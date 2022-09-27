@@ -957,6 +957,52 @@ class Tests {
     //----------------------------------------------------------------------------------------
 
     @Test
+    fun `Reverse chrono new moon search`() {
+        val numNewMoons = 5000
+        val utList = arrayListOf<Double>()
+        var dtMin = +1000.0
+        var dtMax = -1000.0
+
+        // Search forward in time from 1800 to find consecutive new moon events.
+        var time = Time(1800, 1, 1, 0, 0, 0.0)
+        var i = 0
+        while (i < numNewMoons) {
+            val result = searchMoonPhase(0.0, time, +40.0) ?:
+                fail("Failed to find new moon after $time")
+            utList.add(result.ut)
+            if (i > 0) {
+                // Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
+                val dt = utList[i] - utList[i-1]
+                if (dt < dtMin) dtMin = dt
+                if (dt > dtMax) dtMax = dt
+            }
+            time = result.addDays(+0.1)
+            ++i
+        }
+
+        if (dtMin < 29.273 || dtMax > 29.832)
+            fail("Time between consecutive new moons is suspicious: dtMin=$dtMin, dtMax=$dtMax.")
+
+        // Do a reverse chronological search and make sure the results are consistent with the forward search.
+        time = time.addDays(+20.0)
+        var maxDiff = 0.0
+        i = numNewMoons - 1
+        while (i >= 0) {
+            val result = searchMoonPhase(0.0, time, -40.0) ?:
+                fail("Failed to find new moon before $time")
+            val diff = 86400.0 * abs(result.ut - utList[i])
+            if (diff > maxDiff) maxDiff = diff
+            time = result.addDays(-0.1)
+            --i
+        }
+
+        if (maxDiff > 0.128)
+            fail("Excessive discrepancy in reverse search: $maxDiff seconds.")
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
     fun `Rise set test`() {
         val filename = dataRootDir + "riseset/riseset.txt"
         val infile = File(filename)
