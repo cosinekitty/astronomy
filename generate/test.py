@@ -9,6 +9,7 @@ import astronomy
 #-----------------------------------------------------------------------------------------------------------
 
 Verbose = False
+SECONDS_PER_DAY = 86400.0
 
 def Debug(text):
     if Verbose:
@@ -292,7 +293,7 @@ def MoonPhase(filename = 'moonphase/moonphases.txt'):
             quarter_count += 1
 
             # Make sure the time matches what we expect.
-            diff_seconds = vabs(mq.time.tt - expected_time.tt) * (24.0 * 3600.0)
+            diff_seconds = vabs(mq.time.tt - expected_time.tt) * SECONDS_PER_DAY
             if diff_seconds > threshold_seconds:
                 print('PY MoonPhase({} line {}): excessive time error {:0.3f} seconds.'.format(filename, lnum, diff_seconds))
                 return 1
@@ -1267,7 +1268,7 @@ def LunarEclipseIssue78():
 
     eclipse = astronomy.SearchLunarEclipse(astronomy.Time.Make(2020, 12, 19, 0, 0, 0))
     expected_peak = astronomy.Time.Make(2021, 5, 26, 11, 18, 42)  # https://www.timeanddate.com/eclipse/lunar/2021-may-26
-    dt = (expected_peak.tt - eclipse.peak.tt) * (24.0 * 3600.0)
+    dt = (expected_peak.tt - eclipse.peak.tt) * SECONDS_PER_DAY
     if vabs(dt) > 40.0:
         print('LunarEclipseIssue78: Excessive prediction error = {} seconds.'.format(dt))
         return 1
@@ -2200,7 +2201,7 @@ def Twilight():
             for i in range(6):
                 correct = correctTimes[i]
                 calc = calcTimes[i]
-                diff = 86400.0 * vabs(calc.ut - correct.ut)
+                diff = SECONDS_PER_DAY * vabs(calc.ut - correct.ut)
                 if diff > tolerance_seconds:
                     print('PY Twilight({} line {}): EXCESSIVE ERROR = {} seconds for case {}'.format(filename, lnum, diff, i))
                     return 1
@@ -2427,6 +2428,56 @@ def MoonNodes():
         print('PY MoonNodes: EXCESSIVE time prediction error = {:0.3f} minutes.'.format(max_minutes))
         return 1
     print('PY MoonNodes: PASS ({} nodes, max equ error = {:0.3f} arcmin, max time error = {:0.3f} minutes.)'.format(lnum, max_angle, max_minutes))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
+def MoonReverse():
+    # Verify that SearchMoonPhase works both forward and backward in time.
+    numNewMoons = 5000
+    utList = []
+    dtMin = +1000.0
+    dtMax = -1000.0
+
+    # Search forward in time from 1800 to find consecutive new moon events.
+    time = astronomy.Time.Make(1800, 1, 1, 0, 0, 0.0)
+    for i in range(numNewMoons):
+        result = astronomy.SearchMoonPhase(0.0, time, +40.0)
+        if result is None:
+            print('PY MoonReverse(i={}): failed to find new moon after {}'.format(i, time))
+            return 1
+        utList.append(result.ut)
+        if i > 0:
+            # Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
+            dt = v(utList[i] - utList[i-1])
+            if dt < dtMin:
+                dtMin = dt
+            if dt > dtMax:
+                dtMax = dt
+        time = result.AddDays(+0.1)
+
+    Debug('PY MoonReverse: dtMin={:0.3f} days, dtMax={:0.3f} days.'.format(dtMin, dtMax))
+    if (dtMin < 29.273) or (dtMax > 29.832):
+        print('PY MoonReverse: Time between consecutive new moons is suspicious.')
+        return 1
+
+    # Do a reverse chronological search and make sure the results are consistent with the forward search.
+    time = time.AddDays(20.0)
+    maxDiff = 0.0
+    for i in range(numNewMoons-1, -1, -1):
+        result = astronomy.SearchMoonPhase(0.0, time, -40.0)
+        if result is None:
+            print('PY MoonReverse(i={}): failed to find new moon before {}'.format(i, time))
+            return 1
+        diff = SECONDS_PER_DAY * abs(result.ut - utList[i])
+        if diff > maxDiff:
+            maxDiff = diff
+        time = result.AddDays(-0.1)
+
+    print('PY MoonReverse: Maximum discrepancy in reverse search = {:0.3f} seconds.'.format(maxDiff))
+    if maxDiff > 0.128:
+        print('PY MoonReverse: EXCESSIVE DISCREPANCY in reverse search.')
+        return 1
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -2689,6 +2740,7 @@ UnitTests = {
     'magnitude':                Magnitude,
     'moon':                     GeoMoon,
     'moon_nodes':               MoonNodes,
+    'moon_reverse':             MoonReverse,
     'moonphase':                MoonPhase,
     'planet_apsis':             PlanetApsis,
     'pluto':                    PlutoCheck,

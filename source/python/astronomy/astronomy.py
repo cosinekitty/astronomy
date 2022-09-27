@@ -5893,7 +5893,9 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
     startTime : Time
          The beginning of the time window in which to search for the Moon reaching the specified phase.
     limitDays : float
-         The number of days after `startTime` that limits the time window for the search.
+         The number of days away from `startTime` that limits the time window for the search.
+         If the value is negative, the search is performed into the past from `startTime`.
+         Otherwise, the search is performed into the future from `startTime`.
 
     Returns
     -------
@@ -5911,16 +5913,27 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
     # But we must return None if the final result goes beyond limitDays after startTime.
     uncertainty = 1.5
     ya = _moon_offset(targetLon, startTime)
-    if ya > 0.0:
-        ya -= 360.0     # force searching forward in time, not backward
-    est_dt = -(_MEAN_SYNODIC_MONTH * ya) / 360.0
-    dt1 = est_dt - uncertainty
-    if dt1 > limitDays:
-        return None     # not possible for moon phase to occur within the specified window
-    dt2 = min(limitDays, est_dt + uncertainty)
+    if limitDays < 0.0:
+        # Search backward in time.
+        if ya < 0.0:
+            ya += 360.0     # force searching forward in time, not backward
+        est_dt = -(_MEAN_SYNODIC_MONTH * ya) / 360.0
+        dt2 = est_dt + uncertainty
+        if dt2 < limitDays:
+            return None     # not possible for moon phase to occur within the specified window
+        dt1 = max(limitDays, est_dt - uncertainty)
+    else:
+        # Search forward in time.
+        if ya > 0.0:
+            ya -= 360.0     # force searching forward in time, not backward
+        est_dt = -(_MEAN_SYNODIC_MONTH * ya) / 360.0
+        dt1 = est_dt - uncertainty
+        if dt1 > limitDays:
+            return None     # not possible for moon phase to occur within the specified window
+        dt2 = min(limitDays, est_dt + uncertainty)
     t1 = startTime.AddDays(dt1)
     t2 = startTime.AddDays(dt2)
-    return Search(_moon_offset, targetLon, t1, t2, 1.0)
+    return Search(_moon_offset, targetLon, t1, t2, 0.1)
 
 class MoonQuarter:
     """A lunar quarter event along with its date and time.
