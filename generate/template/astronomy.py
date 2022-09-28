@@ -3874,7 +3874,7 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
     if limitDays < 0.0:
         # Search backward in time.
         if ya < 0.0:
-            ya += 360.0     # force searching forward in time, not backward
+            ya += 360.0
         est_dt = -(_MEAN_SYNODIC_MONTH * ya) / 360.0
         dt2 = est_dt + uncertainty
         if dt2 < limitDays:
@@ -3883,7 +3883,7 @@ def SearchMoonPhase(targetLon, startTime, limitDays):
     else:
         # Search forward in time.
         if ya > 0.0:
-            ya -= 360.0     # force searching forward in time, not backward
+            ya -= 360.0
         est_dt = -(_MEAN_SYNODIC_MONTH * ya) / 360.0
         dt1 = est_dt - uncertainty
         if dt1 > limitDays:
