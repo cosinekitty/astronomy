@@ -74,7 +74,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 | -------- | ----------- |
 | [SearchRiseSet](#Astronomy_SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
 | [SearchAltitude](#Astronomy_SearchAltitude) | Finds time when a body reaches a given altitude above or below the horizon. Useful for finding civil, nautical, or astronomical twilight. |
-| [SearchHourAngle](#Astronomy_SearchHourAngle) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
+| [SearchHourAngleEx](#Astronomy_SearchHourAngleEx) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
 
 ### Moon phases
 
@@ -2386,8 +2386,8 @@ This function finds the first solar eclipse that occurs after `startTime`. A sol
 
 ---
 
-<a name="Astronomy_SearchHourAngle"></a>
-### Astronomy_SearchHourAngle(body, observer, hourAngle, startTime) &#8658; [`astro_hour_angle_t`](#astro_hour_angle_t)
+<a name="Astronomy_SearchHourAngleEx"></a>
+### Astronomy_SearchHourAngleEx(body, observer, hourAngle, startTime, direction) &#8658; [`astro_hour_angle_t`](#astro_hour_angle_t)
 
 **Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.** 
 
@@ -2395,7 +2395,7 @@ This function finds the first solar eclipse that occurs after `startTime`. A sol
 
 The *hour angle* of a celestial body indicates its position in the sky with respect to the Earth's rotation. The hour angle depends on the location of the observer on the Earth. The hour angle is 0 when the body reaches its highest angle above the horizon in a given day. The hour angle increases by 1 unit for every sidereal hour that passes after that point, up to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates the number of hours that have passed since the most recent time that the body has culminated, or reached its highest point.
 
-This function searches for the next time a celestial body reaches the given hour angle after the date and time specified by `startTime`. To find when a body culminates, pass 0 for `hourAngle`. To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
+This function searches for the next or previous time a celestial body reaches the given hour angle relative to the date and time specified by `startTime`. To find when a body culminates, pass 0 for `hourAngle`. To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
 
 Note that, especially close to the Earth's poles, a body as seen on a given day may always be above the horizon or always below the horizon, so the caller cannot assume that a culminating object is visible nor that an object is below the horizon at its minimum altitude.
 
@@ -2413,6 +2413,7 @@ On success, the function reports the date and time, along with the horizontal co
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  Indicates a location on or near the surface of the Earth where the observer is located. Call [`Astronomy_MakeObserver`](#Astronomy_MakeObserver) to create an observer structure. | 
 | `double` | `hourAngle` |  An hour angle value in the range [0, 24) indicating the number of sidereal hours after the body's most recent culmination. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
+| `int` | `direction` |  The direction in time to perform the search: a positive value searches forward in time, a negative value searches backward in time. The function will fail with `ASTRO_INVALID_PARAMETER` if `direction` is zero. | 
 
 
 
@@ -4052,7 +4053,7 @@ Contains horizontal and equatorial coordinates seen by an observer on or near th
 
 
 
-Returned by the function [`Astronomy_SearchHourAngle`](#Astronomy_SearchHourAngle) to report information about a celestial body crossing a certain hour angle as seen by a specified topocentric observer. 
+Returned by the function [`Astronomy_SearchHourAngleEx`](#Astronomy_SearchHourAngleEx) to report information about a celestial body crossing a certain hour angle as seen by a specified topocentric observer. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |

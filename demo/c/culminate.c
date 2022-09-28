@@ -59,7 +59,7 @@ int main(int argc, const char *argv[])
 
     for (i=0; i < nbodies; ++i)
     {
-        evt = Astronomy_SearchHourAngle(bodies[i], observer, 0.0, time);
+        evt = Astronomy_SearchHourAngleEx(bodies[i], observer, 0.0, time, +1);
         PrintEvent(Astronomy_BodyName(bodies[i]), evt);
     }
 

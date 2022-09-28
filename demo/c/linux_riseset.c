@@ -45,8 +45,8 @@ void PrintLocalTime(astro_time_t time)
     default: dow = "---"; break;
     }
 
-    printf("%04d-%02d-%02d %s %02d:%02d:%02d %s", 
-        local.tm_year+1900, local.tm_mon+1, local.tm_mday, 
+    printf("%04d-%02d-%02d %s %02d:%02d:%02d %s",
+        local.tm_year+1900, local.tm_mon+1, local.tm_mday,
         dow,
         local.tm_hour, local.tm_min, local.tm_sec,
         (local.tm_isdst ? "DT" : "ST"));
@@ -63,16 +63,16 @@ event_t;
 
 
 void AppendCulm(
-    event_t evtlist[], 
-    int *evtcount, 
-    const char *name, 
-    astro_body_t body, 
+    event_t evtlist[],
+    int *evtcount,
+    const char *name,
+    astro_body_t body,
     astro_observer_t observer,
     astro_time_t search_time)
 {
     astro_hour_angle_t culm;
 
-    culm = Astronomy_SearchHourAngle(body, observer, 0.0, search_time);
+    culm = Astronomy_SearchHourAngleEx(body, observer, 0.0, search_time, +1);
     if (culm.status == ASTRO_SUCCESS)
     {
         evtlist[*evtcount].name = name;

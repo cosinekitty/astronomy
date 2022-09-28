@@ -651,7 +651,7 @@ astro_elongation_t;
 /**
  * @brief Information about a celestial body crossing a specific hour angle.
  *
- * Returned by the function #Astronomy_SearchHourAngle to report information about
+ * Returned by the function #Astronomy_SearchHourAngleEx to report information about
  * a celestial body crossing a certain hour angle as seen by a specified topocentric observer.
  */
 typedef struct
@@ -1224,11 +1224,20 @@ astro_search_result_t Astronomy_SearchSunLongitude(
     astro_time_t startTime,
     double limitDays);
 
-astro_hour_angle_t Astronomy_SearchHourAngle(
+astro_hour_angle_t Astronomy_SearchHourAngleEx(
     astro_body_t body,
     astro_observer_t observer,
     double hourAngle,
-    astro_time_t startTime);
+    astro_time_t startTime,
+    int direction);
+
+/** @cond DOXYGEN_SKIP */
+
+/* The following is provided for backward compatibility. */
+#define Astronomy_SearchHourAngle(body,observer,hourAngle,startTime)    \
+    Astronomy_SearchHourAngleEx((body), (observer), (hourAngle), (startTime), +1)
+
+/** @endcond */
 
 astro_search_result_t Astronomy_SearchRiseSet(
     astro_body_t body,

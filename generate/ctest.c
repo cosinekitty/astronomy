@@ -179,6 +179,7 @@ static int MoonPhase(void);
 static int MoonReverse(void);
 static int MoonNodes(void);
 static int RiseSet(void);
+static int RiseSetReverse(void);
 static int LunarApsis(void);
 static int EarthApsis(void);
 static int PlanetApsis(void);
@@ -266,6 +267,7 @@ static unit_test_t UnitTests[] =
     {"pluto",                   PlutoCheck},
     {"refraction",              RefractionTest},
     {"riseset",                 RiseSet},
+    {"riseset_reverse",         RiseSetReverse},
     {"rotation",                RotationTest},
     {"seasons",                 SeasonsTest},
     {"seasons187",              SeasonsIssue187},
@@ -1672,6 +1674,74 @@ static int RiseSet(void)
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int RiseSetReverse(void)
+{
+    /* Verify that the rise/set search works equally well forwards and backwards in time. */
+
+    const int nsamples = 5000;
+    const double nudge = 0.1;
+    int error = 1;
+    int i;
+    double *utList = NULL;
+    astro_observer_t observer = Astronomy_MakeObserver(30.5, -90.7, 0.0);
+    astro_direction_t dir;
+    astro_time_t time;
+    astro_search_result_t result;
+    double dt, dtMin = +1000.0, dtMax = -1000.0;
+    double diff, maxDiff = 0.0;
+
+    utList = (double *)calloc(nsamples, sizeof(utList[0]));
+    if (utList == NULL)
+        FAIL("C RiseSetReverse: out of memory!");
+
+    /* Find alternating sunrise/sunset events in forward chronological order. */
+    dir = DIRECTION_RISE;
+    time = Astronomy_MakeTime(2022, 1, 1, 0, 0, 0.0);
+    for (i = 0; i < nsamples; ++i)
+    {
+        result = Astronomy_SearchRiseSet(BODY_SUN, observer, dir, time, +1.0);
+        CHECK_STATUS(result);
+        utList[i] = result.time.ut;
+        if (i > 0)
+        {
+            /* Check the time between consecutive sunrise/sunset events. */
+            /* These will vary considerably with the seasons, so just make sure we don't miss any entirely. */
+            dt = V(utList[i] - utList[i-1]);
+            if (dt < dtMin) dtMin = dt;
+            if (dt > dtMax) dtMax = dt;
+        }
+        dir *= -1;      /* Toggle searching sunrise/sunset. */
+        time = Astronomy_AddDays(result.time, +nudge);
+    }
+
+    DEBUG("C RiseSetReverse: dtMin=%0.6lf days, dtMax=%0.6lf days.\n", dtMin, dtMax);
+    if (dtMin < 0.411 || dtMax > 0.589)
+        FAIL("C RiseSetReverse: Invalid intervals between sunrise/sunset.\n");
+
+    /* Perform the same search in reverse. Verify we get consistent rise/set times. */
+    for (int i = nsamples-1; i >= 0; --i)
+    {
+        dir *= -1;      /* Toggle searching sunrise/sunset. */
+        result = Astronomy_SearchRiseSet(BODY_SUN, observer, dir, time, -1.0);
+        CHECK_STATUS(result);
+        diff = SECONDS_PER_DAY * ABS(utList[i] - result.time.ut);
+        if (diff > maxDiff) maxDiff = diff;
+        time = Astronomy_AddDays(result.time, -nudge);
+    }
+
+    if (maxDiff > 0.982)
+        FAIL("C RiseSetReverse: EXCESSIVE discrepancy = %0.6lf seconds.\n", maxDiff);
+
+    printf("C RiseSetReverse: PASS - max diff = %0.6lf seconds\n", maxDiff);
+    error = 0;
+
+fail:
+    free(utList);
     return error;
 }
 
