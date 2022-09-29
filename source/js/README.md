@@ -2631,7 +2631,7 @@ Astronomical twilight uses -18 degrees as the `altitude` value.
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | direction | <code>number</code> | Either +1 to find when the body ascends through the altitude,      or -1 for when the body descends through the altitude.      Any other value will cause an exception to be thrown. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified altitude event is to be found. |
-| limitDays | <code>number</code> | The fractional number of days after `dateStart` that limits      when the altitude event is to be found. Must be a positive number. |
+| limitDays | <code>number</code> | Limits how many days to search for the body reaching the altitude angle,      and defines the direction in time to search. When `limitDays` is positive, the      search is performed into the future, after `dateStart`.      When negative, the search is performed into the past, before `dateStart`.      To limit the search to the same day, you can use a value of 1 day.      In cases where you want to find the altitude event no matter how far      in the future (for example, for an observer near the south pole), you can      pass in a larger value like 365. |
 | altitude | <code>number</code> | The desired altitude angle of the body's center above (positive)      or below (negative) the observer's local horizon, expressed in degrees.      Must be in the range [-90, +90]. |
 
 
@@ -2659,7 +2659,7 @@ passing in the `peak` value returned from the previous call.
 
 <a name="SearchHourAngle"></a>
 
-## SearchHourAngle(body, observer, hourAngle, dateStart) ⇒ [<code>HourAngleEvent</code>](#HourAngleEvent)
+## SearchHourAngle(body, observer, hourAngle, dateStart, direction) ⇒ [<code>HourAngleEvent</code>](#HourAngleEvent)
 **Kind**: global function  
 **Brief**: Finds when a body will reach a given hour angle.
 
@@ -2679,6 +2679,7 @@ at its minimum altitude.
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | hourAngle | <code>number</code> | The hour angle expressed in      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>      hours for which the caller seeks to find the body attain.      The value must be in the range [0, 24).      The hour angle represents the number of sidereal hours that have      elapsed since the most recent time the body crossed the observer's local      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.      This specifying `hourAngle` = 0 finds the moment in time      the body reaches the highest angular altitude in a given sidereal day. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the desired hour angle crossing event      is to be found. |
+| direction | <code>number</code> | The direction in time to perform the search: a positive value      searches forward in time, a negative value searches backward in time.      The function throws an exception if `direction` is zero. |
 
 
 * * *
@@ -2931,7 +2932,7 @@ The times are adjusted for typical atmospheric refraction conditions.
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | direction | <code>number</code> | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified rise or set time is to be found. |
-| limitDays | <code>number</code> | The fractional number of days after `dateStart` that limits      when the rise or set time is to be found. |
+| limitDays | <code>number</code> | Limits how many days to search for a rise or set time, and defines      the direction in time to search. When `limitDays` is positive, the      search is performed into the future, after `dateStart`.      When negative, the search is performed into the past, before `dateStart`.      To limit a rise or set time to the same day, you can use a value of 1 day.      In cases where you want to find the next rise or set time no matter how far      in the future (for example, for an observer near the south pole), you can      pass in a larger value like 365. |
 
 
 * * *

@@ -1250,6 +1250,65 @@ function RiseSet() {
 }
 
 
+function RiseSetReverse() {
+    // Verify that the rise/set search works equally well forwards and backwards in time.
+    const nsamples = 5000;
+    const nudge = 0.1;
+    const utList = [];
+    const observer = new Astronomy.Observer(30.5, -90.7, 0.0);
+    let dtMin = +1000;
+    let dtMax = -1000;
+    let maxDiff = 0;
+
+    // Find alternating sunrise/sunset events in forward chronological order.
+    let dir = +1;
+    let time = Astronomy.MakeTime(new Date('2022-01-01T00:00:00Z'));
+    let i;
+    for (i = 0; i < nsamples; ++i) {
+        const result = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, dir, time, +1.0);
+        if (!result) {
+            console.error(`JS RiseSetReverse: cannot find dir=${dir} event after ${time}.`);
+            return 1;
+        }
+        utList.push(result.ut);
+        if (i > 0) {
+            const dt = v(utList[i] - utList[i-1]);
+            if (dt < dtMin) dtMin = dt;
+            if (dt > dtMax) dtMax = dt;
+        }
+        dir *= -1;
+        time = result.AddDays(+nudge);
+    }
+
+    Debug(`JS RiseSetReverse: dtMin=${dtMin.toFixed(6)} days, dtMax=${dtMax.toFixed(6)} days.`);
+    if (dtMin < 0.411 || dtMax > 0.589) {
+        console.error(`JS RiseSetReverse: Invalid intervals between sunrise/sunset.`);
+        return 1;
+    }
+
+    // Perform the same search in reverse. Verify we get consistent rise/set times.
+    for (i = nsamples-1; i >= 0; --i) {
+        dir *= -1;
+        const result = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, dir, time, -1.0);
+        if (!result) {
+            console.error(`JS RiseSetReverse: cannot find dir=${dir} event before ${time}.`);
+            return 1;
+        }
+        const diff = SECONDS_PER_DAY * abs(utList[i] - result.ut);
+        if (diff > maxDiff) maxDiff = diff;
+        time = result.AddDays(-nudge);
+    }
+
+    if (maxDiff > 0.982) {
+        console.error(`C# RiseSetReverse: EXCESSIVE discrepancy = ${maxDiff.toFixed(6)} seconds.`);
+        return 1;
+    }
+
+    console.log(`JS RiseSetReverse: PASS - max diff = ${maxDiff.toFixed(6)} seconds.`);
+    return 0;
+}
+
+
 function Rotation() {
     function CompareMatrices(caller, a, b, tolerance) {
         for (let i=0; i<3; ++i) {
@@ -3026,7 +3085,8 @@ const UnitTests = {
     planet_apsis:           PlanetApsis,
     pluto:                  PlutoCheck,
     refraction:             Refraction,
-    rise_set:               RiseSet,
+    riseset:                RiseSet,
+    riseset_reverse:        RiseSetReverse,
     rotation:               Rotation,
     seasons:                Seasons,
     seasons187:             SeasonsIssue187,

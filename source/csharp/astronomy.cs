@@ -6963,19 +6963,19 @@ namespace CosineKitty
             AstroTime time_before;
             if (alt_before > 0.0)
             {
-                /* We are past the sought event, so we have to wait for the next "before" event (culm/bottom). */
-                evt_before = SearchHourAngle(body, observer, ha_before, startTime);
+                // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
+                evt_before = SearchHourAngle(body, observer, ha_before, startTime, +1);
                 time_before = evt_before.time;
                 alt_before = context.Eval(time_before);
             }
             else
             {
-                /* We are before or at the sought event, so we find the next "after" event (bottom/culm), */
-                /* and use the current time as the "before" event. */
+                // We are before or at the sought event, so we find the next "after" event (bottom/culm),
+                // and use the current time as the "before" event.
                 time_before = startTime;
             }
 
-            evt_after = SearchHourAngle(body, observer, ha_after, time_before);
+            evt_after = SearchHourAngle(body, observer, ha_after, time_before, +1);
             double alt_after = context.Eval(evt_after.time);
 
             for(;;)
@@ -6996,8 +6996,8 @@ namespace CosineKitty
                 }
 
                 // If we didn't find the desired event, use evt_after.time to find the next before-event.
-                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time);
-                evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time);
+                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, +1);
+                evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, +1);
 
                 if (evt_before.time.ut >= startTime.ut + limitDays)
                     return null;
@@ -7085,11 +7085,12 @@ namespace CosineKitty
                     }
                 }
 
-                evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, -1);
-                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, -1);
+                evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, -1);
 
                 if (evt_after.time.ut <= startTime.ut + limitDays)
                     return null;
+
+                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, -1);
 
                 time_after = evt_after.time;
                 alt_before = context.Eval(evt_before.time);

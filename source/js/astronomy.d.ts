@@ -1537,8 +1537,14 @@ export declare function NextMoonQuarter(mq: MoonQuarter): MoonQuarter;
  *      The date and time after which the specified rise or set time is to be found.
  *
  * @param {number} limitDays
- *      The fractional number of days after `dateStart` that limits
- *      when the rise or set time is to be found.
+ *      Limits how many days to search for a rise or set time, and defines
+ *      the direction in time to search. When `limitDays` is positive, the
+ *      search is performed into the future, after `dateStart`.
+ *      When negative, the search is performed into the past, before `dateStart`.
+ *      To limit a rise or set time to the same day, you can use a value of 1 day.
+ *      In cases where you want to find the next rise or set time no matter how far
+ *      in the future (for example, for an observer near the south pole), you can
+ *      pass in a larger value like 365.
  *
  * @returns {AstroTime | null}
  *      The date and time of the rise or set event, or null if no such event
@@ -1580,8 +1586,14 @@ export declare function SearchRiseSet(body: Body, observer: Observer, direction:
  *      The date and time after which the specified altitude event is to be found.
  *
  * @param {number} limitDays
- *      The fractional number of days after `dateStart` that limits
- *      when the altitude event is to be found. Must be a positive number.
+ *      Limits how many days to search for the body reaching the altitude angle,
+ *      and defines the direction in time to search. When `limitDays` is positive, the
+ *      search is performed into the future, after `dateStart`.
+ *      When negative, the search is performed into the past, before `dateStart`.
+ *      To limit the search to the same day, you can use a value of 1 day.
+ *      In cases where you want to find the altitude event no matter how far
+ *      in the future (for example, for an observer near the south pole), you can
+ *      pass in a larger value like 365.
  *
  * @param {number} altitude
  *      The desired altitude angle of the body's center above (positive)
@@ -1646,9 +1658,14 @@ export declare class HourAngleEvent {
  *      The date and time after which the desired hour angle crossing event
  *      is to be found.
  *
+ * @param {number} direction
+ *      The direction in time to perform the search: a positive value
+ *      searches forward in time, a negative value searches backward in time.
+ *      The function throws an exception if `direction` is zero.
+ *
  * @returns {HourAngleEvent}
  */
-export declare function SearchHourAngle(body: Body, observer: Observer, hourAngle: number, dateStart: FlexibleDateTime): HourAngleEvent;
+export declare function SearchHourAngle(body: Body, observer: Observer, hourAngle: number, dateStart: FlexibleDateTime, direction?: number): HourAngleEvent;
 /**
  * @brief When the seasons change for a given calendar year.
  *

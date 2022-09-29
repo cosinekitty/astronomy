@@ -5284,8 +5284,14 @@ function BodyRadiusAu(body: Body): number {
  *      The date and time after which the specified rise or set time is to be found.
  *
  * @param {number} limitDays
- *      The fractional number of days after `dateStart` that limits
- *      when the rise or set time is to be found.
+ *      Limits how many days to search for a rise or set time, and defines
+ *      the direction in time to search. When `limitDays` is positive, the
+ *      search is performed into the future, after `dateStart`.
+ *      When negative, the search is performed into the past, before `dateStart`.
+ *      To limit a rise or set time to the same day, you can use a value of 1 day.
+ *      In cases where you want to find the next rise or set time no matter how far
+ *      in the future (for example, for an observer near the south pole), you can
+ *      pass in a larger value like 365.
  *
  * @returns {AstroTime | null}
  *      The date and time of the rise or set event, or null if no such event
@@ -5298,7 +5304,7 @@ export function SearchRiseSet(
     dateStart: FlexibleDateTime,
     limitDays: number): AstroTime | null
 {
-    let body_radius_au:number = BodyRadiusAu(body);
+    const body_radius_au:number = BodyRadiusAu(body);
 
     function peak_altitude(t: AstroTime): number {
         // Return the angular altitude above or below the horizon
@@ -5316,7 +5322,11 @@ export function SearchRiseSet(
         return direction * alt;
     }
 
-    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, peak_altitude);
+    return (
+        (limitDays < 0)
+        ? BackwardSearchAltitude(body, observer, direction, dateStart, limitDays, peak_altitude)
+        : ForwardSearchAltitude( body, observer, direction, dateStart, limitDays, peak_altitude)
+    );
 }
 
 /**
@@ -5354,8 +5364,14 @@ export function SearchRiseSet(
  *      The date and time after which the specified altitude event is to be found.
  *
  * @param {number} limitDays
- *      The fractional number of days after `dateStart` that limits
- *      when the altitude event is to be found. Must be a positive number.
+ *      Limits how many days to search for the body reaching the altitude angle,
+ *      and defines the direction in time to search. When `limitDays` is positive, the
+ *      search is performed into the future, after `dateStart`.
+ *      When negative, the search is performed into the past, before `dateStart`.
+ *      To limit the search to the same day, you can use a value of 1 day.
+ *      In cases where you want to find the altitude event no matter how far
+ *      in the future (for example, for an observer near the south pole), you can
+ *      pass in a larger value like 365.
  *
  * @param {number} altitude
  *      The desired altitude angle of the body's center above (positive)
@@ -5383,10 +5399,15 @@ export function SearchRiseSet(
         return direction * (hor.altitude - altitude);
     }
 
-    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error);
+    return (
+        (limitDays < 0)
+        ? BackwardSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error)
+        : ForwardSearchAltitude( body, observer, direction, dateStart, limitDays, altitude_error)
+    );
 }
 
-function InternalSearchAltitude(
+
+function ForwardSearchAltitude(
     body: Body,
     observer: Observer,
     direction: number,
@@ -5396,20 +5417,9 @@ function InternalSearchAltitude(
 {
     VerifyObserver(observer);
     VerifyNumber(limitDays);
-    if (limitDays <= 0)
-        throw `Invalid value for limitDays: ${limitDays}`;
 
     if (body === Body.Earth)
         throw 'Cannot find altitude event for the Earth.';
-
-    // See if the body is currently above/below the horizon.
-    // If we are looking for next rise time and the body is below the horizon,
-    // we use the current time as the lower time bound and the next culmination
-    // as the upper bound.
-    // If the body is above the horizon, we search for the next bottom and use it
-    // as the lower bound and the next culmination after that bottom as the upper bound.
-    // The same logic applies for finding set times, only we swap the hour angles.
-    // The peak_altitude() function already considers the 'direction' parameter.
 
     let ha_before: number, ha_after: number;
     if (direction === +1) {
@@ -5422,6 +5432,19 @@ function InternalSearchAltitude(
         throw `Invalid direction parameter ${direction} -- must be +1 or -1`;
     }
 
+    // We cannot possibly satisfy a forward search without a positive time limit.
+    if (limitDays <= 0)
+        return null;
+
+    // See if the body is currently above/below the horizon.
+    // If we are looking for next rise time and the body is below the horizon,
+    // we use the current time as the lower time bound and the next culmination
+    // as the upper bound.
+    // If the body is above the horizon, we search for the next bottom and use it
+    // as the lower bound and the next culmination after that bottom as the upper bound.
+    // The same logic applies for finding set times, only we swap the hour angles.
+    // The peak_altitude() function already considers the 'direction' parameter.
+
     let time_start = MakeTime(dateStart);
     let time_before: AstroTime;
     let evt_before: HourAngleEvent;
@@ -5430,7 +5453,7 @@ function InternalSearchAltitude(
     let error_after: number;
     if (error_before > 0) {
         // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-        evt_before = SearchHourAngle(body, observer, ha_before, time_start);
+        evt_before = SearchHourAngle(body, observer, ha_before, time_start, +1);
         time_before = evt_before.time;
         error_before = altitude_error(time_before);
     } else {
@@ -5438,26 +5461,116 @@ function InternalSearchAltitude(
         // and use the current time as the "before" event.
         time_before = time_start;
     }
-    evt_after = SearchHourAngle(body, observer, ha_after, time_before);
+    evt_after = SearchHourAngle(body, observer, ha_after, time_before, +1);
     error_after = altitude_error(evt_after.time);
 
     while (true) {
         if (error_before <= 0 && error_after > 0) {
             // Search between evt_before and evt_after for the desired event.
             let tx = Search(altitude_error, time_before, evt_after.time, {init_f1:error_before, init_f2:error_after});
-            if (tx)
+            if (tx) {
+                // If we found the rise/set time, but it falls outside limitDays, fail the search.
+                if (tx.ut > time_start.ut + limitDays)
+                    return null;
+
+                // The search succeeded.
                 return tx;
+            }
         }
 
         // If we didn't find the desired event, use time_after to find the next before-event.
-        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time);
-        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time);
+        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, +1);
+        evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, +1);
         if (evt_before.time.ut >= time_start.ut + limitDays)
             return null;
 
         time_before = evt_before.time;
         error_before = altitude_error(evt_before.time);
         error_after = altitude_error(evt_after.time);
+    }
+}
+
+
+function BackwardSearchAltitude(
+    body: Body,
+    observer: Observer,
+    direction: number,
+    dateStart: FlexibleDateTime,
+    limitDays: number,
+    altitude_error: (t: AstroTime) => number):    AstroTime | null
+{
+    VerifyObserver(observer);
+    VerifyNumber(limitDays);
+
+    if (body === Body.Earth)
+        throw 'Cannot find altitude event for the Earth.';
+
+    let ha_before: number, ha_after: number;
+    if (direction === +1) {
+        ha_before = 12;     // minimum altitude (bottom) happens BEFORE the body rises.
+        ha_after = 0;       // maximum altitude (culmination) happens AFTER the body rises.
+    } else if (direction === -1) {
+        ha_before = 0;      // culmination happens BEFORE the body sets.
+        ha_after = 12;      // bottom happens AFTER the body sets.
+    } else {
+        throw `Invalid direction parameter ${direction} -- must be +1 or -1`;
+    }
+
+    // We cannot possibly satisfy a backward search without a negative time limit.
+    if (limitDays >= 0)
+        return null;
+
+    // See if the body is currently above/below the horizon.
+    // If we are looking for previous rise time and the body is above the horizon,
+    // we use the current time as the upper time bound and the previous bottom as the lower time bound.
+    // If the body is below the horizon, we search for the previous culmination and use it
+    // as the upper time bound. Then we search for the bottom before that culmination and
+    // use it as the lower time bound.
+    // The same logic applies for finding set times; altitude_error_func and
+    // altitude_error_context ensure that the desired event is represented
+    // by ascending through zero, so the Search function works correctly.
+
+    let time_start = MakeTime(dateStart);
+    let time_after: AstroTime;
+    let evt_before: HourAngleEvent;
+    let evt_after: HourAngleEvent;
+    let error_after = altitude_error(time_start);
+    let error_before: number;
+    if (error_after < 0) {
+        evt_after = SearchHourAngle(body, observer, ha_after, time_start, -1);
+        time_after = evt_after.time;
+        error_after = altitude_error(time_after);
+    } else {
+        time_after = time_start;
+    }
+
+    evt_before = SearchHourAngle(body, observer, ha_before, time_after, -1);
+    error_before = altitude_error(evt_before.time);
+
+    while (true) {
+        if (error_before <= 0 && error_after > 0) {
+            // Search between evt_before and evt_after for the desired event.
+            let tx = Search(altitude_error, evt_before.time, time_after, {init_f1:error_before, init_f2:error_after});
+            if (tx) {
+                // If we found the rise/set time, but it falls outside limitDays, fail the search.
+                if (tx.ut < time_start.ut + limitDays)
+                    return null;
+
+                // The search succeeded.
+                return tx;
+            }
+        }
+
+        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, -1);
+
+        if (evt_after.time.ut <= time_start.ut + limitDays)
+            return null;
+
+        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, -1);
+
+        time_after = evt_before.time;
+        error_before = altitude_error(evt_before.time);
+        error_after  = altitude_error(evt_after.time);
     }
 }
 
@@ -5517,9 +5630,20 @@ export class HourAngleEvent {
  *      The date and time after which the desired hour angle crossing event
  *      is to be found.
  *
+ * @param {number} direction
+ *      The direction in time to perform the search: a positive value
+ *      searches forward in time, a negative value searches backward in time.
+ *      The function throws an exception if `direction` is zero.
+ *
  * @returns {HourAngleEvent}
  */
-export function SearchHourAngle(body: Body, observer: Observer, hourAngle: number, dateStart: FlexibleDateTime): HourAngleEvent {
+export function SearchHourAngle(
+    body: Body,
+    observer: Observer,
+    hourAngle: number,
+    dateStart: FlexibleDateTime,
+    direction: number = +1
+): HourAngleEvent {
     VerifyObserver(observer);
     let time = MakeTime(dateStart);
     let iter = 0;
@@ -5530,6 +5654,10 @@ export function SearchHourAngle(body: Body, observer: Observer, hourAngle: numbe
     VerifyNumber(hourAngle);
     if (hourAngle < 0.0 || hourAngle >= 24.0)
         throw `Invalid hour angle ${hourAngle}`;
+
+    VerifyNumber(direction);
+    if (direction === 0)
+        throw `Direction must be positive or negative.`;
 
     while (true) {
         ++iter;
@@ -5543,9 +5671,16 @@ export function SearchHourAngle(body: Body, observer: Observer, hourAngle: numbe
         // the hour angle to the desired value.
         let delta_sidereal_hours = ((hourAngle + ofdate.ra - observer.longitude/15) - gast) % 24;
         if (iter === 1) {
-            // On the first iteration, always search forward in time.
-            if (delta_sidereal_hours < 0)
-                delta_sidereal_hours += 24;
+            // On the first iteration, always search in the requested time direction.
+            if (direction > 0) {
+                // Search forward in time.
+                if (delta_sidereal_hours < 0)
+                    delta_sidereal_hours += 24;
+            } else {
+                // Search backward in time.
+                if (delta_sidereal_hours > 0)
+                    delta_sidereal_hours -= 24;
+            }
         } else {
             // On subsequent iterations, we make the smallest possible adjustment,
             // either forward or backward in time.
