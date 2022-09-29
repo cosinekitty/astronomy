@@ -56,6 +56,7 @@ namespace csharp_test
             new Test("pluto", PlutoCheck),
             new Test("refraction", RefractionTest),
             new Test("riseset", RiseSetTest),
+            new Test("riseset_reverse", RiseSetReverseTest),
             new Test("rotation", RotationTest),
             new Test("seasons", SeasonsTest),
             new Test("seasons187", SeasonsIssue187),
@@ -818,6 +819,73 @@ namespace csharp_test
                 Console.WriteLine("C# RiseSetTest: passed {0} lines: time errors in minutes: rms={1}, max={2}", lnum, rms_minutes, max_minutes);
                 return 0;
             }
+        }
+
+        static int RiseSetReverseTest()
+        {
+            // Verify that the rise/set search works equally well forwards and backwards in time.
+            const int nsamples = 5000;
+            const double nudge = 0.1;
+            var utList = new double[nsamples];
+            var observer = new Observer(30.5, -90.7, 0.0);
+            double dtMin = +1000.0;
+            double dtMax = -1000.0;
+            double maxDiff = 0.0;
+
+            // Find alternating sunrise/sunset events in forward chronological order.
+            Direction dir = Direction.Rise;
+            var time = new AstroTime(2022, 1, 1, 0, 0, 0);
+            for (int i = 0; i < nsamples; ++i)
+            {
+                AstroTime result = Astronomy.SearchRiseSet(Body.Sun, observer, dir, time, +1.0);
+                if (result == null)
+                {
+                    Console.WriteLine($"C# RiseSetReverseTest: cannot find {dir} event after {time}.");
+                    return 1;
+                }
+                utList[i] = result.ut;
+                if (i > 0)
+                {
+                    // Check the time between consecutive sunrise/sunset events.
+                    // These will vary considerably with the seasons, so just make sure we don't miss any entirely.
+                    double dt = v(utList[i] - utList[i-1]);
+                    if (dt < dtMin) dtMin = dt;
+                    if (dt > dtMax) dtMax = dt;
+                }
+                dir = (dir == Direction.Rise) ? Direction.Set : Direction.Rise;
+                time = result.AddDays(+nudge);
+            }
+
+            Debug($"C# RiseSetReverse: dtMin={dtMin:F6} days, dtMax={dtMax:F6} days.");
+            if (dtMin < 0.411 || dtMax > 0.589)
+            {
+                Console.WriteLine($"C# RiseSetReverse: Invalid intervals between sunrise/sunset.");
+                return 1;
+            }
+
+            // Perform the same search in reverse. Verify we get consistent rise/set times.
+            for (int i = nsamples-1; i >= 0; --i)
+            {
+                dir = (dir == Direction.Rise) ? Direction.Set : Direction.Rise;
+                AstroTime result = Astronomy.SearchRiseSet(Body.Sun, observer, dir, time, -1.0);
+                if (result == null)
+                {
+                    Console.WriteLine($"C# RiseSetReverseTest: cannot find {dir} event before {time}.");
+                    return 1;
+                }
+                double diff = SECONDS_PER_DAY * abs(utList[i] - result.ut);
+                if (diff > maxDiff) maxDiff = diff;
+                time = result.AddDays(-nudge);
+            }
+
+            if (maxDiff > 0.982)
+            {
+                Console.WriteLine($"C# RiseSetReverse: EXCESSIVE discrepancy = {maxDiff:F6} seconds.");
+                return 1;
+            }
+
+            Console.WriteLine($"C# RiseSetReverse: PASS - max diff = {maxDiff:F6} seconds.");
+            return 0;
         }
 
         static int TestElongFile(string filename, double targetRelLon)

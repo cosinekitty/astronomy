@@ -1734,7 +1734,7 @@ Astronomical twilight uses -18 degrees as the `altitude` value.
 | [`Observer`](#Observer) | `observer` | The location where observation takes place. |
 | [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event. |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start the search. |
-| `double` | `limitDays` | The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number. |
+| `double` | `limitDays` | Limits how many days to search for the body reaching the altitude angle, and defines the direction in time to search. When `limitDays` is positive, the search is performed into the future, after `startTime`. When negative, the search is performed into the past, before `startTime`. To limit the search to the same day, you can use a value of 1 day. In cases where you want to find the altitude event no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
 | `double` | `altitude` | The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range [-90, +90]. |
 
 **Returns:** The date and time of the altitude event, or `null` if no such event occurs within the specified time window.
@@ -1758,7 +1758,7 @@ See [`Astronomy.GlobalSolarEclipsesAfter`](#Astronomy.GlobalSolarEclipsesAfter) 
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time for starting the search for a solar eclipse. |
 
 <a name="Astronomy.SearchHourAngle"></a>
-### Astronomy.SearchHourAngle(body, observer, hourAngle, startTime) &#8658; [`HourAngleInfo`](#HourAngleInfo)
+### Astronomy.SearchHourAngle(body, observer, hourAngle, startTime, direction) &#8658; [`HourAngleInfo`](#HourAngleInfo)
 
 **Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.**
 
@@ -1770,8 +1770,8 @@ to 24 sidereal hours when it reaches the highest point again. So the hour angle 
 the number of hours that have passed since the most recent time that the body has culminated,
 or reached its highest point.
 
-This function searches for the next time a celestial body reaches the given hour angle
-after the date and time specified by `startTime`.
+This function searches for the next or previous time a celestial body reaches the given hour angle
+relative to the date and time specified by `startTime`.
 To find when a body culminates, pass 0 for `hourAngle`.
 To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
 
@@ -1789,6 +1789,7 @@ of the body at that time, as seen by the given observer.
 | [`Observer`](#Observer) | `observer` | Indicates a location on or near the surface of the Earth where the observer is located. |
 | `double` | `hourAngle` | An hour angle value in the range [0, 24) indicating the number of sidereal hours after the body's most recent culmination. |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start the search. |
+| `int` | `direction` | The direction in time to perform the search: a positive value searches forward in time, a negative value searches backward in time. The function throws an exception if `direction` is zero. |
 
 **Returns:** This function returns a valid [`HourAngleInfo`](#HourAngleInfo) object on success. If any error occurs, it throws an exception. It never returns a null value.
 
@@ -2071,7 +2072,7 @@ Therefore callers must not assume that the function will always succeed.
 | [`Observer`](#Observer) | `observer` | The location where observation takes place. |
 | [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find a rise time or `Direction.Set` to find a set time. |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start the search. |
-| `double` | `limitDays` | Limits how many days to search for a rise or set time. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
+| `double` | `limitDays` | Limits how many days to search for a rise or set time, and defines the direction in time to search. When `limitDays` is positive, the search is performed into the future, after `startTime`. When negative, the search is performed into the past, before `startTime`. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
 
 **Returns:** On success, returns the date and time of the rise or set time as requested. If the function returns `null`, it means the rise or set event does not occur within `limitDays` days of `startTime`. This is a normal condition, not an error.
 

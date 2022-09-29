@@ -5706,7 +5706,7 @@ $ASTRO_IAU_DATA()
             return Search(moon_offset, t1, t2, 0.1);
         }
 
-        private static AstroTime InternalSearchAltitude(
+        private static AstroTime ForwardSearchAltitude(
             Body body,
             Observer observer,
             Direction direction,
@@ -5734,15 +5734,17 @@ $ASTRO_IAU_DATA()
                     throw new ArgumentException(string.Format("Unsupported direction value {0}", direction));
             }
 
-            /*
-                See if the body is currently above/below the horizon.
-                If we are looking for next rise time and the body is below the horizon,
-                we use the current time as the lower time bound and the next culmination
-                as the upper bound.
-                If the body is above the horizon, we search for the next bottom and use it
-                as the lower bound and the next culmination after that bottom as the upper bound.
-                The same logic applies for finding set times, only we swap the hour angles.
-            */
+            // We cannot possibly satisfy a forward search without a positive time limit.
+            if (limitDays <= 0.0)
+                return null;
+
+            // See if the body is currently above/below the horizon.
+            // If we are looking for next rise time and the body is below the horizon,
+            // we use the current time as the lower time bound and the next culmination
+            // as the upper bound.
+            // If the body is above the horizon, we search for the next bottom and use it
+            // as the lower bound and the next culmination after that bottom as the upper bound.
+            // The same logic applies for finding set times, only we swap the hour angles.
 
             HourAngleInfo evt_before, evt_after;
             double alt_before = context.Eval(startTime);
@@ -5768,13 +5770,20 @@ $ASTRO_IAU_DATA()
             {
                 if (alt_before <= 0.0 && alt_after > 0.0)
                 {
-                    /* Search between evt_before and evt_after for the desired event. */
+                    // Search the time window for the desired event.
                     AstroTime time = Search(context, time_before, evt_after.time, 1.0);
                     if (time != null)
+                    {
+                        // If we found the rise/set time, but it falls outside limitDays, fail the search.
+                        if (time.ut > startTime.ut + limitDays)
+                            return null;
+
+                        // The search succeeded.
                         return time;
+                    }
                 }
 
-                /* If we didn't find the desired event, use evt_after.time to find the next before-event. */
+                // If we didn't find the desired event, use evt_after.time to find the next before-event.
                 evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time);
                 evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time);
 
@@ -5783,6 +5792,94 @@ $ASTRO_IAU_DATA()
 
                 time_before = evt_before.time;
 
+                alt_before = context.Eval(evt_before.time);
+                alt_after = context.Eval(evt_after.time);
+            }
+        }
+
+        private static AstroTime BackwardSearchAltitude(
+            Body body,
+            Observer observer,
+            Direction direction,
+            AstroTime startTime,
+            double limitDays,
+            SearchContext context)
+        {
+            if (body == Body.Earth)
+                throw new EarthNotAllowedException();
+
+            double ha_before, ha_after;
+            switch (direction)
+            {
+                case Direction.Rise:
+                    ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
+                    ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
+                    break;
+
+                case Direction.Set:
+                    ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
+                    ha_after = 12.0;    /* bottom happens AFTER the body sets. */
+                    break;
+
+                default:
+                    throw new ArgumentException(string.Format("Unsupported direction value {0}", direction));
+            }
+
+            // We cannot possibly satisfy a backward search without a negative time limit.
+            if (limitDays >= 0.0)
+                return null;
+
+            // See if the body is currently above/below the horizon.
+            // If we are looking for previous rise time and the body is above the horizon,
+            // we use the current time as the upper time bound and the previous bottom as the lower time bound.
+            // If the body is below the horizon, we search for the previous culmination and use it
+            // as the upper time bound. Then we search for the bottom before that culmination and
+            // use it as the lower time bound.
+            // The same logic applies for finding set times; altitude_error_func and
+            // altitude_error_context ensure that the desired event is represented
+            // by ascending through zero, so the Search function works correctly.
+
+            HourAngleInfo evt_before, evt_after;
+            double alt_after = context.Eval(startTime);
+            AstroTime time_after;
+            if (alt_after < 0.0)
+            {
+                evt_after = SearchHourAngle(body, observer, ha_after, startTime, -1);
+                time_after = evt_after.time;
+                alt_after = context.Eval(time_after);
+            }
+            else
+            {
+                time_after = startTime;
+            }
+
+            evt_before = SearchHourAngle(body, observer, ha_before, time_after, -1);
+            double alt_before = context.Eval(evt_before.time);
+
+            for(;;)
+            {
+                if (alt_before <= 0.0 && alt_after > 0.0)
+                {
+                    // Search the time window for the desired event.
+                    AstroTime time = Search(context, evt_before.time, time_after, 1.0);
+                    if (time != null)
+                    {
+                        // If we found the rise/set time, but it falls outside limitDays, fail the search.
+                        if (time.ut < startTime.ut + limitDays)
+                            return null;
+
+                        // The search succeeded.
+                        return time;
+                    }
+                }
+
+                evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, -1);
+                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, -1);
+
+                if (evt_after.time.ut <= startTime.ut + limitDays)
+                    return null;
+
+                time_after = evt_after.time;
                 alt_before = context.Eval(evt_before.time);
                 alt_after = context.Eval(evt_after.time);
             }
@@ -5821,7 +5918,10 @@ $ASTRO_IAU_DATA()
         /// <param name="startTime">The date and time at which to start the search.</param>
         ///
         /// <param name="limitDays">
-        /// Limits how many days to search for a rise or set time.
+        /// Limits how many days to search for a rise or set time, and defines
+        /// the direction in time to search. When `limitDays` is positive, the
+        /// search is performed into the future, after `startTime`.
+        /// When negative, the search is performed into the past, before `startTime`.
         /// To limit a rise or set time to the same day, you can use a value of 1 day.
         /// In cases where you want to find the next rise or set time no matter how far
         /// in the future (for example, for an observer near the south pole), you can
@@ -5842,7 +5942,9 @@ $ASTRO_IAU_DATA()
             double limitDays)
         {
             var peak_altitude = new SearchContext_PeakAltitude(body, direction, observer);
-            return InternalSearchAltitude(body, observer, direction, startTime, limitDays, peak_altitude);
+            return (limitDays < 0.0)
+                ? BackwardSearchAltitude(body, observer, direction, startTime, limitDays, peak_altitude)
+                : ForwardSearchAltitude( body, observer, direction, startTime, limitDays, peak_altitude);
         }
 
         /// <summary>
@@ -5878,8 +5980,14 @@ $ASTRO_IAU_DATA()
         /// <param name="startTime">The date and time at which to start the search.</param>
         ///
         /// <param name="limitDays">
-        /// The fractional number of days after `dateStart` that limits
-        /// when the altitude event is to be found. Must be a positive number.
+        /// Limits how many days to search for the body reaching the altitude angle,
+        /// and defines the direction in time to search. When `limitDays` is positive, the
+        /// search is performed into the future, after `startTime`.
+        /// When negative, the search is performed into the past, before `startTime`.
+        /// To limit the search to the same day, you can use a value of 1 day.
+        /// In cases where you want to find the altitude event no matter how far
+        /// in the future (for example, for an observer near the south pole), you can
+        /// pass in a larger value like 365.
         /// </param>
         ///
         /// <param name="altitude">
@@ -5901,7 +6009,9 @@ $ASTRO_IAU_DATA()
             double altitude)
         {
             var altitude_error = new SearchContext_AltitudeError(body, direction, observer, altitude);
-            return InternalSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error);
+            return (limitDays < 0.0)
+                ? BackwardSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error)
+                : ForwardSearchAltitude( body, observer, direction, startTime, limitDays, altitude_error);
         }
 
         /// <summary>
@@ -5917,8 +6027,8 @@ $ASTRO_IAU_DATA()
         /// the number of hours that have passed since the most recent time that the body has culminated,
         /// or reached its highest point.
         ///
-        /// This function searches for the next time a celestial body reaches the given hour angle
-        /// after the date and time specified by `startTime`.
+        /// This function searches for the next or previous time a celestial body reaches the given hour angle
+        /// relative to the date and time specified by `startTime`.
         /// To find when a body culminates, pass 0 for `hourAngle`.
         /// To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
         ///
@@ -5948,6 +6058,12 @@ $ASTRO_IAU_DATA()
         /// The date and time at which to start the search.
         /// </param>
         ///
+        /// <param name="direction">
+        /// The direction in time to perform the search: a positive value
+        /// searches forward in time, a negative value searches backward in time.
+        /// The function throws an exception if `direction` is zero.
+        /// </param>
+        ///
         /// <returns>
         /// This function returns a valid #HourAngleInfo object on success.
         /// If any error occurs, it throws an exception.
@@ -5957,7 +6073,8 @@ $ASTRO_IAU_DATA()
             Body body,
             Observer observer,
             double hourAngle,
-            AstroTime startTime)
+            AstroTime startTime,
+            int direction = +1)
         {
             int iter = 0;
 
@@ -5967,26 +6084,39 @@ $ASTRO_IAU_DATA()
             if (hourAngle < 0.0 || hourAngle >= 24.0)
                 throw new ArgumentException("hourAngle is out of the allowed range [0, 24).");
 
+            if (direction == 0)
+                throw new ArgumentException("direction must be positive or negative.");
+
             AstroTime time = startTime;
             for(;;)
             {
                 ++iter;
 
-                /* Calculate Greenwich Apparent Sidereal Time (GAST) at the given time. */
+                // Calculate Greenwich Apparent Sidereal Time (GAST) at the given time.
                 double gast = SiderealTime(time);
 
-                /* Obtain equatorial coordinates of date for the body. */
+                // Obtain equatorial coordinates of date for the body.
                 Equatorial ofdate = Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
 
-                /* Calculate the adjustment needed in sidereal time */
-                /* to bring the hour angle to the desired value. */
+                // Calculate the adjustment needed in sidereal time
+                // to bring the hour angle to the desired value.
 
                 double delta_sidereal_hours = ((hourAngle + ofdate.ra - observer.longitude/15.0) - gast) % 24.0;
                 if (iter == 1)
                 {
-                    /* On the first iteration, always search forward in time. */
-                    if (delta_sidereal_hours < 0.0)
-                        delta_sidereal_hours += 24.0;
+                    // On the first iteration, always search in the requested time direction.
+                    if (direction > 0)
+                    {
+                        // Search forward in time.
+                        if (delta_sidereal_hours < 0.0)
+                            delta_sidereal_hours += 24.0;
+                    }
+                    else
+                    {
+                        // Search backward in time.
+                        if (delta_sidereal_hours > 0.0)
+                            delta_sidereal_hours -= 24.0;
+                    }
                 }
                 else
                 {

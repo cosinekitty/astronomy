@@ -7975,7 +7975,10 @@ static astro_func_result_t altitude_error(void *context, astro_time_t time)
  *      The date and time at which to start the search.
  *
  * @param limitDays
- *      Limits how many days to search for a rise or set time.
+ *      Limits how many days to search for a rise or set time, and defines
+ *      the direction in time to search. When `limitDays` is positive, the
+ *      search is performed into the future, after `startTime`.
+ *      When negative, the search is performed into the past, before `startTime`.
  *      To limit a rise or set time to the same day, you can use a value of 1 day.
  *      In cases where you want to find the next rise or set time no matter how far
  *      in the future (for example, for an observer near the south pole), you can
@@ -8051,8 +8054,14 @@ astro_search_result_t Astronomy_SearchRiseSet(
  *      The date and time at which to start the search.
  *
  * @param limitDays
- *      The fractional number of days after `startTime` that limits
- *      when the altitude event is to be found. Must be a positive number.
+ *      Limits how many days to search for the body reaching the altitude angle,
+ *      and defines the direction in time to search. When `limitDays` is positive, the
+ *      search is performed into the future, after `startTime`.
+ *      When negative, the search is performed into the past, before `startTime`.
+ *      To limit the search to the same day, you can use a value of 1 day.
+ *      In cases where you want to find the altitude event no matter how far
+ *      in the future (for example, for an observer near the south pole), you can
+ *      pass in a larger value like 365.
  *
  * @param altitude
  *      The desired altitude angle of the body's center above (positive)
