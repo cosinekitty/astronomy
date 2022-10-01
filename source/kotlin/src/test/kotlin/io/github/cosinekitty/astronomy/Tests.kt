@@ -16,6 +16,7 @@ import kotlin.text.Regex
 
 private const val dataRootDir = "../../generate/"
 private const val MINUTES_PER_DAY = 24.0 * 60.0
+private const val SECONDS_PER_DAY = 60.0 * MINUTES_PER_DAY
 
 private val regexTokenize = Regex("""\s+""")
 private fun tokenize(s: String): List<String> = s.split(regexTokenize)
@@ -1091,6 +1092,59 @@ class Tests {
             val errorMinutes = (24.0 * 60.0) * abs(aEvt.tt - correctDate.tt)
             assertTrue(errorMinutes < 0.57, "$filename line $lnum: excessive prediction time error = $errorMinutes minutes.")
         }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Reverse chrono rise set test`() {
+        // Verify that the rise/set search works equally well forwards and backwards in time.
+
+        val nsamples = 5000
+        val nudge = 0.1
+        val utList = arrayListOf<Double>()
+        val observer = Observer(30.5, -90.7, 0.0)
+        var dtMin = +1000.0
+        var dtMax = -1000.0
+        var maxDiff = 0.0
+
+        // Find alternating sunrise/sunset events in forward chronological order.
+        var dir = Direction.Rise
+        var time = Time(2022, 1, 1, 0, 0, 0.0)
+        var i = 0
+        while (i < nsamples) {
+            val result = searchRiseSet(Body.Sun, observer, dir, time, +1.0) ?:
+                fail("Cannot find $dir event after $time")
+            utList.add(result.ut)
+            if (i > 0) {
+                // Check the time between consecutive sunrise/sunset events.
+                // These will vary considerably with the seasons, so just make sure we don't miss any entirely.
+                val dt = utList[i] - utList[i-1]
+                if (dt < dtMin) dtMin = dt
+                if (dt > dtMax) dtMax = dt
+            }
+            dir = if (dir == Direction.Rise) Direction.Set else Direction.Rise
+            time = result.addDays(+nudge)
+            ++i
+        }
+
+        if (dtMin < 0.411 || dtMax > 0.589)
+            fail("Invalid intervals between sunrise/sunset: dtMin=$dtMin, dtMax=$dtMax")
+
+        // Perform the same search in reverse. Verify we get consistent rise/set times.
+        i = nsamples-1
+        while (i >= 0) {
+            dir = if (dir == Direction.Rise) Direction.Set else Direction.Rise
+            val result = searchRiseSet(Body.Sun, observer, dir, time, -1.0) ?:
+                fail("Cannot find $dir event before $time")
+            val diff = SECONDS_PER_DAY * abs(utList[i] - result.ut)
+            if (diff > maxDiff) maxDiff = diff
+            time = result.addDays(-nudge)
+            --i
+        }
+
+        if (maxDiff > 0.982)
+            fail("Excessive forward/reverse rise/set discrepancy = $maxDiff seconds.")
     }
 
     //----------------------------------------------------------------------------------------

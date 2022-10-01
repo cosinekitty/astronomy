@@ -36,8 +36,8 @@ public class RiseSetCulm {
         maybeAdd(eventList, "moonset",  Astronomy.searchRiseSet(Body.Moon, observer, Direction.Set,  startTime, dayLimit));
 
         // Culmination times can always be found regardless of latitude.
-        eventList.add(new AstroEvent("sunculm",  Astronomy.searchHourAngle(Body.Sun,  observer, 0.0, startTime)));
-        eventList.add(new AstroEvent("moonculm", Astronomy.searchHourAngle(Body.Moon, observer, 0.0, startTime)));
+        eventList.add(new AstroEvent("sunculm",  Astronomy.searchHourAngle(Body.Sun,  observer, 0.0, startTime, +1)));
+        eventList.add(new AstroEvent("moonculm", Astronomy.searchHourAngle(Body.Moon, observer, 0.0, startTime, +1)));
 
         // Sort the list chronologically.
         Collections.sort(eventList);

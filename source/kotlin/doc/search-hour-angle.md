@@ -2,7 +2,7 @@
 
 # searchHourAngle
 
-fun [searchHourAngle](search-hour-angle.md)(body: [Body](-body/index.md), observer: [Observer](-observer/index.md), hourAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), startTime: [Time](-time/index.md)): [HourAngleInfo](-hour-angle-info/index.md)
+fun [searchHourAngle](search-hour-angle.md)(body: [Body](-body/index.md), observer: [Observer](-observer/index.md), hourAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), startTime: [Time](-time/index.md), direction: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) = +1): [HourAngleInfo](-hour-angle-info/index.md)
 
 Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
 
@@ -26,3 +26,4 @@ The time when the body reaches the hour angle, and the horizontal coordinates of
 | observer | A location on or near the surface of the Earth where the observer is located. |
 | hourAngle | An hour angle value in the range [0, 24) indicating the number of sidereal hours after the body's most recent culmination. |
 | startTime | The date and time at which to start the search. |
+| direction | The direction in time to perform the search: a positive value searches forward in time, a negative value searches backward in time. The function throws an exception if direction is zero. |

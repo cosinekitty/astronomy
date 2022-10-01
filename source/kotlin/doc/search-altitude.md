@@ -28,5 +28,5 @@ The date and time of the altitude event, or null if no such event occurs within 
 | observer | The location where observation takes place. |
 | direction | Either [Direction.Rise](-direction/-rise/index.md) to find an ascending altitude event or [Direction.Set](-direction/-set/index.md) to find a descending altitude event. |
 | startTime | The date and time at which to start the search. |
-| limitDays | The fractional number of days after dateStart that limits when the altitude event is to be found. Must be a positive number. |
+| limitDays | Limits how many days to search for the body reaching the altitude angle, and defines the direction in time to search. When limitDays is positive, the search is performed into the future, after startTime. When negative, the search is performed into the past, before startTime. To limit the search to the same day, you can use a value of 1 day. In cases where you want to find the altitude event no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
 | altitude | The desired altitude angle of the body's center above (positive) or below (negative) the observer's local horizon, expressed in degrees. Must be in the range -90, +90. |

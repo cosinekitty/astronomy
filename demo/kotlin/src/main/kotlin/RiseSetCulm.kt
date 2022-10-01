@@ -29,8 +29,8 @@ internal fun `Rise Set Culmination demo`(observer: Observer, startTime: Time): I
         maybe("moonset",  searchRiseSet(Body.Moon, observer, Direction.Set,  startTime, dayLimit)),
 
         // Culmination times can always be found regardless of latitude.
-        AstroEvent("sunculm",  searchHourAngle(Body.Sun,  observer, 0.0, startTime)),
-        AstroEvent("moonculm", searchHourAngle(Body.Moon, observer, 0.0, startTime)),
+        AstroEvent("sunculm",  searchHourAngle(Body.Sun,  observer, 0.0, startTime, +1)),
+        AstroEvent("moonculm", searchHourAngle(Body.Moon, observer, 0.0, startTime, +1)),
     )
 
     // Print the list in sorted order.

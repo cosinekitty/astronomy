@@ -5983,6 +5983,11 @@ fun moonQuartersAfter(startTime: Time): Sequence<MoonQuarterInfo> =
  * @param startTime
  * The date and time at which to start the search.
  *
+ * @param direction
+ * The direction in time to perform the search: a positive value
+ * searches forward in time, a negative value searches backward in time.
+ * The function throws an exception if `direction` is zero.
+ *
  * @return
  * The time when the body reaches the hour angle, and the horizontal coordinates of the body at that time.
  */
@@ -5990,13 +5995,17 @@ fun searchHourAngle(
     body: Body,
     observer: Observer,
     hourAngle: Double,
-    startTime: Time
+    startTime: Time,
+    direction: Int = +1
 ): HourAngleInfo {
     if (body == Body.Earth)
         throw EarthNotAllowedException()
 
     if (hourAngle < 0.0 || hourAngle >= 24.0)
         throw IllegalArgumentException("hourAngle=$hourAngle is out of the allowed range [0, 24).")
+
+    if (direction == 0)
+        throw IllegalArgumentException("direction must be a positive or negative integer, not zero.")
 
     var time = startTime
     var iter = 0
@@ -6013,9 +6022,16 @@ fun searchHourAngle(
         // to bring the hour angle to the desired value.
         var deltaSiderealHours = ((hourAngle + ofdate.ra - observer.longitude/15.0) - gast) % 24.0
         if (iter == 1) {
-            // On the first iteration, always search forward in time.
-            if (deltaSiderealHours < 0.0)
-                deltaSiderealHours += 24.0
+            // On the first iteration, always search in the requested time direction.
+            if (direction > 0) {
+                // Search forward in time.
+                if (deltaSiderealHours < 0.0)
+                    deltaSiderealHours += 24.0
+            } else {
+                // Search backward in time.
+                if (deltaSiderealHours > 0.0)
+                    deltaSiderealHours -= 24.0
+            }
         } else {
             // On subsequent iterations, we make the smallest possible adjustment,
             // either forward or backward in time.
@@ -6037,7 +6053,7 @@ fun searchHourAngle(
     }
 }
 
-private fun internalSearchAltitude(
+private fun forwardSearchAltitude(
     body: Body,
     observer: Observer,
     direction: Direction,
@@ -6047,6 +6063,10 @@ private fun internalSearchAltitude(
 ): Time? {
     if (body == Body.Earth)
         throw EarthNotAllowedException()
+
+    // We cannot poswsibly satisfy a forward search without a positive time limit.
+    if (limitDays <= 0.0)
+        return null
 
     // Find the pair of hour angles that bound the desired event.
     // When a body's hour angle is 0, it means it is at its highest point
@@ -6073,7 +6093,7 @@ private fun internalSearchAltitude(
     var timeBefore: Time
     if (altBefore > 0.0) {
         // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-        timeBefore = searchHourAngle(body, observer, haBefore, startTime).time
+        timeBefore = searchHourAngle(body, observer, haBefore, startTime, +1).time
         altBefore = context.eval(timeBefore)
     } else {
         // We are before or at the sought event, so we find the next "after" event,
@@ -6081,21 +6101,27 @@ private fun internalSearchAltitude(
         timeBefore = startTime
     }
 
-    var timeAfter = searchHourAngle(body, observer, haAfter, timeBefore).time
+    var timeAfter = searchHourAngle(body, observer, haAfter, timeBefore, +1).time
     var altAfter = context.eval(timeAfter)
 
     while (true) {
         if (altBefore <= 0.0 && altAfter > 0.0) {
             // The body crosses the horizon during the time interval.
-            // Search between evtBefore and evtAfter for the desired event.
+            // Search between timeBefore and timeAfter for the desired event.
             val time = search(timeBefore, timeAfter, 1.0, context)
-            if (time != null)
+            if (time != null) {
+                // If we found the rise/set time, but it falls outside limitDays, fail the search.
+                if (time.ut > startTime.ut + limitDays)
+                    return  null
+
+                // The search succeeded.
                 return time
+            }
         }
 
         // If we didn't find the desired event, find the next hour angle bracket and try again.
-        val evtBefore = searchHourAngle(body, observer, haBefore, timeAfter)
-        val evtAfter = searchHourAngle(body, observer, haAfter, timeBefore)
+        val evtBefore = searchHourAngle(body, observer, haBefore, timeAfter, +1)
+        val evtAfter  = searchHourAngle(body, observer, haAfter, timeBefore, +1)
 
         if (evtBefore.time.ut >= startTime.ut + limitDays)
             return null
@@ -6106,6 +6132,128 @@ private fun internalSearchAltitude(
         altAfter = context.eval(timeAfter)
     }
 }
+
+private fun backwardSearchAltitude(
+    body: Body,
+    observer: Observer,
+    direction: Direction,
+    startTime: Time,
+    limitDays: Double,
+    context: SearchContext
+): Time? {
+    if (body == Body.Earth)
+        throw EarthNotAllowedException()
+
+    // We cannot poswsibly satisfy a backward search without a negative time limit.
+    if (limitDays >= 0.0)
+        return null
+
+    // Find the pair of hour angles that bound the desired event.
+    // When a body's hour angle is 0, it means it is at its highest point
+    // in the observer's sky, called culmination.
+    // If the body's hour angle is 12, it means it is at its lowest point in the sky.
+    // (Note that it is possible for a body to be above OR below the horizon in either case.)
+    // If the caller wants a rising event, we want the pair haBefore=12, haAfter=0.
+    // If the caller wants a setting event, the desired pair is haBefore=0, haAfter=12.
+    val haBefore: Double = when (direction) {
+        Direction.Rise -> 12.0      // minimum altitude (bottom) happens before the body rises
+        Direction.Set  ->  0.0      // culmination happens before the body sets
+    }
+    val haAfter: Double = 12.0 - haBefore
+
+    // See if the body is currently above/below the horizon.
+    // If we are looking for previous rise time and the body is above the horizon,
+    // we use the current time as the upper time bound and the previous bottom as the lower time bound.
+    // If the body is below the horizon, we search for the previous culmination and use it
+    // as the upper time bound. Then we search for the bottom before that culmination and
+    // use it as the lower time bound.
+    // The same logic applies for finding set times; altitude_error_func and
+    // altitude_error_context ensure that the desired event is represented
+    // by ascending through zero, so the Search function works correctly.
+
+    var altAfter = context.eval(startTime)
+    var timeAfter: Time
+    if (altAfter < 0.0) {
+        timeAfter = searchHourAngle(body, observer, haAfter, startTime, -1).time
+        altAfter = context.eval(timeAfter)
+    } else {
+        timeAfter = startTime
+    }
+
+    var timeBefore = searchHourAngle(body, observer, haBefore, timeAfter, -1).time
+    var altBefore = context.eval(timeBefore)
+
+    while (true) {
+        if (altBefore <= 0.0 && altAfter > 0.0) {
+            // The body crosses the horizon during the time interval.
+            // Search between timeBefore and timeAfter for the desired event.
+            val time = search(timeBefore, timeAfter, 1.0, context)
+            if (time != null) {
+                // If we found the rise/set time, but it falls outside limitDays, fail the search.
+                if (time.ut < startTime.ut + limitDays)
+                    return  null
+
+                // The search succeeded.
+                return time
+            }
+        }
+
+        // If we didn't find the desired event, find the next hour angle bracket and try again.
+        val evtAfter  = searchHourAngle(body, observer, haAfter, timeBefore, -1)
+
+        if (evtAfter.time.ut <= startTime.ut + limitDays)
+            return null
+
+        val evtBefore = searchHourAngle(body, observer, haBefore, timeAfter, -1)
+
+        timeAfter  = evtAfter.time
+        timeBefore = evtBefore.time
+        altAfter  = context.eval(timeAfter)
+        altBefore = context.eval(timeBefore)
+    }
+}
+
+
+private class SearchContext_PeakAltitude(
+    private val direction: Direction,
+    private val body: Body,
+    private val observer: Observer
+) : SearchContext {
+    private val bodyRadiusAu = when (body) {
+        Body.Sun -> SUN_RADIUS_AU
+        Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
+        else -> 0.0
+    }
+
+    public override fun eval(time: Time): Double {
+        // Return the angular altitude above or below the horizon
+        // of the highest part (the peak) of the given object.
+        // This is defined as the apparent altitude of the center of the body plus
+        // the body's angular radius.
+        // The 'direction' parameter controls whether the angle is measured
+        // positive above the horizon or positive below the horizon,
+        // depending on whether the caller wants rise times or set times, respectively.
+
+        val ofdate: Equatorial = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+        val hor: Topocentric = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+        return direction.sign * (hor.altitude + (bodyRadiusAu / ofdate.dist).radiansToDegrees() + REFRACTION_NEAR_HORIZON)
+    }
+}
+
+
+private class SearchContext_AltitudeError(
+    private val direction: Direction,
+    private val altitude: Double,
+    private val body: Body,
+    private val observer: Observer
+) : SearchContext {
+    public override fun eval(time: Time): Double {
+        val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
+        val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
+        return direction.sign * (hor.altitude - altitude)
+    }
+}
+
 
 /**
  * Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
@@ -6140,7 +6288,10 @@ private fun internalSearchAltitude(
  * The date and time at which to start the search.
  *
  * @param limitDays
- * Limits how many days to search for a rise or set time.
+ * Limits how many days to search for a rise or set time, and defines
+ * the direction in time to search. When `limitDays` is positive, the
+ * search is performed into the future, after `startTime`.
+ * When negative, the search is performed into the past, before `startTime`.
  * To limit a rise or set time to the same day, you can use a value of 1 day.
  * In cases where you want to find the next rise or set time no matter how far
  * in the future (for example, for an observer near the south pole), you can
@@ -6159,25 +6310,11 @@ fun searchRiseSet(
     startTime: Time,
     limitDays: Double
 ): Time? {
-    val bodyRadiusAu = when (body) {
-        Body.Sun -> SUN_RADIUS_AU
-        Body.Moon -> MOON_EQUATORIAL_RADIUS_AU
-        else -> 0.0
-    }
-
-    return internalSearchAltitude(body, observer, direction, startTime, limitDays) { time ->
-        // Return the angular altitude above or below the horizon
-        // of the highest part (the peak) of the given object.
-        // This is defined as the apparent altitude of the center of the body plus
-        // the body's angular radius.
-        // The 'direction' parameter controls whether the angle is measured
-        // positive above the horizon or positive below the horizon,
-        // depending on whether the caller wants rise times or set times, respectively.
-
-        val ofdate: Equatorial = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-        val hor: Topocentric = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
-        direction.sign * (hor.altitude + (bodyRadiusAu / ofdate.dist).radiansToDegrees() + REFRACTION_NEAR_HORIZON)
-    }
+    val altitudeError = SearchContext_PeakAltitude(direction, body, observer)
+    return if (limitDays < 0.0)
+        backwardSearchAltitude(body, observer, direction, startTime, limitDays, altitudeError)
+    else
+        forwardSearchAltitude(body, observer, direction, startTime, limitDays, altitudeError)
 }
 
 /**
@@ -6212,7 +6349,14 @@ fun searchRiseSet(
  * The date and time at which to start the search.
  *
  * @param limitDays
- * The fractional number of days after `dateStart` that limits when the altitude event is to be found. Must be a positive number.
+ * Limits how many days to search for the body reaching the altitude angle,
+ * and defines the direction in time to search. When `limitDays` is positive, the
+ * search is performed into the future, after `startTime`.
+ * When negative, the search is performed into the past, before `startTime`.
+ * To limit the search to the same day, you can use a value of 1 day.
+ * In cases where you want to find the altitude event no matter how far
+ * in the future (for example, for an observer near the south pole), you can
+ * pass in a larger value like 365.
  *
  * @param altitude
  * The desired altitude angle of the body's center above (positive) or below (negative)
@@ -6229,11 +6373,11 @@ fun searchAltitude(
     limitDays: Double,
     altitude: Double
 ): Time? {
-    return internalSearchAltitude(body, observer, direction, startTime, limitDays) { time ->
-        val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-        val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
-        direction.sign * (hor.altitude - altitude)
-    }
+    val altitudeError = SearchContext_AltitudeError(direction, altitude, body, observer)
+    return if (limitDays < 0.0)
+        backwardSearchAltitude(body, observer, direction, startTime, limitDays, altitudeError)
+    else
+        forwardSearchAltitude(body, observer, direction, startTime, limitDays, altitudeError)
 }
 
 
