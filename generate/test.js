@@ -244,20 +244,29 @@ function MoonPhase() {
     return 0;
 }
 
-function MoonReverse() {
+function MoonReverse(longitude) {
+    return (
+        MoonReversePhase(0) ||
+        MoonReversePhase(90) ||
+        MoonReversePhase(180) ||
+        MoonReversePhase(270)
+    );
+}
+
+function MoonReversePhase(longitude) {
     // Verify that SearchMoonPhase works both forward and backward in time.
 
     const numNewMoons = 5000;
     let utList = [];
-    let i, result;
+    let i, result, diff;
 
     let dtMin = +1000;
     let dtMax = -1000;
     let time = Astronomy.MakeTime(new Date('1800-01-01T00:00:00Z'));
     for (i = 0; i < numNewMoons; ++i) {
-        result = Astronomy.SearchMoonPhase(0, time, +40);
+        result = Astronomy.SearchMoonPhase(longitude, time, +40);
         if (result === null) {
-            console.error(`JS MoonReverse(i=${i}): failed to find new moon after ${time}`);
+            console.error(`JS MoonReverse(i=${i}): failed to find phase ${longitude} after ${time}`);
             return 1;
         }
         utList.push(result.ut);
@@ -270,9 +279,9 @@ function MoonReverse() {
         time = result.AddDays(+0.1);
     }
 
-    Debug(`JS MoonReverse: dtMin=${dtMin.toFixed(3)} days, dtMax=${dtMax.toFixed(3)} days.`);
-    if (dtMin < 29.273 || dtMax > 29.832) {
-        console.error(`JS MoonReverse: Time between consecutive new moons is suspicious.`);
+    Debug(`JS MoonReverse(${longitude}): dtMin=${dtMin.toFixed(3)} days, dtMax=${dtMax.toFixed(3)} days.`);
+    if (dtMin < 29.175 || dtMax > 29.926) {
+        console.error(`JS MoonReverse(${longitude}): Time between consecutive phases is suspicious.`);
         return 1;
     }
 
@@ -280,21 +289,56 @@ function MoonReverse() {
     time = time.AddDays(20);
     let maxDiff = 0;
     for (i = numNewMoons-1; i >= 0; --i) {
-        result = Astronomy.SearchMoonPhase(0, time, -40);
+        result = Astronomy.SearchMoonPhase(longitude, time, -40);
         if (result === null) {
-            console.error(`JS MoonReverse(i=${i}): failed to find new moon before ${time}`);
+            console.error(`JS MoonReverse(i=${i}): failed to find phase ${longitude} before ${time}`);
             return 1;
         }
-        const diff = SECONDS_PER_DAY * abs(result.ut - utList[i]);
+        diff = SECONDS_PER_DAY * abs(result.ut - utList[i]);
         if (diff > maxDiff) maxDiff = diff;
         time = result.AddDays(-0.1);
     }
 
-    console.log(`JS MoonReverse: Maximum discrepancy in reverse search = ${maxDiff.toFixed(3)} seconds.`);
-    if (maxDiff > 0.128) {
-        console.error(`JS MoonReverse: EXCESSIVE DISCREPANCY in reverse search.`);
+    Debug(`JS MoonReverse(${longitude}): Maximum discrepancy in reverse search = ${maxDiff.toFixed(3)} seconds.`);
+    if (maxDiff > 0.165) {
+        console.error(`JS MoonReverse(${longitude}): EXCESSIVE DISCREPANCY in reverse search.`);
         return 1;
     }
+
+    // Pick a pair of consecutive events from the middle of the list.
+    // Verify forward and backward searches work correctly from many intermediate times.
+    const nslots = 100;
+    const k = Math.floor(nslots / 2);
+    const ut1 = utList[k];
+    const ut2 = utList[k+1];
+    for (i = 1; i < nslots; ++i) {
+        const ut = ut1 + (i/nslots)*(ut2 - ut1)
+        time = Astronomy.MakeTime(ut);
+
+        const before = Astronomy.SearchMoonPhase(longitude, time, -40);
+        if (!before) {
+            console.error(`JS MoonReverse(${longitude}): backward search failed from ${time}`);
+            return 1;
+        }
+        diff = SECONDS_PER_DAY * abs(before.ut - ut1);
+        if (diff > 0.07) {
+            console.error(`JS MoonPhase(${longitude}): backward search from ${time} has error = ${diff.toExponential(4)} seconds.`);
+            return 1;
+        }
+
+        const after = Astronomy.SearchMoonPhase(longitude, time, +40);
+        if (!after) {
+            console.error(`JS MoonReverse(${longitude}): forward search failed from ${time}`);
+            return 1;
+        }
+        diff = SECONDS_PER_DAY * abs(after.ut - ut2);
+        if (diff > 0.07) {
+            console.error(`JS MoonPhase(${longitude}): forward search from ${time} has error = ${diff.toExponential(4)} seconds.`);
+            return 1;
+        }
+    }
+
+    console.log(`JS MoonReverse(${longitude}): PASS`);
     return 0;
 }
 
