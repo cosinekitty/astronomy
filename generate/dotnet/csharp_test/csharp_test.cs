@@ -632,21 +632,32 @@ namespace csharp_test
 
         static int MoonReverseTest()
         {
+            return (
+                MoonReverse(  0.0) == 0 &&
+                MoonReverse( 90.0) == 0 &&
+                MoonReverse(180.0) == 0 &&
+                MoonReverse(270.0) == 0
+            ) ? 0 : 1;
+        }
+
+        static int MoonReverse(double longitude)
+        {
             // Verify that SearchMoonPhase works both forward and backward in time.
 
             const int numNewMoons = 5000;
             var utList = new double[numNewMoons];
             double dtMin = +1000.0;
             double dtMax = -1000.0;
+            double diff;
 
             // Search forward in time from 1800 to find consecutive new moon events.
             var time = new AstroTime(1800, 1, 1, 0, 0, 0);
             for (int i = 0; i < numNewMoons; ++i)
             {
-                AstroTime result = Astronomy.SearchMoonPhase(0.0, time, +40.0);
+                AstroTime result = Astronomy.SearchMoonPhase(longitude, time, +40.0);
                 if (result == null)
                 {
-                    Console.WriteLine($"C# MoonReverse(i={i}): failed to find new moon after {time}");
+                    Console.WriteLine($"C# MoonReverse(i={i}): failed to find phase {longitude} after {time}");
                     return 1;
                 }
                 utList[i] = result.ut;
@@ -660,10 +671,10 @@ namespace csharp_test
                 time = result.AddDays(+0.1);
             }
 
-            Debug($"C# MoonReverse: dtMin={dtMin:F3} days, dtMax={dtMax:F3} days.");
-            if (dtMin < 29.273 || dtMax > 29.832)
+            Debug($"C# MoonReverse({longitude}): dtMin={dtMin:F6} days, dtMax={dtMax:F6} days.");
+            if (dtMin < 29.175 || dtMax > 29.926)
             {
-                Console.WriteLine($"C# MoonReverse: Time between consecutive new moons is suspicious.");
+                Console.WriteLine($"C# MoonReverse({longitude}): Time between consecutive phases is suspicious.");
                 return 1;
             }
 
@@ -672,23 +683,63 @@ namespace csharp_test
             double maxDiff = 0.0;
             for (int i = numNewMoons-1; i >= 0; --i)
             {
-                AstroTime result = Astronomy.SearchMoonPhase(0.0, time, -40.0);
+                AstroTime result = Astronomy.SearchMoonPhase(longitude, time, -40.0);
                 if (result == null)
                 {
-                    Console.WriteLine($"C# MoonReverse(i={i}): failed to find new moon before {time}");
+                    Console.WriteLine($"C# MoonReverse(i={i}): failed to find phase {longitude} before {time}");
                     return 1;
                 }
-                double diff = SECONDS_PER_DAY * abs(result.ut - utList[i]);
+                diff = SECONDS_PER_DAY * abs(result.ut - utList[i]);
                 if (diff > maxDiff) maxDiff = diff;
                 time = result.AddDays(-0.1);
             }
 
-            Console.WriteLine($"C# MoonReverse: Maximum discrepancy in reverse search = {maxDiff:F3} seconds.");
-            if (maxDiff > 0.128)
+            Debug($"C# MoonReverse({longitude}): Maximum discrepancy in reverse search = {maxDiff:F6} seconds.");
+            if (maxDiff > 0.164)
             {
-                Console.WriteLine("C# MoonReverse: EXCESSIVE DISCREPANCY in reverse search.");
+                Console.WriteLine($"C# MoonReverse({longitude}): EXCESSIVE DISCREPANCY in reverse search.");
                 return 1;
             }
+
+            // Pick a pair of consecutive events from the middle of the list.
+            // Verify forward and backward searches work correctly from many intermediate times.
+            const int nslots = 100;
+            int k = numNewMoons / 2;
+            double ut1 = utList[k];
+            double ut2 = utList[k+1];
+            for (int i = 1; i < nslots; ++i)
+            {
+                double ut = ut1 + ((double)i/nslots)*(ut2 - ut1);
+                time = new AstroTime(ut);
+
+                AstroTime before = Astronomy.SearchMoonPhase(longitude, time, -40.0);
+                if (before == null)
+                {
+                    Console.WriteLine($"C# MoonReverse({longitude}): backward search from {time} failed.");
+                    return 1;
+                }
+                diff = SECONDS_PER_DAY * abs(before.ut - ut1);
+                if (diff > 0.07)
+                {
+                    Console.WriteLine($"C# MoonReverse({longitude}): backward search error = {diff:E4} seconds from {time}.");
+                    return 1;
+                }
+
+                AstroTime after = Astronomy.SearchMoonPhase(longitude, time, +40.0);
+                if (after == null)
+                {
+                    Console.WriteLine($"C# MoonReverse({longitude}): forward search from {time} failed.");
+                    return 1;
+                }
+                diff = SECONDS_PER_DAY * abs(after.ut - ut2);
+                if (diff > 0.07)
+                {
+                    Console.WriteLine($"C# MoonReverse({longitude}): forward search error = {diff:E4} seconds from {time}.");
+                    return 1;
+                }
+            }
+
+            Console.WriteLine($"C# MoonReverse({longitude}): PASS");
             return 0;
         }
 
