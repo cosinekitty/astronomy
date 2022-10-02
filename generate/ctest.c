@@ -1782,6 +1782,7 @@ static int RiseSetReverse(void)
     }
     if (maxDiff > 0.982)
         FAIL("C RiseSetReverse: EXCESSIVE forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
+    DEBUG("C RiseSetReverse: forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
 
     /* All even indexes in utList hold sunrise times. */
     /* All odd indexes in utList hold sunset times. */
@@ -1808,6 +1809,7 @@ static int RiseSetReverse(void)
     }
     if (maxDiff > 0.8)
         FAIL("C RiseSetReverse: EXCESSIVE slot-test discrepancy = %0.6lf seconds.\n", maxDiff);
+    DEBUG("C RiseSetReverse: slot discrepancy = %0.6lf seconds.\n", maxDiff);
 
     printf("C RiseSetReverse: PASS\n");
     error = 0;
