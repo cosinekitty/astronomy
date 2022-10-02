@@ -644,15 +644,15 @@ namespace csharp_test
         {
             // Verify that SearchMoonPhase works both forward and backward in time.
 
-            const int numNewMoons = 5000;
-            var utList = new double[numNewMoons];
+            const int nphases = 5000;
+            var utList = new double[nphases];
             double dtMin = +1000.0;
             double dtMax = -1000.0;
             double diff;
 
-            // Search forward in time from 1800 to find consecutive new moon events.
+            // Search forward in time from 1800 to find consecutive phase events.
             var time = new AstroTime(1800, 1, 1, 0, 0, 0);
-            for (int i = 0; i < numNewMoons; ++i)
+            for (int i = 0; i < nphases; ++i)
             {
                 AstroTime result = Astronomy.SearchMoonPhase(longitude, time, +40.0);
                 if (result == null)
@@ -663,7 +663,7 @@ namespace csharp_test
                 utList[i] = result.ut;
                 if (i > 0)
                 {
-                    // Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
+                    // Verify that consecutive events are reasonably close to the synodic period (29.5 days) apart.
                     double dt = v(utList[i] - utList[i-1]);
                     if (dt < dtMin) dtMin = dt;
                     if (dt > dtMax) dtMax = dt;
@@ -681,7 +681,7 @@ namespace csharp_test
             // Do a reverse chronological search and make sure the results are consistent with the forward search.
             time = time.AddDays(20.0);
             double maxDiff = 0.0;
-            for (int i = numNewMoons-1; i >= 0; --i)
+            for (int i = nphases-1; i >= 0; --i)
             {
                 AstroTime result = Astronomy.SearchMoonPhase(longitude, time, -40.0);
                 if (result == null)
@@ -704,7 +704,7 @@ namespace csharp_test
             // Pick a pair of consecutive events from the middle of the list.
             // Verify forward and backward searches work correctly from many intermediate times.
             const int nslots = 100;
-            int k = numNewMoons / 2;
+            int k = nphases / 2;
             double ut1 = utList[k];
             double ut2 = utList[k+1];
             for (int i = 1; i < nslots; ++i)

@@ -256,14 +256,14 @@ function MoonReverse(longitude) {
 function MoonReversePhase(longitude) {
     // Verify that SearchMoonPhase works both forward and backward in time.
 
-    const numNewMoons = 5000;
+    const nphases = 5000;
     let utList = [];
     let i, result, diff;
 
     let dtMin = +1000;
     let dtMax = -1000;
     let time = Astronomy.MakeTime(new Date('1800-01-01T00:00:00Z'));
-    for (i = 0; i < numNewMoons; ++i) {
+    for (i = 0; i < nphases; ++i) {
         result = Astronomy.SearchMoonPhase(longitude, time, +40);
         if (result === null) {
             console.error(`JS MoonReverse(i=${i}): failed to find phase ${longitude} after ${time}`);
@@ -271,7 +271,7 @@ function MoonReversePhase(longitude) {
         }
         utList.push(result.ut);
         if (i > 0) {
-            // Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
+            // Verify that consecutive phase events are reasonably close to the synodic period (29.5 days) apart.
             const dt = v(utList[i] - utList[i-1]);
             if (dt < dtMin) dtMin = dt;
             if (dt > dtMax) dtMax = dt;
@@ -288,7 +288,7 @@ function MoonReversePhase(longitude) {
     // Do a reverse chronological search and make sure the results are consistent with the forward search.
     time = time.AddDays(20);
     let maxDiff = 0;
-    for (i = numNewMoons-1; i >= 0; --i) {
+    for (i = nphases-1; i >= 0; --i) {
         result = Astronomy.SearchMoonPhase(longitude, time, -40);
         if (result === null) {
             console.error(`JS MoonReverse(i=${i}): failed to find phase ${longitude} before ${time}`);

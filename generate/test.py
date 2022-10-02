@@ -2489,21 +2489,21 @@ def MoonNodes():
 
 def MoonReversePhase(longitude):
     # Verify that SearchMoonPhase works both forward and backward in time.
-    numNewMoons = 5000
+    nphases = 5000
     utList = []
     dtMin = +1000.0
     dtMax = -1000.0
 
-    # Search forward in time from 1800 to find consecutive new moon events.
+    # Search forward in time from 1800 to find consecutive phase events events.
     time = astronomy.Time.Make(1800, 1, 1, 0, 0, 0.0)
-    for i in range(numNewMoons):
+    for i in range(nphases):
         result = astronomy.SearchMoonPhase(longitude, time, +40.0)
         if result is None:
             print('PY MoonReversePhase(lon={}, i={}): failed to find event after {}'.format(longitude, i, time))
             return 1
         utList.append(result.ut)
         if i > 0:
-            # Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
+            # Verify that consecutive events are reasonably close to the synodic period (29.5 days) apart.
             dt = v(utList[i] - utList[i-1])
             if dt < dtMin:
                 dtMin = dt
@@ -2519,7 +2519,7 @@ def MoonReversePhase(longitude):
     # Do a reverse chronological search and make sure the results are consistent with the forward search.
     time = time.AddDays(20.0)
     maxDiff = 0.0
-    for i in range(numNewMoons-1, -1, -1):
+    for i in range(nphases-1, -1, -1):
         result = astronomy.SearchMoonPhase(longitude, time, -40.0)
         if result is None:
             print('PY MoonReversePhase(lon={}, i={}): failed to find event before {}'.format(longitude, i, time))
@@ -2537,7 +2537,7 @@ def MoonReversePhase(longitude):
     # Pick a pair of consecutive events from the middle of the list.
     # Verify forward and backward searches work correctly from many intermediate times.
     nslots = 100
-    k = numNewMoons // 2
+    k = nphases // 2
     ut1 = utList[k]
     ut2 = utList[k+1]
     for i in range(1, nslots):

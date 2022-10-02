@@ -957,22 +957,22 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
-    private fun ReverseMoon(longitude: Double) {
-        val numNewMoons = 5000
+    private fun reverseMoon(longitude: Double) {
+        val nphases = 5000
         val utList = arrayListOf<Double>()
         var dtMin = +1000.0
         var dtMax = -1000.0
         var diff: Double
 
-        // Search forward in time from 1800 to find consecutive new moon events.
+        // Search forward in time from 1800 to find consecutive phase events.
         var time = Time(1800, 1, 1, 0, 0, 0.0)
         var i = 0
-        while (i < numNewMoons) {
+        while (i < nphases) {
             val result = searchMoonPhase(longitude, time, +40.0) ?:
                 fail("Failed to find moon phase $longitude after $time")
             utList.add(result.ut)
             if (i > 0) {
-                // Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
+                // Verify that consecutive events are reasonably close to the synodic period (29.5 days) apart.
                 val dt = utList[i] - utList[i-1]
                 if (dt < dtMin) dtMin = dt
                 if (dt > dtMax) dtMax = dt
@@ -987,7 +987,7 @@ class Tests {
         // Do a reverse chronological search and make sure the results are consistent with the forward search.
         time = time.addDays(+20.0)
         var maxDiff = 0.0
-        i = numNewMoons - 1
+        i = nphases - 1
         while (i >= 0) {
             val result = searchMoonPhase(longitude, time, -40.0) ?:
                 fail("Failed to find phase $longitude before $time")
@@ -1003,7 +1003,7 @@ class Tests {
         // Pick a pair of consecutive events from the middle of the list.
         // Verify forward and backward searches work correctly from many intermediate times.
         val nslots = 100
-        val k = numNewMoons / 2
+        val k = nphases / 2
         val ut1 = utList[k]
         val ut2 = utList[k+1]
         i = 1
@@ -1026,10 +1026,10 @@ class Tests {
 
     @Test
     fun `Reverse moon phase search`() {
-        ReverseMoon(0.0)
-        ReverseMoon(90.0)
-        ReverseMoon(180.0)
-        ReverseMoon(270.0)
+        reverseMoon(0.0)
+        reverseMoon(90.0)
+        reverseMoon(180.0)
+        reverseMoon(270.0)
     }
 
     //----------------------------------------------------------------------------------------
