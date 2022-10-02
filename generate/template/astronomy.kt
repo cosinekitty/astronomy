@@ -6121,11 +6121,10 @@ private fun forwardSearchAltitude(
 
         // If we didn't find the desired event, find the next hour angle bracket and try again.
         val evtBefore = searchHourAngle(body, observer, haBefore, timeAfter, +1)
-        val evtAfter  = searchHourAngle(body, observer, haAfter, timeBefore, +1)
-
         if (evtBefore.time.ut >= startTime.ut + limitDays)
             return null
 
+        val evtAfter  = searchHourAngle(body, observer, haAfter, timeBefore, +1)
         timeBefore = evtBefore.time
         timeAfter = evtAfter.time
         altBefore = context.eval(timeBefore)
@@ -6200,7 +6199,6 @@ private fun backwardSearchAltitude(
 
         // If we didn't find the desired event, find the next hour angle bracket and try again.
         val evtAfter  = searchHourAngle(body, observer, haAfter, timeBefore, -1)
-
         if (evtAfter.time.ut <= startTime.ut + limitDays)
             return null
 

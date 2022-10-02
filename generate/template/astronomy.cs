@@ -5785,10 +5785,11 @@ $ASTRO_IAU_DATA()
 
                 // If we didn't find the desired event, use evt_after.time to find the next before-event.
                 evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, +1);
-                evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, +1);
 
                 if (evt_before.time.ut >= startTime.ut + limitDays)
                     return null;
+
+                evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, +1);
 
                 time_before = evt_before.time;
 

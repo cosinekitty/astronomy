@@ -821,6 +821,16 @@ namespace csharp_test
             }
         }
 
+        static Direction Toggle(Direction dir)
+        {
+            switch (dir)
+            {
+            case Direction.Rise: return Direction.Set;
+            case Direction.Set:  return Direction.Rise;
+            default: throw new ArgumentException($"Invalid direction: {dir}");
+            }
+        }
+
         static int RiseSetReverseTest()
         {
             // Verify that the rise/set search works equally well forwards and backwards in time.
@@ -852,7 +862,7 @@ namespace csharp_test
                     if (dt < dtMin) dtMin = dt;
                     if (dt > dtMax) dtMax = dt;
                 }
-                dir = (dir == Direction.Rise) ? Direction.Set : Direction.Rise;
+                dir = Toggle(dir);
                 time = result.AddDays(+nudge);
             }
 
@@ -866,7 +876,7 @@ namespace csharp_test
             // Perform the same search in reverse. Verify we get consistent rise/set times.
             for (int i = nsamples-1; i >= 0; --i)
             {
-                dir = (dir == Direction.Rise) ? Direction.Set : Direction.Rise;
+                dir = Toggle(dir);
                 AstroTime result = Astronomy.SearchRiseSet(Body.Sun, observer, dir, time, -1.0);
                 if (result == null)
                 {

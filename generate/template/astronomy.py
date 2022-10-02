@@ -4290,7 +4290,7 @@ class HourAngleEvent:
     def __repr__(self):
         return 'HourAngleEvent({}, {})'.format(repr(self.time), repr(self.hor))
 
-def SearchHourAngle(body, observer, hourAngle, startTime):
+def SearchHourAngle(body, observer, hourAngle, startTime, direction = +1):
     """Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
 
     The *hour angle* of a celestial body indicates its position in the sky with respect
@@ -4325,6 +4325,10 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
          body's most recent culmination.
     startTime : Time
          The date and time at which to start the search.
+    direction : int
+        The direction in time to perform the search: a positive value
+        searches forward in time, a negative value searches backward in time.
+        The function throws an exception if `direction` is zero.
 
     Returns
     -------
@@ -4335,6 +4339,9 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
 
     if hourAngle < 0.0 or hourAngle >= 24.0:
         raise Error('Invalid hour angle.')
+
+    if direction == 0:
+        raise Error('Direction must be positive or negative.')
 
     iter_count = 0
     time = startTime
@@ -4348,9 +4355,15 @@ def SearchHourAngle(body, observer, hourAngle, startTime):
         # the hour angle to the desired value.
         delta_sidereal_hours = math.fmod(((hourAngle + ofdate.ra - observer.longitude/15) - gast), 24.0)
         if iter_count == 1:
-            # On the first iteration, always search forward in time.
-            if delta_sidereal_hours < 0.0:
-                delta_sidereal_hours += 24.0
+            # On the first iteration, always search in the requested time direction.
+            if direction > 0:
+                # Search forward in time.
+                if delta_sidereal_hours < 0.0:
+                    delta_sidereal_hours += 24.0
+            else:
+                # Search backward in time.
+                if delta_sidereal_hours > 0.0:
+                    delta_sidereal_hours -= 24.0
         else:
             # On subsequent iterations, we make the smallest possible adjustment,
             # either forward or backward in time.
@@ -4385,8 +4398,10 @@ class Direction(enum.Enum):
     Rise = +1
     Set  = -1
 
+def _ForwardSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error_func, altitude_error_context):
+    if body == Body.Earth:
+        raise EarthNotAllowedError()
 
-def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error_func, altitude_error_context):
     if direction == Direction.Rise:
         ha_before = 12.0    # minimum altitude (bottom) happens BEFORE the body rises.
         ha_after  =  0.0    # maximum altitude (culmination) happens AFTER the body rises.
@@ -4395,6 +4410,10 @@ def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, alt
         ha_after  = 12.0    # bottom happens AFTER the body sets.
     else:
         raise Error('Invalid value for direction parameter')
+
+    # We cannot possibly satisfy a forward search without a positive time limit.
+    if limitDays <= 0.0:
+        return None
 
     # See if the body is currently above/below the horizon.
     # If we are looking for next rise time and the body is below the horizon,
@@ -4407,7 +4426,7 @@ def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, alt
     alt_before = altitude_error_func(altitude_error_context, time_start)
     if alt_before > 0.0:
         # We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-        evt_before = SearchHourAngle(body, observer, ha_before, time_start)
+        evt_before = SearchHourAngle(body, observer, ha_before, time_start, +1)
         time_before = evt_before.time
         alt_before = altitude_error_func(altitude_error_context, time_before)
     else:
@@ -4415,7 +4434,7 @@ def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, alt
         # and use the current time as the "before" event.
         time_before = time_start
 
-    evt_after = SearchHourAngle(body, observer, ha_after, time_before)
+    evt_after = SearchHourAngle(body, observer, ha_after, time_before, +1)
     alt_after = altitude_error_func(altitude_error_context, evt_after.time)
 
     while True:
@@ -4423,13 +4442,73 @@ def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, alt
             # Search between the "before time" and the "after time" for the desired event.
             event_time = Search(altitude_error_func, altitude_error_context, time_before, evt_after.time, 1.0)
             if event_time is not None:
+                # If we found the rise/set time, but it falls outside limitDays, fail the search.
+                if event_time.ut > startTime.ut + limitDays:
+                    return None
+                # The search succeeded.
                 return event_time
         # We didn't find the desired event, so use the "after" time to find the next "before" event.
-        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time)
-        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time)
+        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, +1)
         if evt_before.time.ut >= time_start.ut + limitDays:
             return None
+        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, +1)
         time_before = evt_before.time
+        alt_before = altitude_error_func(altitude_error_context, evt_before.time)
+        alt_after = altitude_error_func(altitude_error_context, evt_after.time)
+
+def _BackwardSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error_func, altitude_error_context):
+    if body == Body.Earth:
+        raise EarthNotAllowedError()
+
+    if direction == Direction.Rise:
+        ha_before = 12.0    # minimum altitude (bottom) happens BEFORE the body rises.
+        ha_after  =  0.0    # maximum altitude (culmination) happens AFTER the body rises.
+    elif direction == Direction.Set:
+        ha_before =  0.0    # culmination happens BEFORE the body sets.
+        ha_after  = 12.0    # bottom happens AFTER the body sets.
+    else:
+        raise Error('Invalid value for direction parameter')
+
+    # We cannot possibly satisfy a backward search without a negative time limit.
+    if limitDays >= 0.0:
+        return None
+
+    # See if the body is currently above/below the horizon.
+    # If we are looking for previous rise time and the body is above the horizon,
+    # we use the current time as the upper time bound and the previous bottom as the lower time bound.
+    # If the body is below the horizon, we search for the previous culmination and use it
+    # as the upper time bound. Then we search for the bottom before that culmination and
+    # use it as the lower time bound.
+    # The same logic applies for finding set times; altitude_error_func and
+    # altitude_error_context ensure that the desired event is represented
+    # by ascending through zero, so the Search function works correctly.
+    time_start = startTime
+    alt_after = altitude_error_func(altitude_error_context, time_start)
+    if alt_after < 0.0:
+        evt_after = SearchHourAngle(body, observer, ha_after, time_start, -1)
+        time_after = evt_after.time
+        alt_after = altitude_error_func(altitude_error_context, time_after)
+    else:
+        time_after = time_start
+
+    evt_before = SearchHourAngle(body, observer, ha_before, time_after, -1)
+    alt_before = altitude_error_func(altitude_error_context, evt_before.time)
+
+    while True:
+        if alt_before <= 0.0 and alt_after > 0.0:
+            # Search between the "before time" and the "after time" for the desired event.
+            event_time = Search(altitude_error_func, altitude_error_context, evt_before.time, time_after, 1.0)
+            if event_time is not None:
+                # If we found the rise/set time, but it falls outside limitDays, fail the search.
+                if event_time.ut < startTime.ut + limitDays:
+                    return None
+                # The search succeeded.
+                return event_time
+        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, -1)
+        if evt_after.time.ut <= time_start.ut + limitDays:
+            return None
+        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, -1)
+        time_after = evt_after.time
         alt_before = altitude_error_func(altitude_error_context, evt_before.time)
         alt_after = altitude_error_func(altitude_error_context, evt_after.time)
 
@@ -4491,11 +4570,14 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
     startTime : Time
         The date and time at which to start the search.
     limitDays : float
-        Limits how many days to search for a rise or set time.
+        Limits how many days to search for a rise or set time, and defines
+        the direction in time to search. When `limitDays` is positive, the
+        search is performed into the future, after `startTime`.
+        When negative, the search is performed into the past, before `startTime`.
         To limit a rise or set time to the same day, you can use a value of 1 day.
         In cases where you want to find the next rise or set time no matter how far
-        in the future (for example, for an observer near the south pole), you can pass
-        in a larger value like 365.
+        in the future (for example, for an observer near the south pole), you can
+        pass in a larger value like 365.
 
     Returns
     -------
@@ -4514,7 +4596,9 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
         body_radius = 0.0
 
     context = _peak_altitude_context(body, direction, observer, body_radius)
-    return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, _peak_altitude, context)
+    if limitDays < 0.0:
+        return _BackwardSearchAltitude(body, observer, direction, startTime, limitDays, _peak_altitude, context)
+    return _ForwardSearchAltitude(body, observer, direction, startTime, limitDays, _peak_altitude, context)
 
 
 class _altitude_error_context:
@@ -4561,8 +4645,14 @@ def SearchAltitude(body, observer, direction, dateStart, limitDays, altitude):
     startTime : Time
         The date and time at which to start the search.
     limitDays : float
-        The fractional number of days after `dateStart` that limits
-        when the altitude event is to be found. Must be a positive number.
+        Limits how many days to search for the body reaching the altitude angle,
+        and defines the direction in time to search. When `limitDays` is positive, the
+        search is performed into the future, after `startTime`.
+        When negative, the search is performed into the past, before `startTime`.
+        To limit the search to the same day, you can use a value of 1 day.
+        In cases where you want to find the altitude event no matter how far
+        in the future (for example, for an observer near the south pole), you can
+        pass in a larger value like 365.
     altitude : float
         The desired altitude angle of the body's center above (positive)
         or below (negative) the observer's local horizon, expressed in degrees.
@@ -4576,9 +4666,10 @@ def SearchAltitude(body, observer, direction, dateStart, limitDays, altitude):
     """
     if not (-90.0 <= altitude <= +90.0):
         raise Error('Invalid altitude: {}'.format(altitude))
-
     context = _altitude_error_context(body, direction, observer, altitude)
-    return _InternalSearchAltitude(body, observer, direction, dateStart, limitDays, _altitude_error_func, context)
+    if limitDays < 0.0:
+        return _BackwardSearchAltitude(body, observer, direction, dateStart, limitDays, _altitude_error_func, context)
+    return _ForwardSearchAltitude(body, observer, direction, dateStart, limitDays, _altitude_error_func, context)
 
 class SeasonInfo:
     """The dates and times of changes of season for a given calendar year.

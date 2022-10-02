@@ -648,6 +648,61 @@ def Magnitude():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def ToggleDir(dir):
+    return astronomy.Direction(-dir.value)
+
+def RiseSetReverse():
+    nsamples = 5000
+    nudge = 0.1
+    utList = []
+    observer = astronomy.Observer(30.5, -90.7, 0.0)
+    dtMin = +1000.0
+    dtMax = -1000.0
+    maxDiff = 0.0
+
+    # Find alternating sunrise/sunset events in forward chronological order.
+    dir = astronomy.Direction.Rise
+    time = astronomy.Time.Make(2022, 1, 1, 0, 0, 0)
+    for i in range(nsamples):
+        result = astronomy.SearchRiseSet(astronomy.Body.Sun, observer, dir, time, +1.0)
+        if not result:
+            print('PY RiseSetReverse: cannot find {} event after {}'.format(dir, time))
+            return 1
+        utList.append(result.ut)
+        if i > 0:
+            # Check the time between consecutive sunrise/sunset events.
+            # These will vary considerably with the seasons, so just make sure we don't miss any entirely.
+            dt = v(utList[i] - utList[i-1])
+            dtMin = min(dtMin, dt)
+            dtMax = max(dtMax, dt)
+        dir = ToggleDir(dir)
+        time = result.AddDays(+nudge)
+
+    print('PY RiseSetReverse: dtMin={:0.6f} days, dtMax={:0.6f} days.'.format(dtMin, dtMax))
+    if (dtMin < 0.411) or (dtMax > 0.589):
+        print('PY RiseSetReverse: Invalid intervals between sunrise/sunset.')
+        return 1
+
+    # Perform the same search in reverse. Verify we get consistent rise/set times.
+    for i in range(nsamples-1, -1, -1):
+        dir = ToggleDir(dir)
+        result = astronomy.SearchRiseSet(astronomy.Body.Sun, observer, dir, time, -1.0)
+        if not result:
+            print('PY RiseSetReverse: cannot find {] event before {}.'.format(dir, time))
+            return 1
+        diff = SECONDS_PER_DAY * vabs(utList[i] - result.ut)
+        maxDiff = max(maxDiff, diff)
+        time = result.AddDays(-nudge)
+
+    if maxDiff > 0.982:
+        print('PY RiseSetReverse: EXCESSIVE discrepancy = {:0.6f} seconds.'.format(maxDiff))
+        return 1
+
+    print('PY RiseSetReverse: PASS - max diff = {:0.6f} seconds.'.format(maxDiff))
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 def RiseSet(filename = 'riseset/riseset.txt'):
     sum_minutes = 0.0
     max_minutes = 0.0
@@ -2747,6 +2802,7 @@ UnitTests = {
     'refraction':               Refraction,
     'repr':                     Repr,
     'riseset':                  RiseSet,
+    'riseset_reverse':          RiseSetReverse,
     'rotation':                 Rotation,
     'seasons':                  Seasons,
     'seasons187':               SeasonsIssue187,

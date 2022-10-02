@@ -5480,9 +5480,9 @@ function ForwardSearchAltitude(
 
         // If we didn't find the desired event, use time_after to find the next before-event.
         evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, +1);
-        evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, +1);
         if (evt_before.time.ut >= time_start.ut + limitDays)
             return null;
+        evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, +1);
 
         time_before = evt_before.time;
         error_before = altitude_error(evt_before.time);
@@ -5562,7 +5562,6 @@ function BackwardSearchAltitude(
         }
 
         evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, -1);
-
         if (evt_after.time.ut <= time_start.ut + limitDays)
             return null;
 
