@@ -1294,6 +1294,38 @@ function RiseSet() {
 }
 
 
+function RiseSetSlot(ut1, ut2, dir, observer) {
+    const nslots = 100;
+    let maxDiff = 0.0;
+    for (let i = 1; i < nslots; ++i) {
+        const ut = ut1 + (i/nslots)*(ut2 - ut1);
+        const time = Astronomy.MakeTime(ut);
+        let result = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, dir, time, -1.0);
+        if (!result) {
+            console.error(`JS RiseSetSlot(${dir}): backward slot search failed for sunrise before ${time}`);
+            return 1;
+        }
+        let diff = SECONDS_PER_DAY * abs(result.ut - ut1);
+        if (diff > maxDiff) maxDiff = diff;
+
+        result = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, dir, time, +1.0);
+        if (!result) {
+            console.error(`JS RiseSetSlot(${dir}): forward slot search failed for sunrise before ${time}`);
+            return 1;
+        }
+        diff = SECONDS_PER_DAY * abs(result.ut - ut2);
+        if (diff > maxDiff) maxDiff = diff;
+    }
+
+    if (maxDiff > 0.9) {
+        console.error(`JS RiseSetSlot(${dir}): EXCESSIVE slot-test discrepancy = ${maxDiff.toFixed(6)} seconds.`);
+        return 1;
+    }
+    Debug(`JS RiseSetSlot(${dir}): slot-test discrepancy = ${maxDiff.toFixed(6)} seconds.`);
+    return 0;
+}
+
+
 function RiseSetReverse() {
     // Verify that the rise/set search works equally well forwards and backwards in time.
     const nsamples = 5000;
@@ -1344,11 +1376,19 @@ function RiseSetReverse() {
     }
 
     if (maxDiff > 0.982) {
-        console.error(`C# RiseSetReverse: EXCESSIVE discrepancy = ${maxDiff.toFixed(6)} seconds.`);
+        console.error(`C# RiseSetReverse: EXCESSIVE forward/backward discrepancy = ${maxDiff.toFixed(6)} seconds.`);
         return 1;
     }
+    Debug(`JS RiseSetReverse: forward/backward discrepancy = ${maxDiff.toFixed(6)} seconds.`);
 
-    console.log(`JS RiseSetReverse: PASS - max diff = ${maxDiff.toFixed(6)} seconds.`);
+    // All even indexes in utList hold sunrise times.
+    // All odd indexes in utList hold sunset times.
+    // Verify that forward/backward searches for consecutive sunrises/sunsets
+    // resolve correctly for 100 time slots between them.
+    const k = (nsamples / 2) & ~1;
+    if (RiseSetSlot(utList[k+0], utList[k+2], +1, observer)) return 1;
+    if (RiseSetSlot(utList[k+1], utList[k+3], -1, observer)) return 1;
+    console.log('JS RiseSetReverse: PASS');
     return 0;
 }
 

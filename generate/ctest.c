@@ -1723,6 +1723,39 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
+static int RiseSetSlot(double ut1, double ut2, astro_direction_t dir, astro_observer_t observer)
+{
+    int error = 1;
+    const int nslots = 100;
+    astro_time_t time;
+    astro_search_result_t result;
+    int i;
+    double ut, diff, maxDiff = 0.0;
+
+    for (i = 1; i < nslots; ++i)
+    {
+        ut = ut1 + ((double)i / nslots)*(ut2 - ut1);
+        time = Astronomy_TimeFromDays(ut);
+
+        result = Astronomy_SearchRiseSet(BODY_SUN, observer, dir, time, -1.0);
+        CHECK_STATUS(result);
+        diff = SECONDS_PER_DAY * ABS(result.time.ut - ut1);
+        if (diff > maxDiff) maxDiff = diff;
+
+        result = Astronomy_SearchRiseSet(BODY_SUN, observer, dir, time, +1.0);
+        CHECK_STATUS(result);
+        diff = SECONDS_PER_DAY * ABS(result.time.ut - ut2);
+        if (diff > maxDiff) maxDiff = diff;
+    }
+    if (maxDiff > 0.9)
+        FAIL("C RiseSetSlot(dir=%d): EXCESSIVE slot-test discrepancy = %0.6lf seconds.\n", dir, maxDiff);
+    DEBUG("C RiseSetSlot(dir=%d): slot discrepancy = %0.6lf seconds.\n", dir, maxDiff);
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int RiseSetReverse(void)
 {
     /* Verify that the rise/set search works equally well forwards and backwards in time. */
@@ -1738,9 +1771,7 @@ static int RiseSetReverse(void)
     astro_search_result_t result;
     double dt, dtMin = +1000.0, dtMax = -1000.0;
     double diff, maxDiff = 0.0;
-    const int nslots = 100;
     int k;
-    double ut, ut1, ut2;
 
     utList = (double *)calloc(nsamples, sizeof(utList[0]));
     if (utList == NULL)
@@ -1786,30 +1817,11 @@ static int RiseSetReverse(void)
 
     /* All even indexes in utList hold sunrise times. */
     /* All odd indexes in utList hold sunset times. */
-    /* Verify that forward/backward searches for consecutive sunrises resolve */
-    /* correctly for 100 time slots between them. */
-    k = (nslots / 2) & ~1;
-    ut1 = utList[k];
-    ut2 = utList[k+2];
-    maxDiff = 0.0;
-    for (i = 1; i < nslots; ++i)
-    {
-        ut = ut1 + ((double)i / nslots)*(ut2 - ut1);
-        time = Astronomy_TimeFromDays(ut);
-
-        result = Astronomy_SearchRiseSet(BODY_SUN, observer, DIRECTION_RISE, time, -1.0);
-        CHECK_STATUS(result);
-        diff = SECONDS_PER_DAY * ABS(result.time.ut - ut1);
-        if (diff > maxDiff) maxDiff = diff;
-
-        result = Astronomy_SearchRiseSet(BODY_SUN, observer, DIRECTION_RISE, time, +1.0);
-        CHECK_STATUS(result);
-        diff = SECONDS_PER_DAY * ABS(result.time.ut - ut2);
-        if (diff > maxDiff) maxDiff = diff;
-    }
-    if (maxDiff > 0.8)
-        FAIL("C RiseSetReverse: EXCESSIVE slot-test discrepancy = %0.6lf seconds.\n", maxDiff);
-    DEBUG("C RiseSetReverse: slot discrepancy = %0.6lf seconds.\n", maxDiff);
+    /* Verify that forward/backward searches for consecutive sunrises/sunsets */
+    /* resolve correctly for 100 time slots between them. */
+    k = (nsamples / 2) & ~1;
+    CHECK(RiseSetSlot(utList[k+0], utList[k+2], DIRECTION_RISE, observer));
+    CHECK(RiseSetSlot(utList[k+1], utList[k+3], DIRECTION_SET,  observer));
 
     printf("C RiseSetReverse: PASS\n");
     error = 0;

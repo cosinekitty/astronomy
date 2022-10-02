@@ -15,6 +15,10 @@ def Debug(text):
     if Verbose:
         print(text)
 
+def Pass(funcname):
+    print('PY {}: PASS'.format(funcname))
+    return 0
+
 def v(x):
     # Verify that a number is really numeric
     if not isinstance(x, (int, float)):
@@ -651,6 +655,32 @@ def Magnitude():
 def ToggleDir(dir):
     return astronomy.Direction(-dir.value)
 
+def RiseSetSlot(ut1, ut2, direction, observer):
+    maxDiff = 0.0
+    nslots = 100
+    for i in range(1, nslots):
+        ut = ut1 + (i / nslots)*(ut2 - ut1)
+        time = astronomy.Time(ut)
+        result = astronomy.SearchRiseSet(astronomy.Body.Sun, observer, direction, time, -1.0)
+        if not result:
+            print('PY RiseSetSlot: backward slot search failed for {} before {}'.format(direction, time))
+            return 1
+        diff = SECONDS_PER_DAY * vabs(result.ut - ut1)
+        maxDiff = max(maxDiff, diff)
+        result = astronomy.SearchRiseSet(astronomy.Body.Sun, observer, direction, time, +1.0)
+        if not result:
+            print('PY RiseSetSlot: forward slot search failed for {} after {}'.format(direction, time))
+            return 1
+        diff = SECONDS_PER_DAY * vabs(result.ut - ut2)
+        maxDiff = max(maxDiff, diff)
+
+    if maxDiff > 0.9:
+        print('PY RiseSetSlot: EXCESSIVE {} slot-test discrepancy = {:0.6f} seconds.'.format(direction, maxDiff))
+        return 1
+    Debug('PY RiseSetSlot: {} slot-test discrepancy = {:0.6f} seconds.'.format(direction, maxDiff))
+    return 0
+
+
 def RiseSetReverse():
     nsamples = 5000
     nudge = 0.1
@@ -678,7 +708,7 @@ def RiseSetReverse():
         dir = ToggleDir(dir)
         time = result.AddDays(+nudge)
 
-    print('PY RiseSetReverse: dtMin={:0.6f} days, dtMax={:0.6f} days.'.format(dtMin, dtMax))
+    Debug('PY RiseSetReverse: dtMin={:0.6f} days, dtMax={:0.6f} days.'.format(dtMin, dtMax))
     if (dtMin < 0.411) or (dtMax > 0.589):
         print('PY RiseSetReverse: Invalid intervals between sunrise/sunset.')
         return 1
@@ -695,11 +725,21 @@ def RiseSetReverse():
         time = result.AddDays(-nudge)
 
     if maxDiff > 0.982:
-        print('PY RiseSetReverse: EXCESSIVE discrepancy = {:0.6f} seconds.'.format(maxDiff))
+        print('PY RiseSetReverse: EXCESSIVE forward/backward discrepancy = {:0.6f} seconds.'.format(maxDiff))
         return 1
+    Debug('PY RiseSetReverse: forward/backward discrepancy = {:0.6f} seconds.'.format(maxDiff))
 
-    print('PY RiseSetReverse: PASS - max diff = {:0.6f} seconds.'.format(maxDiff))
-    return 0
+    # All even indexes in utList hold sunrise times.
+    # All odd indexes in utList hold sunset times.
+    # Verify that forward/backward searches for consecutive sunrises/sunsets
+    # resolve correctly for 100 time slots between them.
+    k = (nsamples // 2) & ~1
+
+    return (
+        RiseSetSlot(utList[k], utList[k+2], astronomy.Direction.Rise, observer) or
+        RiseSetSlot(utList[k+1], utList[k+3], astronomy.Direction.Set, observer) or
+        Pass('RiseSetReverse')
+    )
 
 #-----------------------------------------------------------------------------------------------------------
 

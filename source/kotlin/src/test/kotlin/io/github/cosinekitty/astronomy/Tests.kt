@@ -10,6 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.PI
 import kotlin.math.sqrt
 import kotlin.text.Regex
@@ -1127,6 +1128,29 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
+    private fun riseSetSlot(ut1: Double, ut2: Double, dir: Direction, observer: Observer) {
+        val nslots = 100
+        var i = 1
+        while (i < nslots) {
+            val ut = ut1 + (i.toDouble() / nslots)*(ut2 - ut1)
+            val time = Time(ut)
+
+            var result = searchRiseSet(Body.Sun, observer, dir, time, -1.0) ?:
+                fail("Backward slot search failed for $dir before $time")
+            var diff = 86400.0 * abs(result.ut - ut1)
+            if (diff > 0.9)
+                fail("Backward slot search: excessive error = $diff seconds at i=$i, time=$time, dir=$dir")
+
+            result = searchRiseSet(Body.Sun, observer, dir, time, +1.0) ?:
+                fail("Forward slot search failed for $dir after $time")
+            diff = 86400.0 * abs(result.ut - ut2)
+            if (diff > 0.9)
+                fail("Forward slot search: excessive error = $diff seconds at i=$i, time=$time, dir=$dir")
+
+            ++i
+        }
+    }
+
     @Test
     fun `Reverse chrono rise set test`() {
         // Verify that the rise/set search works equally well forwards and backwards in time.
@@ -1176,6 +1200,14 @@ class Tests {
 
         if (maxDiff > 0.982)
             fail("Excessive forward/reverse rise/set discrepancy = $maxDiff seconds.")
+
+        // All even indexes in utList hold sunrise times.
+        // All odd indexes in utList hold sunset times.
+        // Verify that forward/backward searches for consecutive sunrises/sunsets
+        // resolve correctly for 100 time slots between them.
+        val k = (nsamples / 2) and (-2)
+        riseSetSlot(utList[k+0], utList[k+2], Direction.Rise, observer)
+        riseSetSlot(utList[k+1], utList[k+3], Direction.Set,  observer)
     }
 
     //----------------------------------------------------------------------------------------

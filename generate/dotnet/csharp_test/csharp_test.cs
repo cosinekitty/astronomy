@@ -882,6 +882,43 @@ namespace csharp_test
             }
         }
 
+        static int RiseSetSlot(double ut1, double ut2, Direction dir, Observer observer)
+        {
+            const int nslots = 100;
+            double maxDiff = 0.0;
+            AstroTime time, result;
+            for (int i = 1; i < nslots; ++i)
+            {
+                double ut = ut1 + ((double)i / nslots)*(ut2 - ut1);
+                time = new AstroTime(ut);
+
+                result = Astronomy.SearchRiseSet(Body.Sun, observer, dir, time, -1.0);
+                if (result == null)
+                {
+                    Console.WriteLine($"C# RiseSetSlot({dir}): backward slot search failed before {time}");
+                    return 1;
+                }
+                double diff = SECONDS_PER_DAY * abs(result.ut - ut1);
+                if (diff > maxDiff) maxDiff = diff;
+
+                result = Astronomy.SearchRiseSet(Body.Sun, observer, dir, time, +1.0);
+                if (result == null)
+                {
+                    Console.WriteLine($"C# RiseSetSlot({dir}): forward slot search failed after {time}");
+                    return 1;
+                }
+                diff = SECONDS_PER_DAY * abs(result.ut - ut2);
+                if (diff > maxDiff) maxDiff = diff;
+            }
+            if (maxDiff > 0.9)
+            {
+                Console.WriteLine($"C# RiseSetSlot({dir}): EXCESSIVE slot-test discrepancy = {maxDiff:F6} seconds.");
+                return 1;
+            }
+            Debug($"C# RiseSetSlot({dir}): slot-test discrepancy = {maxDiff:F6} seconds.");
+            return 0;
+        }
+
         static int RiseSetReverseTest()
         {
             // Verify that the rise/set search works equally well forwards and backwards in time.
@@ -949,42 +986,11 @@ namespace csharp_test
 
             // All even indexes in utList hold sunrise times.
             // All odd indexes in utList hold sunset times.
-            // Verify that forward/backward searches for consecutive sunrises resolve
-            // correctly for 100 time slots between them.
-            const int nslots = 100;
-            int k = (nslots / 2) & ~1;
-            double ut1 = utList[k];
-            double ut2 = utList[k+2];
-            maxDiff = 0.0;
-            for (int i = 1; i < nslots; ++i)
-            {
-                double ut = ut1 + ((double)i / nslots)*(ut2 - ut1);
-                time = new AstroTime(ut);
-
-                result = Astronomy.SearchRiseSet(Body.Sun, observer, Direction.Rise, time, -1.0);
-                if (result == null)
-                {
-                    Console.WriteLine($"C# RiseSetReverse: backward slot search failed for sunrise before {time}");
-                    return 1;
-                }
-                double diff = SECONDS_PER_DAY * abs(result.ut - ut1);
-                if (diff > maxDiff) maxDiff = diff;
-
-                result = Astronomy.SearchRiseSet(Body.Sun, observer, Direction.Rise, time, +1.0);
-                if (result == null)
-                {
-                    Console.WriteLine($"C# RiseSetReverse: forward slot search failed for sunrise after {time}");
-                    return 1;
-                }
-                diff = SECONDS_PER_DAY * abs(result.ut - ut2);
-                if (diff > maxDiff) maxDiff = diff;
-            }
-            if (maxDiff > 0.8)
-            {
-                Console.WriteLine($"C# RiseSetReverse: EXCESSIVE slot-test discrepancy = {maxDiff:F6} seconds.");
-                return 1;
-            }
-            Debug($"C# RiseSetReverse: slot-test discrepancy = {maxDiff:F6} seconds.");
+            // Verify that forward/backward searches for consecutive sunrises/sunsets
+            // resolve correctly for 100 time slots between them.
+            int k = (nsamples / 2) & ~1;
+            if (0 != RiseSetSlot(utList[k+0], utList[k+2], Direction.Rise, observer)) return 1;
+            if (0 != RiseSetSlot(utList[k+1], utList[k+3], Direction.Set,  observer)) return 1;
 
             Console.WriteLine("C# RiseSetReverse: PASS");
             return 0;
