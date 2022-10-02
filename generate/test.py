@@ -2535,7 +2535,7 @@ def MoonReversePhase(longitude):
         return 1
 
     # Pick a pair of consecutive events from the middle of the list.
-    # Verify forward and backward search works correctly from many intermediate times.
+    # Verify forward and backward searches work correctly from many intermediate times.
     nslots = 100
     k = numNewMoons // 2
     ut1 = utList[k]

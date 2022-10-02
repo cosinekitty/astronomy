@@ -957,19 +957,19 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
-    @Test
-    fun `Reverse chrono new moon search`() {
+    private fun ReverseMoon(longitude: Double) {
         val numNewMoons = 5000
         val utList = arrayListOf<Double>()
         var dtMin = +1000.0
         var dtMax = -1000.0
+        var diff: Double
 
         // Search forward in time from 1800 to find consecutive new moon events.
         var time = Time(1800, 1, 1, 0, 0, 0.0)
         var i = 0
         while (i < numNewMoons) {
-            val result = searchMoonPhase(0.0, time, +40.0) ?:
-                fail("Failed to find new moon after $time")
+            val result = searchMoonPhase(longitude, time, +40.0) ?:
+                fail("Failed to find moon phase $longitude after $time")
             utList.add(result.ut)
             if (i > 0) {
                 // Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart.
@@ -981,24 +981,55 @@ class Tests {
             ++i
         }
 
-        if (dtMin < 29.273 || dtMax > 29.832)
-            fail("Time between consecutive new moons is suspicious: dtMin=$dtMin, dtMax=$dtMax.")
+        if (dtMin < 29.175 || dtMax > 29.926)
+            fail("Time between consecutive phase $longitude events is suspicious: dtMin=$dtMin, dtMax=$dtMax.")
 
         // Do a reverse chronological search and make sure the results are consistent with the forward search.
         time = time.addDays(+20.0)
         var maxDiff = 0.0
         i = numNewMoons - 1
         while (i >= 0) {
-            val result = searchMoonPhase(0.0, time, -40.0) ?:
-                fail("Failed to find new moon before $time")
-            val diff = 86400.0 * abs(result.ut - utList[i])
+            val result = searchMoonPhase(longitude, time, -40.0) ?:
+                fail("Failed to find phase $longitude before $time")
+            diff = 86400.0 * abs(result.ut - utList[i])
             if (diff > maxDiff) maxDiff = diff
             time = result.addDays(-0.1)
             --i
         }
 
-        if (maxDiff > 0.128)
-            fail("Excessive discrepancy in reverse search: $maxDiff seconds.")
+        if (maxDiff > 0.164)
+            fail("Excessive discrepancy in reverse search for phase $longitude: $maxDiff seconds.")
+
+        // Pick a pair of consecutive events from the middle of the list.
+        // Verify forward and backward searches work correctly from many intermediate times.
+        val nslots = 100
+        val k = numNewMoons / 2
+        val ut1 = utList[k]
+        val ut2 = utList[k+1]
+        i = 1
+        while (i < nslots) {
+            val ut = ut1 + (i.toDouble() / nslots)*(ut2 - ut1)
+            time = Time(ut)
+            val before = searchMoonPhase(longitude, time, -40.0) ?:
+                fail("Backward search failed for phase $longitude from $time")
+            diff = 86400.0 * abs(before.ut - ut1)
+            if (diff > 0.07)
+                fail("Backward search error = $diff seconds for phase $longitude from $time")
+            val after = searchMoonPhase(longitude, time, +40.0) ?:
+                fail("Forward search failed for phase $longitude from $time")
+            diff = 86400.0 * abs(after.ut - ut2)
+            if (diff > 0.07)
+                fail("Forward search error = $diff seconds for phase $longitude from $time")
+            ++i
+        }
+    }
+
+    @Test
+    fun `Reverse moon phase search`() {
+        ReverseMoon(0.0)
+        ReverseMoon(90.0)
+        ReverseMoon(180.0)
+        ReverseMoon(270.0)
     }
 
     //----------------------------------------------------------------------------------------
