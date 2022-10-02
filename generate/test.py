@@ -2487,7 +2487,7 @@ def MoonNodes():
 
 #-----------------------------------------------------------------------------------------------------------
 
-def MoonReverse():
+def MoonReversePhase(longitude):
     # Verify that SearchMoonPhase works both forward and backward in time.
     numNewMoons = 5000
     utList = []
@@ -2497,9 +2497,9 @@ def MoonReverse():
     # Search forward in time from 1800 to find consecutive new moon events.
     time = astronomy.Time.Make(1800, 1, 1, 0, 0, 0.0)
     for i in range(numNewMoons):
-        result = astronomy.SearchMoonPhase(0.0, time, +40.0)
+        result = astronomy.SearchMoonPhase(longitude, time, +40.0)
         if result is None:
-            print('PY MoonReverse(i={}): failed to find new moon after {}'.format(i, time))
+            print('PY MoonReversePhase(lon={}, i={}): failed to find event after {}'.format(longitude, i, time))
             return 1
         utList.append(result.ut)
         if i > 0:
@@ -2511,29 +2511,66 @@ def MoonReverse():
                 dtMax = dt
         time = result.AddDays(+0.1)
 
-    Debug('PY MoonReverse: dtMin={:0.3f} days, dtMax={:0.3f} days.'.format(dtMin, dtMax))
-    if (dtMin < 29.273) or (dtMax > 29.832):
-        print('PY MoonReverse: Time between consecutive new moons is suspicious.')
+    Debug('PY MoonReversePhase({}): dtMin={:0.6f} days, dtMax={:0.6f} days.'.format(longitude, dtMin, dtMax))
+    if (dtMin < 29.175) or (dtMax > 29.926):
+        print('PY MoonReversePhase({}): Time between consecutive events is suspicious.'.format(longitude))
         return 1
 
     # Do a reverse chronological search and make sure the results are consistent with the forward search.
     time = time.AddDays(20.0)
     maxDiff = 0.0
     for i in range(numNewMoons-1, -1, -1):
-        result = astronomy.SearchMoonPhase(0.0, time, -40.0)
+        result = astronomy.SearchMoonPhase(longitude, time, -40.0)
         if result is None:
-            print('PY MoonReverse(i={}): failed to find new moon before {}'.format(i, time))
+            print('PY MoonReversePhase(lon={}, i={}): failed to find event before {}'.format(longitude, i, time))
             return 1
-        diff = SECONDS_PER_DAY * abs(result.ut - utList[i])
+        diff = SECONDS_PER_DAY * vabs(result.ut - utList[i])
         if diff > maxDiff:
             maxDiff = diff
         time = result.AddDays(-0.1)
 
-    print('PY MoonReverse: Maximum discrepancy in reverse search = {:0.3f} seconds.'.format(maxDiff))
-    if maxDiff > 0.128:
-        print('PY MoonReverse: EXCESSIVE DISCREPANCY in reverse search.')
+    Debug('PY MoonReversePhase({}): Maximum discrepancy in reverse search = {:0.6f} seconds.'.format(longitude, maxDiff))
+    if maxDiff > 0.164:
+        print('PY MoonReversePhase({}): EXCESSIVE DISCREPANCY in reverse search.'.format(longitude))
         return 1
+
+    # Pick a pair of consecutive events from the middle of the list.
+    # Verify forward and backward search works correctly from many intermediate times.
+    nslots = 100
+    k = numNewMoons // 2
+    ut1 = utList[k]
+    ut2 = utList[k+1]
+    for i in range(1, nslots):
+        ut = ut1 + (i/nslots)*(ut2 - ut1)
+        time = astronomy.Time(ut)
+        before = astronomy.SearchMoonPhase(longitude, time, -40.0)
+        if before is None:
+            print('PY MoonReversePhase(lon={}, time={}): backward search failed'.format(longitude, time))
+            return 1
+        diff = SECONDS_PER_DAY * vabs(before.ut - ut1)
+        if diff > 0.07:
+            print('PY MoonReversePhase(lon={}, time={}): backward search error = {:0.4e} seconds'.format(longitude, time, diff))
+            return 1
+        after = astronomy.SearchMoonPhase(longitude, time, +40.0)
+        if after is None:
+            print('PY MoonReversePhase(lon={}, time={}): forward search failed'.format(longitude, time))
+            return 1
+        diff = SECONDS_PER_DAY * vabs(after.ut - ut2)
+        if diff > 0.07:
+            print('PY MoonReversePhase(lon={}, time={}): forward search error = {:0.4e} seconds'.format(longitude, time, diff))
+            return 1
+
+    print('PY MoonReversePhase({}): PASS'.format(longitude))
     return 0
+
+
+def MoonReverse():
+    return (
+        MoonReversePhase(0.0) or
+        MoonReversePhase(90.0) or
+        MoonReversePhase(180.0) or
+        MoonReversePhase(270.0)
+    )
 
 #-----------------------------------------------------------------------------------------------------------
 
