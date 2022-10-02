@@ -1143,11 +1143,11 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-static int MoonReverse(void)
+static int MoonReversePhase(double longitude)
 {
     /* Verify that Astronomy_SearchMoonPhase works both forward and backward in time. */
 
-    const int numNewMoons = 5000;   /* approximately 400 years worth */
+    const int nphases = 5000;   /* approximately 400 years worth */
     int error = 1;
     int i;
     astro_time_t time;
@@ -1156,22 +1156,25 @@ static int MoonReverse(void)
     double dtMin = +1000.0;
     double dtMax = -1000.0;
     double diff, maxDiff = 0.0;
+    const int nslots = 100;
+    int k;
+    double ut, ut1, ut2;
 
-    /* Allocate memory to hold times of consecutive new moons. */
-    utList = (double *)calloc(numNewMoons, sizeof(utList[0]));
+    /* Allocate memory to hold times of consecutive moon phases. */
+    utList = (double *)calloc(nphases, sizeof(utList[0]));
     if (utList == NULL)
-        FAIL("C MoonReverse: cannot allocate memory\n");
+        FAIL("C MoonReverse(%0.0lf): cannot allocate memory\n", longitude);
 
     /* Search forward in time from 1800 to find consecutive new moon events. */
     time = Astronomy_MakeTime(1800, 1, 1, 0, 0, 0.0);
-    for (i = 0; i < numNewMoons; ++i)
+    for (i = 0; i < nphases; ++i)
     {
-        result = Astronomy_SearchMoonPhase(0.0, time, +40.0);
+        result = Astronomy_SearchMoonPhase(longitude, time, +40.0);
         CHECK_STATUS(result);
         utList[i] = result.time.ut;
         if (i > 0)
         {
-            /* Verify that consecutive new moons are reasonably close to the synodic period (29.5 days) apart. */
+            /* Verify that consecutive events are reasonably close to the synodic period (29.5 days) apart. */
             double dt = V(utList[i] - utList[i-1]);
             if (dt < dtMin) dtMin = dt;
             if (dt > dtMax) dtMax = dt;
@@ -1179,30 +1182,71 @@ static int MoonReverse(void)
         time = Astronomy_AddDays(result.time, +0.1);
     }
 
-    DEBUG("C MoonReverse: dtMin=%0.3lf days, dtMax=%0.3lf days.\n", dtMin, dtMax);
-    if (dtMin < 29.273 || dtMax > 29.832)
+    DEBUG("C MoonReverse(%0.0lf): dtMin=%0.3lf days, dtMax=%0.3lf days.\n", longitude, dtMin, dtMax);
+    if (dtMin < 29.175 || dtMax > 29.926)
         FAIL("C MoonReverse: Time between consecutive new moons is suspicious.\n");
 
     /* Do a reverse chronological search and make sure the results are consistent with the forward search. */
     time = Astronomy_AddDays(time, 20.0);
-    for (i = numNewMoons-1; i >= 0; --i)
+    for (i = nphases-1; i >= 0; --i)
     {
-        result = Astronomy_SearchMoonPhase(0.0, time, -40.0);
+        result = Astronomy_SearchMoonPhase(longitude, time, -40.0);
         CHECK_STATUS(result);
         diff = SECONDS_PER_DAY * ABS(result.time.ut - utList[i]);
         if (diff > maxDiff) maxDiff = diff;
         time = Astronomy_AddDays(result.time, -0.1);
     }
 
-    printf("C MoonReverse: Maximum discrepancy in reverse search = %0.3lf seconds.\n", maxDiff);
-    if (maxDiff > 0.128)
+    DEBUG("C MoonReverse(%0.0lf): Maximum discrepancy in reverse search = %0.3lf seconds.\n", longitude, maxDiff);
+    if (maxDiff > 0.165)
         FAIL("C MoonReverse: EXCESSIVE DISCREPANCY in reverse search.\n");
-    error = 0;
 
+    /* Pick a pair of consecutive events from the middle of the list. */
+    /* Verify forward and backward searches work correctly from many intermediate times. */
+    k = nphases / 2;
+    ut1 = utList[k];
+    ut2 = utList[k+1];
+    for (i = 1; i < nslots; ++i)
+    {
+        ut = ut1 + ((double)i/nslots)*(ut2 - ut1);
+        time = Astronomy_TimeFromDays(ut);
+
+        result = Astronomy_SearchMoonPhase(longitude, time, -40.0);
+        CHECK_STATUS(result);
+        diff = SECONDS_PER_DAY * ABS(result.time.ut - ut1);
+        if (diff > 0.07)
+        {
+            printf("C MoonReverse(%0.0lf): backward search error = %0.4le seconds.\n", longitude, diff);
+            return 1;
+        }
+
+        result = Astronomy_SearchMoonPhase(longitude, time, +40.0);
+        CHECK_STATUS(result);
+        diff = SECONDS_PER_DAY * ABS(result.time.ut - ut2);
+        if (diff > 0.07)
+        {
+            printf("C MoonReverse(%0.0lf): forward search error = %0.4le seconds.\n", longitude, diff);
+            return 1;
+        }
+    }
+
+    printf("C MoonReverse(%0.0lf): PASS\n", longitude);
+    error = 0;
 fail:
     free(utList);
     return error;
 }
+
+
+static int MoonReverse(void)
+{
+    return
+        MoonReversePhase(  0.0) ||
+        MoonReversePhase( 90.0) ||
+        MoonReversePhase(180.0) ||
+        MoonReversePhase(270.0);
+}
+
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
