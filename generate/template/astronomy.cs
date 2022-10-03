@@ -1498,13 +1498,11 @@ namespace CosineKitty
 
         public override double Eval(AstroTime time)
         {
-            /*
-                The Search() function finds a transition from negative to positive values.
-                The derivative of magnitude y with respect to time t (dy/dt)
-                is negative as an object gets brighter, because the magnitude numbers
-                get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
-                dy/dt > 0.
-            */
+            // The Search() function finds a transition from negative to positive values.
+            // The derivative of magnitude y with respect to time t (dy/dt)
+            // is negative as an object gets brighter, because the magnitude numbers
+            // get smaller. At peak magnitude dy/dt = 0, then as the object gets dimmer,
+            // dy/dt > 0.
             const double dt = 0.01;
             AstroTime t1 = time.AddDays(-dt/2);
             AstroTime t2 = time.AddDays(+dt/2);
@@ -1632,20 +1630,18 @@ namespace CosineKitty
 
         public override double Eval(AstroTime time)
         {
-            /*
-                Return the angular altitude above or below the horizon
-                of the highest part (the peak) of the given object.
-                This is defined as the apparent altitude of the center of the body plus
-                the body's angular radius.
-                The 'direction' parameter controls whether the angle is measured
-                positive above the horizon or positive below the horizon,
-                depending on whether the caller wants rise times or set times, respectively.
-            */
+            // Return the angular altitude above or below the horizon
+            // of the highest part (the peak) of the given object.
+            // This is defined as the apparent altitude of the center of the body plus
+            // the body's angular radius.
+            // The 'direction' parameter controls whether the angle is measured
+            // positive above the horizon or positive below the horizon,
+            // depending on whether the caller wants rise times or set times, respectively.
 
             Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
 
-            /* We calculate altitude without refraction, then add fixed refraction near the horizon. */
-            /* This gives us the time of rise/set without the extra work. */
+            // We calculate altitude without refraction, then add fixed refraction near the horizon.
+            // This gives us the time of rise/set without the extra work.
             Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
 
             return direction * (hor.altitude + Astronomy.RAD2DEG*(body_radius_au / ofdate.dist) + Astronomy.REFRACTION_NEAR_HORIZON);
@@ -1874,7 +1870,7 @@ namespace CosineKitty
 
         static double Sine(double phi)
         {
-            /* sine, of phi in revolutions, not radians */
+            // sine, of phi in revolutions, not radians
             return Math.Sin(2.0 * Math.PI * phi);
         }
 
@@ -2618,7 +2614,7 @@ $ASTRO_ADDSOL()
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
         internal const double PI2 = 2.0 * Math.PI;
-        internal const double ARC = 3600.0 * 180.0 / Math.PI;       /* arcseconds per radian */
+        internal const double ARC = 3600.0 * 180.0 / Math.PI;       // arcseconds per radian
 
         internal const double SUN_RADIUS_KM  = 695700.0;
         internal const double SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU;
@@ -2627,8 +2623,8 @@ $ASTRO_ADDSOL()
         internal const double EARTH_EQUATORIAL_RADIUS_KM = 6378.1366;
         internal const double EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU;
         internal const double EARTH_POLAR_RADIUS_KM = EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING;
-        internal const double EARTH_MEAN_RADIUS_KM = 6371.0;    /* mean radius of the Earth's geoid, without atmosphere */
-        internal const double EARTH_ATMOSPHERE_KM = 88.0;       /* effective atmosphere thickness for lunar eclipses */
+        internal const double EARTH_MEAN_RADIUS_KM = 6371.0;    // mean radius of the Earth's geoid, without atmosphere
+        internal const double EARTH_ATMOSPHERE_KM = 88.0;       // effective atmosphere thickness for lunar eclipses
         internal const double EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM;
 
         internal const double MOON_EQUATORIAL_RADIUS_KM = 1738.1;
@@ -2639,26 +2635,24 @@ $ASTRO_ADDSOL()
         private const double ANGVEL = 7.2921150e-5;
         private const double SECONDS_PER_DAY = 24.0 * 3600.0;
         private const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
-        private const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
+        private const double MEAN_SYNODIC_MONTH = 29.530588;     // average number of days for Moon to return to the same phase
         private const double EARTH_ORBITAL_PERIOD = 365.256;
         private const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
-        internal const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
-        private const double ASEC180 = 180.0 * 60.0 * 60.0;         /* arcseconds per 180 degrees (or pi radians) */
-        private const double AU_PER_PARSEC = (ASEC180 / Math.PI);   /* exact definition of how many AU = one parsec */
+        internal const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   //  degrees of refractive "lift" seen for objects near horizon
+        private const double ASEC180 = 180.0 * 60.0 * 60.0;         // arcseconds per 180 degrees (or pi radians)
+        private const double AU_PER_PARSEC = (ASEC180 / Math.PI);   // exact definition of how many AU = one parsec
         private const double EARTH_MOON_MASS_RATIO = 81.30056;
 
-        /*
-            Masses of the Sun and outer planets, used for:
-            (1) Calculating the Solar System Barycenter
-            (2) Integrating the movement of Pluto
-
-            https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
-
-            Page 10 in the above document describes the constants used in the DE405 ephemeris.
-            The following are G*M values (gravity constant * mass) in [au^3 / day^2].
-            This side-steps issues of not knowing the exact values of G and masses M[i];
-            the products GM[i] are known extremely accurately.
-        */
+        //  Masses of the Sun and outer planets, used for:
+        //  (1) Calculating the Solar System Barycenter
+        //  (2) Integrating the movement of Pluto
+        //
+        //  https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+        //
+        //  Page 10 in the above document describes the constants used in the DE405 ephemeris.
+        //  The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+        //  This side-steps issues of not knowing the exact values of G and masses M[i];
+        //  the products GM[i] are known extremely accurately.
         internal const double SUN_GM     = 0.2959122082855911e-03;
         internal const double MERCURY_GM = 0.4912547451450812e-10;
         internal const double VENUS_GM   = 0.7243452486162703e-09;
@@ -2819,18 +2813,16 @@ $ASTRO_CSHARP_VSOP(Neptune)
         /// <returns>The estimated difference TT-UT on the given date, expressed in seconds.</returns>
         public static double DeltaT_EspenakMeeus(double ut)
         {
-            /*
-                Fred Espenak writes about Delta-T generically here:
-                https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
-                https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
-
-                He provides polynomial approximations for distant years here:
-                https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
-
-                They start with a year value 'y' such that y=2000 corresponds
-                to the UTC Date 15-January-2000. Convert difference in days
-                to mean tropical years.
-            */
+            // Fred Espenak writes about Delta-T generically here:
+            // https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
+            // https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
+            //
+            // He provides polynomial approximations for distant years here:
+            // https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+            //
+            // They start with a year value 'y' such that y=2000 corresponds
+            // to the UTC Date 15-January-2000. Convert difference in days
+            // to mean tropical years.
             double u, u2, u3, u4, u5, u6, u7;
             double y = 2000 + ((ut - 14) / DAYS_PER_TROPICAL_YEAR);
             if (y < -500)
@@ -2915,7 +2907,7 @@ $ASTRO_CSHARP_VSOP(Neptune)
                 return -20.0 + 32.0*u*u - 0.5628*(2150 - y);
             }
 
-            /* all years after 2150 */
+            // all years after 2150
             u = (y - 1820) / 100;
             return -20 + (32 * u*u);
         }
@@ -2988,24 +2980,24 @@ $ASTRO_CSHARP_VSOP(Neptune)
 
         private static AstroVector CalcVsop(vsop_model_t model, AstroTime time)
         {
-            double t = time.tt / DAYS_PER_MILLENNIUM;    /* millennia since 2000 */
+            double t = time.tt / DAYS_PER_MILLENNIUM;    // millennia since 2000
 
-            /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
+            // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
             double lon = VsopFormulaCalc(model.lon, t, true);
             double lat = VsopFormulaCalc(model.lat, t, false);
             double rad = VsopFormulaCalc(model.rad, t, false);
 
-            /* Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates. */
+            // Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates.
             TerseVector eclip = VsopSphereToRect(lon, lat, rad);
 
-            /* Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates. */
+            // Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates.
             return VsopRotate(eclip).ToAstroVector(time);
         }
 
         private static double VsopDerivCalc(vsop_formula_t formula, double t)
         {
-            double tpower = 1.0;        /* t^s */
-            double dpower = 0.0;        /* t^(s-1) */
+            double tpower = 1.0;        // t^s
+            double dpower = 0.0;        // t^(s-1)
             double deriv = 0.0;
             for (int s=0; s < formula.series.Length; ++s)
             {
@@ -3056,9 +3048,9 @@ $ASTRO_CSHARP_VSOP(Neptune)
 
         private static body_state_t CalcVsopPosVel(vsop_model_t model, double tt)
         {
-            double t = tt / DAYS_PER_MILLENNIUM;    /* millennia since 2000 */
+            double t = tt / DAYS_PER_MILLENNIUM;    // millennia since 2000
 
-            /* Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates. */
+            // Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
             double lon = VsopFormulaCalc(model.lon, t, true);
             double lat = VsopFormulaCalc(model.lat, t, false);
             double rad = VsopFormulaCalc(model.rad, t, false);
@@ -3069,8 +3061,8 @@ $ASTRO_CSHARP_VSOP(Neptune)
             double dlat_dt = VsopDerivCalc(model.lat, t);
             double drad_dt = VsopDerivCalc(model.rad, t);
 
-            /* Use spherical coords and spherical derivatives to calculate */
-            /* the velocity vector in rectangular coordinates. */
+            // Use spherical coords and spherical derivatives to calculate
+            // the velocity vector in rectangular coordinates.
 
             double coslon = Math.Cos(lon);
             double sinlon = Math.Sin(lon);
@@ -3091,13 +3083,13 @@ $ASTRO_CSHARP_VSOP(Neptune)
                 + (drad_dt * sinlat)
                 + (rad * coslat * dlat_dt);
 
-            /* Convert speed units from [AU/millennium] to [AU/day]. */
+            // Convert speed units from [AU/millennium] to [AU/day].
             var eclip_vel = new TerseVector(
                 vx / DAYS_PER_MILLENNIUM,
                 vy / DAYS_PER_MILLENNIUM,
                 vz / DAYS_PER_MILLENNIUM);
 
-            /* Rotate the vectors from ecliptic to equatorial coordinates. */
+            // Rotate the vectors from ecliptic to equatorial coordinates.
             TerseVector equ_pos = VsopRotate(eclip_pos);
             TerseVector equ_vel = VsopRotate(eclip_vel);
             return new body_state_t(tt, equ_pos, equ_vel);
@@ -3281,18 +3273,18 @@ $ASTRO_PLUTO_TABLE();
                 body_grav_calc_t s1 = seg[left];
                 body_grav_calc_t s2 = seg[left+1];
 
-                /* Find mean acceleration vector over the interval. */
+                // Find mean acceleration vector over the interval.
                 TerseVector acc = (s1.a + s2.a) / 2.0;
 
-                /* Use Newtonian mechanics to extrapolate away from t1 in the positive time direction. */
+                // Use Newtonian mechanics to extrapolate away from t1 in the positive time direction.
                 TerseVector ra = UpdatePosition(time.tt - s1.tt, s1.r, s1.v, acc);
                 TerseVector va = UpdateVelocity(time.tt - s1.tt, s1.v, acc);
 
-                /* Use Newtonian mechanics to extrapolate away from t2 in the negative time direction. */
+                // Use Newtonian mechanics to extrapolate away from t2 in the negative time direction.
                 TerseVector rb = UpdatePosition(time.tt - s2.tt, s2.r, s2.v, acc);
                 TerseVector vb = UpdateVelocity(time.tt - s2.tt, s2.v, acc);
 
-                /* Use fade in/out idea to blend the two position estimates. */
+                // Use fade in/out idea to blend the two position estimates.
                 double ramp = (time.tt - s1.tt)/PLUTO_DT;
                 calc.r = (1 - ramp)*ra + ramp*rb;
                 calc.v = (1 - ramp)*va + ramp*vb;
@@ -3390,7 +3382,7 @@ $ASTRO_JUPITER_MOONS();
 
             double t = time.tt + 18262.5;     // number of days since 1950-01-01T00:00:00Z
 
-            /* Calculate 6 orbital elements at the given time t. */
+            // Calculate 6 orbital elements at the given time t.
             double elem0 = 0.0;
             foreach (vsop_term_t term in m.a)
                 elem0 += term.amplitude * Math.Cos(term.phase + (t * term.frequency));
@@ -3603,7 +3595,7 @@ $ASTRO_IAU_DATA()
 
         private static void iau2000b(AstroTime time)
         {
-            /* Adapted from the NOVAS C 3.1 function of the same name. */
+            // Adapted from the NOVAS C 3.1 function of the same name.
 
             double t, el, elp, f, d, om, arg, dp, de, sarg, carg;
             int i;
@@ -3655,7 +3647,7 @@ $ASTRO_IAU_DATA()
             return new earth_tilt_t(time.tt, time.psi, time.eps, ee, mobl, tobl);
         }
 
-        private static double era(double ut)        /* Earth Rotation Angle */
+        private static double era(double ut)        // Earth Rotation Angle
         {
             double thet1 = 0.7790572732640 + 0.00273781191135448 * ut;
             double thet3 = ut % 1.0;
@@ -3696,7 +3688,7 @@ $ASTRO_IAU_DATA()
             if (double.IsNaN(time.st))
             {
                 double t = time.tt / 36525.0;
-                double eqeq = 15.0 * e_tilt(time).ee;    /* Replace with eqeq=0 to get GMST instead of GAST (if we ever need it) */
+                double eqeq = 15.0 * e_tilt(time).ee;    // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
                 double theta = era(time.ut);
                 double st = (eqeq + 0.014506 +
                     (((( -    0.0000000368  * t
@@ -3718,40 +3710,40 @@ $ASTRO_IAU_DATA()
         {
             double lon_deg, lat_deg, height_km;
 
-            /* Convert from AU to kilometers. */
+            // Convert from AU to kilometers.
             double x = ovec.x * KM_PER_AU;
             double y = ovec.y * KM_PER_AU;
             double z = ovec.z * KM_PER_AU;
             double p = Math.Sqrt(x*x + y*y);
             if (p < 1.0e-6)
             {
-                /* Special case: within 1 millimeter of a pole! */
-                /* Use arbitrary longitude, and latitude determined by polarity of z. */
+                // Special case: within 1 millimeter of a pole!
+                // Use arbitrary longitude, and latitude determined by polarity of z.
                 lon_deg = 0.0;
                 lat_deg = (z > 0.0) ? +90.0 : -90.0;
-                /* Elevation is calculated directly from z */
+                // Elevation is calculated directly from z
                 height_km = Math.Abs(z) - EARTH_POLAR_RADIUS_KM;
             }
             else
             {
                 double stlocl = Math.Atan2(y, x);
                 double st = SiderealTime(ovec.t);
-                /* Calculate exact longitude. */
+                // Calculate exact longitude.
                 lon_deg = RAD2DEG*stlocl - (15.0 * st);
-                /* Normalize longitude to the range (-180, +180]. */
+                // Normalize longitude to the range (-180, +180].
                 while (lon_deg <= -180.0)
                     lon_deg += 360.0;
                 while (lon_deg > +180.0)
                     lon_deg -= 360.0;
-                /* Numerically solve for exact latitude, using Newton's Method. */
+                // Numerically solve for exact latitude, using Newton's Method.
                 double F = EARTH_FLATTENING * EARTH_FLATTENING;
-                /* Start with initial latitude estimate, based on a spherical Earth. */
+                // Start with initial latitude estimate, based on a spherical Earth.
                 double lat = Math.Atan2(z, p);
                 double c, s, denom;
                 for(;;)
                 {
-                    /* Calculate the error function W(lat). */
-                    /* We try to find the root of W, meaning where the error is 0. */
+                    // Calculate the error function W(lat).
+                    // We try to find the root of W, meaning where the error is 0.
                     c = Math.Cos(lat);
                     s = Math.Sin(lat);
                     double factor = (F-1)*EARTH_EQUATORIAL_RADIUS_KM;
@@ -3761,16 +3753,16 @@ $ASTRO_IAU_DATA()
                     denom = Math.Sqrt(radicand);
                     double W = (factor*s*c)/denom - z*c + p*s;
                     if (Math.Abs(W) < 1.0e-12)
-                        break;  /* The error is now negligible. */
-                    /* Error is still too large. Find the next estimate. */
-                    /* Calculate D = the derivative of W with respect to lat. */
+                        break;  // The error is now negligible.
+                    // Error is still too large. Find the next estimate.
+                    // Calculate D = the derivative of W with respect to lat.
                     double D = factor*((c2 - s2)/denom - s2*c2*(F-1)/(factor*radicand)) + z*s + p*c;
                     lat -= W/D;
                 }
-                /* We now have a solution for the latitude in radians. */
+                // We now have a solution for the latitude in radians.
                 lat_deg = lat * RAD2DEG;
-                /* Solve for exact height in kilometers. */
-                /* There are two formulas I can use. Use whichever has the less risky denominator. */
+                // Solve for exact height in kilometers.
+                // There are two formulas I can use. Use whichever has the less risky denominator.
                 double adjust = EARTH_EQUATORIAL_RADIUS_KM / denom;
                 if (Math.Abs(s) > Math.Abs(c))
                     height_km = z/s - F*adjust;
@@ -3950,7 +3942,7 @@ $ASTRO_IAU_DATA()
             var context = new MoonContext(time.tt / 36525.0);
             MoonResult moon = context.CalcMoon();
 
-            /* Convert geocentric ecliptic spherical coordinates to Cartesian coordinates. */
+            // Convert geocentric ecliptic spherical coordinates to Cartesian coordinates.
             double dist_cos_lat = moon.distance_au * Math.Cos(moon.geo_eclip_lat);
 
             var gepos = new AstroVector(
@@ -3960,10 +3952,10 @@ $ASTRO_IAU_DATA()
                 time
             );
 
-            /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
+            // Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
             AstroVector mpos1 = ecl2equ_vec(gepos);
 
-            /* Convert from mean equinox of date to J2000. */
+            // Convert from mean equinox of date to J2000.
             AstroVector mpos2 = precession(mpos1, PrecessDirection.Into2000);
 
             return mpos2;
@@ -4315,7 +4307,7 @@ $ASTRO_IAU_DATA()
                     return VsopFormulaCalc(vsop[(int)body].rad, time.tt / DAYS_PER_MILLENNIUM, false);
 
                 default:
-                    /* For non-VSOP objects, fall back to taking the length of the heliocentric vector. */
+                    // For non-VSOP objects, fall back to taking the length of the heliocentric vector.
                     return HelioVector(body, time).Length();
             }
         }
@@ -5114,19 +5106,19 @@ $ASTRO_IAU_DATA()
         /// </returns>
         public static Ecliptic SunPosition(AstroTime time)
         {
-            /* Correct for light travel time from the Sun. */
-            /* Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes! */
+            // Correct for light travel time from the Sun.
+            // Otherwise season calculations (equinox, solstice) will all be early by about 8 minutes!
             AstroTime adjusted_time = time.AddDays(-1.0 / C_AUDAY);
 
             AstroVector earth2000 = CalcEarth(adjusted_time);
 
-            /* Convert heliocentric location of Earth to geocentric location of Sun. */
+            // Convert heliocentric location of Earth to geocentric location of Sun.
             AstroVector sun2000 = new AstroVector(-earth2000.x, -earth2000.y, -earth2000.z, adjusted_time);
 
-            /* Convert to equatorial Cartesian coordinates of date. */
+            // Convert to equatorial Cartesian coordinates of date.
             AstroVector sun_ofdate = gyration(sun2000, PrecessDirection.From2000);
 
-            /* Convert equatorial coordinates to ecliptic coordinates. */
+            // Convert equatorial coordinates to ecliptic coordinates.
             double true_obliq = DEG2RAD * e_tilt(adjusted_time).tobl;
             return RotateEquatorialToEcliptic(sun_ofdate, true_obliq);
         }
@@ -5170,8 +5162,8 @@ $ASTRO_IAU_DATA()
         /// <returns>Ecliptic coordinates in the J2000 frame of reference.</returns>
         public static Ecliptic EquatorialToEcliptic(AstroVector equ)
         {
-            /* Based on NOVAS functions equ2ecl() and equ2ecl_vec(). */
-            const double ob2000 = 0.40909260059599012;   /* mean obliquity of the J2000 ecliptic in radians */
+            // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
+            const double ob2000 = 0.40909260059599012;   // mean obliquity of the J2000 ecliptic in radians
             return RotateEquatorialToEcliptic(equ, ob2000);
         }
 
@@ -5359,18 +5351,18 @@ $ASTRO_IAU_DATA()
                 AstroTime tmid = t1.AddDays(dt);
                 if (Math.Abs(dt) < dt_days)
                 {
-                    /* We are close enough to the event to stop the search. */
+                    // We are close enough to the event to stop the search.
                     return tmid;
                 }
 
                 if (calc_fmid)
                     fmid = func.Eval(tmid);
                 else
-                    calc_fmid = true;   /* we already have the correct value of fmid from the previous loop */
+                    calc_fmid = true;   // we already have the correct value of fmid from the previous loop
 
-                /* Quadratic interpolation: */
-                /* Try to find a parabola that passes through the 3 points we have sampled: */
-                /* (t1,f1), (tmid,fmid), (t2,f2) */
+                // Quadratic interpolation:
+                // Try to find a parabola that passes through the 3 points we have sampled:
+                // (t1,f1), (tmid,fmid), (t2,f2)
 
                 double q_ut, q_df_dt;
                 if (QuadInterp(tmid.ut, t2.ut - tmid.ut, f1, fmid, f2, out q_ut, out q_df_dt))
@@ -5382,11 +5374,11 @@ $ASTRO_IAU_DATA()
                         double dt_guess = Math.Abs(fq / q_df_dt);
                         if (dt_guess < dt_days)
                         {
-                            /* The estimated time error is small enough that we can quit now. */
+                            // The estimated time error is small enough that we can quit now.
                             return tq;
                         }
 
-                        /* Try guessing a tighter boundary with the interpolated root at the center. */
+                        // Try guessing a tighter boundary with the interpolated root at the center.
                         dt_guess *= 1.2;
                         if (dt_guess < dt/10.0)
                         {
@@ -5405,7 +5397,7 @@ $ASTRO_IAU_DATA()
                                         t1 = tleft;
                                         t2 = tright;
                                         fmid = fq;
-                                        calc_fmid = false;  /* save a little work -- no need to re-calculate fmid next time around the loop */
+                                        calc_fmid = false;  // save a little work -- no need to re-calculate fmid next time around the loop
                                         continue;
                                     }
                                 }
@@ -5414,8 +5406,8 @@ $ASTRO_IAU_DATA()
                     }
                 }
 
-                /* After quadratic interpolation attempt. */
-                /* Now just divide the region in two parts and pick whichever one appears to contain a root. */
+                // After quadratic interpolation attempt.
+                // Now just divide the region in two parts and pick whichever one appears to contain a root.
                 if (f1 < 0.0 && fmid >= 0.0)
                 {
                     t2 = tmid;
@@ -5430,8 +5422,8 @@ $ASTRO_IAU_DATA()
                     continue;
                 }
 
-                /* Either there is no ascending zero-crossing in this range */
-                /* or the search window is too wide (more than one zero-crossing). */
+                // Either there is no ascending zero-crossing in this range
+                // or the search window is too wide (more than one zero-crossing).
                 return null;
             }
         }
@@ -5452,19 +5444,19 @@ $ASTRO_IAU_DATA()
 
             if (Q == 0.0)
             {
-                /* This is a line, not a parabola. */
+                // This is a line, not a parabola.
                 if (R == 0.0)
-                    return false;       /* This is a HORIZONTAL line... can't make progress! */
+                    return false;       // This is a HORIZONTAL line... can't make progress!
                 x = -S / R;
                 if (x < -1.0 || x > +1.0)
-                    return false;   /* out of bounds */
+                    return false;   // out of bounds
             }
             else
             {
-                /* This really is a parabola. Find roots x1, x2. */
+                // This really is a parabola. Find roots x1, x2.
                 u = R*R - 4*Q*S;
                 if (u <= 0.0)
-                    return false;   /* can't solve if imaginary, or if vertex of parabola is tangent. */
+                    return false;   // can't solve if imaginary, or if vertex of parabola is tangent.
 
                 ru = Math.Sqrt(u);
                 x1 = (-R + ru) / (2.0 * Q);
@@ -5472,18 +5464,18 @@ $ASTRO_IAU_DATA()
                 if (-1.0 <= x1 && x1 <= +1.0)
                 {
                     if (-1.0 <= x2 && x2 <= +1.0)
-                        return false;   /* two roots are within bounds; we require a unique zero-crossing. */
+                        return false;   // two roots are within bounds; we require a unique zero-crossing.
                     x = x1;
                 }
                 else if (-1.0 <= x2 && x2 <= +1.0)
                     x = x2;
                 else
-                    return false;   /* neither root is within bounds */
+                    return false;   // neither root is within bounds
             }
 
             out_t = tm + x*dt;
             out_df_dt = (2*Q*x + R) / dt;
-            return true;   /* success */
+            return true;   // success
         }
 
         ///
@@ -5596,7 +5588,7 @@ $ASTRO_IAU_DATA()
 
             AstroTime time = mq.time.AddDays(6.0);
             MoonQuarterInfo next_mq = SearchMoonQuarter(time);
-            /* Verify that we found the expected moon quarter. */
+            // Verify that we found the expected moon quarter.
             if (next_mq.quarter != (1 + mq.quarter) % 4)
                 throw new InternalError("found the wrong moon quarter.");
             return next_mq;
@@ -5659,17 +5651,15 @@ $ASTRO_IAU_DATA()
         /// </returns>
         public static AstroTime SearchMoonPhase(double targetLon, AstroTime startTime, double limitDays)
         {
-            /*
-                To avoid discontinuities in the moon_offset function causing problems,
-                we need to approximate when that function will next return 0.
-                We probe it with the start time and take advantage of the fact
-                that every lunar phase repeats roughly every 29.5 days.
-                There is a surprising uncertainty in the quarter timing,
-                due to the eccentricity of the moon's orbit.
-                I have seen more than 0.9 days away from the simple prediction.
-                To be safe, we take the predicted time of the event and search
-                +/-1.5 days around it (a 3-day wide window).
-            */
+            // To avoid discontinuities in the moon_offset function causing problems,
+            // we need to approximate when that function will next return 0.
+            // We probe it with the start time and take advantage of the fact
+            // that every lunar phase repeats roughly every 29.5 days.
+            // There is a surprising uncertainty in the quarter timing,
+            // due to the eccentricity of the moon's orbit.
+            // I have seen more than 0.9 days away from the simple prediction.
+            // To be safe, we take the predicted time of the event and search
+            // +/-1.5 days around it (a 3-day wide window).
 
             const double uncertainty = 1.5;
             var moon_offset = new SearchContext_MoonOffset(targetLon);
@@ -5721,13 +5711,13 @@ $ASTRO_IAU_DATA()
             switch (direction)
             {
                 case Direction.Rise:
-                    ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
-                    ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
+                    ha_before = 12.0;   // minimum altitude (bottom) happens BEFORE the body rises.
+                    ha_after = 0.0;     // maximum altitude (culmination) happens AFTER the body rises.
                     break;
 
                 case Direction.Set:
-                    ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
-                    ha_after = 12.0;    /* bottom happens AFTER the body sets. */
+                    ha_before = 0.0;    // culmination happens BEFORE the body sets.
+                    ha_after = 12.0;    // bottom happens AFTER the body sets.
                     break;
 
                 default:
@@ -5813,13 +5803,13 @@ $ASTRO_IAU_DATA()
             switch (direction)
             {
                 case Direction.Rise:
-                    ha_before = 12.0;   /* minimum altitude (bottom) happens BEFORE the body rises. */
-                    ha_after = 0.0;     /* maximum altitude (culmination) happens AFTER the body rises. */
+                    ha_before = 12.0;   // minimum altitude (bottom) happens BEFORE the body rises.
+                    ha_after = 0.0;     // maximum altitude (culmination) happens AFTER the body rises.
                     break;
 
                 case Direction.Set:
-                    ha_before = 0.0;    /* culmination happens BEFORE the body sets. */
-                    ha_after = 12.0;    /* bottom happens AFTER the body sets. */
+                    ha_before = 0.0;    // culmination happens BEFORE the body sets.
+                    ha_after = 12.0;    // bottom happens AFTER the body sets.
                     break;
 
                 default:
@@ -6122,23 +6112,23 @@ $ASTRO_IAU_DATA()
                 }
                 else
                 {
-                    /* On subsequent iterations, we make the smallest possible adjustment, */
-                    /* either forward or backward in time. */
+                    // On subsequent iterations, we make the smallest possible adjustment,
+                    // either forward or backward in time.
                     if (delta_sidereal_hours < -12.0)
                         delta_sidereal_hours += 24.0;
                     else if (delta_sidereal_hours > +12.0)
                         delta_sidereal_hours -= 24.0;
                 }
 
-                /* If the error is tolerable (less than 0.1 seconds), the search has succeeded. */
+                // If the error is tolerable (less than 0.1 seconds), the search has succeeded.
                 if (Math.Abs(delta_sidereal_hours) * 3600.0 < 0.1)
                 {
                     Topocentric hor = Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.Normal);
                     return new HourAngleInfo(time, hor);
                 }
 
-                /* We need to loop another time to get more accuracy. */
-                /* Update the terrestrial time (in solar days) adjusting by sidereal time (sidereal hours). */
+                // We need to loop another time to get more accuracy.
+                // Update the terrestrial time (in solar days) adjusting by sidereal time (sidereal hours).
                 time = time.AddDays((delta_sidereal_hours / 24.0) * SOLAR_DAYS_PER_SIDEREAL_DAY);
             }
         }
@@ -6198,19 +6188,19 @@ $ASTRO_IAU_DATA()
             double syn = SynodicPeriod(body);
             int direction = IsSuperiorPlanet(body) ? +1 : -1;
 
-            /* Iterate until we converge on the desired event. */
-            /* Calculate the error angle, which will be a negative number of degrees, */
-            /* meaning we are "behind" the target relative longitude. */
+            // Iterate until we converge on the desired event.
+            // Calculate the error angle, which will be a negative number of degrees,
+            // meaning we are "behind" the target relative longitude.
 
             double error_angle = RelativeLongitudeOffset(body, startTime, direction, targetRelLon);
             if (error_angle > 0.0)
-                error_angle -= 360.0;    /* force searching forward in time */
+                error_angle -= 360.0;    // force searching forward in time
 
             AstroTime time = startTime;
             for (int iter = 0; iter < 100; ++iter)
             {
-                /* Estimate how many days in the future (positive) or past (negative) */
-                /* we have to go to get closer to the target relative longitude. */
+                // Estimate how many days in the future (positive) or past (negative)
+                // we have to go to get closer to the target relative longitude.
                 double day_adjust = (-error_angle/360.0) * syn;
                 time = time.AddDays(day_adjust);
                 if (Math.Abs(day_adjust) * SECONDS_PER_DAY < 1.0)
@@ -6220,9 +6210,9 @@ $ASTRO_IAU_DATA()
                 error_angle = RelativeLongitudeOffset(body, time, direction, targetRelLon);
                 if (Math.Abs(prev_angle) < 30.0 && (prev_angle != error_angle))
                 {
-                    /* Improve convergence for Mercury/Mars (eccentric orbits) */
-                    /* by adjusting the synodic period to more closely match the */
-                    /* variable speed of both planets in this part of their respective orbits. */
+                    // Improve convergence for Mercury/Mars (eccentric orbits)
+                    // by adjusting the synodic period to more closely match the
+                    // variable speed of both planets in this part of their respective orbits.
                     double ratio = prev_angle / (prev_angle - error_angle);
                     if (ratio > 0.5 && ratio < 2.0)
                         syn *= ratio;
@@ -6242,7 +6232,7 @@ $ASTRO_IAU_DATA()
 
         private static double SynodicPeriod(Body body)
         {
-            /* The Earth does not have a synodic period as seen from itself. */
+            // The Earth does not have a synodic period as seen from itself.
             if (body == Body.Earth)
                 throw new EarthNotAllowedException();
 
@@ -6280,7 +6270,7 @@ $ASTRO_IAU_DATA()
 
         private static double PlanetOrbitalPeriod(Body body)
         {
-            /* Returns the number of days it takes for a planet to orbit the Sun. */
+            // Returns the number of days it takes for a planet to orbit the Sun.
             switch (body)
             {
                 case Body.Mercury:  return     87.969;
@@ -6421,46 +6411,46 @@ $ASTRO_IAU_DATA()
             {
                 double plon = EclipticLongitude(body, startTime);
                 double elon = EclipticLongitude(Body.Earth, startTime);
-                double rlon = LongitudeOffset(plon - elon);     /* clamp to (-180, +180] */
+                double rlon = LongitudeOffset(plon - elon);     // clamp to (-180, +180]
 
-                /* The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees */
-                /* because there is a cusp there that causes a discontinuity in the derivative. */
-                /* So we need to guard against searching near such times. */
+                // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
+                // because there is a cusp there that causes a discontinuity in the derivative.
+                // So we need to guard against searching near such times.
                 double adjust_days, rlon_lo, rlon_hi;
                 if (rlon >= -s1 && rlon < +s1)
                 {
-                    /* Seek to the window [+s1, +s2]. */
+                    // Seek to the window [+s1, +s2].
                     adjust_days = 0.0;
-                    /* Search forward for the time t1 when rel lon = +s1. */
+                    // Search forward for the time t1 when rel lon = +s1.
                     rlon_lo = +s1;
-                    /* Search forward for the time t2 when rel lon = +s2. */
+                    // Search forward for the time t2 when rel lon = +s2.
                     rlon_hi = +s2;
                 }
                 else if (rlon > +s2 || rlon < -s2)
                 {
-                    /* Seek to the next search window at [-s2, -s1]. */
+                    // Seek to the next search window at [-s2, -s1].
                     adjust_days = 0.0;
-                    /* Search forward for the time t1 when rel lon = -s2. */
+                    // Search forward for the time t1 when rel lon = -s2.
                     rlon_lo = -s2;
-                    /* Search forward for the time t2 when rel lon = -s1. */
+                    // Search forward for the time t2 when rel lon = -s1.
                     rlon_hi = -s1;
                 }
                 else if (rlon >= 0.0)
                 {
-                    /* rlon must be in the middle of the window [+s1, +s2]. */
-                    /* Search BACKWARD for the time t1 when rel lon = +s1. */
+                    // rlon must be in the middle of the window [+s1, +s2].
+                    // Search BACKWARD for the time t1 when rel lon = +s1.
                     adjust_days = -syn / 4.0;
                     rlon_lo = +s1;
                     rlon_hi = +s2;
-                    /* Search forward from t1 to find t2 such that rel lon = +s2. */
+                    // Search forward from t1 to find t2 such that rel lon = +s2.
                 }
                 else
                 {
-                    /* rlon must be in the middle of the window [-s2, -s1]. */
-                    /* Search BACKWARD for the time t1 when rel lon = -s2. */
+                    // rlon must be in the middle of the window [-s2, -s1].
+                    // Search BACKWARD for the time t1 when rel lon = -s2.
                     adjust_days = -syn / 4.0;
                     rlon_lo = -s2;
-                    /* Search forward from t1 to find t2 such that rel lon = -s1. */
+                    // Search forward from t1 to find t2 such that rel lon = -s1.
                     rlon_hi = -s1;
                 }
 
@@ -6469,8 +6459,8 @@ $ASTRO_IAU_DATA()
                 AstroTime t1 = SearchRelativeLongitude(body, rlon_lo, t_start);
                 AstroTime t2 = SearchRelativeLongitude(body, rlon_hi, t1);
 
-                /* Now we have a time range [t1,t2] that brackets a maximum elongation event. */
-                /* Confirm the bracketing. */
+                // Now we have a time range [t1,t2] that brackets a maximum elongation event.
+                // Confirm the bracketing.
                 double m1 = neg_elong_slope.Eval(t1);
                 if (m1 >= 0.0)
                     throw new InternalError("There is a bug in the bracketing algorithm! m1 = " + m1);
@@ -6479,16 +6469,16 @@ $ASTRO_IAU_DATA()
                 if (m2 <= 0.0)
                     throw new InternalError("There is a bug in the bracketing algorithm! m2 = " + m2);
 
-                /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
+                // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
                 AstroTime searchx = Search(neg_elong_slope, t1, t2, 10.0) ??
                     throw new InternalError("Maximum elongation search failed.");
 
                 if (searchx.tt >= startTime.tt)
                     return Elongation(body, searchx);
 
-                /* This event is in the past (earlier than startTime). */
-                /* We need to search forward from t2 to find the next possible window. */
-                /* We never need to search more than twice. */
+                // This event is in the past (earlier than startTime).
+                // We need to search forward from t2 to find the next possible window.
+                // We never need to search more than twice.
                 startTime = t2.AddDays(1.0);
             }
 
@@ -6586,18 +6576,16 @@ $ASTRO_IAU_DATA()
         /// </returns>
         public static ApsisInfo SearchLunarApsis(AstroTime startTime)
         {
-            const double increment = 5.0;   /* number of days to skip in each iteration */
+            const double increment = 5.0;   // number of days to skip in each iteration
             var positive_slope = new SearchContext_MoonDistanceSlope(+1);
             var negative_slope = new SearchContext_MoonDistanceSlope(-1);
 
-            /*
-                Check the rate of change of the distance dr/dt at the start time.
-                If it is positive, the Moon is currently getting farther away,
-                so start looking for apogee.
-                Conversely, if dr/dt < 0, start looking for perigee.
-                Either way, the polarity of the slope will change, so the product will be negative.
-                Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
-            */
+            // Check the rate of change of the distance dr/dt at the start time.
+            // If it is positive, the Moon is currently getting farther away,
+            // so start looking for apogee.
+            // Conversely, if dr/dt < 0, start looking for perigee.
+            // Either way, the polarity of the slope will change, so the product will be negative.
+            // Handle the crazy corner case of exactly touching zero by checking for m1*m2 <= 0.
             AstroTime t1 = startTime;
             double m1 = positive_slope.Eval(t1);
             for (int iter=0; iter * increment < 2.0 * Astronomy.MEAN_SYNODIC_MONTH; ++iter)
@@ -6606,29 +6594,29 @@ $ASTRO_IAU_DATA()
                 double m2 = positive_slope.Eval(t2);
                 if (m1 * m2 <= 0.0)
                 {
-                    /* There is a change of slope polarity within the time range [t1, t2]. */
-                    /* Therefore this time range contains an apsis. */
-                    /* Figure out whether it is perigee or apogee. */
+                    // There is a change of slope polarity within the time range [t1, t2].
+                    // Therefore this time range contains an apsis.
+                    // Figure out whether it is perigee or apogee.
 
                     AstroTime search;
                     ApsisKind kind;
                     if (m1 < 0.0 || m2 > 0.0)
                     {
-                        /* We found a minimum-distance event: perigee. */
-                        /* Search the time range for the time when the slope goes from negative to positive. */
+                        // We found a minimum-distance event: perigee.
+                        // Search the time range for the time when the slope goes from negative to positive.
                         search = Search(positive_slope, t1, t2, 1.0);
                         kind = ApsisKind.Pericenter;
                     }
                     else if (m1 > 0.0 || m2 < 0.0)
                     {
-                        /* We found a maximum-distance event: apogee. */
-                        /* Search the time range for the time when the slope goes from positive to negative. */
+                        // We found a maximum-distance event: apogee.
+                        // Search the time range for the time when the slope goes from positive to negative.
                         search = Search(negative_slope, t1, t2, 1.0);
                         kind = ApsisKind.Apocenter;
                     }
                     else
                     {
-                        /* This should never happen. It should not be possible for both slopes to be zero. */
+                        // This should never happen. It should not be possible for both slopes to be zero.
                         throw new InternalError("both slopes are zero in SearchLunarApsis.");
                     }
 
@@ -6638,12 +6626,12 @@ $ASTRO_IAU_DATA()
                     double dist_au = SearchContext_MoonDistanceSlope.MoonDistance(search);
                     return new ApsisInfo(search, kind, dist_au);
                 }
-                /* We have not yet found a slope polarity change. Keep searching. */
+                // We have not yet found a slope polarity change. Keep searching.
                 t1 = t2;
                 m1 = m2;
             }
 
-            /* It should not be possible to fail to find an apsis within 2 synodic months. */
+            // It should not be possible to fail to find an apsis within 2 synodic months.
             throw new InternalError("should have found lunar apsis within 2 synodic months.");
         }
 
@@ -6709,7 +6697,7 @@ $ASTRO_IAU_DATA()
             {
                 double interval = dayspan / (npoints - 1);
 
-                if (interval < 1.0 / 1440.0)    /* iterate until uncertainty is less than one minute */
+                if (interval < 1.0 / 1440.0)    // iterate until uncertainty is less than one minute
                 {
                     AstroTime apsis_time = start_time.AddDays(interval / 2.0);
                     double dist_au = HelioDistance(body, apsis_time);
@@ -6729,7 +6717,7 @@ $ASTRO_IAU_DATA()
                     }
                 }
 
-                /* Narrow in on the extreme point. */
+                // Narrow in on the extreme point.
                 start_time = start_time.AddDays((best_i - 1) * interval);
                 dayspan = 2.0 * interval;
             }
@@ -6742,31 +6730,28 @@ $ASTRO_IAU_DATA()
             var perihelion = new ApsisInfo();
             var aphelion = new ApsisInfo();
 
-            /*
-                Neptune is a special case for two reasons:
-                1. Its orbit is nearly circular (low orbital eccentricity).
-                2. It is so distant from the Sun that the orbital period is very long.
-                Put together, this causes wobbling of the Sun around the Solar System Barycenter (SSB)
-                to be so significant that there are 3 local minima in the distance-vs-time curve
-                near each apsis. Therefore, unlike for other planets, we can't use an optimized
-                algorithm for finding dr/dt = 0.
-                Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
-                heliocentric distance.
+            // Neptune is a special case for two reasons:
+            // 1. Its orbit is nearly circular (low orbital eccentricity).
+            // 2. It is so distant from the Sun that the orbital period is very long.
+            // Put together, this causes wobbling of the Sun around the Solar System Barycenter (SSB)
+            // to be so significant that there are 3 local minima in the distance-vs-time curve
+            // near each apsis. Therefore, unlike for other planets, we can't use an optimized
+            // algorithm for finding dr/dt = 0.
+            // Instead, we use a dumb, brute-force algorithm of sampling and finding min/max
+            // heliocentric distance.
+            //
+            // There is a similar problem in the TOP2013 model for Pluto:
+            // Its position vector has high-frequency oscillations that confuse the
+            // slope-based determination of apsides.
+            //
+            // Rewind approximately 30 degrees in the orbit,
+            // then search forward for 270 degrees.
+            // This is a very cautious way to prevent missing an apsis.
+            // Typically we will find two apsides, and we pick whichever
+            // apsis is ealier, but after startTime.
+            // Sample points around this orbital arc and find when the distance
+            // is greatest and smallest.
 
-                There is a similar problem in the TOP2013 model for Pluto:
-                Its position vector has high-frequency oscillations that confuse the
-                slope-based determination of apsides.
-            */
-
-            /*
-                Rewind approximately 30 degrees in the orbit,
-                then search forward for 270 degrees.
-                This is a very cautious way to prevent missing an apsis.
-                Typically we will find two apsides, and we pick whichever
-                apsis is ealier, but after startTime.
-                Sample points around this orbital arc and find when the distance
-                is greatest and smallest.
-            */
             double period = PlanetOrbitalPeriod(body);
             AstroTime t1 = startTime.AddDays(period * ( -30.0 / 360.0));
             AstroTime t2 = startTime.AddDays(period * (+270.0 / 360.0));
@@ -6809,7 +6794,7 @@ $ASTRO_IAU_DATA()
             {
                 if (aphelion.time.tt >= startTime.tt)
                 {
-                    /* Perihelion and aphelion are both valid. Pick the one that comes first. */
+                    // Perihelion and aphelion are both valid. Pick the one that comes first.
                     if (aphelion.time.tt < perihelion.time.tt)
                         return aphelion;
                 }
@@ -6873,29 +6858,29 @@ $ASTRO_IAU_DATA()
                 double m2 = positive_slope.Eval(t2);
                 if (m1 * m2 <= 0.0)
                 {
-                    /* There is a change of slope polarity within the time range [t1, t2]. */
-                    /* Therefore this time range contains an apsis. */
-                    /* Figure out whether it is perihelion or aphelion. */
+                    // There is a change of slope polarity within the time range [t1, t2].
+                    // Therefore this time range contains an apsis.
+                    // Figure out whether it is perihelion or aphelion.
 
                     SearchContext_PlanetDistanceSlope slope_func;
                     ApsisKind kind;
                     if (m1 < 0.0 || m2 > 0.0)
                     {
-                        /* We found a minimum-distance event: perihelion. */
-                        /* Search the time range for the time when the slope goes from negative to positive. */
+                        // We found a minimum-distance event: perihelion.
+                        // Search the time range for the time when the slope goes from negative to positive.
                         slope_func = positive_slope;
                         kind = ApsisKind.Pericenter;
                     }
                     else if (m1 > 0.0 || m2 < 0.0)
                     {
-                        /* We found a maximum-distance event: aphelion. */
-                        /* Search the time range for the time when the slope goes from positive to negative. */
+                        // We found a maximum-distance event: aphelion.
+                        // Search the time range for the time when the slope goes from positive to negative.
                         slope_func = negative_slope;
                         kind = ApsisKind.Apocenter;
                     }
                     else
                     {
-                        /* This should never happen. It should not be possible for both slopes to be zero. */
+                        // This should never happen. It should not be possible for both slopes to be zero.
                         throw new InternalError("Both slopes were zero in SearchPlanetApsis");
                     }
 
@@ -6905,11 +6890,11 @@ $ASTRO_IAU_DATA()
                     double dist = HelioDistance(body, search);
                     return new ApsisInfo(search, kind, dist);
                 }
-                /* We have not yet found a slope polarity change. Keep searching. */
+                // We have not yet found a slope polarity change. Keep searching.
                 t1 = t2;
                 m1 = m2;
             }
-            /* It should not be possible to fail to find an apsis within 2 planet orbits. */
+            // It should not be possible to fail to find an apsis within 2 planet orbits.
             throw new InternalError("should have found planetary apsis within 2 orbital periods.");
         }
 
@@ -6940,7 +6925,7 @@ $ASTRO_IAU_DATA()
             if (apsis.kind != ApsisKind.Apocenter && apsis.kind != ApsisKind.Pericenter)
                 throw new ArgumentException("Invalid apsis kind");
 
-            /* skip 1/4 of an orbit before starting search again */
+            // skip 1/4 of an orbit before starting search again
             double skip = 0.25 * PlanetOrbitalPeriod(body);
             if (skip <= 0.0)
                 throw new InvalidBodyException(body);
@@ -6948,7 +6933,7 @@ $ASTRO_IAU_DATA()
             AstroTime time = apsis.time.AddDays(skip);
             ApsisInfo next = SearchPlanetApsis(body, time);
 
-            /* Verify that we found the opposite apsis from the previous one. */
+            // Verify that we found the opposite apsis from the previous one.
             if ((int)next.kind + (int)apsis.kind != 1)
                 throw new InternalError($"previous apsis was {apsis.kind}, but found {next.kind} for next apsis.");
 
@@ -6987,7 +6972,7 @@ $ASTRO_IAU_DATA()
 
         private static ShadowInfo PeakEarthShadow(AstroTime search_center_time)
         {
-            const double window = 0.03;        /* initial search window, in days, before/after given time */
+            const double window = 0.03;        // initial search window, in days, before/after given time
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
             AstroTime tx = Search(earthShadowSlopeContext, t1, t2, 1.0) ??
@@ -7015,7 +7000,7 @@ $ASTRO_IAU_DATA()
         /// </returns>
         public static LunarEclipseInfo SearchLunarEclipse(AstroTime startTime)
         {
-            const double PruneLatitude = 1.8;   /* full Moon's ecliptic latitude above which eclipse is impossible */
+            const double PruneLatitude = 1.8;   // full Moon's ecliptic latitude above which eclipse is impossible
             // Iterate through consecutive full moons until we find any kind of lunar eclipse.
             AstroTime fmtime = startTime;
             for (int fmcount=0; fmcount < 12; ++fmcount)
@@ -7024,11 +7009,9 @@ $ASTRO_IAU_DATA()
                 AstroTime fullmoon = SearchMoonPhase(180.0, fmtime, 40.0) ??
                     throw new InternalError("Failed to find next full moon.");
 
-                /*
-                    Pruning: if the full Moon's ecliptic latitude is too large,
-                    a lunar eclipse is not possible. Avoid needless work searching for
-                    the minimum moon distance.
-                */
+                // Pruning: if the full Moon's ecliptic latitude is too large,
+                // a lunar eclipse is not possible. Avoid needless work searching for
+                // the minimum moon distance.
                 var mc = new MoonContext(fullmoon.tt / 36525.0);
                 MoonResult mr = mc.CalcMoon();
                 if (RAD2DEG * Math.Abs(mr.geo_eclip_lat) < PruneLatitude)
@@ -7146,37 +7129,37 @@ $ASTRO_IAU_DATA()
         /// <param name="startTime">The date and time for starting the search for a solar eclipse.</param>
         public static GlobalSolarEclipseInfo SearchGlobalSolarEclipse(AstroTime startTime)
         {
-            const double PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
+            const double PruneLatitude = 1.8;   // Moon's ecliptic latitude beyond which eclipse is impossible
 
-            /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
+            // Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth.
             AstroTime nmtime = startTime;
             for (int nmcount=0; nmcount < 12; ++nmcount)
             {
-                /* Search for the next new moon. Any eclipse will be near it. */
+                // Search for the next new moon. Any eclipse will be near it.
                 AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0) ??
                     throw new InternalError("Failed to find next new moon.");
 
-                /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
+                // Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
                 double eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
                 if (Math.Abs(eclip_lat) < PruneLatitude)
                 {
-                    /* Search near the new moon for the time when the center of the Earth */
-                    /* is closest to the line passing through the centers of the Sun and Moon. */
+                    // Search near the new moon for the time when the center of the Earth
+                    // is closest to the line passing through the centers of the Sun and Moon.
                     ShadowInfo shadow = PeakMoonShadow(newmoon);
                     if (shadow.r < shadow.p + EARTH_MEAN_RADIUS_KM)
                     {
-                        /* This is at least a partial solar eclipse visible somewhere on Earth. */
-                        /* Try to find an intersection between the shadow axis and the Earth's oblate geoid. */
+                        // This is at least a partial solar eclipse visible somewhere on Earth.
+                        // Try to find an intersection between the shadow axis and the Earth's oblate geoid.
                         return GeoidIntersect(shadow);
                     }
                 }
 
-                /* We didn't find an eclipse on this new moon, so search for the next one. */
+                // We didn't find an eclipse on this new moon, so search for the next one.
                 nmtime = newmoon.AddDays(10.0);
             }
 
-            /* Safety valve to prevent infinite loop. */
-            /* This should never happen, because at least 2 solar eclipses happen per year. */
+            // Safety valve to prevent infinite loop.
+            // This should never happen, because at least 2 solar eclipses happen per year.
             throw new InternalError("Failure to find global solar eclipse.");
         }
 
@@ -7231,23 +7214,19 @@ $ASTRO_IAU_DATA()
             eclipse.distance = shadow.r;
             eclipse.latitude = eclipse.longitude = double.NaN;
 
-            /*
-                We want to calculate the intersection of the shadow axis with the Earth's geoid.
-                First we must convert EQJ (equator of J2000) coordinates to EQD (equator of date)
-                coordinates that are perfectly aligned with the Earth's equator at this
-                moment in time.
-            */
+            // We want to calculate the intersection of the shadow axis with the Earth's geoid.
+            // First we must convert EQJ (equator of J2000) coordinates to EQD (equator of date)
+            // coordinates that are perfectly aligned with the Earth's equator at this
+            // moment in time.
             RotationMatrix rot = Rotation_EQJ_EQD(shadow.time);
 
-            AstroVector v = RotateVector(rot, shadow.dir);        /* shadow-axis vector in equator-of-date coordinates */
-            AstroVector e = RotateVector(rot, shadow.target);     /* lunacentric Earth in equator-of-date coordinates */
+            AstroVector v = RotateVector(rot, shadow.dir);        // shadow-axis vector in equator-of-date coordinates
+            AstroVector e = RotateVector(rot, shadow.target);     // lunacentric Earth in equator-of-date coordinates
 
-            /*
-                Convert all distances from AU to km.
-                But dilate the z-coordinates so that the Earth becomes a perfect sphere.
-                Then find the intersection of the vector with the sphere.
-                See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
-            */
+            // Convert all distances from AU to km.
+            // But dilate the z-coordinates so that the Earth becomes a perfect sphere.
+            // Then find the intersection of the vector with the sphere.
+            // See p 184 in Montenbruck & Pfleger's "Astronomy on the Personal Computer", second edition.
             v.x *= KM_PER_AU;
             v.y *= KM_PER_AU;
             v.z *= KM_PER_AU / EARTH_FLATTENING;
@@ -7256,10 +7235,8 @@ $ASTRO_IAU_DATA()
             e.y *= KM_PER_AU;
             e.z *= KM_PER_AU / EARTH_FLATTENING;
 
-            /*
-                Solve the quadratic equation that finds whether and where
-                the shadow axis intersects with the Earth in the dilated coordinate system.
-            */
+            // Solve the quadratic equation that finds whether and where
+            // the shadow axis intersects with the Earth in the dilated coordinate system.
             double R = EARTH_EQUATORIAL_RADIUS_KM;
             double A = v.x*v.x + v.y*v.y + v.z*v.z;
             double B = -2.0 * (v.x*e.x + v.y*e.y + v.z*e.z);
@@ -7268,23 +7245,23 @@ $ASTRO_IAU_DATA()
 
             if (radic > 0.0)
             {
-                /* Calculate the closer of the two intersection points. */
-                /* This will be on the day side of the Earth. */
+                // Calculate the closer of the two intersection points.
+                // This will be on the day side of the Earth.
                 double u = (-B - Math.Sqrt(radic)) / (2 * A);
 
-                /* Convert lunacentric dilated coordinates to geocentric coordinates. */
+                // Convert lunacentric dilated coordinates to geocentric coordinates.
                 double px = u*v.x - e.x;
                 double py = u*v.y - e.y;
                 double pz = (u*v.z - e.z) * EARTH_FLATTENING;
 
-                /* Convert cartesian coordinates into geodetic latitude/longitude. */
+                // Convert cartesian coordinates into geodetic latitude/longitude.
                 double proj = Math.Sqrt(px*px + py*py) * (EARTH_FLATTENING * EARTH_FLATTENING);
                 if (proj == 0.0)
                     eclipse.latitude = (pz > 0.0) ? +90.0 : -90.0;
                 else
                     eclipse.latitude = RAD2DEG * Math.Atan(pz / proj);
 
-                /* Adjust longitude for Earth's rotation at the given UT. */
+                // Adjust longitude for Earth's rotation at the given UT.
                 double gast = SiderealTime(eclipse.peak);
                 eclipse.longitude = ((RAD2DEG*Math.Atan2(py, px)) - (15*gast)) % 360.0;
                 if (eclipse.longitude <= -180.0)
@@ -7292,28 +7269,28 @@ $ASTRO_IAU_DATA()
                 else if (eclipse.longitude > +180.0)
                     eclipse.longitude -= 360.0;
 
-                /* We want to determine whether the observer sees a total eclipse or an annular eclipse. */
-                /* We need to perform a series of vector calculations... */
-                /* Calculate the inverse rotation matrix, so we can convert EQD to EQJ. */
+                // We want to determine whether the observer sees a total eclipse or an annular eclipse.
+                // We need to perform a series of vector calculations...
+                // Calculate the inverse rotation matrix, so we can convert EQD to EQJ.
                 RotationMatrix inv = InverseRotation(rot);
 
-                /* Put the EQD geocentric coordinates of the observer into the vector 'o'. */
-                /* Also convert back from kilometers to astronomical units. */
+                // Put the EQD geocentric coordinates of the observer into the vector 'o'.
+                // Also convert back from kilometers to astronomical units.
                 var o = new AstroVector(px / KM_PER_AU, py / KM_PER_AU, pz / KM_PER_AU, shadow.time);
 
-                /* Rotate the observer's geocentric EQD back to the EQJ system. */
+                // Rotate the observer's geocentric EQD back to the EQJ system.
                 o = RotateVector(inv, o);
 
-                /* Convert geocentric vector to lunacentric vector. */
+                // Convert geocentric vector to lunacentric vector.
                 o.x += shadow.target.x;
                 o.y += shadow.target.y;
                 o.z += shadow.target.z;
 
-                /* Recalculate the shadow using a vector from the Moon's center toward the observer. */
+                // Recalculate the shadow using a vector from the Moon's center toward the observer.
                 ShadowInfo surface = CalcShadow(MOON_POLAR_RADIUS_KM, shadow.time, o, shadow.dir);
 
-                /* If we did everything right, the shadow distance should be very close to zero. */
-                /* That's because we already determined the observer 'o' is on the shadow axis! */
+                // If we did everything right, the shadow distance should be very close to zero.
+                // That's because we already determined the observer 'o' is on the shadow axis!
                 if (surface.r > 1.0e-9 || surface.r < 0.0)
                     throw new InternalError("Invalid surface distance from intersection.");
 
@@ -7337,9 +7314,9 @@ $ASTRO_IAU_DATA()
 
         private static ShadowInfo PeakMoonShadow(AstroTime search_center_time)
         {
-            /* Search for when the Moon's shadow axis is closest to the center of the Earth. */
+            // Search for when the Moon's shadow axis is closest to the center of the Earth.
 
-            const double window = 0.03;     /* days before/after new moon to search for minimum shadow distance */
+            const double window = 0.03;     // days before/after new moon to search for minimum shadow distance
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
             AstroTime time = Search(moonShadowSlopeContext, t1, t2, 1.0) ??
@@ -7349,10 +7326,8 @@ $ASTRO_IAU_DATA()
 
         private static ShadowInfo PeakLocalMoonShadow(AstroTime search_center_time, Observer observer)
         {
-            /*
-                Search for the time near search_center_time that the Moon's shadow comes
-                closest to the given observer.
-            */
+            // Search for the time near search_center_time that the Moon's shadow comes
+            // closest to the given observer.
             const double window = 0.2;
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
@@ -7364,8 +7339,8 @@ $ASTRO_IAU_DATA()
 
         private static ShadowInfo PeakPlanetShadow(Body body, double planet_radius_km, AstroTime search_center_time)
         {
-            /* Search for when the body's shadow is closest to the center of the Earth. */
-            const double window = 1.0;     /* days before/after inferior conjunction to search for minimum shadow distance */
+            // Search for when the body's shadow is closest to the center of the Earth.
+            const double window = 1.0;     // days before/after inferior conjunction to search for minimum shadow distance
             AstroTime t1 = search_center_time.AddDays(-window);
             AstroTime t2 = search_center_time.AddDays(+window);
             var context = new SearchContext_PlanetShadowSlope(body, planet_radius_km);
@@ -7476,37 +7451,37 @@ $ASTRO_IAU_DATA()
         /// <param name="observer">The geographic location of the observer.</param>
         public static LocalSolarEclipseInfo SearchLocalSolarEclipse(AstroTime startTime, Observer observer)
         {
-            const double PruneLatitude = 1.8;   /* Moon's ecliptic latitude beyond which eclipse is impossible */
+            const double PruneLatitude = 1.8;   // Moon's ecliptic latitude beyond which eclipse is impossible
 
-            /* Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth. */
+            // Iterate through consecutive new moons until we find a solar eclipse visible somewhere on Earth.
             AstroTime nmtime = startTime;
             for(;;)
             {
-                /* Search for the next new moon. Any eclipse will be near it. */
+                // Search for the next new moon. Any eclipse will be near it.
                 AstroTime newmoon = SearchMoonPhase(0.0, nmtime, 40.0) ??
                     throw new InternalError("Failed to find next new moon.");
 
-                /* Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible. */
+                // Pruning: if the new moon's ecliptic latitude is too large, a solar eclipse is not possible.
                 double eclip_lat = MoonEclipticLatitudeDegrees(newmoon);
                 if (Math.Abs(eclip_lat) < PruneLatitude)
                 {
-                    /* Search near the new moon for the time when the observer */
-                    /* is closest to the line passing through the centers of the Sun and Moon. */
+                    // Search near the new moon for the time when the observer
+                    // is closest to the line passing through the centers of the Sun and Moon.
                     ShadowInfo shadow = PeakLocalMoonShadow(newmoon, observer);
                     if (shadow.r < shadow.p)
                     {
-                        /* This is at least a partial solar eclipse for the observer. */
+                        // This is at least a partial solar eclipse for the observer.
                         LocalSolarEclipseInfo eclipse = LocalEclipse(shadow, observer);
 
-                        /* Ignore any eclipse that happens completely at night. */
-                        /* More precisely, the center of the Sun must be above the horizon */
-                        /* at the beginning or the end of the eclipse, or we skip the event. */
+                        // Ignore any eclipse that happens completely at night.
+                        // More precisely, the center of the Sun must be above the horizon
+                        // at the beginning or the end of the eclipse, or we skip the event.
                         if (eclipse.partial_begin.altitude > 0.0 || eclipse.partial_end.altitude > 0.0)
                             return eclipse;
                     }
                 }
 
-                /* We didn't find an eclipse on this new moon, so search for the next one. */
+                // We didn't find an eclipse on this new moon, so search for the next one.
                 nmtime = newmoon.AddDays(10.0);
             }
         }
@@ -7572,8 +7547,8 @@ $ASTRO_IAU_DATA()
 
         private static double local_total_distance(ShadowInfo shadow)
         {
-            /* Must take the absolute value of the umbra radius 'k' */
-            /* because it can be negative for an annular eclipse. */
+            // Must take the absolute value of the umbra radius 'k'
+            // because it can be negative for an annular eclipse.
             return Math.Abs(shadow.k) - shadow.r;
         }
 
@@ -7589,7 +7564,7 @@ $ASTRO_IAU_DATA()
             eclipse.partial_begin = LocalEclipseTransition(observer, +1.0, local_partial_distance, t1, shadow.time);
             eclipse.partial_end   = LocalEclipseTransition(observer, -1.0, local_partial_distance, shadow.time, t2);
 
-            if (shadow.r < Math.Abs(shadow.k))      /* take absolute value of 'k' to handle annular eclipses too. */
+            if (shadow.r < Math.Abs(shadow.k))      // take absolute value of 'k' to handle annular eclipses too.
             {
                 t1 = shadow.time.AddDays(-TOTAL_WINDOW);
                 t2 = shadow.time.AddDays(+TOTAL_WINDOW);
@@ -7641,7 +7616,7 @@ $ASTRO_IAU_DATA()
             AstroTime t2,
             double direction)
         {
-            /* Search for the time the planet's penumbra begins/ends making contact with the center of the Earth. */
+            // Search for the time the planet's penumbra begins/ends making contact with the center of the Earth.
             var context = new SearchContext_PlanetShadowBoundary(body, planet_radius_km, direction);
             AstroTime time = Search(context, t1, t2, 1.0) ??
                 throw new InternalError("Planet transit boundary search failed");
@@ -7669,7 +7644,7 @@ $ASTRO_IAU_DATA()
         /// </param>
         public static TransitInfo SearchTransit(Body body, AstroTime startTime)
         {
-            const double threshold_angle = 0.4;     /* maximum angular separation to attempt transit calculation */
+            const double threshold_angle = 0.4;     // maximum angular separation to attempt transit calculation
             const double dt_days = 1.0;
 
             // Validate the planet and find its mean radius.
@@ -7691,31 +7666,27 @@ $ASTRO_IAU_DATA()
             AstroTime search_time = startTime;
             for(;;)
             {
-                /*
-                    Search for the next inferior conjunction of the given planet.
-                    This is the next time the Earth and the other planet have the same
-                    ecliptic longitude as seen from the Sun.
-                */
+                // Search for the next inferior conjunction of the given planet.
+                // This is the next time the Earth and the other planet have the same
+                // ecliptic longitude as seen from the Sun.
                 AstroTime conj = SearchRelativeLongitude(body, 0.0, search_time);
 
-                /* Calculate the angular separation between the body and the Sun at this time. */
+                // Calculate the angular separation between the body and the Sun at this time.
                 double separation = AngleFromSun(body, conj);
 
                 if (separation < threshold_angle)
                 {
-                    /*
-                        The planet's angular separation from the Sun is small enough
-                        to consider it a transit candidate.
-                        Search for the moment when the line passing through the Sun
-                        and planet are closest to the Earth's center.
-                    */
+                    // The planet's angular separation from the Sun is small enough
+                    // to consider it a transit candidate.
+                    // Search for the moment when the line passing through the Sun
+                    // and planet are closest to the Earth's center.
                     ShadowInfo shadow = PeakPlanetShadow(body, planet_radius_km, conj);
 
-                    if (shadow.r < shadow.p)        /* does the planet's penumbra touch the Earth's center? */
+                    if (shadow.r < shadow.p)        // does the planet's penumbra touch the Earth's center?
                     {
                         var transit = new TransitInfo();
 
-                        /* Find the beginning and end of the penumbral contact. */
+                        // Find the beginning and end of the penumbral contact.
                         AstroTime tx = shadow.time.AddDays(-dt_days);
                         transit.start = PlanetTransitBoundary(body, planet_radius_km, tx, shadow.time, -1.0);
 
@@ -7728,7 +7699,7 @@ $ASTRO_IAU_DATA()
                     }
                 }
 
-                /* This inferior conjunction was not a transit. Try the next inferior conjunction. */
+                // This inferior conjunction was not a transit. Try the next inferior conjunction.
                 search_time = conj.AddDays(10.0);
             }
         }
@@ -7981,7 +7952,7 @@ $ASTRO_IAU_DATA()
 
         private static double MoonMagnitude(double phase, double helio_dist, double geo_dist)
         {
-            /* https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve */
+            // https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
             double rad = phase * DEG2RAD;
             double rad2 = rad * rad;
             double rad4 = rad2 * rad2;
@@ -7998,7 +7969,7 @@ $ASTRO_IAU_DATA()
             double helio_dist,
             double geo_dist)
         {
-            /* For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212 */
+            // For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
             double c0, c1=0, c2=0, c3=0;
             switch (body)
             {
@@ -8037,17 +8008,17 @@ $ASTRO_IAU_DATA()
             AstroTime time,
             out double ring_tilt)
         {
-            /* Based on formulas by Paul Schlyter found here: */
-            /* http://www.stjarnhimlen.se/comp/ppcomp.html#15 */
+            // Based on formulas by Paul Schlyter found here:
+            // http://www.stjarnhimlen.se/comp/ppcomp.html#15
 
-            /* We must handle Saturn's rings as a major component of its visual magnitude. */
-            /* Find geocentric ecliptic coordinates of Saturn. */
+            // We must handle Saturn's rings as a major component of its visual magnitude.
+            // Find geocentric ecliptic coordinates of Saturn.
             Ecliptic eclip = EquatorialToEcliptic(gc);
 
-            double ir = DEG2RAD * 28.06;   /* tilt of Saturn's rings to the ecliptic, in radians */
-            double Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt));    /* ascending node of Saturn's rings, in radians */
+            double ir = DEG2RAD * 28.06;   // tilt of Saturn's rings to the ecliptic, in radians
+            double Nr = DEG2RAD * (169.51 + (3.82e-5 * time.tt));    // ascending node of Saturn's rings, in radians
 
-            /* Find tilt of Saturn's rings, as seen from Earth. */
+            // Find tilt of Saturn's rings, as seen from Earth.
             double lat = DEG2RAD * eclip.elat;
             double lon = DEG2RAD * eclip.elon;
             double tilt = Math.Asin(Math.Sin(lat)*Math.Cos(ir) - Math.Cos(lat)*Math.Sin(ir)*Math.Sin(lon-Nr));
@@ -8088,7 +8059,7 @@ $ASTRO_IAU_DATA()
         /// </returns>
         public static IllumInfo SearchPeakMagnitude(Body body, AstroTime startTime)
         {
-            /* s1 and s2 are relative longitudes within which peak magnitude of Venus can occur. */
+            // s1 and s2 are relative longitudes within which peak magnitude of Venus can occur.
             const double s1 = 10.0;
             const double s2 = 30.0;
 
@@ -8100,79 +8071,79 @@ $ASTRO_IAU_DATA()
             int iter = 0;
             while (++iter <= 2)
             {
-                /* Find current heliocentric relative longitude between the */
-                /* inferior planet and the Earth. */
+                // Find current heliocentric relative longitude between the
+                // inferior planet and the Earth.
                 double plon = EclipticLongitude(body, startTime);
                 double elon = EclipticLongitude(Body.Earth, startTime);
                 double rlon = LongitudeOffset(plon - elon);     // clamp to (-180, +180].
 
-                /* The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees */
-                /* because there is a cusp there that causes a discontinuity in the derivative. */
-                /* So we need to guard against searching near such times. */
+                // The slope function is not well-behaved when rlon is near 0 degrees or 180 degrees
+                // because there is a cusp there that causes a discontinuity in the derivative.
+                // So we need to guard against searching near such times.
 
                 double rlon_lo, rlon_hi, adjust_days, syn;
                 if (rlon >= -s1 && rlon < +s1)
                 {
-                    /* Seek to the window [+s1, +s2]. */
+                    // Seek to the window [+s1, +s2].
                     adjust_days = 0.0;
-                    /* Search forward for the time t1 when rel lon = +s1. */
+                    // Search forward for the time t1 when rel lon = +s1.
                     rlon_lo = +s1;
-                    /* Search forward for the time t2 when rel lon = +s2. */
+                    // Search forward for the time t2 when rel lon = +s2.
                     rlon_hi = +s2;
                 }
                 else if (rlon >= +s2 || rlon < -s2)
                 {
-                    /* Seek to the next search window at [-s2, -s1]. */
+                    // Seek to the next search window at [-s2, -s1].
                     adjust_days = 0.0;
-                    /* Search forward for the time t1 when rel lon = -s2. */
+                    // Search forward for the time t1 when rel lon = -s2.
                     rlon_lo = -s2;
-                    /* Search forward for the time t2 when rel lon = -s1. */
+                    // Search forward for the time t2 when rel lon = -s1.
                     rlon_hi = -s1;
                 }
                 else if (rlon >= 0)
                 {
-                    /* rlon must be in the middle of the window [+s1, +s2]. */
-                    /* Search BACKWARD for the time t1 when rel lon = +s1. */
+                    // rlon must be in the middle of the window [+s1, +s2].
+                    // Search BACKWARD for the time t1 when rel lon = +s1.
                     syn = SynodicPeriod(body);
                     adjust_days = -syn / 4;
                     rlon_lo = +s1;
-                    /* Search forward from t1 to find t2 such that rel lon = +s2. */
+                    // Search forward from t1 to find t2 such that rel lon = +s2.
                     rlon_hi = +s2;
                 }
                 else
                 {
-                    /* rlon must be in the middle of the window [-s2, -s1]. */
-                    /* Search BACKWARD for the time t1 when rel lon = -s2. */
+                    // rlon must be in the middle of the window [-s2, -s1].
+                    // Search BACKWARD for the time t1 when rel lon = -s2.
                     syn = SynodicPeriod(body);
                     adjust_days = -syn / 4;
                     rlon_lo = -s2;
-                    /* Search forward from t1 to find t2 such that rel lon = -s1. */
+                    // Search forward from t1 to find t2 such that rel lon = -s1.
                     rlon_hi = -s1;
                 }
                 AstroTime t_start = startTime.AddDays(adjust_days);
                 AstroTime t1 = SearchRelativeLongitude(body, rlon_lo, t_start);
                 AstroTime t2 = SearchRelativeLongitude(body, rlon_hi, t1);
 
-                /* Now we have a time range [t1,t2] that brackets a maximum magnitude event. */
-                /* Confirm the bracketing. */
+                // Now we have a time range [t1,t2] that brackets a maximum magnitude event.
+                // Confirm the bracketing.
                 double m1 = mag_slope.Eval(t1);
                 if (m1 >= 0.0)
-                    throw new InternalError("m1 >= 0");    /* should never happen! */
+                    throw new InternalError("m1 >= 0");    // should never happen!
 
                 double m2 = mag_slope.Eval(t2);
                 if (m2 <= 0.0)
-                    throw new InternalError("m2 <= 0");    /* should never happen! */
+                    throw new InternalError("m2 <= 0");    // should never happen!
 
-                /* Use the generic search algorithm to home in on where the slope crosses from negative to positive. */
+                // Use the generic search algorithm to home in on where the slope crosses from negative to positive.
                 AstroTime tx = Search(mag_slope, t1, t2, 10.0) ??
                     throw new InternalError("Failed to find magnitude slope transition.");
 
                 if (tx.tt >= startTime.tt)
                     return Illumination(body, tx);
 
-                /* This event is in the past (earlier than startTime). */
-                /* We need to search forward from t2 to find the next possible window. */
-                /* We never need to search more than twice. */
+                // This event is in the past (earlier than startTime).
+                // We need to search forward from t2 to find the next possible window.
+                // We never need to search more than twice.
                 startTime = t2.AddDays(1.0);
             }
             // This should never happen. If it does, please report as a bug in Astronomy Engine.
@@ -8244,12 +8215,12 @@ $ASTRO_IAU_DATA()
             StateVector major_state;
             StateVector minor_state;
 
-            /* Calculate the state vectors for the major and minor bodies. */
+            // Calculate the state vectors for the major and minor bodies.
             if (major_body == Body.Earth && minor_body == Body.Moon)
             {
-                /* Use geocentric calculations for more precision. */
+                // Use geocentric calculations for more precision.
 
-                /* The Earth's geocentric state is trivial. */
+                // The Earth's geocentric state is trivial.
                 major_state.t = time;
                 major_state.x = major_state.y = major_state.z = 0.0;
                 major_state.vx = major_state.vy = major_state.vz = 0.0;
@@ -8313,7 +8284,7 @@ $ASTRO_IAU_DATA()
             double minor_mass)
         {
             const double cos_60 = 0.5;
-            const double sin_60 = 0.8660254037844386;   /* sqrt(3) / 2 */
+            const double sin_60 = 0.8660254037844386;   // sqrt(3) / 2
 
             if (point < 1 || point > 5)
                 throw new ArgumentException($"Invalid lagrange point {point}");
@@ -8324,16 +8295,16 @@ $ASTRO_IAU_DATA()
             if (double.IsNaN(minor_mass) || double.IsInfinity(minor_mass) || minor_mass <= 0.0)
                 throw new ArgumentException("Minor mass must be a positive number.");
 
-            /* Find the relative position vector <dx, dy, dz>. */
+            // Find the relative position vector <dx, dy, dz>.
             double dx = minor_state.x - major_state.x;
             double dy = minor_state.y - major_state.y;
             double dz = minor_state.z - major_state.z;
             double R2 = (dx*dx + dy*dy + dz*dz);
 
-            /* R = Total distance between the bodies. */
+            // R = Total distance between the bodies.
             double R = Math.Sqrt(R2);
 
-            /* Find the velocity vector <vx, vy, vz>. */
+            // Find the velocity vector <vx, vy, vz>.
             double vx = minor_state.vx - major_state.vx;
             double vy = minor_state.vy - major_state.vy;
             double vz = minor_state.vz - major_state.vz;
@@ -8341,106 +8312,100 @@ $ASTRO_IAU_DATA()
             StateVector p;
             if (point == 4 || point == 5)
             {
-                /*
-                    For L4 and L5, we need to find points 60 degrees away from the
-                    line connecting the two bodies and in the instantaneous orbital plane.
-                    Define the instantaneous orbital plane as the unique plane that contains
-                    both the relative position vector and the relative velocity vector.
-                */
+                // For L4 and L5, we need to find points 60 degrees away from the
+                // line connecting the two bodies and in the instantaneous orbital plane.
+                // Define the instantaneous orbital plane as the unique plane that contains
+                // both the relative position vector and the relative velocity vector.
 
-                /* Take the cross product of position and velocity to find a normal vector <nx, ny, nz>. */
+                // Take the cross product of position and velocity to find a normal vector <nx, ny, nz>.
                 double nx = dy*vz - dz*vy;
                 double ny = dz*vx - dx*vz;
                 double nz = dx*vy - dy*vx;
 
-                /* Take the cross product normal*position to get a tangential vector <ux, uy, uz>. */
+                // Take the cross product normal*position to get a tangential vector <ux, uy, uz>.
                 double ux = ny*dz - nz*dy;
                 double uy = nz*dx - nx*dz;
                 double uz = nx*dy - ny*dx;
 
-                /* Convert the tangential direction vector to a unit vector. */
+                // Convert the tangential direction vector to a unit vector.
                 double U = Math.Sqrt(ux*ux + uy*uy + uz*uz);
                 ux /= U;
                 uy /= U;
                 uz /= U;
 
-                /* Convert the relative position vector into a unit vector. */
+                // Convert the relative position vector into a unit vector.
                 dx /= R;
                 dy /= R;
                 dz /= R;
 
-                /* Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'. */
+                // Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'.
 
-                /* Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions. */
+                // Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions.
                 double vert = (point == 4) ? +sin_60 : -sin_60;
 
-                /* Rotated radial vector */
+                // Rotated radial vector
                 double Dx = cos_60*dx + vert*ux;
                 double Dy = cos_60*dy + vert*uy;
                 double Dz = cos_60*dz + vert*uz;
 
-                /* Rotated tangent vector */
+                // Rotated tangent vector
                 double Ux = cos_60*ux - vert*dx;
                 double Uy = cos_60*uy - vert*dy;
                 double Uz = cos_60*uz - vert*dz;
 
-                /* Calculate L4/L5 positions relative to the major body. */
+                // Calculate L4/L5 positions relative to the major body.
                 p.x = R * Dx;
                 p.y = R * Dy;
                 p.z = R * Dz;
 
-                /* Use dot products to find radial and tangential components of the relative velocity. */
+                // Use dot products to find radial and tangential components of the relative velocity.
                 double vrad = vx*dx + vy*dy + vz*dz;
                 double vtan = vx*ux + vy*uy + vz*uz;
 
-                /* Calculate L4/L5 velocities. */
+                // Calculate L4/L5 velocities.
                 p.vx = vrad*Dx + vtan*Ux;
                 p.vy = vrad*Dy + vtan*Uy;
                 p.vz = vrad*Dz + vtan*Uz;
             }
             else
             {
-                /*
-                    Calculate the distances of each body from their mutual barycenter.
-                    r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
-                    r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
-                */
+                // Calculate the distances of each body from their mutual barycenter.
+                // r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
+                // r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
                 double r1 = -R * (minor_mass / (major_mass + minor_mass));
                 double r2 = +R * (major_mass / (major_mass + minor_mass));
 
-                /* Calculate the square of the angular orbital speed in [rad^2 / day^2]. */
+                // Calculate the square of the angular orbital speed in [rad^2 / day^2].
                 double omega2 = (major_mass + minor_mass) / (R2*R);
 
-                /*
-                    Use Newton's Method to numerically solve for the location where
-                    outward centrifugal acceleration in the rotating frame of reference
-                    is equal to net inward gravitational acceleration.
-                    First derive a good initial guess based on approximate analysis.
-                */
+                // Use Newton's Method to numerically solve for the location where
+                // outward centrifugal acceleration in the rotating frame of reference
+                // is equal to net inward gravitational acceleration.
+                // First derive a good initial guess based on approximate analysis.
                 double scale, numer1, numer2;
                 if (point == 1 || point == 2)
                 {
                     scale = (major_mass / (major_mass + minor_mass)) * CubeRoot(minor_mass / (3.0 * major_mass));
-                    numer1 = -major_mass;    /* The major mass is to the left of L1 and L2 */
+                    numer1 = -major_mass;    // The major mass is to the left of L1 and L2
                     if (point == 1)
                     {
                         scale = 1.0 - scale;
-                        numer2 = +minor_mass;    /* The minor mass is to the right of L1. */
+                        numer2 = +minor_mass;    // The minor mass is to the right of L1.
                     }
                     else
                     {
                         scale = 1.0 + scale;
-                        numer2 = -minor_mass;    /* The minor mass is to the left of L2. */
+                        numer2 = -minor_mass;    // The minor mass is to the left of L2.
                     }
                 }
-                else /* point == 3 */
+                else // point == 3
                 {
                     scale = ((7.0/12.0)*minor_mass - major_mass) / (minor_mass + major_mass);
-                    numer1 = +major_mass;    /* major mass is to the right of L3. */
-                    numer2 = +minor_mass;    /* minor mass is to the right of L3. */
+                    numer1 = +major_mass;    // major mass is to the right of L3.
+                    numer2 = +minor_mass;    // minor mass is to the right of L3.
                 }
 
-                /* Iterate Newton's Method until it converges. */
+                // Iterate Newton's Method until it converges.
                 double x = R*scale - r1;
                 double deltax;
                 do
@@ -8572,11 +8537,11 @@ $ASTRO_IAU_DATA()
         /// <returns>A pivoted matrix object.</returns>
         public static RotationMatrix Pivot(RotationMatrix rotation, int axis, double angle)
         {
-            /* Check for an invalid coordinate axis. */
+            // Check for an invalid coordinate axis.
             if (axis < 0 || axis > 2)
                 throw new ArgumentException($"Invalid coordinate axis = {axis}. Must be 0..2.");
 
-            /* Check for an invalid angle value. */
+            // Check for an invalid angle value.
             if (double.IsNaN(angle) || double.IsInfinity(angle))
                 throw new ArgumentException("Angle is not a finite number.");
 
@@ -8584,12 +8549,10 @@ $ASTRO_IAU_DATA()
             double c = Math.Cos(radians);
             double s = Math.Sin(radians);
 
-            /*
-                We need to maintain the "right-hand" rule, no matter which
-                axis was selected. That means we pick (i, j, k) axis order
-                such that the following vector cross product is satisfied:
-                i x j = k
-            */
+            // We need to maintain the "right-hand" rule, no matter which
+            // axis was selected. That means we pick (i, j, k) axis order
+            // such that the following vector cross product is satisfied:
+            // i x j = k
             int i = (axis + 1) % 3;
             int j = (axis + 2) % 3;
             int k = axis;
@@ -8686,7 +8649,7 @@ $ASTRO_IAU_DATA()
             {
                 if (vector.z == 0.0)
                 {
-                    /* Indeterminate coordinates; pos vector has zero length. */
+                    // Indeterminate coordinates; pos vector has zero length.
                     throw new ArgumentException("Cannot convert zero-length vector to spherical coordinates.");
                 }
 
@@ -8828,7 +8791,7 @@ $ASTRO_IAU_DATA()
         public static double RefractionAngle(Refraction refraction, double altitude)
         {
             if (altitude < -90.0 || altitude > +90.0)
-                return 0.0;     /* no attempt to correct an invalid altitude */
+                return 0.0;     // no attempt to correct an invalid altitude
 
             double refr;
             if (refraction == Refraction.Normal || refraction == Refraction.JplHor)
@@ -8858,7 +8821,7 @@ $ASTRO_IAU_DATA()
             }
             else
             {
-                /* No refraction, or the refraction option is invalid. */
+                // No refraction, or the refraction option is invalid.
                 refr = 0.0;
             }
 
@@ -8890,13 +8853,13 @@ $ASTRO_IAU_DATA()
         public static double InverseRefractionAngle(Refraction refraction, double bent_altitude)
         {
             if (bent_altitude < -90.0 || bent_altitude > +90.0)
-                return 0.0;     /* no attempt to correct an invalid altitude */
+                return 0.0;     // no attempt to correct an invalid altitude
 
-            /* Find the pre-adjusted altitude whose refraction correction leads to 'altitude'. */
+            // Find the pre-adjusted altitude whose refraction correction leads to 'altitude'.
             double altitude = bent_altitude - RefractionAngle(refraction, bent_altitude);
             for(;;)
             {
-                /* See how close we got. */
+                // See how close we got.
                 double diff = (altitude + RefractionAngle(refraction, altitude)) - bent_altitude;
                 if (Math.Abs(diff) < 1.0e-14)
                     return altitude - bent_altitude;
@@ -9167,9 +9130,9 @@ $ASTRO_IAU_DATA()
         /// <returns>A rotation matrix that converts EQJ to ECL.</returns>
         public static RotationMatrix Rotation_EQJ_ECL()
         {
-            /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
-            const double c = 0.9174821430670688;    /* cos(ob) */
-            const double s = 0.3977769691083922;    /* sin(ob) */
+            // ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+            const double c = 0.9174821430670688;    // cos(ob)
+            const double s = 0.3977769691083922;    // sin(ob)
             var r = new RotationMatrix(new double[3,3]);
 
             r.rot[0, 0] = 1.0;  r.rot[1, 0] = 0.0;  r.rot[2, 0] = 0.0;
@@ -9190,9 +9153,9 @@ $ASTRO_IAU_DATA()
         /// <returns>A rotation matrix that converts ECL to EQJ.</returns>
         public static RotationMatrix Rotation_ECL_EQJ()
         {
-            /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
-            const double c = 0.9174821430670688;    /* cos(ob) */
-            const double s = 0.3977769691083922;    /* sin(ob) */
+            // ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+            const double c = 0.9174821430670688;    // cos(ob)
+            const double s = 0.3977769691083922;    // sin(ob)
             var r = new RotationMatrix(new double[3,3]);
 
             r.rot[0, 0] = 1.0;  r.rot[1, 0] = 0.0;  r.rot[2, 0] = 0.0;

@@ -295,14 +295,12 @@ namespace csharp_test
                 while (null != (line = infile.ReadLine()))
                 {
                     ++lnum;
-                    /*
-                        2019-01-03T05:20Z Perihelion
-                        2019-03-20T21:58Z Equinox
-                        2019-06-21T15:54Z Solstice
-                        2019-07-04T22:11Z Aphelion
-                        2019-09-23T07:50Z Equinox
-                        2019-12-22T04:19Z Solstice
-                    */
+                    // 2019-01-03T05:20Z Perihelion
+                    // 2019-03-20T21:58Z Equinox
+                    // 2019-06-21T15:54Z Solstice
+                    // 2019-07-04T22:11Z Aphelion
+                    // 2019-09-23T07:50Z Equinox
+                    // 2019-12-22T04:19Z Solstice
                     Match m = re.Match(line);
                     if (!m.Success)
                     {
@@ -365,12 +363,12 @@ namespace csharp_test
                     }
                     else if (name == "Aphelion")
                     {
-                        /* not yet calculated */
+                        // not yet calculated
                         continue;
                     }
                     else if (name == "Perihelion")
                     {
-                        /* not yet calculated */
+                        // not yet calculated
                         continue;
                     }
                     else
@@ -379,7 +377,7 @@ namespace csharp_test
                         return 1;
                     }
 
-                    /* Verify that the calculated time matches the correct time for this event. */
+                    // Verify that the calculated time matches the correct time for this event.
                     double diff_minutes = (24.0 * 60.0) * abs(calc_time.tt - correct_time.tt);
                     if (diff_minutes > max_minutes)
                         max_minutes = diff_minutes;
@@ -425,12 +423,10 @@ namespace csharp_test
                 while (null != (line = infile.ReadLine()))
                 {
                     ++lnum;
-                    /*
-                        0 1800-01-25T03:21:00.000Z
-                        1 1800-02-01T20:40:00.000Z
-                        2 1800-02-09T17:26:00.000Z
-                        3 1800-02-16T15:49:00.000Z
-                    */
+                    // 0 1800-01-25T03:21:00.000Z
+                    // 1 1800-02-01T20:40:00.000Z
+                    // 2 1800-02-09T17:26:00.000Z
+                    // 3 1800-02-16T15:49:00.000Z
                     Match m = re.Match(line);
                     if (!m.Success)
                     {
@@ -463,20 +459,20 @@ namespace csharp_test
                     if (year != prev_year)
                     {
                         prev_year = year;
-                        /* The test data contains a single year's worth of data for every 10 years. */
-                        /* Every time we see the year value change, it breaks continuity of the phases. */
-                        /* Start the search over again. */
+                        // The test data contains a single year's worth of data for every 10 years.
+                        // Every time we see the year value change, it breaks continuity of the phases.
+                        // Start the search over again.
                         AstroTime start_time = new AstroTime(year, 1, 1, 0, 0, 0);
                         mq = Astronomy.SearchMoonQuarter(start_time);
-                        expected_quarter = -1;  /* we have no idea what the quarter should be */
+                        expected_quarter = -1;  // we have no idea what the quarter should be
                     }
                     else
                     {
-                        /* Yet another lunar quarter in the same year. */
+                        // Yet another lunar quarter in the same year.
                         expected_quarter = (1 + mq.quarter) % 4;
                         mq = Astronomy.NextMoonQuarter(mq);
 
-                        /* Make sure we find the next expected quarter. */
+                        // Make sure we find the next expected quarter.
                         if (expected_quarter != mq.quarter)
                         {
                             Console.WriteLine("C# MoonPhaseTest({0} line {1}): SearchMoonQuarter returned quarter {2}, but expected {3}", filename, lnum, mq.quarter, expected_quarter);
@@ -484,7 +480,7 @@ namespace csharp_test
                         }
                     }
                     ++quarter_count;
-                    /* Make sure the time matches what we expect. */
+                    // Make sure the time matches what we expect.
                     double diff_seconds = abs(mq.time.tt - expected_time.tt) * SECONDS_PER_DAY;
                     if (diff_seconds > threshold_seconds)
                     {
@@ -1006,7 +1002,7 @@ namespace csharp_test
                 while (null != (line = infile.ReadLine()))
                 {
                     ++lnum;
-                    /* 2018-05-09T00:28Z Jupiter */
+                    // 2018-05-09T00:28Z Jupiter
                     Match m = re.Match(line);
                     if (!m.Success)
                     {
@@ -1067,8 +1063,8 @@ namespace csharp_test
 
                     if (count >= 2)
                     {
-                        /* Check for consistent intervals. */
-                        /* Mainly I don't want to skip over an event! */
+                        // Check for consistent intervals.
+                        // Mainly I don't want to skip over an event!
                         double day_diff = search_result.tt - time.tt;
                         if (count == 2)
                         {
@@ -1088,7 +1084,7 @@ namespace csharp_test
                     double dist = geo.Length();
                     outfile.WriteLine("e {0} {1} {2} {3}", body, event_name, search_result.tt.ToString("G18"), dist.ToString("G18"));
 
-                    /* Search for the opposite longitude event next time. */
+                    // Search for the opposite longitude event next time.
                     time = search_result;
                     rlon = 180.0 - rlon;
                 }
@@ -1202,8 +1198,8 @@ namespace csharp_test
 
         static readonly elong_test_t[] ElongTestData = new elong_test_t[]
         {
-            /* Max elongation data obtained from: */
-            /* http://www.skycaramba.com/greatest_elongations.shtml */
+            // Max elongation data obtained from:
+            // http://www.skycaramba.com/greatest_elongations.shtml
             new elong_test_t( Body.Mercury, "2010-01-17T05:22Z", "2010-01-27T05:22Z", 24.80, Visibility.Morning ),
             new elong_test_t( Body.Mercury, "2010-05-16T02:15Z", "2010-05-26T02:15Z", 25.10, Visibility.Morning ),
             new elong_test_t( Body.Mercury, "2010-09-09T17:24Z", "2010-09-19T17:24Z", 17.90, Visibility.Morning ),
@@ -1320,7 +1316,7 @@ namespace csharp_test
                     string line;
                     while (null != (line = infile.ReadLine()))
                     {
-                        /* Parse the line of test data. */
+                        // Parse the line of test data.
                         string[] token = Tokenize(line);
                         if (token.Length != 3)
                         {
@@ -1331,7 +1327,7 @@ namespace csharp_test
                         AstroTime expected_time = ParseDate(token[1]);
                         double expected_distance = double.Parse(token[2]);
 
-                        /* Compare computed values against expected values. */
+                        // Compare computed values against expected values.
                         if ((int)apsis.kind != expected_kind)
                         {
                             Console.WriteLine("C# PlanetApsisTest({0} line {1}): WRONG APSIS KIND", filename, count);
@@ -1355,11 +1351,11 @@ namespace csharp_test
                             return 1;
                         }
 
-                        /* Calculate the next apsis. */
+                        // Calculate the next apsis.
                         AstroTime prev_time = apsis.time;
                         apsis = Astronomy.NextPlanetApsis(body, apsis);
 
-                        /* Update statistics. */
+                        // Update statistics.
                         ++count;
                         double interval = apsis.time.tt - prev_time.tt;
                         if (min_interval < 0.0)
@@ -1403,10 +1399,8 @@ namespace csharp_test
                 ApsisInfo apsis = new ApsisInfo();
                 double max_minutes = 0.0;
                 double max_km = 0.0;
-                /*
-                    0 2001-01-10T08:59Z 357132
-                    1 2001-01-24T19:02Z 406565
-                */
+                // 0 2001-01-10T08:59Z 357132
+                // 1 2001-01-24T19:02Z 406565
                 var regex = new Regex(@"^\s*([01])\s+(\d+)-(\d+)-(\d+)T(\d+):(\d+)Z\s+(\d+)\s*$");
                 while (null != (line = infile.ReadLine()))
                 {
@@ -1586,10 +1580,10 @@ namespace csharp_test
             }
         }
 
-        /* JPL Horizons does not include Saturn's rings in its magnitude models. */
-        /* I still don't have authoritative test data for Saturn's magnitude. */
-        /* For now, I just test for consistency with Paul Schlyter's formulas at: */
-        /* http://www.stjarnhimlen.se/comp/ppcomp.html#15 */
+        // JPL Horizons does not include Saturn's rings in its magnitude models.
+        // I still don't have authoritative test data for Saturn's magnitude.
+        // For now, I just test for consistency with Paul Schlyter's formulas at:
+        // http://www.stjarnhimlen.se/comp/ppcomp.html#15
         static saturn_test_case[] saturn_data = new saturn_test_case[]
         {
             new saturn_test_case("1972-01-01T00:00Z", -0.31904865,  +24.50061220),
@@ -1616,14 +1610,14 @@ namespace csharp_test
                 if (mag_diff > 1.0e-4)
                 {
                     Console.WriteLine("C# CheckSaturn ERROR: Excessive magnitude error {0}", mag_diff);
-                    error = 1;      /* keep going -- print all errors before exiting */
+                    error = 1;      // keep going -- print all errors before exiting
                 }
 
                 double tilt_diff = abs(illum.ring_tilt - data.tilt);
                 if (tilt_diff > 3.0e-5)
                 {
                     Console.WriteLine("C# CheckSaturn ERROR: Excessive ring tilt error {0}", tilt_diff);
-                    error = 1;      /* keep going -- print all errors before exiting */
+                    error = 1;      // keep going -- print all errors before exiting
                 }
             }
 
@@ -1632,16 +1626,15 @@ namespace csharp_test
 
         static int TestMaxMag(Body body, string filename)
         {
-            /*
-                Example of input data:
+            // Example of input data:
+            //
+            // 2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84
+            //
+            // JPL Horizons test data has limited floating point precision in the magnitude values.
+            // There is a pair of dates for the beginning and end of the max magnitude period,
+            // given the limited precision.
+            // We pick the point halfway between as the supposed max magnitude time.
 
-                2001-02-21T08:00Z 2001-02-27T08:00Z 23.17 19.53 -4.84
-
-                JPL Horizons test data has limited floating point precision in the magnitude values.
-                There is a pair of dates for the beginning and end of the max magnitude period,
-                given the limited precision.
-                We pick the point halfway between as the supposed max magnitude time.
-            */
             using (StreamReader infile = File.OpenText(filename))
             {
                 int lnum = 0;
@@ -1802,15 +1795,15 @@ namespace csharp_test
         {
             RotationMatrix r = Astronomy.Rotation_EQJ_ECL();
 
-            /* Calculate heliocentric Earth position at a test time. */
+            // Calculate heliocentric Earth position at a test time.
             var time = new AstroTime(2019, 12, 8, 19, 39, 15);
             var ev = Astronomy.HelioVector(Body.Earth, time);
 
-            /* Use the older function to calculate ecliptic vector and angles. */
+            // Use the older function to calculate ecliptic vector and angles.
             Ecliptic ecl = Astronomy.EquatorialToEcliptic(ev);
             Debug("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.vec.x, ecl.vec.y, ecl.vec.z);
 
-            /* Now compute the same vector via rotation matrix. */
+            // Now compute the same vector via rotation matrix.
             AstroVector ee = Astronomy.RotateVector(r, ev);
             double dx = ee.x - ecl.vec.x;
             double dy = ee.y - ecl.vec.y;
@@ -1823,7 +1816,7 @@ namespace csharp_test
                 return 1;
             }
 
-            /* Reverse the test: go from ecliptic back to equatorial. */
+            // Reverse the test: go from ecliptic back to equatorial.
             r = Astronomy.Rotation_ECL_EQJ();
             AstroVector et = Astronomy.RotateVector(r, ee);
             diff = VectorDiff(et, ev);
@@ -1899,7 +1892,7 @@ namespace csharp_test
                 return 1;
             }
 
-            /* Confirm that we can convert back to horizontal vector. */
+            // Confirm that we can convert back to horizontal vector.
             AstroVector check_hor = Astronomy.VectorFromHorizon(sphere, time, Refraction.Normal);
             double diff = VectorDiff(check_hor, vec_hor);
             Debug("C# Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
@@ -1909,7 +1902,7 @@ namespace csharp_test
                 return 1;
             }
 
-            /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
+            // Verify the inverse translation from horizontal vector to equatorial of-date vector.
             rot = Astronomy.Rotation_HOR_EQD(time, observer);
             AstroVector check_eqd = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqd, vec_eqd);
@@ -1920,7 +1913,7 @@ namespace csharp_test
                 return 1;
             }
 
-            /* Exercise HOR to EQJ translation. */
+            // Exercise HOR to EQJ translation.
             Equatorial eqj = Astronomy.Equator(body, time, observer, EquatorEpoch.J2000, Aberration.Corrected);
             AstroVector vec_eqj = eqj.vec;
 
@@ -1934,7 +1927,7 @@ namespace csharp_test
                 return 1;
             }
 
-            /* Verify the inverse translation: EQJ to HOR. */
+            // Verify the inverse translation: EQJ to HOR.
             rot = Astronomy.Rotation_EQJ_HOR(time, observer);
             check_hor = Astronomy.RotateVector(rot, vec_eqj);
             diff = VectorDiff(check_hor, vec_hor);
@@ -2033,54 +2026,50 @@ namespace csharp_test
             AstroTime time = new AstroTime(2067, 5, 30, 14, 45, 0);
             Observer observer = new Observer(+28.0, -82.0, 0.0);
 
-            /*
-                In each round trip, calculate a forward rotation and a backward rotation.
-                Verify the two are inverse matrices.
-            */
+            // In each round trip, calculate a forward rotation and a backward rotation.
+            // Verify the two are inverse matrices.
 
-            /* Round trip #1: EQJ <==> EQD. */
+            // Round trip #1: EQJ <==> EQD.
             RotationMatrix eqj_eqd = Astronomy.Rotation_EQJ_EQD(time);
             RotationMatrix eqd_eqj = Astronomy.Rotation_EQD_EQJ(time);
             if (0 != CheckInverse(nameof(eqj_eqd), nameof(eqd_eqj), eqj_eqd, eqd_eqj)) return 1;
 
-            /* Round trip #2: EQJ <==> ECL. */
+            // Round trip #2: EQJ <==> ECL.
             RotationMatrix eqj_ecl = Astronomy.Rotation_EQJ_ECL();
             RotationMatrix ecl_eqj = Astronomy.Rotation_ECL_EQJ();
             if (0 != CheckInverse(nameof(eqj_ecl), nameof(ecl_eqj), eqj_ecl, ecl_eqj)) return 1;
 
-            /* Round trip #3: EQJ <==> HOR. */
+            // Round trip #3: EQJ <==> HOR.
             RotationMatrix eqj_hor = Astronomy.Rotation_EQJ_HOR(time, observer);
             RotationMatrix hor_eqj = Astronomy.Rotation_HOR_EQJ(time, observer);
             if (0 != CheckInverse(nameof(eqj_hor), nameof(hor_eqj), eqj_hor, hor_eqj)) return 1;
 
-            /* Round trip #4: EQD <==> HOR. */
+            // Round trip #4: EQD <==> HOR.
             RotationMatrix eqd_hor = Astronomy.Rotation_EQD_HOR(time, observer);
             RotationMatrix hor_eqd = Astronomy.Rotation_HOR_EQD(time, observer);
             if (0 != CheckInverse(nameof(eqd_hor), nameof(hor_eqd), eqd_hor, hor_eqd)) return 1;
 
-            /* Round trip #5: EQD <==> ECL. */
+            // Round trip #5: EQD <==> ECL.
             RotationMatrix eqd_ecl = Astronomy.Rotation_EQD_ECL(time);
             RotationMatrix ecl_eqd = Astronomy.Rotation_ECL_EQD(time);
             if (0 != CheckInverse(nameof(eqd_ecl), nameof(ecl_eqd), eqd_ecl, ecl_eqd)) return 1;
 
-            /* Round trip #6: HOR <==> ECL. */
+            // Round trip #6: HOR <==> ECL.
             RotationMatrix hor_ecl = Astronomy.Rotation_HOR_ECL(time, observer);
             RotationMatrix ecl_hor = Astronomy.Rotation_ECL_HOR(time, observer);
             if (0 != CheckInverse(nameof(hor_ecl), nameof(ecl_hor), hor_ecl, ecl_hor)) return 1;
 
-            /*
-                Verify that combining different sequences of rotations result
-                in the expected combination.
-                For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
-                Each of these is a "triangle" of relationships between 3 orientations.
-                There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
-                Because we have just proved that each transformation is reversible,
-                we only need to verify the triangle in one cyclic direction.
-            */
-            if (0 != CheckCycle(nameof(eqj_ecl), nameof(ecl_eqd), nameof(eqd_eqj), eqj_ecl, ecl_eqd, eqd_eqj)) return 1;     /* excluded corner = HOR */
-            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_ecl), nameof(ecl_eqj), eqj_hor, hor_ecl, ecl_eqj)) return 1;     /* excluded corner = EQD */
-            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_eqd), nameof(eqd_eqj), eqj_hor, hor_eqd, eqd_eqj)) return 1;     /* excluded corner = ECL */
-            if (0 != CheckCycle(nameof(ecl_eqd), nameof(eqd_hor), nameof(hor_ecl), ecl_eqd, eqd_hor, hor_ecl)) return 1;     /* excluded corner = EQJ */
+            // Verify that combining different sequences of rotations result
+            // in the expected combination.
+            // For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+            // Each of these is a "triangle" of relationships between 3 orientations.
+            // There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
+            // Because we have just proved that each transformation is reversible,
+            // we only need to verify the triangle in one cyclic direction.
+            if (0 != CheckCycle(nameof(eqj_ecl), nameof(ecl_eqd), nameof(eqd_eqj), eqj_ecl, ecl_eqd, eqd_eqj)) return 1;     // excluded corner = HOR
+            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_ecl), nameof(ecl_eqj), eqj_hor, hor_ecl, ecl_eqj)) return 1;     // excluded corner = EQD
+            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_eqd), nameof(eqd_eqj), eqj_hor, hor_eqd, eqd_eqj)) return 1;     // excluded corner = ECL
+            if (0 != CheckCycle(nameof(ecl_eqd), nameof(eqd_hor), nameof(hor_ecl), ecl_eqd, eqd_hor, hor_ecl)) return 1;     // excluded corner = EQJ
 
             Debug("C# Test_RotRoundTrip: PASS");
             return 0;
@@ -2092,15 +2081,15 @@ namespace csharp_test
             //astro_vector_t v1, v2, ve;
             const double tolerance = 1.0e-15;
 
-            /* Test #1 */
+            // Test #1
 
-            /* Start with an identity matrix. */
+            // Start with an identity matrix.
             RotationMatrix ident = Astronomy.IdentityMatrix();
 
-            /* Pivot 90 degrees counterclockwise around the z-axis. */
+            // Pivot 90 degrees counterclockwise around the z-axis.
             RotationMatrix r = Astronomy.Pivot(ident, 2, +90.0);
 
-            /* Put the expected answer in 'a'. */
+            // Put the expected answer in 'a'.
             var a = new RotationMatrix(new double[3,3]
             {
                 {  0, +1,  0 },
@@ -2108,23 +2097,23 @@ namespace csharp_test
                 {  0,  0, +1 },
             });
 
-            /* Compare actual 'r' with expected 'a'. */
+            // Compare actual 'r' with expected 'a'.
             if (0 != CompareMatrices("Rotation_Pivot #1", r, a, tolerance)) return 1;
 
-            /* Test #2. */
+            // Test #2.
 
-            /* Pivot again, -30 degrees around the x-axis. */
+            // Pivot again, -30 degrees around the x-axis.
             r = Astronomy.Pivot(r, 0, -30.0);
 
-            /* Pivot a third time, 180 degrees around the y-axis. */
+            // Pivot a third time, 180 degrees around the y-axis.
             r = Astronomy.Pivot(r, 1, +180.0);
 
-            /* Use the 'r' matrix to rotate a vector. */
+            // Use the 'r' matrix to rotate a vector.
             var v1 = new AstroVector(1.0, 2.0, 3.0, new AstroTime(0.0));
 
             AstroVector v2 = Astronomy.RotateVector(r, v1);
 
-            /* Initialize the expected vector 've'. */
+            // Initialize the expected vector 've'.
             AstroVector ve = new AstroVector(+2.0, +2.3660254037844390, -2.0980762113533156, v1.t);
 
             if (0 != CompareVectors("Rotation_Pivot #2", v2, ve, tolerance)) return 1;
@@ -2335,7 +2324,7 @@ namespace csharp_test
                         if (diff_minutes > max_diff_minutes)
                             max_diff_minutes = diff_minutes;
 
-                        /* check partial eclipse duration */
+                        // check partial eclipse duration
 
                         diff_minutes = abs(partial_minutes - eclipse.sd_partial);
                         sum_diff_minutes += diff_minutes;
@@ -2350,7 +2339,7 @@ namespace csharp_test
                         if (diff_minutes > max_diff_minutes)
                             max_diff_minutes = diff_minutes;
 
-                        /* check total eclipse duration */
+                        // check total eclipse duration
 
                         diff_minutes = abs(total_minutes - eclipse.sd_total);
                         sum_diff_minutes += diff_minutes;
@@ -2365,7 +2354,7 @@ namespace csharp_test
                         if (diff_minutes > max_diff_minutes)
                             max_diff_minutes = diff_minutes;
 
-                        /* calculate for next iteration */
+                        // calculate for next iteration
 
                         eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
                     }
@@ -2393,7 +2382,7 @@ namespace csharp_test
                 {
                     ++lnum;
                     string[] token = Tokenize(line);
-                    /* 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8 */
+                    // 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8
                     if (token.Length != 5)
                     {
                         Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): wrong token count = {2}", inFileName, lnum, token.Length);
@@ -2417,8 +2406,8 @@ namespace csharp_test
 
                     double diff_days = eclipse.peak.ut - peak.ut;
 
-                    /* Sometimes we find marginal eclipses that aren't listed in the test data. */
-                    /* Ignore them if the distance between the Sun/Moon shadow axis and the Earth's center is large. */
+                    // Sometimes we find marginal eclipses that aren't listed in the test data.
+                    // Ignore them if the distance between the Sun/Moon shadow axis and the Earth's center is large.
                     while (diff_days < -25.0 && eclipse.distance > 9000.0)
                     {
                         ++skip_count;
@@ -2426,7 +2415,7 @@ namespace csharp_test
                         diff_days = eclipse.peak.ut - peak.ut;
                     }
 
-                    /* Validate the eclipse prediction. */
+                    // Validate the eclipse prediction.
                     double diff_minutes = (24 * 60) * abs(diff_days);
                     if (diff_minutes > 6.93)
                     {
@@ -2437,7 +2426,7 @@ namespace csharp_test
                     if (diff_minutes > max_minutes)
                         max_minutes = diff_minutes;
 
-                    /* Validate the eclipse kind, but only when it is not a "glancing" eclipse. */
+                    // Validate the eclipse kind, but only when it is not a "glancing" eclipse.
                     if ((eclipse.distance < 6360) && (eclipse.kind != expected_kind))
                     {
                         Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): WRONG ECLIPSE KIND: expected {2}, found {3}", inFileName, lnum, expected_kind, eclipse.kind);
@@ -2446,11 +2435,9 @@ namespace csharp_test
 
                     if (eclipse.kind == EclipseKind.Total || eclipse.kind == EclipseKind.Annular)
                     {
-                        /*
-                            When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
-                            it creates a glancing blow whose geographic coordinates are excessively sensitive to
-                            slight changes in the ray. Therefore, it is unreasonable to count large errors there.
-                        */
+                        // When the distance between the Moon's shadow ray and the Earth's center is beyond 6100 km,
+                        // it creates a glancing blow whose geographic coordinates are excessively sensitive to
+                        // slight changes in the ray. Therefore, it is unreasonable to count large errors there.
                         if (eclipse.distance < 6100.0)
                         {
                             double diff_angle = AngleDiff(lat, lon, eclipse.latitude, eclipse.longitude);
@@ -2499,7 +2486,7 @@ namespace csharp_test
             double[] b = new double[3];
             double dot;
 
-            /* Convert angles to vectors on a unit sphere. */
+            // Convert angles to vectors on a unit sphere.
             VectorFromAngles(a, alat, alon);
             VectorFromAngles(b, blat, blon);
 
@@ -2515,12 +2502,10 @@ namespace csharp_test
 
         static int LocalSolarEclipseTest1()
         {
-            /*
-                Re-use the test data for global solar eclipses, only feed the given coordinates
-                into the local solar eclipse predictor as the observer's location.
-                In each case, start the search 20 days before the expected eclipse.
-                Then verify that the peak time and eclipse type is correct in each case.
-            */
+            // Re-use the test data for global solar eclipses, only feed the given coordinates
+            // into the local solar eclipse predictor as the observer's location.
+            // In each case, start the search 20 days before the expected eclipse.
+            // Then verify that the peak time and eclipse type is correct in each case.
             Astronomy.CalcMoonCount = 0;
 
             int lnum = 0;
@@ -2535,7 +2520,7 @@ namespace csharp_test
                 {
                     ++lnum;
                     string[] token = Tokenize(line);
-                    /* 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8 */
+                    // 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8
                     if (token.Length != 5)
                     {
                         Console.WriteLine("C# LocalSolarEclipseTest1({0} line {1}): wrong token count = {2}", inFileName, lnum, token.Length);
@@ -2547,11 +2532,11 @@ namespace csharp_test
                     double lon = double.Parse(token[4]);
                     var observer = new Observer(lat, lon, 0.0);
 
-                    /* Start the search 20 days before we know the eclipse should peak. */
+                    // Start the search 20 days before we know the eclipse should peak.
                     AstroTime search_start = peak.AddDays(-20.0);
                     LocalSolarEclipseInfo eclipse = Astronomy.SearchLocalSolarEclipse(search_start, observer);
 
-                    /* Validate the predicted eclipse peak time. */
+                    // Validate the predicted eclipse peak time.
                     double diff_days = eclipse.peak.time.ut - peak.ut;
                     if (diff_days > 20.0)
                     {
@@ -2591,10 +2576,8 @@ namespace csharp_test
 
         static int LocalSolarEclipseTest2()
         {
-            /*
-                Test ability to calculate local solar eclipse conditions away from
-                the peak position on the Earth.
-            */
+            // Test ability to calculate local solar eclipse conditions away from
+            // the peak position on the Earth.
 
             Astronomy.CalcMoonCount = 0;
 
@@ -2723,7 +2706,7 @@ namespace csharp_test
                 while (null != (line = infile.ReadLine()))
                 {
                     ++lnum;
-                    /* 22:17 1881-11-08T00:57Z 03:38  3.8633 */
+                    // 22:17 1881-11-08T00:57Z 03:38  3.8633
                     string[] token = Tokenize(line);
                     if (token.Length != 4)
                     {
@@ -2809,7 +2792,7 @@ namespace csharp_test
             double dy = v(vector.y - y);
             double dz = v(vector.z - z);
             double diff = sqrt(dx*dx + dy*dy + dz*dz);
-            double dist = (sqrt(x*x + y*y + z*z) - 1.0);       /* worst-case distance between Pluto and Earth */
+            double dist = (sqrt(x*x + y*y + z*z) - 1.0);       // worst-case distance between Pluto and Earth
             double arcmin = (diff / dist) * (180.0 * 60.0 / Math.PI);
             Debug("C# PlutoCheck: calc pos = [{0}, {1}, {2}]", vector.x, vector.y, vector.z);
             Debug("C# PlutoCheck: ref  pos = [{0}, {1}, {2}]", x, y, z);
@@ -2932,7 +2915,7 @@ namespace csharp_test
                 new Observer(-90.0, -180.0,    0.0)
             };
 
-            /* Test a variety of times and locations, in both supported orientation systems. */
+            // Test a variety of times and locations, in both supported orientation systems.
 
             foreach (Observer observer in observer_list)
             {
@@ -3059,12 +3042,12 @@ namespace csharp_test
                             switch (part)
                             {
                                 case 0:
-                                    /* 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB */
-                                    tt = double.Parse(line.Split()[0]) - 2451545.0;    /* convert JD to J2000 TT */
+                                    // 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB
+                                    tt = double.Parse(line.Split()[0]) - 2451545.0;    // convert JD to J2000 TT
                                     break;
 
                                 case 1:
-                                    /* X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05 */
+                                    // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
                                     match = Regex.Match(line, @"\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)");
                                     if (!match.Success)
                                     {
@@ -3077,7 +3060,7 @@ namespace csharp_test
                                     break;
 
                                 case 2:
-                                    /* VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04 */
+                                    // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
                                     match = Regex.Match(line, @"\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)");
                                     if (!match.Success)
                                     {
@@ -3642,7 +3625,7 @@ namespace csharp_test
                         var sphere = new Spherical(dec, ra, 1.0);
                         AstroVector north = Astronomy.VectorFromSphere(sphere, time);
 
-                        /* Find angle between two versions of the north pole. Use that as the measure of error. */
+                        // Find angle between two versions of the north pole. Use that as the measure of error.
                         double arcmin = 60.0 * Astronomy.AngleBetween(north, axis.north);
                         if (arcmin > max_arcmin)
                             max_arcmin = arcmin;
@@ -3715,7 +3698,7 @@ namespace csharp_test
                                 break;
 
                             case 1:
-                                /* X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05 */
+                                // X = 1.134408131605554E-03 Y =-2.590904586750408E-03 Z =-7.490427225904720E-05
                                 match = Regex.Match(line, @"\s*X =\s*(\S+) Y =\s*(\S+) Z =\s*(\S+)");
                                 if (!match.Success)
                                     throw new Exception($"C# JplHorizonsStateVectors({filename} line {lnum}): cannot parse position vector.");
@@ -3725,7 +3708,7 @@ namespace csharp_test
                                 break;
 
                             case 2:
-                                /* VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04 */
+                                // VX= 9.148038778472862E-03 VY= 3.973823407182510E-03 VZ= 2.765660368640458E-04
                                 match = Regex.Match(line, @"\s*VX=\s*(\S+) VY=\s*(\S+) VZ=\s*(\S+)");
                                 if (!match.Success)
                                     throw new Exception($"C# JplHorizonsStateVectors({filename} line {lnum}): cannot parse velocity vector.");
