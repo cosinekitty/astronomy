@@ -248,9 +248,9 @@ namespace CosineKitty
         /// <param name="day">The UTC day of the month 1..31.</param>
         /// <param name="hour">The UTC hour value 0..23.</param>
         /// <param name="minute">The UTC minute value 0..59.</param>
-        /// <param name="second">The UTC second value 0..59.</param>
-        public AstroTime(int year, int month, int day, int hour, int minute, int second)
-            : this(new DateTime(year, month, day, hour, minute, second, DateTimeKind.Utc))
+        /// <param name="second">The UTC second value [0, 60).</param>
+        public AstroTime(int year, int month, int day, int hour, int minute, double second)
+            : this(UniversalTimeFromCalendar(year, month, day, hour, minute, second))
         {
         }
 
@@ -288,7 +288,12 @@ namespace CosineKitty
         /// <returns>Example: "2019-08-30T17:45:22.763Z".</returns>
         public override string ToString()
         {
-            return ToUtcDateTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+            var d = new CalendarDateTime(ut);
+            int millis = Math.Max(0, Math.Min(59999, (int)Math.Round(d.second * 1000.0)));
+            string s = $"{d.year:0000}-{d.month:00}-{d.day:00}T{d.hour:00}:{d.minute:00}:{millis/1000:00}.{millis%1000:000}Z";
+            if (d.year > 9999)
+                s = "+" + s;
+            return s;
         }
 
         /// <summary>
@@ -308,6 +313,61 @@ namespace CosineKitty
         public AstroTime AddDays(double days)
         {
             return new AstroTime(this.ut + days);
+        }
+
+        private static double UniversalTimeFromCalendar(int year, int month, int day, int hour, int minute, double second)
+        {
+            // This formula is adapted from NOVAS C 3.1 function julian_date().
+            // It given a Gregorian calendar date/time, it calculates the fractional
+            // number of days since the J2000 epoch.
+
+            long jd12h = (long) day - 32075L + 1461L * ((long) year + 4800L
+                + ((long) month - 14L) / 12L) / 4L
+                + 367L * ((long) month - 2L - ((long) month - 14L) / 12L * 12L)
+                / 12L - 3L * (((long) year + 4900L + ((long) month - 14L) / 12L)
+                / 100L) / 4L;
+
+            long y2000 = jd12h - 2451545L;
+
+            return (double)y2000 - 0.5 + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0);
+        }
+    }
+
+    internal struct CalendarDateTime
+    {
+        public int year;
+        public int month;
+        public int day;
+        public int hour;
+        public int minute;
+        public double second;
+
+        public CalendarDateTime(double ut)
+        {
+            // Adapted from the NOVAS C 3.1 function cal_date().
+            // Convert fractional days since J2000 into Gregorian calendar date/time.
+
+            double djd = ut + 2451545.5;
+            long jd = (long)djd;
+
+            double x = 24.0 * (djd % 1.0);
+            hour = (int)x;
+            x = 60.0 * (x % 1.0);
+            minute = (int)x;
+            second = 60.0 * (x % 1.0);
+
+            long k = jd + 68569L;
+            long n = 4L * k / 146097L;
+            k = k - (146097L * n + 3L) / 4L;
+            long m = 4000L * (k + 1L) / 1461001L;
+            k = k - 1461L * m / 4L + 31L;
+
+            month = (int) (80L * k / 2447L);
+            day = (int) (k - 2447L * (long)month / 80L);
+            k = (long) month / 11L;
+
+            month = (int) ((long)month + 2L - 12L * k);
+            year = (int) (100L * (n - 49L) + m + k);
         }
     }
 

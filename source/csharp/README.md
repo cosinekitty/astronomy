@@ -2382,7 +2382,7 @@ to iterate through consecutive alternating perigees and apogees.
 | `int` | `day` | The UTC day of the month 1..31. |
 | `int` | `hour` | The UTC hour value 0..23. |
 | `int` | `minute` | The UTC minute value 0..59. |
-| `int` | `second` | The UTC second value 0..59. |
+| `double` | `second` | The UTC second value [0, 60). |
 
 
 ### member variables

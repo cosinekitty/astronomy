@@ -928,7 +928,7 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
 
     y2000 = jd12h - 2451545L;
 
-    time.ut = (double)y2000 - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0));
+    time.ut = (double)y2000 - 0.5 + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0);
     time.tt = TerrestrialTime(time.ut);
     time.psi = time.eps = time.st = NAN;
 

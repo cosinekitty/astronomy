@@ -38,6 +38,7 @@ namespace csharp_test
             new Test("moon", MoonTest),
             new Test("geoid", GeoidTest),
             new Test("constellation", ConstellationTest),
+            new Test("dates250", DatesIssue250),
             new Test("elongation", ElongationTest),
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
             new Test("gravsim", GravitySimulatorTest),
@@ -402,6 +403,29 @@ namespace csharp_test
             for (int year = 1; year <= 9999; ++year)
                 Astronomy.Seasons(year);
 
+            return 0;
+        }
+
+        static int CheckDecemberSolstice(int year, string expected)
+        {
+            SeasonsInfo si = Astronomy.Seasons(year);
+            string actual = si.dec_solstice.ToString();
+            if (actual != expected)
+            {
+                Console.WriteLine($"C# DatesIssue250: FAIL: year {year}, expected [{expected}], actual [{actual}]");
+                return 1;
+            }
+            return 0;
+        }
+
+        static int DatesIssue250()
+        {
+            // Make sure we can handle dates outside the range supported by System.DateTime.
+            // https://github.com/cosinekitty/astronomy/issues/250
+            if (0 != CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z")) return 1;
+            if (0 != CheckDecemberSolstice(-2300, "-2300-12-19T16:22:26.325Z")) return 1;
+            if (0 != CheckDecemberSolstice(12345, "+12345-12-11T13:30:10.041Z")) return 1;
+            Console.WriteLine("C# DatesIssue250: PASS");
             return 0;
         }
 
