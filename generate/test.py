@@ -63,25 +63,25 @@ def AstroTime():
     diff = time.ut - expected_ut
     if vabs(diff) > 1.0e-12:
         print('PY AstroTime: excessive UT error {}'.format(diff))
-        sys.exit(1)
+        return 1
     diff = time.tt - expected_tt
     if vabs(diff) > 1.0e-12:
         print('PY AstroTime: excessive TT error {}'.format(diff))
-        sys.exit(1)
+        return 1
     s = str(time.Utc())
     if s != '2018-12-02 18:30:12.543000':
         print('PY AstroTime: Utc() returned incorrect string "{}"'.format(s))
-        sys.exit(1)
+        return 1
     time = astronomy.Time.Make(2018, 12, 31, 23, 59, 59.9994)
     s = str(time)
     if s != '2018-12-31T23:59:59.999Z':
         print('PY AstroTime: expected 2018-12-31T23:59:59.999Z but found {}'.format(s))
-        sys.exit(1)
+        return 1
     time = astronomy.Time.Make(2018, 12, 31, 23, 59, 59.9995)
     s = str(time)
     if s != '2019-01-01T00:00:00.000Z':
         print('PY AstroTime: expected 2019-01-01T00:00:00.000Z but found {}'.format(s))
-        sys.exit(1)
+        return 1
     print('PY Current time =', astronomy.Time.Now())
     AssertGoodTime('2015-12-31', '2015-12-31T00:00:00.000Z')
     AssertGoodTime('2015-12-31T23:45Z', '2015-12-31T23:45:00.000Z')
@@ -94,6 +94,9 @@ def AstroTime():
     AssertBadTime('1971-12-31T23:60:00Z')
     AssertBadTime('1971-12-31T23:00:60Z')
     AssertBadTime('1971-03-17T03:30:55.976')
+    # Extreme year values...
+    AssertGoodTime('-2300-12-19T16:22:26.325Z', '-2300-12-19T16:22:26.325Z')
+    AssertGoodTime('+12345-12-11T13:30:10.041Z', '+12345-12-11T13:30:10.041Z')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -2851,11 +2854,32 @@ def ArcminVelError(correct, calc):
 
 #-----------------------------------------------------------------------------------------------------------
 
+def CheckDecemberSolstice(year, expected):
+    si = astronomy.Seasons(year)
+    actual = str(si.dec_solstice)
+    if actual != expected:
+        print('PY DatesIssue250: FAIL: year {}, expected [{}], actual [{}]'.format(year, expected, actual))
+        return 1
+    return 0
+
+def DatesIssue250():
+    # Make sure we can handle dates outside the range supported by System.DateTime.
+    # https://github.com/cosinekitty/astronomy/issues/250
+    return (
+        CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z") or
+        CheckDecemberSolstice(-2300, "-2300-12-19T16:22:26.325Z") or
+        CheckDecemberSolstice(12345, "+12345-12-11T13:30:10.041Z") or
+        Pass('DatesIssue250')
+    )
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'axis':                     Axis,
     'barystate':                BaryState,
     'constellation':            Constellation,
+    'dates250':                 DatesIssue250,
     'elongation':               Elongation,
     'geoid':                    Geoid,
     'global_solar_eclipse':     GlobalSolarEclipse,

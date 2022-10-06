@@ -917,7 +917,7 @@ The value of the calling object is not modified. This function creates a brand n
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `int` | `year` | The UTC 4-digit year value, e.g. 2019. |
+| `int` | `year` | The UTC year value, e.g. 2019. |
 | `int` | `month` | The UTC month in the range 1..12. |
 | `int` | `day` | The UTC day of the month, in the range 1..31. |
 | `int` | `hour` | The UTC hour, in the range 0..23. |

@@ -916,19 +916,19 @@ astro_time_t Astronomy_CurrentTime(void)
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second)
 {
     astro_time_t time;
-    long int jd12h;
-    long int y2000;
+    long y = (long)year;
+    long m = (long)month;
+    long d = (long)day;
 
     /* This formula is adapted from NOVAS C 3.1 function julian_date() */
-    jd12h = (long) day - 32075L + 1461L * ((long) year + 4800L
-        + ((long) month - 14L) / 12L) / 4L
-        + 367L * ((long) month - 2L - ((long) month - 14L) / 12L * 12L)
-        / 12L - 3L * (((long) year + 4900L + ((long) month - 14L) / 12L)
-        / 100L) / 4L;
+    long y2000 = (
+        (d - 2483620L)
+        + 1461L*(y + 4800L - (14L - m) / 12L)/4L
+        + 367L*(m - 2L + (14L - m) / 12L * 12L)/12L
+        - 3L*((y + 4900L - (14L - m) / 12L) / 100L)/4L
+    );
 
-    y2000 = jd12h - 2451545L;
-
-    time.ut = (double)y2000 - 0.5 + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0);
+    time.ut = (y2000 - 0.5) + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0);
     time.tt = TerrestrialTime(time.ut);
     time.psi = time.eps = time.st = NAN;
 

@@ -577,7 +577,7 @@ def _UniversalTime(tt):
             return ut
         dt += err
 
-_TimeRegex = re.compile(r'^([0-9]{1,4})-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
+_TimeRegex = re.compile(r'^([\+\-]?[0-9]{1,5})-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
 
 class Time:
     """Represents a date and time used for performing astronomy calculations.
@@ -705,7 +705,7 @@ class Time:
         Parameters
         ----------
         year : int
-            The UTC 4-digit year value, e.g. 2019.
+            The UTC year value, e.g. 2019.
         month : int
             The UTC month in the range 1..12.
         day : int
@@ -721,10 +721,17 @@ class Time:
         -------
         Time
         """
-        micro = round(math.fmod(second, 1.0) * 1000000)
-        second = math.floor(second - micro/1000000)
-        d = datetime.datetime(year, month, day, hour, minute, second, micro)
-        ut = (d - _EPOCH).total_seconds() / 86400
+        # This formula is adapted from NOVAS C 3.1 function julian_date().
+        y = int(year)
+        m = int(month)
+        d = int(day)
+        y2000 = float(
+            (d - 2483620)
+            + 1461 * (y + 4800 - (14 - m) // 12) // 4
+            + 367 * (m - 2 + (14 - m) // 12 * 12) // 12
+            - 3 * ((y + 4900 - (14 - m) // 12) // 100) // 4
+        )
+        ut = (y2000 - 0.5) + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0)
         return Time(ut)
 
     @staticmethod
@@ -774,9 +781,38 @@ class Time:
         return 'Time(\'' + str(self) + '\')'
 
     def __str__(self):
-        millis = round(self.ut * 86400000.0)
-        n = _EPOCH + datetime.timedelta(milliseconds=millis)
-        return '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(n.year, n.month, n.day, n.hour, n.minute, n.second, math.floor(n.microsecond / 1000))
+        # Adapted from the NOVAS C 3.1 function cal_date().
+        djd = self.ut + 2451545.5
+        jd = int(djd)
+        x = 24.0 * math.fmod(djd, 1.0)
+        hour = int(x)
+        x = 60.0 * math.fmod(x, 1.0)
+        minute = int(x)
+        second = round(60.0 * math.fmod(x, 1.0), 3)
+        if second >= 60.0:
+            second -= 60.0
+            minute += 1
+            if minute >= 60:
+                minute -= 60
+                hour += 1
+                if hour >= 24:
+                    hour -= 24
+                    jd += 1
+        k = jd + 68569
+        n = 4 * k // 146097
+        k = k - (146097 * n + 3) // 4
+        m = 4000 * (k + 1) // 1461001
+        k = k - 1461 * m // 4 + 31
+        month = (80 * k) // 2447
+        day = k - 2447 * month // 80
+        k = month // 11
+        month = month + 2 - 12 * k
+        year = 100 * (n - 49) + m + k
+        millis = max(0, min(59999, round(1000.0 * second)))
+        text = '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(year, month, day, hour, minute, millis // 1000, millis % 1000)
+        if year > 9999:
+            text = '+' + text
+        return text
 
     def Utc(self):
         """Returns the UTC date and time as a `datetime` object.
