@@ -1061,7 +1061,7 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
  *      If `size` is too small to hold the string as specified by `format`,
  *      the `text` buffer is set to `""` (if possible)
  *      and the function returns `ASTRO_BUFFER_TOO_SMALL`.
- *      A buffer that is `TIME_TEXT_BYTES` (25) bytes or larger is always large enough for this function.
+ *      A buffer that is `TIME_TEXT_BYTES` (28) bytes or larger is always large enough for this function.
  *
  * @return `ASTRO_SUCCESS` on success; otherwise an error as described in the parameter notes.
  */
@@ -1075,6 +1075,7 @@ astro_status_t Astronomy_FormatTime(
     double rounding;
     size_t min_size;
     astro_utc_t utc;
+    char ytext[8];   /* worst case: "+999999" = 8 characters including terminal '\0'. */
 
     if (text == NULL)
         return ASTRO_INVALID_PARAMETER;
@@ -1111,43 +1112,58 @@ astro_status_t Astronomy_FormatTime(
         return ASTRO_INVALID_PARAMETER;
     }
 
-    /* Check for insufficient buffer size. */
-    if (size < min_size)
-        return ASTRO_BUFFER_TOO_SMALL;
-
     /* Perform rounding. */
     time.ut += rounding;
 
     /* Convert linear J2000 days to Gregorian UTC date/time. */
     utc = Astronomy_UtcFromTime(time);
 
-    /* We require the year to be formatted as a 4-digit non-negative integer. */
-    if (utc.year < 0 || utc.year > 9999)
-        return ASTRO_BAD_TIME;
+    if (utc.year >= 0 && utc.year <= 9999)
+    {
+        snprintf(ytext, sizeof(ytext), "%04d", utc.year);
+    }
+    else
+    {
+        /* ISO 8600 allows for years outside the usual range. */
+        /* In this case, try to fit the year in a 6-digit format, with a + or - prefix. */
+        if (utc.year < -999999 || utc.year > +999999)
+            return ASTRO_BAD_TIME;
+
+        if (utc.year < 0)
+            snprintf(ytext, sizeof(ytext), "%07d", utc.year);
+        else
+            snprintf(ytext, sizeof(ytext), "+%06d", utc.year);
+
+        min_size += 3;  /* two extra year digits and an extra +/- prefix. */
+    }
+
+    /* Check for insufficient buffer size. */
+    if (size < min_size)
+        return ASTRO_BUFFER_TOO_SMALL;
 
     /* Format the string. */
     switch (format)
     {
     case TIME_FORMAT_DAY:
-        nprinted = snprintf(text, size, "%04d-%02d-%02d",
-            utc.year, utc.month, utc.day);
+        nprinted = snprintf(text, size, "%s-%02d-%02d",
+            ytext, utc.month, utc.day);
         break;
 
     case TIME_FORMAT_MINUTE:
-        nprinted = snprintf(text, size, "%04d-%02d-%02dT%02d:%02dZ",
-            utc.year, utc.month, utc.day,
+        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02dZ",
+            ytext, utc.month, utc.day,
             utc.hour, utc.minute);
         break;
 
     case TIME_FORMAT_SECOND:
-        nprinted = snprintf(text, size, "%04d-%02d-%02dT%02d:%02d:%02.0lfZ",
-            utc.year, utc.month, utc.day,
+        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02d:%02.0lfZ",
+            ytext, utc.month, utc.day,
             utc.hour, utc.minute, floor(utc.second));
         break;
 
     case TIME_FORMAT_MILLI:
-        nprinted = snprintf(text, size, "%04d-%02d-%02dT%02d:%02d:%06.3lfZ",
-            utc.year, utc.month, utc.day,
+        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02d:%06.3lfZ",
+            ytext, utc.month, utc.day,
             utc.hour, utc.minute, floor(1000.0 * utc.second) / 1000.0);
         break;
 

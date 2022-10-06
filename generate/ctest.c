@@ -218,6 +218,7 @@ static int LibrationTest(void);
 static int DE405_Check(void);
 static int AxisTest(void);
 static int SiderealTimeTest(void);
+static int DatesIssue250(void);
 
 #if PERFORMANCE_TESTS
 static int MapPerformanceTest(void);
@@ -239,6 +240,7 @@ static unit_test_t UnitTests[] =
     {"barystate",               BaryStateTest},
     {"check",                   AstroCheck},
     {"constellation",           ConstellationTest},
+    {"dates250",                DatesIssue250},
     {"de405",                   DE405_Check},
     {"earth_apsis",             EarthApsis},
     {"elongation",              ElongationTest},
@@ -6795,6 +6797,36 @@ static int GravitySimulatorTest(void)
     CHECK(GravSimFile("geostate/Juno.txt",      BODY_EARTH, nsteps, &rscore, &vscore, 6.0962, 7.7147));
 
     printf("C GravitySimulatorTest: PASS (pos score = %0.4lf arcmin, vel score = %0.4lf arcmin)\n", rscore, vscore);
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int CheckDecemberSolstice(int year, const char *expected)
+{
+    int error = 1;
+    char actual[TIME_TEXT_BYTES];
+    astro_seasons_t si = Astronomy_Seasons(year);
+    astro_status_t status = Astronomy_FormatTime(si.dec_solstice, TIME_FORMAT_MILLI, actual, sizeof(actual));
+    if (status != ASTRO_SUCCESS)
+        FAIL("C DateIssue250: FAIL: status=%d for year %d.\n", status, year);
+    if (strcmp(actual, expected))
+        FAIL("C DatesIssue250: FAIL: year %d, expected [%s], actual [%s]\n", year, expected, actual);
+    error = 0;
+fail:
+    return error;
+}
+
+static int DatesIssue250(void)
+{
+    /* Make sure we can handle dates outside the range supported by System.DateTime. */
+    /* https://github.com/cosinekitty/astronomy/issues/250 */
+    int error;
+    CHECK(CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z"));
+    CHECK(CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.325Z"));
+    CHECK(CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.041Z"));
+    printf("C DatesIssue250: PASS\n");
 fail:
     return error;
 }

@@ -14,6 +14,11 @@ function Fail(message) {
     process.exit(1);
 }
 
+function Pass(name) {
+    console.log(`JS ${name}: PASS`);
+    return 0;
+}
+
 function v(x) {
     // Verify that 'x' is really a number.
 
@@ -3144,11 +3149,33 @@ function ArcminVelError(correct, calc) {
 
 //-------------------------------------------------------------------------------------------------
 
+function CheckDecemberSolstice(year, expected) {
+    const si = Astronomy.Seasons(year);
+    const actual = si.dec_solstice.toString();
+    if (actual != expected) {
+        console.error(`JS DatesIssue250 FAIL: year ${year}, expected [${expected}], actual [${actual}]`);
+        return 1;
+    }
+    return 0;
+}
+
+function DatesIssue250() {
+    return (
+        CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z") ||
+        CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.326Z") ||
+        CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.040Z") ||
+        Pass('DatesIssue250')
+    );
+}
+
+//-------------------------------------------------------------------------------------------------
+
 const UnitTests = {
     aberration:             AberrationTest,
     axis:                   AxisTest,
     barystate:              BaryStateTest,
     constellation:          Constellation,
+    dates250:               DatesIssue250,
     elongation:             Elongation,
     geoid:                  Geoid,
     global_solar_eclipse:   GlobalSolarEclipse,

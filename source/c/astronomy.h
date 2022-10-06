@@ -1045,7 +1045,7 @@ astro_axis_t;
  * \def TIME_TEXT_BYTES
  * @brief The smallest number of characters that is always large enough for #Astronomy_FormatTime.
  */
-#define TIME_TEXT_BYTES  25
+#define TIME_TEXT_BYTES  28
 
 /**
  * @brief Holds the positions and velocities of Jupiter's major 4 moons.

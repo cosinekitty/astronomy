@@ -714,7 +714,7 @@ Given an [`astro_time_t`](#astro_time_t) value `time`, formats it as an ISO 8601
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string. If the civil time is outside the year range 0000 to 9999, the function fails and returns `ASTRO_BAD_TIME`. Years prior to 1583 are treated as if they are using the modern Gregorian calendar, even when the Julian calendar was actually in effect. | 
 | [`astro_time_format_t`](#astro_time_format_t) | `format` |  Specifies the resolution to which the date and time should be formatted, as explained at [`astro_time_format_t`](#astro_time_format_t). If the value of `format` is not recognized, the function fails and returns `ASTRO_INVALID_PARAMETER`. | 
 | `char *` | `text` |  A pointer to a text buffer to receive the output. If `text` is `NULL`, this function returns `ASTRO_INVALID_PARAMETER`. If the function fails for any reason, and `text` is not `NULL`, and `size` is greater than 0, the `text` buffer is set to an empty string. | 
-| `size_t` | `size` |  The size in bytes of the buffer pointed to by `text`. The buffer must be large enough to accomodate the output format selected by the `format` parameter, as specified at [`astro_time_format_t`](#astro_time_format_t). If `size` is too small to hold the string as specified by `format`, the `text` buffer is set to `""` (if possible) and the function returns `ASTRO_BUFFER_TOO_SMALL`. A buffer that is `TIME_TEXT_BYTES` (25) bytes or larger is always large enough for this function. | 
+| `size_t` | `size` |  The size in bytes of the buffer pointed to by `text`. The buffer must be large enough to accomodate the output format selected by the `format` parameter, as specified at [`astro_time_format_t`](#astro_time_format_t). If `size` is too small to hold the string as specified by `format`, the `text` buffer is set to `""` (if possible) and the function returns `ASTRO_BUFFER_TOO_SMALL`. A buffer that is `TIME_TEXT_BYTES` (28) bytes or larger is always large enough for this function. | 
 
 
 
@@ -3536,7 +3536,7 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 
 ```C
-#define TIME_TEXT_BYTES  25
+#define TIME_TEXT_BYTES  28
 ```
 
 
