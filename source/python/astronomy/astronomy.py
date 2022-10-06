@@ -577,7 +577,7 @@ def _UniversalTime(tt):
             return ut
         dt += err
 
-_TimeRegex = re.compile(r'^([\+\-]?[0-9]{1,5})-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
+_TimeRegex = re.compile(r'^([\+\-]?[0-9]+)-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
 
 class Time:
     """Represents a date and time used for performing astronomy calculations.
@@ -809,9 +809,13 @@ class Time:
         month = month + 2 - 12 * k
         year = 100 * (n - 49) + m + k
         millis = max(0, min(59999, round(1000.0 * second)))
-        text = '{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(year, month, day, hour, minute, millis // 1000, millis % 1000)
-        if year > 9999:
-            text = '+' + text
+        if year < 0:
+            text = '-{:06d}'.format(-year)
+        elif year <= 9999:
+            text = '{:04d}'.format(year)
+        else:
+            text = '+{:06d}'.format(year)
+        text += '-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(month, day, hour, minute, millis // 1000, millis % 1000)
         return text
 
     def Utc(self):

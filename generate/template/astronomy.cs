@@ -290,10 +290,14 @@ namespace CosineKitty
         {
             var d = new CalendarDateTime(ut);
             int millis = Math.Max(0, Math.Min(59999, (int)Math.Round(d.second * 1000.0)));
-            string s = $"{d.year:0000}-{d.month:00}-{d.day:00}T{d.hour:00}:{d.minute:00}:{millis/1000:00}.{millis%1000:000}Z";
-            if (d.year > 9999)
-                s = "+" + s;
-            return s;
+            string y;
+            if (d.year < 0)
+                y = "-" + (-d.year).ToString("000000");
+            else if (d.year <= 9999)
+                y = d.year.ToString("0000");
+            else
+                y = "+" + d.year.ToString("000000");
+            return $"{y}-{d.month:00}-{d.day:00}T{d.hour:00}:{d.minute:00}:{millis/1000:00}.{millis%1000:000}Z";
         }
 
         /// <summary>

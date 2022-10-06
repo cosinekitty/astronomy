@@ -95,8 +95,8 @@ def AstroTime():
     AssertBadTime('1971-12-31T23:00:60Z')
     AssertBadTime('1971-03-17T03:30:55.976')
     # Extreme year values...
-    AssertGoodTime('-2300-12-19T16:22:26.325Z', '-2300-12-19T16:22:26.325Z')
-    AssertGoodTime('+12345-12-11T13:30:10.041Z', '+12345-12-11T13:30:10.041Z')
+    AssertGoodTime('-2300-12-19T16:22:26.325Z', '-002300-12-19T16:22:26.325Z')
+    AssertGoodTime('+12345-12-11T13:30:10.041Z', '+012345-12-11T13:30:10.041Z')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -2867,8 +2867,8 @@ def DatesIssue250():
     # https://github.com/cosinekitty/astronomy/issues/250
     return (
         CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z") or
-        CheckDecemberSolstice(-2300, "-2300-12-19T16:22:26.325Z") or
-        CheckDecemberSolstice(12345, "+12345-12-11T13:30:10.041Z") or
+        CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.325Z") or
+        CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.041Z") or
         Pass('DatesIssue250')
     )
 

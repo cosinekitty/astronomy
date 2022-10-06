@@ -1117,24 +1117,22 @@ astro_status_t Astronomy_FormatTime(
 
     /* Convert linear J2000 days to Gregorian UTC date/time. */
     utc = Astronomy_UtcFromTime(time);
+    if (utc.year < -999999 || utc.year > +999999)
+        return ASTRO_BAD_TIME;
 
-    if (utc.year >= 0 && utc.year <= 9999)
+    if (utc.year < 0)
+    {
+        snprintf(ytext, sizeof(ytext), "-%06d", -utc.year);
+        min_size += 3;  /* '-' prefix and two extra year digits. */
+    }
+    else if (utc.year <= 9999)
     {
         snprintf(ytext, sizeof(ytext), "%04d", utc.year);
     }
     else
     {
-        /* ISO 8600 allows for years outside the usual range. */
-        /* In this case, try to fit the year in a 6-digit format, with a + or - prefix. */
-        if (utc.year < -999999 || utc.year > +999999)
-            return ASTRO_BAD_TIME;
-
-        if (utc.year < 0)
-            snprintf(ytext, sizeof(ytext), "%07d", utc.year);
-        else
-            snprintf(ytext, sizeof(ytext), "+%06d", utc.year);
-
-        min_size += 3;  /* two extra year digits and an extra +/- prefix. */
+        snprintf(ytext, sizeof(ytext), "+%06d", utc.year);
+        min_size += 3;  /* '+' prefix and two extra year digits. */
     }
 
     /* Check for insufficient buffer size. */

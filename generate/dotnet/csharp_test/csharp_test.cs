@@ -423,8 +423,8 @@ namespace csharp_test
             // Make sure we can handle dates outside the range supported by System.DateTime.
             // https://github.com/cosinekitty/astronomy/issues/250
             if (0 != CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z")) return 1;
-            if (0 != CheckDecemberSolstice(-2300, "-2300-12-19T16:22:26.325Z")) return 1;
-            if (0 != CheckDecemberSolstice(12345, "+12345-12-11T13:30:10.041Z")) return 1;
+            if (0 != CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.325Z")) return 1;
+            if (0 != CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.041Z")) return 1;
             Console.WriteLine("C# DatesIssue250: PASS");
             return 0;
         }
