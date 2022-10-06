@@ -896,6 +896,19 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
+    private fun decemberSolstice(year: Int): String =
+        seasons(year).decemberSolstice.toString()
+
+    @Test
+    fun `Extreme year values`() {
+        // https://github.com/cosinekitty/astronomy/issues/250
+        assertEquals("2022-12-21T21:47:58.189Z", decemberSolstice(2022))
+        assertEquals("-002300-12-19T16:22:26.325Z", decemberSolstice(-2300))
+        assertEquals("+012345-12-11T13:30:10.040Z", decemberSolstice(12345))
+    }
+
+    //----------------------------------------------------------------------------------------
+
     @Test
     fun `Moon phase search`() {
         val thresholdSeconds = 90.0

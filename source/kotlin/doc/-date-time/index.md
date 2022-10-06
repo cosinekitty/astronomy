@@ -29,4 +29,4 @@ A universal time resolved into UTC calendar date and time fields.
 | [minute](minute.md)<br>val [minute](minute.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The minute value 0..59. |
 | [month](month.md)<br>val [month](month.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The month value 1=January, ..., 12=December. |
 | [second](second.md)<br>val [second](second.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The floating point second value in the half-open range [0, 60). |
-| [year](year.md)<br>val [year](year.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The integer 4-digit year value. |
+| [year](year.md)<br>val [year](year.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The integer year value. |

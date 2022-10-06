@@ -357,7 +357,7 @@ private fun universalTimeDays(year: Int, month: Int, day: Int, hour: Int, minute
  */
 class DateTime(
     /**
-     * The integer 4-digit year value.
+     * The integer year value.
      */
     val year: Int,
 
@@ -411,8 +411,14 @@ class DateTime(
         val millis: Double = 1000.0 * (second - wholeSeconds)
         val wholeMillis: Int = millis.toInt()
 
-        return "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ"
-            .format(year, month, day, hour, minute, wholeSeconds, wholeMillis)
+        val ytext = when {
+            year < 0 -> "-%06d".format(-year)
+            year <= 9999 -> "%04d".format(year)
+            else -> "+%06d".format(year)
+        }
+
+        return "%s-%02d-%02dT%02d:%02d:%02d.%03dZ"
+            .format(ytext, month, day, hour, minute, wholeSeconds, wholeMillis)
     }
 }
 
