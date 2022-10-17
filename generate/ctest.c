@@ -195,6 +195,7 @@ static int RefractionTest(void);
 static int ConstellationTest(void);
 static int LunarEclipseIssue78(void);
 static int LunarEclipseTest(void);
+static int LunarFractionTest(void);
 static int GlobalSolarEclipseTest(void);
 static int GravitySimulatorTest(void);
 static int PlotDeltaT(const char *outFileName);
@@ -256,6 +257,7 @@ static unit_test_t UnitTests[] =
     {"local_solar_eclipse",     LocalSolarEclipseTest},
     {"lunar_eclipse",           LunarEclipseTest},
     {"lunar_eclipse_78",        LunarEclipseIssue78},
+    {"lunar_fraction",          LunarFractionTest},
     {"magnitude",               MagnitudeTest},
 #if PERFORMANCE_TESTS
     {"map",                     MapPerformanceTest},
@@ -3543,7 +3545,8 @@ static int LunarEclipseTest(void)
     double diff_minutes, max_diff_minutes = 0.0, sum_diff_minutes = 0.0;
     int diff_count = 0;
     double diff_days;
-    int valid = 0;
+    int sd_valid = 0;
+    int frac_valid = 0;
     int skip_count = 0;
     const double diff_limit = 2.0;
     extern int _CalcMoonCount;      /* incremented by Astronomy Engine every time expensive CalcMoon() is called */
@@ -3566,6 +3569,12 @@ static int LunarEclipseTest(void)
     {
         ++lnum;
 
+        /* Make sure numeric data are finite numbers. */
+        V(eclipse.obscuration);
+        V(eclipse.sd_partial);
+        V(eclipse.sd_penum);
+        V(eclipse.sd_total);
+
         /* scan test data */
 
         /* 2021-05-26T11:19Z  94   9 */
@@ -3577,30 +3586,40 @@ static int LunarEclipseTest(void)
         if (2 != sscanf(line+18, "%lf %lf", &partial_minutes, &total_minutes))
             FAIL("C LunarEclipseTest(%s line %d): invalid data format.\n", filename, lnum);
 
-        /* verify that the calculated eclipse semi-durations are consistent with the kind */
+        /* Verify that the calculated eclipse semi-durations are consistent with the kind. */
+        /* Verify that fractional coverage values also make sense for the kind. */
 
         switch (eclipse.kind)
         {
         case ECLIPSE_PENUMBRAL:
-            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial == 0.0) && (eclipse.sd_total == 0.0);
+            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial == 0.0) && (eclipse.sd_total == 0.0);
+            frac_valid = (eclipse.obscuration == 0.0);
             break;
 
         case ECLIPSE_PARTIAL:
-            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total == 0.0);
+            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total == 0.0);
+            frac_valid = (eclipse.obscuration > 0.0) && (eclipse.obscuration < 1.0);
             break;
 
         case ECLIPSE_TOTAL:
-            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
+            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
+            frac_valid = (eclipse.obscuration == 1.0);
             break;
 
         default:
             FAIL("C LunarEclipseTest(%s line %d): invalid eclipse kind %d.\n", filename, lnum, eclipse.kind);
         }
 
-        if (!valid)
+        if (!sd_valid)
         {
             FAIL("C LunarEclipseTest(%s line %d): invalid semiduration(s) for kind %d: penum=%lf, partial=%lf, total=%lf.\n",
                 filename, lnum, eclipse.kind, eclipse.sd_penum, eclipse.sd_partial, eclipse.sd_total);
+        }
+
+        if (!frac_valid)
+        {
+            FAIL("C LunarEclipseTest(%s line %d): invalid obscuration = %0.16lf for kind %d\n",
+                filename, lnum, eclipse.obscuration, eclipse.kind);
         }
 
         /* check eclipse peak time */
@@ -3681,6 +3700,65 @@ static int LunarEclipseTest(void)
 fail:
     if (infile != NULL) fclose(infile);
     if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int LunarFractionCase(int year, int month, int day, double obscuration)
+{
+    int error;
+    astro_time_t time;
+    astro_lunar_eclipse_t eclipse;
+    double dt, diff;
+
+    /* Search for the first lunar eclipse to occur after the given date. */
+    /* It should always happen within 24 hours of the given date. */
+    time = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
+    eclipse = Astronomy_SearchLunarEclipse(time);
+    CHECK_STATUS(eclipse);
+
+    if (eclipse.kind != ECLIPSE_PARTIAL)
+        FAIL("C LunarFractionCase(%04d-%02d-%02d): expected partial eclipse, but found %d.\n", year, month, day, eclipse.kind);
+
+    dt = V(eclipse.peak.ut - time.ut);
+    if (dt < 0.0 || dt > 1.0)
+        FAIL("C LunarFractionCase(%04d-%02d-%02d): eclipse occurs %0.4lf days after predicted date.\n", year, month, day, dt);
+
+    diff = V(eclipse.obscuration - obscuration);
+    if (ABS(diff) > 0.00901)
+        FAIL("C LunarFractionCase(%04d-%02d-%02d) FAIL: obscuration error = %0.8lf, expected = %0.3lf, actual = %0.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
+    DEBUG("C LunarFractionCase(%04d-%02d-%02d) fraction error = %0.8lf\n", year, month, day, diff);
+
+fail:
+    return error;
+}
+
+
+static int LunarFractionTest(void)
+{
+    int error;
+
+    /* Verify calculation of the fraction of the Moon's disc covered by the Earth's umbra during a partial eclipse. */
+    /* Data for this is more tedious to gather, because Espenak data does not contain it. */
+    /* We already verify fraction=0.0 for penumbral eclipses and fraction=1.0 for total eclipses in LunarEclipseTest. */
+
+    CHECK(LunarFractionCase(2010,  6, 26, 0.506));  /* https://www.timeanddate.com/eclipse/lunar/2010-june-26 */
+    CHECK(LunarFractionCase(2012,  6,  4, 0.304));  /* https://www.timeanddate.com/eclipse/lunar/2012-june-4 */
+    CHECK(LunarFractionCase(2013,  4, 25, 0.003));  /* https://www.timeanddate.com/eclipse/lunar/2013-april-25 */
+    CHECK(LunarFractionCase(2017,  8,  7, 0.169));  /* https://www.timeanddate.com/eclipse/lunar/2017-august-7 */
+    CHECK(LunarFractionCase(2019,  7, 16, 0.654));  /* https://www.timeanddate.com/eclipse/lunar/2019-july-16 */
+    CHECK(LunarFractionCase(2021, 11, 19, 0.991));  /* https://www.timeanddate.com/eclipse/lunar/2021-november-19 */
+    CHECK(LunarFractionCase(2023, 10, 28, 0.060));  /* https://www.timeanddate.com/eclipse/lunar/2023-october-28 */
+    CHECK(LunarFractionCase(2024,  9, 18, 0.035));  /* https://www.timeanddate.com/eclipse/lunar/2024-september-18 */
+    CHECK(LunarFractionCase(2026,  8, 28, 0.962));  /* https://www.timeanddate.com/eclipse/lunar/2026-august-28 */
+    CHECK(LunarFractionCase(2028,  1, 12, 0.024));  /* https://www.timeanddate.com/eclipse/lunar/2028-january-12 */
+    CHECK(LunarFractionCase(2028,  7,  6, 0.325));  /* https://www.timeanddate.com/eclipse/lunar/2028-july-6 */
+    CHECK(LunarFractionCase(2030,  6, 15, 0.464));  /* https://www.timeanddate.com/eclipse/lunar/2030-june-15 */
+
+    printf("C LunarFractionTest: PASS\n");
+
+fail:
     return error;
 }
 

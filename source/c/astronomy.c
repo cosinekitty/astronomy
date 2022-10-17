@@ -223,7 +223,7 @@ static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refra
 #define             SUN_RADIUS_AU  (SUN_RADIUS_KM / KM_PER_AU)
 
 #define EARTH_MEAN_RADIUS_KM        6371.0            /* mean radius of the Earth's geoid, without atmosphere */
-#define EARTH_ATMOSPHERE_KM           88.0            /* effective atmosphere thickness for lunar eclipses */
+#define EARTH_ATMOSPHERE_KM           88.0            /* effective atmosphere thickness for lunar eclipses. see: https://eclipse.gsfc.nasa.gov/LEcat5/shadow.html */
 #define EARTH_ECLIPSE_RADIUS_KM     (EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM)
 #define EARTH_EQUATORIAL_RADIUS_AU  (EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 
@@ -10609,7 +10609,7 @@ static astro_lunar_eclipse_t LunarEclipseError(astro_status_t status)
     eclipse.status = status;
     eclipse.kind = ECLIPSE_NONE;
     eclipse.peak = TimeError();
-    eclipse.sd_penum = eclipse.sd_partial = eclipse.sd_total = NAN;
+    eclipse.obscuration = eclipse.sd_penum = eclipse.sd_partial = eclipse.sd_total = NAN;
     return eclipse;
 }
 
@@ -10635,6 +10635,57 @@ typedef struct
 }
 shadow_context_t;
 /** @endcond */
+
+
+static double Obscuration(      /* returns area of intersection of the two discs, divided by area of first disc. */
+    double a,   /* radius of first disc */
+    double b,   /* radius of second disc */
+    double c)   /* distance between the centers of the discs */
+{
+    double x;   /* Horizontal location of intersection point on both circumferences */
+    double y;   /* Positive vertical location of intersection point on both circumferences */
+    double radicand, lens1, lens2, obs;
+
+    if (a <= 0.0 || b <= 0.0)
+        return 0.0;     /* invalid radius */
+
+    if (c < 0.0)
+        return 0.0;     /* invalid distance between centers */
+
+    if (c >= a + b)
+        return 0.0;     /* the discs are too far apart to have any overlapping area */
+
+    if (c == 0.0)
+    {
+        /* The discs have a common center. Therefore, one disc is inside the other. */
+        return (a <= b) ? 1.0 : (b*b / a*a);
+    }
+
+    x = (a*a - b*b + c*c) / (2 * c);
+
+    radicand = a*a - x*x;
+    if (radicand <= 0.0)
+    {
+        /* The circumferences do not intersect, or are tangent. */
+        /* We already ruled out the case of non-overlapping discs. */
+        /* Therefore, one disc is inside the other. */
+        return (a <= b) ? 1.0 : (b*b / a*a);
+    }
+
+    /* The discs overlap fractionally in a pair of lens-shaped areas. */
+
+    y = sqrt(radicand);
+
+    /* Return the overlapping fractional area. */
+    /* There are two lens-shaped areas, one to the left of x, the other to the right of x. */
+    /* Each part is calculated by subtracting a triangular area from a sector's area. */
+    lens1 = a*a*acos(x/a) - x*y;
+    lens2 = b*b*acos((c-x)/b) - (c-x)*y;
+
+    /* Find the fractional area with respect to the first disc. */
+    obs = (lens1 + lens2) / (PI*a*a);
+    return obs;
+}
 
 
 static shadow_t ShadowError(astro_status_t status)
@@ -10966,6 +11017,7 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                 /* This is at least a penumbral eclipse. We will return a result. */
                 eclipse.status = ASTRO_SUCCESS;
                 eclipse.kind = ECLIPSE_PENUMBRAL;
+                eclipse.obscuration = 0.0;
                 eclipse.peak = shadow.time;
                 eclipse.sd_total = 0.0;
                 eclipse.sd_partial = 0.0;
@@ -10985,9 +11037,15 @@ astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime)
                     {
                         /* This is a total eclipse. */
                         eclipse.kind = ECLIPSE_TOTAL;
+                        eclipse.obscuration = 1.0;
                         eclipse.sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, eclipse.sd_partial);
                         if (eclipse.sd_total <= 0.0)
                             return LunarEclipseError(ASTRO_SEARCH_FAILURE);
+                    }
+                    else
+                    {
+                        /* For lunar eclipses, we calculate the fraction of the Moon's disc covered by the Earth's umbra. */
+                        eclipse.obscuration = Obscuration(MOON_MEAN_RADIUS_KM, shadow.k, shadow.r);
                     }
                 }
                 return eclipse;

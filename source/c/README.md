@@ -4163,6 +4163,8 @@ When a lunar eclipse is found, it is classified as penumbral, partial, or total.
 
 The `kind` field thus holds `ECLIPSE_PENUMBRAL`, `ECLIPSE_PARTIAL`, or `ECLIPSE_TOTAL`, depending on the kind of lunar eclipse found.
 
+The `obscuration` field holds a value in the range [0, 1] that indicates what fraction of the Moon's apparent disc area is covered by the Earth's umbra at the eclipse's peak. This indicates how dark the peak eclipse appears. For penumbral eclipses, the obscuration is 0, because the Moon does not pass through the Earth's umbra. For partial eclipses, the obscuration is somewhere between 0 and 1. For total lunar eclipses, the obscuration is 1.
+
 Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
 
 Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase of the eclipse, which is half of the amount of time the eclipse spends in each phase (expressed in minutes), or 0 if the eclipse never reaches that phase. By converting from minutes to days, and subtracting/adding with `center`, the caller may determine the date and time of the beginning/end of each eclipse phase. 
@@ -4171,6 +4173,7 @@ Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each p
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of lunar eclipse found.  |
+| `double` | `obscuration` |  The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra.  |
 | [`astro_time_t`](#astro_time_t) | `peak` |  The time of the eclipse at its peak.  |
 | `double` | `sd_penum` |  The semi-duration of the penumbral phase in minutes.  |
 | `double` | `sd_partial` |  The semi-duration of the partial phase in minutes, or 0.0 if none.  |
