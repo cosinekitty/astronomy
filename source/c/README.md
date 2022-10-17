@@ -4013,12 +4013,15 @@ The eclipse is classified as partial, annular, or total, depending on the maximu
 
 The `kind` field thus holds `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, or `ECLIPSE_TOTAL`. A total eclipse is when the peak observer sees the Sun completely blocked by the Moon. An annular eclipse is like a total eclipse, but the Moon is too far from the Earth's surface to completely block the Sun; instead, the Sun takes on a ring-shaped appearance. A partial eclipse is when the Moon blocks part of the Sun's disc, but nobody on the Earth observes either a total or annular eclipse.
 
-If `kind` is `ECLIPSE_TOTAL` or `ECLIPSE_ANNULAR`, the `latitude` and `longitude` fields give the geographic coordinates of the center of the Moon's shadow projected onto the daytime side of the Earth at the instant of the eclipse's peak. If `kind` has any other value, `latitude` and `longitude` are undefined and should not be used. 
+If `kind` is `ECLIPSE_TOTAL` or `ECLIPSE_ANNULAR`, the `latitude` and `longitude` fields give the geographic coordinates of the center of the Moon's shadow projected onto the daytime side of the Earth at the instant of the eclipse's peak. If `kind` has any other value, `latitude` and `longitude` are undefined and should not be used.
+
+For total or annular eclipses, the `obscuration` field holds the fraction (0, 1] of the Sun's apparent disc area that is blocked from view by the Moon's silhouette, as seen by an observer located at the geographic coordinates `latitude`, `longitude` at the darkest time `peak`. The value will always be 1 for total eclipses, and less than 1 for annular eclipses. For partial eclipses, `obscuration` is undefined and should not be used. This is because there is little practical use for an obscuration value of a partial eclipse without supplying a particular observation location. Developers who wish to provide an obscuration value for partial solar eclipses should therefore use [`Astronomy_SearchLocalSolarEclipse`](#Astronomy_SearchLocalSolarEclipse) and provide the geographic coordinates of an observer. 
 
 | Type | Member | Description |
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of solar eclipse found.  |
+| `double` | `obscuration` |  The peak fraction of the Sun's apparent disc area obscured by the Moon.  |
 | [`astro_time_t`](#astro_time_t) | `peak` |  The date and time when the solar eclipse is darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.  |
 | `double` | `distance` |  The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers.  |
 | `double` | `latitude` |  The geographic latitude at the center of the peak eclipse shadow.  |

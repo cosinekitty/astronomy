@@ -800,11 +800,23 @@ astro_lunar_eclipse_t;
  * onto the daytime side of the Earth at the instant of the eclipse's peak.
  * If `kind` has any other value, `latitude` and `longitude` are undefined and should
  * not be used.
+ *
+ * For total or annular eclipses, the `obscuration` field holds the fraction (0, 1]
+ * of the Sun's apparent disc area that is blocked from view by the Moon's silhouette,
+ * as seen by an observer located at the geographic coordinates `latitude`, `longitude`
+ * at the darkest time `peak`. The value will always be 1 for total eclipses, and less than
+ * 1 for annular eclipses.
+ * For partial eclipses, `obscuration` is undefined and should not be used.
+ * This is because there is little practical use for an obscuration value of
+ * a partial eclipse without supplying a particular observation location.
+ * Developers who wish to provide an obscuration value for partial solar eclipses should therefore use
+ * #Astronomy_SearchLocalSolarEclipse and provide the geographic coordinates of an observer.
  */
 typedef struct
 {
     astro_status_t          status;         /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
     astro_eclipse_kind_t    kind;           /**< The type of solar eclipse found. */
+    double                  obscuration;    /**< The peak fraction of the Sun's apparent disc area obscured by the Moon. */
     astro_time_t            peak;           /**< The date and time when the solar eclipse is darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. */
     double                  distance;       /**< The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. */
     double                  latitude;       /**< The geographic latitude at the center of the peak eclipse shadow. */

@@ -10658,7 +10658,7 @@ static double Obscuration(      /* returns area of intersection of the two discs
     if (c == 0.0)
     {
         /* The discs have a common center. Therefore, one disc is inside the other. */
-        return (a <= b) ? 1.0 : (b*b / a*a);
+        return (a <= b) ? 1.0 : (b*b)/(a*a);
     }
 
     x = (a*a - b*b + c*c) / (2 * c);
@@ -10669,7 +10669,7 @@ static double Obscuration(      /* returns area of intersection of the two discs
         /* The circumferences do not intersect, or are tangent. */
         /* We already ruled out the case of non-overlapping discs. */
         /* Therefore, one disc is inside the other. */
-        return (a <= b) ? 1.0 : (b*b / a*a);
+        return (a <= b) ? 1.0 : (b*b)/(a*a);
     }
 
     /* The discs overlap fractionally in a pair of lens-shaped areas. */
@@ -11092,7 +11092,7 @@ static astro_global_solar_eclipse_t GlobalSolarEclipseError(astro_status_t statu
     eclipse.status = status;
     eclipse.kind = ECLIPSE_NONE;
     eclipse.peak = TimeError();
-    eclipse.distance = eclipse.latitude = eclipse.longitude = NAN;
+    eclipse.obscuration = eclipse.distance = eclipse.latitude = eclipse.longitude = NAN;
 
     return eclipse;
 }
@@ -11218,6 +11218,40 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
             return GlobalSolarEclipseError(ASTRO_INTERNAL_ERROR);
 
         eclipse.kind = EclipseKindFromUmbra(surface.k);
+        if (eclipse.kind == ECLIPSE_TOTAL)
+        {
+            eclipse.obscuration = 1.0;
+        }
+        else
+        {
+            /* Add heliocentric Moon to lunacentric observer to obtain heliocentric observer. */
+            double hx = shadow.dir.x + o.x;
+            double hy = shadow.dir.y + o.y;
+            double hz = shadow.dir.z + o.z;
+            /* Find the distance from the Sun's center to the observer. */
+            double sun_au = sqrt(hx*hx + hy*hy + hz*hz);
+            /* Calculate the apparent angular radius of the Sun for the observer. */
+            double sun_radius = asin(SUN_RADIUS_AU / sun_au);
+            /* Calculate the apparent angular radius of the Moon for the observer. */
+            double moon_radius = asin((MOON_POLAR_RADIUS_KM / KM_PER_AU) / sqrt(o.x*o.x + o.y*o.y + o.z*o.z));
+            /* Calculate the apparent angular separation between the Sun's center and the Moon's center. */
+            astro_angle_result_t sun_moon_separation = Astronomy_AngleBetween(o, shadow.dir);
+
+            if (sun_moon_separation.status != ASTRO_SUCCESS)
+                return GlobalSolarEclipseError(sun_moon_separation.status);
+
+            eclipse.obscuration = Obscuration(sun_radius, moon_radius, sun_moon_separation.angle * DEG2RAD);
+
+            /* HACK: In marginal cases, we need to clamp obscuration to less than 1.0. */
+            if (eclipse.obscuration > 0.9999)
+                eclipse.obscuration = 0.9999;
+        }
+    }
+    else
+    {
+        /* This is a partial solar eclipse. It does not make practical sense to calculate obscuration. */
+        /* Anyone who wants obscuration should use Astronomy_SearchLocalSolarEclipse for a specific location on the Earth. */
+        eclipse.obscuration = NAN;
     }
 
     return eclipse;

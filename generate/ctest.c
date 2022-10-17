@@ -196,6 +196,7 @@ static int ConstellationTest(void);
 static int LunarEclipseIssue78(void);
 static int LunarEclipseTest(void);
 static int LunarFractionTest(void);
+static int SolarFractionTest(void);
 static int GlobalSolarEclipseTest(void);
 static int GravitySimulatorTest(void);
 static int PlotDeltaT(const char *outFileName);
@@ -276,6 +277,7 @@ static unit_test_t UnitTests[] =
     {"seasons",                 SeasonsTest},
     {"seasons187",              SeasonsIssue187},
     {"sidereal",                SiderealTimeTest},
+    {"solar_fraction",          SolarFractionTest},
     {"time",                    Test_AstroTime},
     {"topostate",               TopoStateTest},
     {"transit",                 Transit},
@@ -3874,6 +3876,32 @@ static int GlobalSolarEclipseTest(void)
             }
         }
 
+        /* Verify that the obscuration value is consistent with the eclipse kind. */
+        switch (eclipse.kind)
+        {
+        case ECLIPSE_PARTIAL:
+            if (!isnan(eclipse.obscuration))
+                FAIL("C GlobalSolarEclipseTest(%s line %d): expected NAN obscuration for partial eclipse, but found %lf\n", inFileName, lnum, eclipse.obscuration);
+            break;
+
+        case ECLIPSE_ANNULAR:
+            if (!isfinite(eclipse.obscuration))
+                FAIL("C GlobalSolarEclipseTest(%s line %d): expected finite obscuration for annular eclipse.\n", inFileName, lnum);
+            if (eclipse.obscuration < 0.8 || eclipse.obscuration >= 1.0)
+                FAIL("C GlobalSolarEclipseTest(%s line %d): obscuration = %0.6lf is out of range for annular eclipse.\n", inFileName, lnum, eclipse.obscuration);
+            break;
+
+        case ECLIPSE_TOTAL:
+            if (!isfinite(eclipse.obscuration))
+                FAIL("C GlobalSolarEclipseTest(%s line %d): expected finite obscuration for total eclipse.\n", inFileName, lnum);
+            if (eclipse.obscuration != 1.0)
+                FAIL("C GlobalSolarEclipseTest(%s line %d): obscuration = %0.6lf should have been 1.0 for total eclipse.\n", inFileName, lnum, eclipse.obscuration);
+            break;
+
+        default:
+            FAIL("C GlobalSolarEclipseTest(%s line %d): Unhandled eclipse kind %d for obscuration check.\n", inFileName, lnum, eclipse.kind);
+        }
+
         eclipse = Astronomy_NextGlobalSolarEclipse(eclipse.peak);
     }
 
@@ -3890,6 +3918,7 @@ fail:
     return error;
 }
 
+/*-----------------------------------------------------------------------------------------------------------*/
 
 static void VectorFromAngles(double v[3], double lat, double lon)
 {
@@ -4171,6 +4200,59 @@ static int LocalSolarEclipseTest2(void)
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int GlobalAnnularCase(int year, int month, int day, double obscuration)
+{
+    int error;
+    astro_time_t time;
+    astro_global_solar_eclipse_t eclipse;
+    double dt, diff;
+
+    /* Search for the first solar eclipse that occurs after the given date. */
+    time = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
+    eclipse = Astronomy_SearchGlobalSolarEclipse(time);
+    CHECK_STATUS(eclipse);
+
+    /* Verify the eclipse is within 1 day after the search basis time. */
+    dt = V(eclipse.peak.ut - time.ut);
+    if (dt < 0.0 || dt > 1.0)
+        FAIL("C GlobalAnnularCase(%04d-%02d-%02d) FAIL: found eclipse %0.8lf days after search time.\n", year, month, day, dt);
+
+    /* Verify we found an annular solar eclipse. */
+    if (eclipse.kind != ECLIPSE_ANNULAR)
+        FAIL("C GlobalAnnularCase(%04d-%02d-%02d) FAIL: expected annular eclipse, found %d.\n", year, month, day, eclipse.kind);
+
+    /* Check how accurately we calculated obscuration. */
+    diff = V(eclipse.obscuration - obscuration);
+    if (ABS(diff) > 0.0000904)
+        FAIL("C GlobalAnnularCase(%04d-%02d-%02d) FAIL: excessive obscuration error = %0.8lf. expected = %0.8lf, calculated = %0.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
+    DEBUG("C GlobalAnnularCase(%04d-%02d-%02d) obscuration error = %0.8lf, expected = %0.8lf, calculated = %0.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
+
+fail:
+    return error;
+}
+
+
+static int SolarFractionTest(void)
+{
+    int error;
+
+    /* Verify global solar eclipse obscurations for annular eclipses only. */
+    /* This is because they are the only nontrivial values for global solar eclipses. */
+    /* The trivial values are all validated exactly by GlobalSolarEclipseTest(). */
+
+    CHECK(GlobalAnnularCase(2023, 10, 14, 0.90638));    /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html */
+    CHECK(GlobalAnnularCase(2024, 10,  2, 0.86975));    /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html */
+    CHECK(GlobalAnnularCase(2027,  2,  6, 0.86139));    /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2027Feb06Aprime.html */
+    CHECK(GlobalAnnularCase(2028,  1, 26, 0.84787));    /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2028Jan26Aprime.html */
+    CHECK(GlobalAnnularCase(2030,  6,  1, 0.89163));    /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html */
+
+    printf("C SolarFractionTest: PASS\n");
+fail:
     return error;
 }
 
