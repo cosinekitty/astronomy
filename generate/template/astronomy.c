@@ -9408,6 +9408,45 @@ static astro_global_solar_eclipse_t GlobalSolarEclipseError(astro_status_t statu
 /* HACK: I added a tiny bias (14 meters) to match Espenak test data. */
 #define EclipseKindFromUmbra(k)     (((k) > 0.014) ? ECLIPSE_TOTAL : ECLIPSE_ANNULAR)
 
+static double LocalSolarObscuration(
+    astro_vector_t hm,     /* heliocentric Moon */
+    astro_vector_t lo)     /* lunacentric observer */
+{
+    astro_vector_t ho;     /* heliocentric observer */
+    astro_angle_result_t sun_moon_separation;
+    double obscuration, sun_au, sun_radius, moon_radius;
+
+    /* Find heliocentric observer. */
+    ho.status = ASTRO_SUCCESS;
+    ho.t = lo.t;
+    ho.x = hm.x + lo.x;
+    ho.y = hm.y + lo.y;
+    ho.z = hm.z + lo.z;
+
+    /* Find the distance from the Sun's center to the observer. */
+    sun_au = Astronomy_VectorLength(ho);
+
+    /* Calculate the apparent angular radius of the Sun for the observer. */
+    sun_radius = asin(SUN_RADIUS_AU / sun_au);
+
+    /* Calculate the apparent angular radius of the Moon for the observer. */
+    moon_radius = asin((MOON_POLAR_RADIUS_KM / KM_PER_AU) / Astronomy_VectorLength(lo));
+
+    /* Calculate the apparent angular separation between the Sun's center and the Moon's center. */
+    sun_moon_separation = Astronomy_AngleBetween(lo, ho);
+
+    if (sun_moon_separation.status != ASTRO_SUCCESS)
+        return -1.0;    /* internal error! should never happen. */
+
+    obscuration = Obscuration(sun_radius, moon_radius, sun_moon_separation.angle * DEG2RAD);
+
+    /* HACK: In marginal cases, we need to clamp obscuration to less than 1.0. */
+    if (obscuration > 0.9999)
+        obscuration = 0.9999;
+
+    return obscuration;
+}
+
 static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
 {
     astro_global_solar_eclipse_t eclipse;
@@ -9525,33 +9564,9 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
 
         eclipse.kind = EclipseKindFromUmbra(surface.k);
         if (eclipse.kind == ECLIPSE_TOTAL)
-        {
             eclipse.obscuration = 1.0;
-        }
         else
-        {
-            /* Add heliocentric Moon to lunacentric observer to obtain heliocentric observer. */
-            double hx = shadow.dir.x + o.x;
-            double hy = shadow.dir.y + o.y;
-            double hz = shadow.dir.z + o.z;
-            /* Find the distance from the Sun's center to the observer. */
-            double sun_au = sqrt(hx*hx + hy*hy + hz*hz);
-            /* Calculate the apparent angular radius of the Sun for the observer. */
-            double sun_radius = asin(SUN_RADIUS_AU / sun_au);
-            /* Calculate the apparent angular radius of the Moon for the observer. */
-            double moon_radius = asin((MOON_POLAR_RADIUS_KM / KM_PER_AU) / sqrt(o.x*o.x + o.y*o.y + o.z*o.z));
-            /* Calculate the apparent angular separation between the Sun's center and the Moon's center. */
-            astro_angle_result_t sun_moon_separation = Astronomy_AngleBetween(o, shadow.dir);
-
-            if (sun_moon_separation.status != ASTRO_SUCCESS)
-                return GlobalSolarEclipseError(sun_moon_separation.status);
-
-            eclipse.obscuration = Obscuration(sun_radius, moon_radius, sun_moon_separation.angle * DEG2RAD);
-
-            /* HACK: In marginal cases, we need to clamp obscuration to less than 1.0. */
-            if (eclipse.obscuration > 0.9999)
-                eclipse.obscuration = 0.9999;
-        }
+            eclipse.obscuration = LocalSolarObscuration(shadow.dir, o);
     }
     else
     {
@@ -9667,6 +9682,7 @@ static astro_local_solar_eclipse_t LocalSolarEclipseError(astro_status_t status)
 
     eclipse.status = status;
     eclipse.kind = ECLIPSE_NONE;
+    eclipse.obscuration = NAN;
 
     eclipse.partial_begin = EclipseEventError();
     eclipse.total_begin   = EclipseEventError();
@@ -9901,11 +9917,16 @@ static astro_local_solar_eclipse_t LocalEclipse(
             return LocalSolarEclipseError(status);
 
         eclipse.kind = EclipseKindFromUmbra(shadow.k);
+        if (eclipse.kind == ECLIPSE_TOTAL)
+            eclipse.obscuration = 1.0;
+        else
+            eclipse.obscuration = LocalSolarObscuration(shadow.dir, shadow.target);
     }
     else
     {
         eclipse.total_begin = eclipse.total_end = EclipseEventError();
         eclipse.kind = ECLIPSE_PARTIAL;
+        eclipse.obscuration = LocalSolarObscuration(shadow.dir, shadow.target);
     }
 
     eclipse.status = ASTRO_SUCCESS;

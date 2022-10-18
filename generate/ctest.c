@@ -3956,7 +3956,6 @@ static int LocalSolarEclipseTest(void)
     int error;
     CHECK(LocalSolarEclipseTest1());
     CHECK(LocalSolarEclipseTest2());
-    error = 0;
 fail:
     return error;
 }
@@ -4034,6 +4033,28 @@ static int LocalSolarEclipseTest1(void)
 
         if (diff_minutes > max_minutes)
             max_minutes = diff_minutes;
+
+        /* Verify obscuration makes sense for this kind of eclipse. */
+
+        if (!isfinite(eclipse.obscuration))
+            FAIL("C LocalSolarEclipseTest1(%s line %d): obscuration is not finite\n", inFileName, lnum);
+
+        switch (eclipse.kind)
+        {
+        case ECLIPSE_ANNULAR:
+        case ECLIPSE_PARTIAL:
+            if (eclipse.obscuration <= 0.0 || eclipse.obscuration >= 1.0)
+                FAIL("C LocalSolarEclipseTest1(%s line %d): eclipse kind %d has invalid obscuration = %0.8lf\n", inFileName, lnum, eclipse.kind, eclipse.obscuration);
+            break;
+
+        case ECLIPSE_TOTAL:
+            if (eclipse.obscuration != 1.0)
+                FAIL("C LocalSolarEclipseTest1(%s line %d): total eclipse has invalid obscuration = %0.8lf\n", inFileName, lnum, eclipse.obscuration);
+            break;
+
+        default:
+            FAIL("C LocalSolarEclipseTest1(%s line %d): Invalid eclipse kind %d\n", inFileName, lnum, eclipse.kind);
+        }
     }
 
     if (skip_count > 6)
@@ -4237,6 +4258,44 @@ fail:
 }
 
 
+static int LocalSolarCase(
+    int year,
+    int month,
+    int day,
+    double latitude,
+    double longitude,
+    astro_eclipse_kind_t kind,
+    double obscuration,
+    double tolerance)
+{
+    int error;
+    astro_time_t time;
+    astro_observer_t observer;
+    astro_local_solar_eclipse_t eclipse;
+    double dt, diff;
+
+    observer = Astronomy_MakeObserver(latitude, longitude, 0.0);
+    time = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
+    eclipse = Astronomy_SearchLocalSolarEclipse(time, observer);
+    CHECK_STATUS(eclipse);
+
+    dt = V(eclipse.peak.time.ut - time.ut);
+    if (dt < 0.0 || dt > 1.0)
+        FAIL("C LocalSolarCase(%04d-%02d-%02d) FAIL: elapsed time = %0.6lf days\n", year, month, day, dt);
+
+    if (eclipse.kind != kind)
+        FAIL("C LocalSolarCase(%04d-%02d-%02d) FAIL: expected kind %d, found %d\n", year, month, day, kind, eclipse.kind);
+
+    diff = V(eclipse.obscuration - obscuration);
+    if (ABS(diff) > tolerance)
+        FAIL("C LocalSolarCase(%04d-%02d-%02d) FAIL: obscuration diff = %0.8lf, expected = %0.8lf, calculated = %0.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
+    DEBUG("C LocalSolarCase(%04d-%02d-%02d) obscuration diff = %0.8lf, expected = %0.8lf, calculated = %0.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
+
+fail:
+    return error;
+}
+
+
 static int SolarFractionTest(void)
 {
     int error;
@@ -4250,6 +4309,17 @@ static int SolarFractionTest(void)
     CHECK(GlobalAnnularCase(2027,  2,  6, 0.86139));    /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2027Feb06Aprime.html */
     CHECK(GlobalAnnularCase(2028,  1, 26, 0.84787));    /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2028Jan26Aprime.html */
     CHECK(GlobalAnnularCase(2030,  6,  1, 0.89163));    /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html */
+
+    /* Verify obscuration values for specific locations on the Earth. */
+    /* Local solar eclipse calculations include obscuration for all types of eclipse, not just annular and total. */
+    CHECK(LocalSolarCase(2023, 10, 14,  11.3683,  -83.1017, ECLIPSE_ANNULAR, 0.90638, 0.00006333)); /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html */
+    CHECK(LocalSolarCase(2023, 10, 14,  25.78,    -80.22,   ECLIPSE_PARTIAL, 0.578,   0.00522));    /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22023&lat=25.78&lon=-80.22&label=Miami%2C+FL&height=0&submit=Get+Data */
+    CHECK(LocalSolarCase(2024,  4,  8,  25.2900, -104.1383, ECLIPSE_TOTAL,   1.0,     0.0));        /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Apr08Tprime.html */
+    CHECK(LocalSolarCase(2024,  4,  8,  37.76,   -122.44,   ECLIPSE_PARTIAL, 0.340,   0.00305));    /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=12024&lat=37.76&lon=-122.44&label=San+Francisco%2C+CA&height=0&submit=Get+Data */
+    CHECK(LocalSolarCase(2024, 10,  2, -21.9533, -114.5083, ECLIPSE_ANNULAR, 0.86975, 0.00007859)); /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html */
+    CHECK(LocalSolarCase(2024, 10,  2, -33.468,   -70.636,  ECLIPSE_PARTIAL, 0.436,   0.00344));    /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22024&lat=-33.468&lon=-70.636&label=Santiago%2C+Chile&height=0&submit=Get+Data */
+    CHECK(LocalSolarCase(2030,  6,  1,  56.525,    80.0617, ECLIPSE_ANNULAR, 0.89163, 0.00007260)); /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html */
+    CHECK(LocalSolarCase(2030,  6,  1,  40.388,    49.914,  ECLIPSE_PARTIAL, 0.67240, 0.00059872)); /* http://xjubier.free.fr/en/site_pages/SolarEclipseCalc_Diagram.html */
 
     printf("C SolarFractionTest: PASS\n");
 fail:
