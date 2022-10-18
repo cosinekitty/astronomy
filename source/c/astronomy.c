@@ -10730,12 +10730,12 @@ static shadow_t PlanetShadow(astro_body_t body, double planet_radius_km, astro_t
     astro_vector_t e, p, g;
 
     /* Calculate light-travel-corrected vector from Earth to planet. */
-    g = Astronomy_GeoVector(body, time, NO_ABERRATION);
+    g = Astronomy_GeoVector(body, time, ABERRATION);
     if (g.status != ASTRO_SUCCESS)
         return ShadowError(g.status);
 
     /* Calculate light-travel-corrected vector from Earth to Sun. */
-    e = Astronomy_GeoVector(BODY_SUN, time, NO_ABERRATION);
+    e = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
     if (e.status != ASTRO_SUCCESS)
         return ShadowError(e.status);
 
@@ -10760,7 +10760,18 @@ static shadow_t EarthShadow(astro_time_t time)
     /* This function helps find when the Earth's shadow falls upon the Moon. */
     astro_vector_t e, m;
 
-    e = CalcEarth(time);            /* This function never fails; no need to check return value */
+    /* Find geocentric Sun with aberration correction. */
+    e = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
+    if (e.status != ASTRO_SUCCESS)
+        return ShadowError(e.status);
+
+    /* Convert geocentric Sun to heliocentric Earth. */
+    /* Thus `e` points in the direction of sunlight heading toward the Earth's center. */
+    e.x = -e.x;
+    e.y = -e.y;
+    e.z = -e.z;
+
+    /* Find geocentric Moon. */
     m = Astronomy_GeoMoon(time);    /* This function never fails; no need to check return value */
 
     return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
