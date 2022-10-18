@@ -49,6 +49,7 @@ namespace csharp_test
             new Test("lunar_apsis", LunarApsisTest),
             new Test("lunar_eclipse", LunarEclipseTest),
             new Test("lunar_eclipse_78", LunarEclipseIssue78),
+            new Test("lunar_fraction", LunarFractionTest),
             new Test("magnitude", MagnitudeTest),
             new Test("moonphase", MoonPhaseTest),
             new Test("moon_nodes", MoonNodesTest),
@@ -2273,6 +2274,13 @@ namespace csharp_test
                     while (null != (line = infile.ReadLine()))
                     {
                         ++lnum;
+
+                        // Make sure numeric data are finite numbers.
+                        v(eclipse.obscuration);
+                        v(eclipse.sd_partial);
+                        v(eclipse.sd_penum);
+                        v(eclipse.sd_total);
+
                         if (line.Length < 17)
                         {
                             Console.WriteLine("C# LunarEclipseTest({0} line {1}): line is too short.", filename, lnum);
@@ -2289,19 +2297,24 @@ namespace csharp_test
                         }
 
                         // Verify that the calculated eclipse semi-durations are consistent with the kind.
-                        bool valid = false;
+                        // Verify that obscurations also make sense for the kind.
+                        bool sd_valid = false;
+                        bool frac_valid = false;
                         switch (eclipse.kind)
                         {
                         case EclipseKind.Penumbral:
-                            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial == 0.0) && (eclipse.sd_total == 0.0);
+                            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial == 0.0) && (eclipse.sd_total == 0.0);
+                            frac_valid = (eclipse.obscuration == 0.0);
                             break;
 
                         case EclipseKind.Partial:
-                            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total == 0.0);
+                            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total == 0.0);
+                            frac_valid = (eclipse.obscuration > 0.0) && (eclipse.obscuration < 1.0);
                             break;
 
                         case EclipseKind.Total:
-                            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
+                            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
+                            frac_valid = (eclipse.obscuration == 1.0);
                             break;
 
                         default:
@@ -2309,10 +2322,16 @@ namespace csharp_test
                             return 1;
                         }
 
-                        if (!valid)
+                        if (!sd_valid)
                         {
                             Console.WriteLine("C# LunarEclipseTest({0} line {1}): inalid semiduration(s) for kind {2}: penum={3}, partial={4}, total={5}",
                                 filename, lnum, eclipse.kind, eclipse.sd_penum, eclipse.sd_partial, eclipse.sd_total);
+                            return 1;
+                        }
+
+                        if (!frac_valid)
+                        {
+                            Console.WriteLine($"C# LunarEclipseTest({filename} line {lnum}): invalid obscuration {eclipse.obscuration} for kind {eclipse.kind}");
                             return 1;
                         }
 
@@ -2385,6 +2404,59 @@ namespace csharp_test
                     Console.WriteLine("C# LunarEclipseTest: PASS (verified {0}, skipped {1}, max_diff_minutes = {2}, avg_diff_minutes = {3}, moon calcs = {4})", lnum, skip_count, max_diff_minutes, (sum_diff_minutes / diff_count), Astronomy.CalcMoonCount);
                 }
             }
+            return 0;
+        }
+
+        static int LunarFractionCase(int year, int month, int day, double obscuration)
+        {
+            // Search for the first lunar eclipse to occur after the given date.
+            // It should always happen within 24 hours of the given date.
+            AstroTime time = new AstroTime(year, month, day, 0, 0, 0.0);
+            LunarEclipseInfo eclipse = Astronomy.SearchLunarEclipse(time);
+
+            if (eclipse.kind != EclipseKind.Partial)
+            {
+                Console.WriteLine($"C# LunarFractionCase({year:0000}-{month:00}-{day:00}): expected partial eclipse, but found {eclipse.kind}.");
+                return 1;
+            }
+
+            double dt = v(eclipse.peak.ut - time.ut);
+            if (dt < 0.0 || dt > 1.0)
+            {
+                Console.WriteLine($"C# LunarFractionCase({year:0000}-{month:00}-{day:00}): eclipse occurs {dt:F4} days after predicted date.");
+                return 1;
+            }
+
+            double diff = v(eclipse.obscuration - obscuration);
+            if (abs(diff) > 0.00901)
+            {
+                Console.WriteLine($"C# LunarFractionCase({year:0000}-{month:00}-{day:00}) FAIL: obscuration error = {diff:F8}, expected = {obscuration:F3}, calculated = {eclipse.obscuration:F8}");
+                return 1;
+            }
+            Debug($"C# LunarFractionCase({year:0000}-{month:00}-{day:00}) obscuration error = {diff:F8}");
+            return 0;
+        }
+
+        static int LunarFractionTest()
+        {
+            // Verify calculation of the fraction of the Moon's disc covered by the Earth's umbra during a partial eclipse.
+            // Data for this is more tedious to gather, because Espenak data does not contain it.
+            // We already verify fraction=0.0 for penumbral eclipses and fraction=1.0 for total eclipses in LunarEclipseTest.
+
+            if (0 != LunarFractionCase(2010,  6, 26, 0.506)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2010-june-26
+            if (0 != LunarFractionCase(2012,  6,  4, 0.304)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2012-june-4
+            if (0 != LunarFractionCase(2013,  4, 25, 0.003)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2013-april-25
+            if (0 != LunarFractionCase(2017,  8,  7, 0.169)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2017-august-7
+            if (0 != LunarFractionCase(2019,  7, 16, 0.654)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2019-july-16
+            if (0 != LunarFractionCase(2021, 11, 19, 0.991)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2021-november-19
+            if (0 != LunarFractionCase(2023, 10, 28, 0.060)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2023-october-28
+            if (0 != LunarFractionCase(2024,  9, 18, 0.035)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2024-september-18
+            if (0 != LunarFractionCase(2026,  8, 28, 0.962)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2026-august-28
+            if (0 != LunarFractionCase(2028,  1, 12, 0.024)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2028-january-12
+            if (0 != LunarFractionCase(2028,  7,  6, 0.325)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2028-july-6
+            if (0 != LunarFractionCase(2030,  6, 15, 0.464)) return 1;  // https://www.timeanddate.com/eclipse/lunar/2030-june-15
+
+            Console.WriteLine("C# LunarFractionTest: PASS");
             return 0;
         }
 

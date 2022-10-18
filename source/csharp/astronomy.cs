@@ -1217,6 +1217,12 @@ namespace CosineKitty
     /// The `kind` field thus holds `EclipseKind.Penumbral`, `EclipseKind.Partial`,
     /// or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
     ///
+    /// The `obscuration` field holds a value in the range [0, 1] that indicates what fraction
+    /// of the Moon's apparent disc area is covered by the Earth's umbra at the eclipse's peak.
+    /// This indicates how dark the peak eclipse appears. For penumbral eclipses, the obscuration
+    /// is 0, because the Moon does not pass through the Earth's umbra. For partial eclipses,
+    /// the obscuration is somewhere between 0 and 1. For total lunar eclipses, the obscuration is 1.
+    ///
     /// Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
     ///
     /// Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
@@ -1230,6 +1236,9 @@ namespace CosineKitty
         /// <summary>The type of lunar eclipse found.</summary>
         public EclipseKind kind;
 
+        /// <summary>The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra.</summary>
+        public double obscuration;
+
         /// <summary>The time of the eclipse at its peak.</summary>
         public AstroTime peak;
 
@@ -1242,9 +1251,10 @@ namespace CosineKitty
         /// <summary>The semi-duration of the total phase in minutes, or 0.0 if none.</summary>
         public double sd_total;
 
-        internal LunarEclipseInfo(EclipseKind kind, AstroTime peak, double sd_penum, double sd_partial, double sd_total)
+        internal LunarEclipseInfo(EclipseKind kind, double obscuration, AstroTime peak, double sd_penum, double sd_partial, double sd_total)
         {
             this.kind = kind;
+            this.obscuration = obscuration;
             this.peak = peak;
             this.sd_penum = sd_penum;
             this.sd_partial = sd_partial;
@@ -8261,6 +8271,57 @@ namespace CosineKitty
         }
 
 
+        private static double Obscuration(  // returns area of intersection of two discs, divided by area of first disc
+            double a,       // radius of first disc
+            double b,       // radius of second disc
+            double c)       // distance between the centers of the discs
+        {
+            if (a <= 0.0)
+                throw new ArgumentException("Radius of first disc must be positive.");
+
+            if (b <= 0.0)
+                throw new ArgumentException("Radius of second disc must be positive.");
+
+            if (c < 0.0)
+                throw new ArgumentException("Distance between discs is not allowed to be negative.");
+
+            if (c >= a + b)
+            {
+                // The discs are too far apart to have any overlapping area.
+                return 0.0;
+            }
+
+            if (c == 0.0)
+            {
+                // The discs have a common center. Therefore, one disc is inside the other.
+                return (a <= b) ? 1.0 : (b*b)/(a*a);
+            }
+
+            double x = (a*a - b*b + c*c) / (2*c);
+            double radicand = a*a - x*x;
+            if (radicand <= 0.0)
+            {
+                // The circumferences do not intersect, or are tangent.
+                // We already ruled out the case of non-overlapping discs.
+                // Therefore, one disc is inside the other.
+                return (a <= b) ? 1.0 : (b*b)/(a*a);
+            }
+
+            // The discs overlap fractionally in a pair of lens-shaped areas.
+
+            double y = Math.Sqrt(radicand);
+
+            // Return the overlapping fractional area.
+            // There are two lens-shaped areas, one to the left of x, the other to the right of x.
+            // Each part is calculated by subtracting a triangular area from a sector's area.
+            double lens1 = a*a*Math.Acos(x/a) - x*y;
+            double lens2 = b*b*Math.Acos((c-x)/b) - (c-x)*y;
+
+            // Find the fractional area with respect to the first disc.
+            return (lens1 + lens2) / (Math.PI*a*a);
+        }
+
+
         /// <summary>Searches for a lunar eclipse.</summary>
         /// <remarks>
         /// This function finds the first lunar eclipse that occurs after `startTime`.
@@ -8304,6 +8365,7 @@ namespace CosineKitty
                     {
                         // This is at least a penumbral eclipse. We will return a result.
                         EclipseKind kind = EclipseKind.Penumbral;
+                        double obscuration = 0.0;
                         double sd_total = 0.0;
                         double sd_partial = 0.0;
                         double sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0);
@@ -8318,10 +8380,15 @@ namespace CosineKitty
                             {
                                 // This is a total eclipse.
                                 kind = EclipseKind.Total;
+                                obscuration = 1.0;
                                 sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, sd_partial);
                             }
+                            else
+                            {
+                                obscuration = Obscuration(MOON_MEAN_RADIUS_KM, shadow.k, shadow.r);
+                            }
                         }
-                        return new LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total);
+                        return new LunarEclipseInfo(kind, obscuration, shadow.time, sd_penum, sd_partial, sd_total);
                     }
                 }
 
@@ -8649,10 +8716,15 @@ namespace CosineKitty
         internal static ShadowInfo EarthShadow(AstroTime time)
         {
             // This function helps find when the Earth's shadow falls upon the Moon.
-            AstroVector e = CalcEarth(time);    // heliocentric Earth
-            AstroVector m = GeoMoon(time);      // geocentric Moon
 
-            return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
+            // Light-travel and aberration corrected vector from the Earth to the Sun.
+            // The negative vector -s is thus the path of sunlight through the center of the Earth.
+            AstroVector s = GeoVector(Body.Sun, time, Aberration.Corrected);
+
+            // Geocentric Moon.
+            AstroVector m = GeoMoon(time);
+
+            return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, -s);
         }
 
 

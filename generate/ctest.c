@@ -3589,7 +3589,7 @@ static int LunarEclipseTest(void)
             FAIL("C LunarEclipseTest(%s line %d): invalid data format.\n", filename, lnum);
 
         /* Verify that the calculated eclipse semi-durations are consistent with the kind. */
-        /* Verify that fractional coverage values also make sense for the kind. */
+        /* Verify that obscuration values also make sense for the kind. */
 
         switch (eclipse.kind)
         {
