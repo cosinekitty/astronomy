@@ -3842,7 +3842,7 @@ static int GlobalSolarEclipseTest(void)
 
         /* Validate the eclipse prediction. */
         diff_minutes = (24 * 60) * ABS(diff_days);
-        if (diff_minutes > 6.93)
+        if (diff_minutes > 7.56)
         {
             printf("Expected: ");
             PrintTime(peak);
@@ -4021,7 +4021,7 @@ static int LocalSolarEclipseTest1(void)
         }
 
         diff_minutes = (24 * 60) * ABS(diff_days);
-        if (diff_minutes > 7.14)
+        if (diff_minutes > 7.734)
         {
             printf("Expected: ");
             PrintTime(peak);
@@ -4121,10 +4121,14 @@ static int CheckEvent(
     if (diff_minutes > 1.0)
         FAIL("CheckEvent(%s line %d): EXCESSIVE TIME ERROR: %0.3lf minutes\n", inFileName, lnum, diff_minutes);
 
-    diff_alt = ABS(expected_altitude - evt.altitude);
-    if (diff_alt > *max_degrees) *max_degrees = diff_alt;
-    if (diff_alt > 0.5)
-        FAIL("CheckEvent(%s line %d): EXCESSIVE ALTITUDE ERROR: %0.6lf degrees\n", inFileName, lnum, diff_alt);
+    /* Ignore discrepancies for negative altitudes, because of quirky and irrelevant differences in refraction models. */
+    if (expected_altitude >= 0.0)
+    {
+        diff_alt = ABS(expected_altitude - evt.altitude);
+        if (diff_alt > *max_degrees) *max_degrees = diff_alt;
+        if (diff_alt > 0.5)
+            FAIL("CheckEvent(%s line %d): EXCESSIVE ALTITUDE ERROR: %0.6lf degrees (expected = %0.6lf, calc = %0.6lf)\n", inFileName, lnum, diff_alt, expected_altitude, evt.altitude);
+    }
 
     error = 0;
 fail:
@@ -4288,8 +4292,8 @@ static int LocalSolarCase(
 
     diff = V(eclipse.obscuration - obscuration);
     if (ABS(diff) > tolerance)
-        FAIL("C LocalSolarCase(%04d-%02d-%02d) FAIL: obscuration diff = %0.8lf, expected = %0.8lf, calculated = %0.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
-    DEBUG("C LocalSolarCase(%04d-%02d-%02d) obscuration diff = %0.8lf, expected = %0.8lf, calculated = %0.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
+        FAIL("C LocalSolarCase(%04d-%02d-%02d) FAIL: obscuration diff = %11.8lf, expected = %11.8lf, calculated = %11.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
+    DEBUG("C LocalSolarCase(%04d-%02d-%02d) obscuration diff = %11.8lf, expected = %11.8lf, calculated = %11.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
 
 fail:
     return error;
@@ -4312,14 +4316,16 @@ static int SolarFractionTest(void)
 
     /* Verify obscuration values for specific locations on the Earth. */
     /* Local solar eclipse calculations include obscuration for all types of eclipse, not just annular and total. */
-    CHECK(LocalSolarCase(2023, 10, 14,  11.3683,  -83.1017, ECLIPSE_ANNULAR, 0.90638, 0.00006333)); /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html */
-    CHECK(LocalSolarCase(2023, 10, 14,  25.78,    -80.22,   ECLIPSE_PARTIAL, 0.578,   0.00522));    /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22023&lat=25.78&lon=-80.22&label=Miami%2C+FL&height=0&submit=Get+Data */
+    CHECK(LocalSolarCase(2023, 10, 14,  11.3683,  -83.1017, ECLIPSE_ANNULAR, 0.90638, 0.000080));   /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html */
+    CHECK(LocalSolarCase(2023, 10, 14,  25.78,    -80.22,   ECLIPSE_PARTIAL, 0.578,   0.000023));   /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22023&lat=25.78&lon=-80.22&label=Miami%2C+FL&height=0&submit=Get+Data */
+    CHECK(LocalSolarCase(2023, 10, 14,  30.2666,  -97.7000, ECLIPSE_PARTIAL, 0.8867,  0.001016));   /* http://astro.ukho.gov.uk/eclipse/0332023/Austin_TX_United_States_2023Oct14.png */
     CHECK(LocalSolarCase(2024,  4,  8,  25.2900, -104.1383, ECLIPSE_TOTAL,   1.0,     0.0));        /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Apr08Tprime.html */
-    CHECK(LocalSolarCase(2024,  4,  8,  37.76,   -122.44,   ECLIPSE_PARTIAL, 0.340,   0.00305));    /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=12024&lat=37.76&lon=-122.44&label=San+Francisco%2C+CA&height=0&submit=Get+Data */
-    CHECK(LocalSolarCase(2024, 10,  2, -21.9533, -114.5083, ECLIPSE_ANNULAR, 0.86975, 0.00007859)); /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html */
-    CHECK(LocalSolarCase(2024, 10,  2, -33.468,   -70.636,  ECLIPSE_PARTIAL, 0.436,   0.00344));    /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22024&lat=-33.468&lon=-70.636&label=Santiago%2C+Chile&height=0&submit=Get+Data */
-    CHECK(LocalSolarCase(2030,  6,  1,  56.525,    80.0617, ECLIPSE_ANNULAR, 0.89163, 0.00007260)); /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html */
-    CHECK(LocalSolarCase(2030,  6,  1,  40.388,    49.914,  ECLIPSE_PARTIAL, 0.67240, 0.00059872)); /* http://xjubier.free.fr/en/site_pages/SolarEclipseCalc_Diagram.html */
+    CHECK(LocalSolarCase(2024,  4,  8,  37.76,   -122.44,   ECLIPSE_PARTIAL, 0.340,   0.000604));   /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=12024&lat=37.76&lon=-122.44&label=San+Francisco%2C+CA&height=0&submit=Get+Data */
+    CHECK(LocalSolarCase(2024, 10,  2, -21.9533, -114.5083, ECLIPSE_ANNULAR, 0.86975, 0.000061));   /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html */
+    CHECK(LocalSolarCase(2024, 10,  2, -33.468,   -70.636,  ECLIPSE_PARTIAL, 0.436,   0.000980));   /* https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22024&lat=-33.468&lon=-70.636&label=Santiago%2C+Chile&height=0&submit=Get+Data */
+    CHECK(LocalSolarCase(2030,  6,  1,  56.525,    80.0617, ECLIPSE_ANNULAR, 0.89163, 0.000067));   /* https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html */
+    CHECK(LocalSolarCase(2030,  6,  1,  40.388,    49.914,  ECLIPSE_PARTIAL, 0.67240, 0.000599));   /* http://xjubier.free.fr/en/site_pages/SolarEclipseCalc_Diagram.html */
+    CHECK(LocalSolarCase(2030,  6,  1,  40.3667,   49.8333, ECLIPSE_PARTIAL, 0.6736,  0.001464));   /* http://astro.ukho.gov.uk/eclipse/0132030/Baku_Azerbaijan_2030Jun01.png */
 
     printf("C SolarFractionTest: PASS\n");
 fail:

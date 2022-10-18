@@ -10771,15 +10771,13 @@ static shadow_t MoonShadow(astro_time_t time)
 {
     /* This function helps find when the Moon's shadow falls upon the Earth. */
 
-    astro_vector_t h, e, m;
+    astro_vector_t s, e, m;
 
-    /*
-        This is a variation on the logic in EarthShadow().
-        Instead of a heliocentric Earth and a geocentric Moon,
-        we want a heliocentric Moon and a lunacentric Earth.
-    */
+    /* Calculate geocentric Sun with aberration correction. */
+    s = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
+    if (s.status != ASTRO_SUCCESS)
+        return ShadowError(s.status);
 
-    h = CalcEarth(time);            /* heliocentric Earth */
     m = Astronomy_GeoMoon(time);    /* geocentric Moon */
 
     /* Calculate lunacentric Earth. */
@@ -10790,9 +10788,9 @@ static shadow_t MoonShadow(astro_time_t time)
     e.t = m.t;
 
     /* Convert geocentric moon to heliocentric Moon. */
-    m.x += h.x;
-    m.y += h.y;
-    m.z += h.z;
+    m.x -= s.x;
+    m.y -= s.y;
+    m.z -= s.z;
 
     return CalcShadow(MOON_MEAN_RADIUS_KM, time, e, m);
 }
@@ -11102,7 +11100,7 @@ static astro_global_solar_eclipse_t GlobalSolarEclipseError(astro_status_t statu
 /* HACK: I added a tiny bias (14 meters) to match Espenak test data. */
 #define EclipseKindFromUmbra(k)     (((k) > 0.014) ? ECLIPSE_TOTAL : ECLIPSE_ANNULAR)
 
-static double LocalSolarObscuration(
+static double SolarEclipseObscuration(
     astro_vector_t hm,     /* heliocentric Moon */
     astro_vector_t lo)     /* lunacentric observer */
 {
@@ -11260,7 +11258,7 @@ static astro_global_solar_eclipse_t GeoidIntersect(shadow_t shadow)
         if (eclipse.kind == ECLIPSE_TOTAL)
             eclipse.obscuration = 1.0;
         else
-            eclipse.obscuration = LocalSolarObscuration(shadow.dir, o);
+            eclipse.obscuration = SolarEclipseObscuration(shadow.dir, o);
     }
     else
     {
@@ -11390,7 +11388,7 @@ static astro_local_solar_eclipse_t LocalSolarEclipseError(astro_status_t status)
 
 static shadow_t LocalMoonShadow(astro_time_t time, astro_observer_t observer)
 {
-    astro_vector_t h, o, m;
+    astro_vector_t s, o, m;
     double pos[3];
 
     /* Calculate observer's geocentric position. */
@@ -11398,7 +11396,11 @@ static shadow_t LocalMoonShadow(astro_time_t time, astro_observer_t observer)
     /* That way they can be recycled instead of recalculated. */
     geo_pos(&time, observer, pos);
 
-    h = CalcEarth(time);            /* heliocentric Earth */
+    /* Calculate geocentric Sun with aberration correction. */
+    s = Astronomy_GeoVector(BODY_SUN, time, ABERRATION);
+    if (s.status != ASTRO_SUCCESS)
+        return ShadowError(s.status);
+
     m = Astronomy_GeoMoon(time);    /* geocentric Moon */
 
     /* Calculate lunacentric location of an observer on the Earth's surface. */
@@ -11409,9 +11411,9 @@ static shadow_t LocalMoonShadow(astro_time_t time, astro_observer_t observer)
     o.t = m.t;
 
     /* Convert geocentric moon to heliocentric Moon. */
-    m.x += h.x;
-    m.y += h.y;
-    m.z += h.z;
+    m.x -= s.x;
+    m.y -= s.y;
+    m.z -= s.z;
 
     return CalcShadow(MOON_MEAN_RADIUS_KM, time, o, m);
 }
@@ -11614,13 +11616,13 @@ static astro_local_solar_eclipse_t LocalEclipse(
         if (eclipse.kind == ECLIPSE_TOTAL)
             eclipse.obscuration = 1.0;
         else
-            eclipse.obscuration = LocalSolarObscuration(shadow.dir, shadow.target);
+            eclipse.obscuration = SolarEclipseObscuration(shadow.dir, shadow.target);
     }
     else
     {
         eclipse.total_begin = eclipse.total_end = EclipseEventError();
         eclipse.kind = ECLIPSE_PARTIAL;
-        eclipse.obscuration = LocalSolarObscuration(shadow.dir, shadow.target);
+        eclipse.obscuration = SolarEclipseObscuration(shadow.dir, shadow.target);
     }
 
     eclipse.status = ASTRO_SUCCESS;
