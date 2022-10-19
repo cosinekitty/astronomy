@@ -4146,7 +4146,7 @@ There are 5 "event" fields, each of which contains a time and a solar altitude. 
 | ---- | ------ | ----------- |
 | [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
 | [`astro_eclipse_kind_t`](#astro_eclipse_kind_t) | `kind` |  The type of solar eclipse found: `ECLIPSE_PARTIAL`, `ECLIPSE_ANNULAR`, or `ECLIPSE_TOTAL`.  |
-| `double` | `obscuration` |  The fraction of the Sun's apparent disc obscured by the Moon at the eclipse peak.  |
+| `double` | `obscuration` |  The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak.  |
 | [`astro_eclipse_event_t`](#astro_eclipse_event_t) | `partial_begin` |  The time and Sun altitude at the beginning of the eclipse.  |
 | [`astro_eclipse_event_t`](#astro_eclipse_event_t) | `total_begin` |  If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid.  |
 | [`astro_eclipse_event_t`](#astro_eclipse_event_t) | `peak` |  The time and Sun altitude when the eclipse reaches its peak.  |

@@ -1286,11 +1286,25 @@ namespace CosineKitty
     /// onto the daytime side of the Earth at the instant of the eclipse's peak.
     /// If `kind` has any other value, `latitude` and `longitude` are undefined and should
     /// not be used.
+    ///
+    /// For total or annular eclipses, the `obscuration` field holds the fraction (0, 1]
+    /// of the Sun's apparent disc area that is blocked from view by the Moon's silhouette,
+    /// as seen by an observer located at the geographic coordinates `latitude`, `longitude`
+    /// at the darkest time `peak`. The value will always be 1 for total eclipses, and less than
+    /// 1 for annular eclipses.
+    /// For partial eclipses, `obscuration` is undefined and should not be used.
+    /// This is because there is little practical use for an obscuration value of
+    /// a partial eclipse without supplying a particular observation location.
+    /// Developers who wish to find an obscuration value for partial solar eclipses should therefore use
+    /// #Astronomy.SearchLocalSolarEclipse and provide the geographic coordinates of an observer.
     /// </remarks>
     public struct GlobalSolarEclipseInfo
     {
         /// <summary>The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.</summary>
         public EclipseKind kind;
+
+        /// <summary>The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only).</summary>
+        public double obscuration;
 
         /// <summary>
         /// The date and time when the solar eclipse is at its darkest.
@@ -1354,6 +1368,13 @@ namespace CosineKitty
     /// A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
     /// Sun just right to completely block all sunlight from reaching the observer.
     ///
+    /// The `obscuration` field reports what fraction of the Sun's disc appears blocked
+    /// by the Moon when viewed by the observer at the peak eclipse time.
+    /// This is a value that ranges from 0 (no blockage) to 1 (total eclipse).
+    /// The obscuration value will be between 0 and 1 for partial eclipses and annular eclipses.
+    /// The value will be exactly 1 for total eclipses. Obscuration gives an indication
+    /// of how dark the eclipse appears.
+    ///
     /// There are 5 "event" fields, each of which contains a time and a solar altitude.
     /// Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
     /// The fields `partial_begin` and `partial_end` are always set, and indicate when
@@ -1367,6 +1388,9 @@ namespace CosineKitty
     {
         /// <summary>The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.</summary>
         public EclipseKind  kind;
+
+        /// <summary>The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak.</summary>
+        public double obscuration;
 
         /// <summary>The time and Sun altitude at the beginning of the eclipse.</summary>
         public EclipseEvent partial_begin;
@@ -2708,6 +2732,7 @@ $ASTRO_ADDSOL()
         internal const double MOON_EQUATORIAL_RADIUS_KM = 1738.1;
         internal const double MOON_MEAN_RADIUS_KM       = 1737.4;
         internal const double MOON_POLAR_RADIUS_KM      = 1736.0;
+        internal const double MOON_POLAR_RADIUS_AU      = (MOON_POLAR_RADIUS_KM / KM_PER_AU);
         internal const double MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU);
 
         private const double ANGVEL = 7.2921150e-5;
@@ -7110,6 +7135,31 @@ $ASTRO_IAU_DATA()
         }
 
 
+        private static double SolarEclipseObscuration(
+            AstroVector hm,     // heliocentric Moon
+            AstroVector lo)     // lunacentric observer
+        {
+            // Find heliocentric observer.
+            AstroVector ho = hm + lo;
+
+            // Calculate the apparent angular radius of the Sun for the observer.
+            double sun_radius = Math.Asin(SUN_RADIUS_AU / ho.Length());
+
+            // Calculate the apparent angular radius of the Moon for the observer.
+            double moon_radius = Math.Asin(MOON_POLAR_RADIUS_AU / lo.Length());
+
+            // Calculate the apparent angular separation between the Sun's center and the Moon's center.
+            double sun_moon_separation = AngleBetween(lo, ho);
+
+            // Find the fraction of the Sun's apparent disc area that is covered by the Moon.
+            double obscuration = Obscuration(sun_radius, moon_radius, sun_moon_separation * DEG2RAD);
+
+            // HACK: In marginal cases, we need to clamp obscuration to less than 1.0.
+            // This function is never called for total eclipses, so it should never return 1.0.
+            return Math.Min(0.9999, obscuration);
+        }
+
+
         /// <summary>Searches for a lunar eclipse.</summary>
         /// <remarks>
         /// This function finds the first lunar eclipse that occurs after `startTime`.
@@ -7430,6 +7480,13 @@ $ASTRO_IAU_DATA()
                     throw new InternalError("Invalid surface distance from intersection.");
 
                 eclipse.kind = EclipseKindFromUmbra(surface.k);
+                eclipse.obscuration = (eclipse.kind == EclipseKind.Total) ? 1.0 : SolarEclipseObscuration(shadow.dir, o);
+            }
+            else
+            {
+                // This is a partial solar eclipse. It does not make practical sense to calculate obscuration.
+                // Anyone who wants obscuration should use Astronomy.SearchLocalSolarEclipse for a specific location on the Earth.
+                eclipse.obscuration = double.NaN;
             }
 
             return eclipse;
@@ -7519,31 +7576,30 @@ $ASTRO_IAU_DATA()
         internal static ShadowInfo MoonShadow(AstroTime time)
         {
             // This function helps find when the Moon's shadow falls upon the Earth.
-            // This is a variation on the logic in EarthShadow().
-            // Instead of a heliocentric Earth and a geocentric Moon,
-            // we want a heliocentric Moon and a lunacentric Earth.
 
-            AstroVector e = CalcEarth(time);    // heliocentric Earth
+            AstroVector s = GeoVector(Body.Sun, time, Aberration.Corrected);
             AstroVector m = GeoMoon(time);      // geocentric Moon
 
             // -m  = lunacentric Earth
-            // m+e = heliocentric Moon
-            return CalcShadow(MOON_MEAN_RADIUS_KM, time, -m, m+e);
+            // m-s = heliocentric Moon
+            return CalcShadow(MOON_MEAN_RADIUS_KM, time, -m, m-s);
         }
 
 
         internal static ShadowInfo LocalMoonShadow(AstroTime time, Observer observer)
         {
             // Calculate observer's geocentric position.
-            // For efficiency, do this first, to populate the earth rotation parameters in 'time'.
-            // That way they can be recycled instead of recalculated.
             AstroVector o = geo_pos(time, observer);
-            AstroVector h = CalcEarth(time);    // heliocentric Earth
-            AstroVector m = GeoMoon(time);      // geocentric Moon
+
+            // Calculate light-travel and aberration corrected Sun.
+            AstroVector s = GeoVector(Body.Sun, time, Aberration.Corrected);
+
+            // Calculate geocentric Moon.
+            AstroVector m = GeoMoon(time);
 
             // o-m = lunacentric observer
-            // m+h = heliocentric Moon
-            return CalcShadow(MOON_MEAN_RADIUS_KM, time, o-m, m+h);
+            // m-s = heliocentric Moon
+            return CalcShadow(MOON_MEAN_RADIUS_KM, time, o-m, m-s);
         }
 
 
@@ -7717,6 +7773,7 @@ $ASTRO_IAU_DATA()
                 eclipse.kind = EclipseKind.Partial;
             }
 
+            eclipse.obscuration = (eclipse.kind == EclipseKind.Total) ? 1.0 : SolarEclipseObscuration(shadow.dir, shadow.target);
             return eclipse;
         }
 

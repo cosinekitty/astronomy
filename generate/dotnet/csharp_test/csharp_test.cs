@@ -63,6 +63,7 @@ namespace csharp_test
             new Test("seasons", SeasonsTest),
             new Test("seasons187", SeasonsIssue187),
             new Test("sidereal", SiderealTimeTest),
+            new Test("solar_fraction", SolarFractionTest),
             new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
             new Test("barystate", BaryStateTest),
@@ -2513,7 +2514,7 @@ namespace csharp_test
 
                     // Validate the eclipse prediction.
                     double diff_minutes = (24 * 60) * abs(diff_days);
-                    if (diff_minutes > 6.93)
+                    if (diff_minutes > 7.56)
                     {
                         Console.WriteLine("C# GlobalSolarEclipseTest({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes", inFileName, lnum, diff_minutes);
                         return 1;
@@ -2545,6 +2546,48 @@ namespace csharp_test
                             if (diff_angle > max_angle)
                                 max_angle = diff_angle;
                         }
+                    }
+
+                    // Verify the obscuration value is consistent with the eclipse kind.
+                    switch (eclipse.kind)
+                    {
+                        case EclipseKind.Partial:
+                            if (!double.IsNaN(eclipse.obscuration))
+                            {
+                                Console.WriteLine($"C# GlobalSolarEclipseTest({inFileName} line {lnum}): Expected NAN obscuration for partial eclipse, but found {eclipse.obscuration}");
+                                return 1;
+                            }
+                            break;
+
+                        case EclipseKind.Annular:
+                            if (!double.IsFinite(eclipse.obscuration))
+                            {
+                                Console.WriteLine($"C# GlobalSolarEclipseTest({inFileName} line {lnum}): Expected finite obscuration for annular eclipse.");
+                                return 1;
+                            }
+                            if (eclipse.obscuration < 0.8 || eclipse.obscuration >= 1.0)
+                            {
+                                Console.WriteLine($"C# GlobalSolarEclipseTest({inFileName} line {lnum}): Invalid obscuration = {eclipse.obscuration:F8} for annular eclipse.");
+                                return 1;
+                            }
+                            break;
+
+                        case EclipseKind.Total:
+                            if (!double.IsFinite(eclipse.obscuration))
+                            {
+                                Console.WriteLine($"C# GlobalSolarEclipseTest({inFileName} line {lnum}): Expected finite obscuration for total eclipse.");
+                                return 1;
+                            }
+                            if (eclipse.obscuration != 1.0)
+                            {
+                                Console.WriteLine($"C# GlobalSolarEclipseTest({inFileName} line {lnum}): Invalid obscuration = {eclipse.obscuration:F8} for total eclipse.");
+                                return 1;
+                            }
+                            break;
+
+                        default:
+                            Console.WriteLine($"C# GlobalSolarEclipseTest({inFileName} line {lnum}): Unhandled eclipse kind {eclipse.kind} for obscuration check.");
+                            return 1;
                     }
 
                     eclipse = Astronomy.NextGlobalSolarEclipse(eclipse.peak);
@@ -2641,14 +2684,46 @@ namespace csharp_test
                     }
 
                     double diff_minutes = (24 * 60) * abs(diff_days);
-                    if (diff_minutes > 7.14)
+                    if (diff_minutes > 7.734)
                     {
-                        Console.WriteLine("C LocalSolarEclipseTest1({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes", inFileName, lnum, diff_minutes);
+                        Console.WriteLine("C# LocalSolarEclipseTest1({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes", inFileName, lnum, diff_minutes);
                         return 1;
                     }
 
                     if (diff_minutes > max_minutes)
                         max_minutes = diff_minutes;
+
+                    // Verify obscuration makes sense for this kind of eclipse.
+
+                    if (!double.IsFinite(eclipse.obscuration))
+                    {
+                        Console.WriteLine($"C# LocalSolarEclipseTest1({inFileName} line {lnum}): obscuration is not finite.");
+                        return 1;
+                    }
+
+                    switch (eclipse.kind)
+                    {
+                        case EclipseKind.Annular:
+                        case EclipseKind.Partial:
+                            if (eclipse.obscuration <= 0.0 || eclipse.obscuration >= 1.0)
+                            {
+                                Console.WriteLine($"C# LocalSolarEclipseTest1({inFileName} line {lnum}): eclipse kind {eclipse.kind} has invalid obscuration {eclipse.obscuration:F8}.");
+                                return 1;
+                            }
+                            break;
+
+                        case EclipseKind.Total:
+                            if (eclipse.obscuration != 1.0)
+                            {
+                                Console.WriteLine($"C# LocalSolarEclipseTest1({inFileName} line {lnum}): total eclipse has invalid obscuration {eclipse.obscuration:F8}.");
+                                return 1;
+                            }
+                            break;
+
+                        default:
+                            Console.WriteLine($"C# LocalSolarEclipseTest1({inFileName} line {lnum}): invalid eclipse kind {eclipse.kind}.");
+                            return 1;
+                    }
                 }
             }
 
@@ -2768,12 +2843,16 @@ namespace csharp_test
                 return true;
             }
 
-            double diff_alt = abs(expected_altitude - evt.altitude);
-            if (diff_alt > max_degrees) max_degrees = diff_alt;
-            if (diff_alt > 0.5)
+            // Ignore discrepancies for negative altitudes, because of quirky and irrelevant differences in refraction models.
+            if (expected_altitude >= 0.0)
             {
-                Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE ALTITUDE ERROR: {2} degrees", inFileName, lnum, diff_alt);
-                return true;
+                double diff_alt = abs(expected_altitude - evt.altitude);
+                if (diff_alt > max_degrees) max_degrees = diff_alt;
+                if (diff_alt > 0.5)
+                {
+                    Console.WriteLine("CheckEvent({0} line {1}): EXCESSIVE ALTITUDE ERROR: {2} degrees", inFileName, lnum, diff_alt);
+                    return true;
+                }
             }
 
             return false;
@@ -2787,6 +2866,103 @@ namespace csharp_test
             if (0 != LocalSolarEclipseTest2())
                 return 1;
 
+            return 0;
+        }
+
+        static int GlobalAnnularCase(int year, int month, int day, double obscuration)
+        {
+            // Search for the first solar eclipse that occurs after the given date.
+            var time = new AstroTime(year, month, day, 0, 0, 0.0);
+            GlobalSolarEclipseInfo eclipse = Astronomy.SearchGlobalSolarEclipse(time);
+
+            // Verify the eclipse is within 1 day after the search basis time.
+            double dt = v(eclipse.peak.ut - time.ut);
+            if (dt < 0.0 || dt > 1.0)
+            {
+                Console.WriteLine($"C# GlobalAnnularCase({year:0000}-{month:00}-{day:00}) FAIL: found eclipse {dt:F8} days after search time.");
+                return 1;
+            }
+
+            // Verify we found an annular solar eclipse.
+            if (eclipse.kind != EclipseKind.Annular)
+            {
+                Console.WriteLine($"C# GlobalAnnularCase({year:0000}-{month:00}-{day:00}) FAIL: expected annular eclipse but found {eclipse.kind}.");
+                return 1;
+            }
+
+            // Check how accurately we calculated obscuration.
+            double diff = v(eclipse.obscuration - obscuration);
+            if (abs(diff) > 0.0000904)
+            {
+                Console.WriteLine($"C# GlobalAnnularCase({year:0000}-{month:00}-{day:00}) FAIL: excessive obscuration error = {diff:F8}, expected = {obscuration:F8}, calculated = {eclipse.obscuration:F8}.");
+                return 1;
+            }
+            Debug($"C# GlobalAnnularCase({year:0000}-{month:00}-{day:00}) obscuration error = {diff:F8}, expected = {obscuration:F8}, calculated = {eclipse.obscuration:F8}.");
+            return 0;
+        }
+
+        static int LocalSolarCase(
+            int year,
+            int month,
+            int day,
+            double latitude,
+            double longitude,
+            EclipseKind kind,
+            double obscuration,
+            double tolerance)
+        {
+            var time = new AstroTime(year, month, day, 0, 0, 0.0);
+            var observer = new Observer(latitude, longitude, 0.0);
+            LocalSolarEclipseInfo eclipse = Astronomy.SearchLocalSolarEclipse(time, observer);
+            double dt = v(eclipse.peak.time.ut - time.ut);
+            if (dt < 0.0 || dt > 1.0)
+            {
+                Console.WriteLine($"C# LocalSolarCase({year:0000}-{month:00}-{day:00}) FAIL: elapsed time = {dt:F6} days.");
+                return 1;
+            }
+
+            if (eclipse.kind != kind)
+            {
+                Console.WriteLine($"C# LocalSolarCase({year:0000}-{month:00}-{day:00}) FAIL: expected {kind} but found {eclipse.kind}.");
+                return 1;
+            }
+
+            double diff = v(eclipse.obscuration - obscuration);
+            if (diff > tolerance)
+            {
+                Console.WriteLine($"C# LocalSolarCase({year:0000}-{month:00}-{day:00}) FAIL: obscuration diff = {diff:F8}, expected = {obscuration:F8}, calculated = {eclipse.obscuration:F8}.");
+                return 1;
+            }
+            Debug($"C# LocalSolarCase({year:0000}-{month:00}-{day:00}) obscuration diff = {diff:+0.00000000;-0.00000000}, expected = {obscuration:+0.00000000;-0.00000000}, calculated = {eclipse.obscuration:+0.00000000;-0.00000000}.");
+            return 0;
+        }
+
+        static int SolarFractionTest()
+        {
+            // Verify global solar eclipse obscurations for annular eclipses only.
+            // This is because they are the only nontrivial values for global solar eclipses.
+            // The trivial values are all validated exactly by GlobalSolarEclipseTest().
+
+            if (0 != GlobalAnnularCase(2023, 10, 14, 0.90638)) return 1;    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
+            if (0 != GlobalAnnularCase(2024, 10,  2, 0.86975)) return 1;    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
+            if (0 != GlobalAnnularCase(2027,  2,  6, 0.86139)) return 1;    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2027Feb06Aprime.html
+            if (0 != GlobalAnnularCase(2028,  1, 26, 0.84787)) return 1;    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2028Jan26Aprime.html
+            if (0 != GlobalAnnularCase(2030,  6,  1, 0.89163)) return 1;    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html
+
+            // Verify obscuration values for specific locations on the Earth.
+            // Local solar eclipse calculations include obscuration for all types of eclipse, not just annular and total.
+            if (0 != LocalSolarCase(2023, 10, 14,  11.3683,  -83.1017, EclipseKind.Annular, 0.90638, 0.000080)) return 1;   // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
+            if (0 != LocalSolarCase(2023, 10, 14,  25.78,    -80.22,   EclipseKind.Partial, 0.578,   0.000023)) return 1;   // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22023&lat=25.78&lon=-80.22&label=Miami%2C+FL&height=0&submit=Get+Data
+            if (0 != LocalSolarCase(2023, 10, 14,  30.2666,  -97.7000, EclipseKind.Partial, 0.8867,  0.001016)) return 1;   // http://astro.ukho.gov.uk/eclipse/0332023/Austin_TX_United_States_2023Oct14.png
+            if (0 != LocalSolarCase(2024,  4,  8,  25.2900, -104.1383, EclipseKind.Total,   1.0,     0.0     )) return 1;   // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Apr08Tprime.html
+            if (0 != LocalSolarCase(2024,  4,  8,  37.76,   -122.44,   EclipseKind.Partial, 0.340,   0.000604)) return 1;   // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=12024&lat=37.76&lon=-122.44&label=San+Francisco%2C+CA&height=0&submit=Get+Data
+            if (0 != LocalSolarCase(2024, 10,  2, -21.9533, -114.5083, EclipseKind.Annular, 0.86975, 0.000061)) return 1;   // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
+            if (0 != LocalSolarCase(2024, 10,  2, -33.468,   -70.636,  EclipseKind.Partial, 0.436,   0.000980)) return 1;   // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22024&lat=-33.468&lon=-70.636&label=Santiago%2C+Chile&height=0&submit=Get+Data
+            if (0 != LocalSolarCase(2030,  6,  1,  56.525,    80.0617, EclipseKind.Annular, 0.89163, 0.000067)) return 1;   // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html
+            if (0 != LocalSolarCase(2030,  6,  1,  40.388,    49.914,  EclipseKind.Partial, 0.67240, 0.000599)) return 1;   // http://xjubier.free.fr/en/site_pages/SolarEclipseCalc_Diagram.html
+            if (0 != LocalSolarCase(2030,  6,  1,  40.3667,   49.8333, EclipseKind.Partial, 0.6736,  0.001464)) return 1;   // http://astro.ukho.gov.uk/eclipse/0132030/Baku_Azerbaijan_2030Jun01.png
+
+            Console.WriteLine("C# SolarFractionTest: PASS");
             return 0;
         }
 

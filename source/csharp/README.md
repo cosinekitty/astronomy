@@ -2756,11 +2756,23 @@ onto the daytime side of the Earth at the instant of the eclipse's peak.
 If `kind` has any other value, `latitude` and `longitude` are undefined and should
 not be used.
 
+For total or annular eclipses, the `obscuration` field holds the fraction (0, 1]
+of the Sun's apparent disc area that is blocked from view by the Moon's silhouette,
+as seen by an observer located at the geographic coordinates `latitude`, `longitude`
+at the darkest time `peak`. The value will always be 1 for total eclipses, and less than
+1 for annular eclipses.
+For partial eclipses, `obscuration` is undefined and should not be used.
+This is because there is little practical use for an obscuration value of
+a partial eclipse without supplying a particular observation location.
+Developers who wish to find an obscuration value for partial solar eclipses should therefore use
+[`Astronomy.SearchLocalSolarEclipse`](#Astronomy.SearchLocalSolarEclipse) and provide the geographic coordinates of an observer.
+
 ### member variables
 
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
+| `double` | `obscuration` | The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only). |
 | [`AstroTime`](#AstroTime) | `peak` | The date and time when the solar eclipse is at its darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. |
 | `double` | `distance` | The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
 | `double` | `latitude` | The geographic latitude at the center of the peak eclipse shadow. |
@@ -3013,6 +3025,13 @@ Sun with a ring-like appearance.
 A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
 Sun just right to completely block all sunlight from reaching the observer.
 
+The `obscuration` field reports what fraction of the Sun's disc appears blocked
+by the Moon when viewed by the observer at the peak eclipse time.
+This is a value that ranges from 0 (no blockage) to 1 (total eclipse).
+The obscuration value will be between 0 and 1 for partial eclipses and annular eclipses.
+The value will be exactly 1 for total eclipses. Obscuration gives an indication
+of how dark the eclipse appears.
+
 There are 5 "event" fields, each of which contains a time and a solar altitude.
 Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
 The fields `partial_begin` and `partial_end` are always set, and indicate when
@@ -3027,6 +3046,7 @@ See [`EclipseEvent`](#EclipseEvent) for more information.
 | Type | Name | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
+| `double` | `obscuration` | The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak. |
 | [`EclipseEvent`](#EclipseEvent) | `partial_begin` | The time and Sun altitude at the beginning of the eclipse. |
 | [`EclipseEvent`](#EclipseEvent) | `total_begin` | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise invalid. |
 | [`EclipseEvent`](#EclipseEvent) | `peak` | The time and Sun altitude when the eclipse reaches its peak. |
