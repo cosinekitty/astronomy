@@ -611,7 +611,7 @@ function GlobalSolarEclipse() {
 
         // Validate the eclipse prediction.
         const diff_minutes = (24 * 60) * abs(diff_days);
-        if (diff_minutes > 6.93) {
+        if (diff_minutes > 7.56) {
             console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
             return 1;
         }
@@ -641,6 +641,42 @@ function GlobalSolarEclipse() {
                     max_angle = diff_angle;
                 }
             }
+        }
+
+        // Verify the obscuration value is consistent with the eclipse kind.
+        switch (eclipse.kind) {
+            case Astronomy.EclipseKind.Partial:
+                if (eclipse.obscuration !== undefined) {
+                    console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): Expected NAN obscuration for partial eclipse, but found ${eclipse.obscuration}`);
+                    return 1;
+                }
+                break;
+
+            case Astronomy.EclipseKind.Annular:
+                if (!Number.isFinite(eclipse.obscuration)) {
+                    console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): Expected finite obscuration for annular eclipse.`);
+                    return 1;
+                }
+                if (eclipse.obscuration < 0.8 || eclipse.obscuration >= 1.0) {
+                    console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): Invalid obscuration = ${eclipse.obscuration} for annular eclipse.`);
+                    return 1;
+                }
+                break;
+
+            case Astronomy.EclipseKind.Total:
+                if (!Number.isFinite(eclipse.obscuration)) {
+                    console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): Expected finite obscuration for total eclipse.`);
+                    return 1;
+                }
+                if (eclipse.obscuration !== 1.0) {
+                    console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): Invalid obscuration = ${eclipse.obscuration} for total eclipse.`);
+                    return 1;
+                }
+                break;
+
+            default:
+                console.error(`JS GlobalSolarEclipse(${filename} line ${lnum}): Unhandled eclipse kind ${eclipse.kind} for obscuration check.`);
+                return 1;
         }
 
         eclipse = Astronomy.NextGlobalSolarEclipse(eclipse.peak);
@@ -699,13 +735,40 @@ function LocalSolarEclipse1() {
         }
 
         const diff_minutes = (24 * 60) * abs(diff_days);
-        if (diff_minutes > 7.14) {
+        if (diff_minutes > 7.734) {
             console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
             return 1;
         }
 
         if (diff_minutes > max_minutes) {
             max_minutes = diff_minutes;
+        }
+
+        // Verify obscuration makes sense for this kind of eclipse.
+        if (!Number.isFinite(eclipse.obscuration)) {
+            console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}) FAIL: obscuration is not finite.`);
+            return 1;
+        }
+
+        switch (eclipse.kind) {
+            case Astronomy.EclipseKind.Annular:
+            case Astronomy.EclipseKind.Partial:
+                if (eclipse.obscuration <= 0.0 || eclipse.obscuration >= 1.0) {
+                    console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}) FAIL: ${eclipse.kind} eclipse has invalid obscuration ${obscuration}`);
+                    return 1;
+                }
+                break;
+
+            case Astronomy.EclipseKind.Total:
+                if (eclipse.obscuration !== 1.0) {
+                    console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}) FAIL: total eclipse has invalid obscuration ${obscuration}`);
+                    return 1;
+                }
+                break;
+
+            default:
+                console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}) FAIL: invalid eclipse kind ${eclipse.kind}`);
+                return 1;
         }
 
         // Confirm that we can call NextLocalSolarEclipse and it doesn't throw an exception.
@@ -773,12 +836,16 @@ function LocalSolarEclipse2() {
         if (diff_minutes > 1.0) {
             throw `CheckEvent(${filename} line ${lnum}): EXCESSIVE TIME ERROR: ${diff_minutes} minutes.`;
         }
-        const diff_alt = abs(expect.altitude - calc.altitude);
-        if (diff_alt > max_degrees) {
-            max_degrees = diff_alt;
-        }
-        if (diff_alt > 0.5) {
-            throw `CheckEvent(${filename} line ${lnum}): EXCESSIVE ALTITUDE ERROR: ${diff_alt} degrees.`;
+
+        // Ignore discrepancies for negative altitudes, because of quirky and irrelevant differences in refraction models.
+        if (expect.altitude > 0.0) {
+            const diff_alt = abs(expect.altitude - calc.altitude);
+            if (diff_alt > max_degrees) {
+                max_degrees = diff_alt;
+            }
+            if (diff_alt > 0.5) {
+                throw `CheckEvent(${filename} line ${lnum}): EXCESSIVE ALTITUDE ERROR: ${diff_alt} degrees.`;
+            }
         }
     }
 
@@ -829,13 +896,93 @@ function LocalSolarEclipse2() {
 
 
 function LocalSolarEclipse() {
-    if (0 !== LocalSolarEclipse1())
-        return 1;
+    return (
+        LocalSolarEclipse1() ||
+        LocalSolarEclipse2()
+    );
+}
 
-    if (0 !== LocalSolarEclipse2())
-        return 1;
 
+function GlobalAnnularCase(dateText, obscuration) {
+    // Search for the first solar eclipse that occurs after the given date.
+    const time = Astronomy.MakeTime(new Date(dateText));
+    const eclipse = Astronomy.SearchGlobalSolarEclipse(time);
+
+    // Verify the eclipse is within 1 day after the search basis time.
+    const dt = v(eclipse.peak.ut - time.ut);
+    if (dt < 0.0 || dt > 1.0) {
+        console.error(`JS GlobalAnnularCase(${dateText}) FAIL: found eclipse ${dt.toFixed(4)} days after search time.`);
+        return 1;
+    }
+
+    // Verify we found an annular solar eclipse.
+    if (eclipse.kind !== Astronomy.EclipseKind.Annular) {
+        console.error(`JS GlobalAnnularCase(${dateText}) FAIL: expected annular eclipse but found ${eclipse.kind}.`);
+        return 1;
+    }
+
+    // Check how accurately we calculated obscuration.
+    const diff = v(eclipse.obscuration - obscuration);
+    if (abs(diff) > 0.0000904) {
+        console.error(`JS GlobalAnnularCase(${dateText}) FAIL: excessive obscuration error = ${diff.toFixed(8)}, expected = ${obscuration.toFixed(8)}, calculated = ${eclipse.obscuration.toFixed(8)}.`);
+        return 1;
+    }
+    Debug(`JS GlobalAnnularCase(${dateText}) obscuration error = ${diff.toFixed(8)}`);
     return 0;
+}
+
+
+function LocalSolarCase(dateText, latitude, longitude, kind, obscuration, tolerance) {
+    const time = Astronomy.MakeTime(new Date(dateText));
+    const observer = new Astronomy.Observer(latitude, longitude, 0.0);
+    const eclipse = Astronomy.SearchLocalSolarEclipse(time, observer);
+    const dt = v(eclipse.peak.time.ut - time.ut);
+    if (dt < 0.0 || dt > 1.0) {
+        console.error(`JS LocalSolarCase(${dateText}) FAIL: elapsed time = ${dt.toFixed(4)} days.`);
+        return 1;
+    }
+
+    if (eclipse.kind !== kind) {
+        console.error(`JS LocalSolarCase(${dateText}) FAIL: expected ${kind} but found ${eclipse.kind}.`);
+        return 1;
+    }
+
+    const diff = v(eclipse.obscuration - obscuration);
+    if (diff > tolerance) {
+        console.error(`JS LocalSolarCase(${dateText}) FAIL: obscuration diff = ${diff}, expected = ${obscuration}, actual = ${eclipse.obscuration}.`);
+        return 1;
+    }
+    Debug(`JS LocalSolarCase(${dateText}): obscuration diff = ${diff.toFixed(8)}`);
+    return 0;
+}
+
+
+function SolarFraction() {
+    return (
+        // Verify global solar eclipse obscurations for annular eclipses only.
+        // This is because they are the only nontrivial values for global solar eclipses.
+        // The trivial values are all validated exactly by GlobalSolarEclipseTest().
+        GlobalAnnularCase('2023-10-14', 0.90638) ||    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
+        GlobalAnnularCase('2024-10-02', 0.86975) ||    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
+        GlobalAnnularCase('2027-02-06', 0.86139) ||    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2027Feb06Aprime.html
+        GlobalAnnularCase('2028-01-26', 0.84787) ||    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2028Jan26Aprime.html
+        GlobalAnnularCase('2030-06-01', 0.89163) ||    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html
+
+        // Verify obscuration values for specific locations on the Earth.
+        // Local solar eclipse calculations include obscuration for all types of eclipse, not just annular and total.
+        LocalSolarCase('2023-10-14',  11.3683,  -83.1017, Astronomy.EclipseKind.Annular, 0.90638, 0.000080) ||   // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
+        LocalSolarCase('2023-10-14',  25.78,    -80.22,   Astronomy.EclipseKind.Partial, 0.578,   0.000023) ||   // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22023&lat=25.78&lon=-80.22&label=Miami%2C+FL&height=0&submit=Get+Data
+        LocalSolarCase('2023-10-14',  30.2666,  -97.7000, Astronomy.EclipseKind.Partial, 0.8867,  0.001016) ||   // http://astro.ukho.gov.uk/eclipse/0332023/Austin_TX_United_States_2023Oct14.png
+        LocalSolarCase('2024-04-08',  25.2900, -104.1383, Astronomy.EclipseKind.Total,   1.0,     0.0     ) ||   // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Apr08Tprime.html
+        LocalSolarCase('2024-04-08',  37.76,   -122.44,   Astronomy.EclipseKind.Partial, 0.340,   0.000604) ||   // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=12024&lat=37.76&lon=-122.44&label=San+Francisco%2C+CA&height=0&submit=Get+Data
+        LocalSolarCase('2024-10-02', -21.9533, -114.5083, Astronomy.EclipseKind.Annular, 0.86975, 0.000061) ||   // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
+        LocalSolarCase('2024-10-02', -33.468,   -70.636,  Astronomy.EclipseKind.Partial, 0.436,   0.000980) ||   // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22024&lat=-33.468&lon=-70.636&label=Santiago%2C+Chile&height=0&submit=Get+Data
+        LocalSolarCase('2030-06-01',  56.525,    80.0617, Astronomy.EclipseKind.Annular, 0.89163, 0.000067) ||   // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html
+        LocalSolarCase('2030-06-01',  40.388,    49.914,  Astronomy.EclipseKind.Partial, 0.67240, 0.000599) ||   // http://xjubier.free.fr/en/site_pages/SolarEclipseCalc_Diagram.html
+        LocalSolarCase('2030-06-01',  40.3667,   49.8333, Astronomy.EclipseKind.Partial, 0.6736,  0.001464) ||   // http://astro.ukho.gov.uk/eclipse/0132030/Baku_Azerbaijan_2030Jun01.png
+
+        Pass('SolarFraction')
+    );
 }
 
 
@@ -3273,6 +3420,7 @@ const UnitTests = {
     seasons:                Seasons,
     seasons187:             SeasonsIssue187,
     sidereal:               SiderealTimeTest,
+    solar_fraction:         SolarFraction,
     topostate:              TopoStateTest,
     transit:                Transit,
     twilight:               TwilightTest,

@@ -2573,8 +2573,22 @@ export declare function SearchLunarEclipse(date: FlexibleDateTime): LunarEclipse
  * If `kind` has any other value, `latitude` and `longitude` are undefined and should
  * not be used.
  *
+ * For total or annular eclipses, the `obscuration` field holds the fraction (0, 1]
+ * of the Sun's apparent disc area that is blocked from view by the Moon's silhouette,
+ * as seen by an observer located at the geographic coordinates `latitude`, `longitude`
+ * at the darkest time `peak`. The value will always be 1 for total eclipses, and less than
+ * 1 for annular eclipses.
+ * For partial eclipses, `obscuration` is undefined and should not be used.
+ * This is because there is little practical use for an obscuration value of
+ * a partial eclipse without supplying a particular observation location.
+ * Developers who wish to find an obscuration value for partial solar eclipses should therefore use
+ * {@link SearchLocalSolarEclipse} and provide the geographic coordinates of an observer.
+ *
  * @property {EclipseKind} kind
  *     One of the following enumeration values: `EclipseKind.Partial`, `EclipseKind.Annular`, `EclipseKind.Total`.
+ *
+ * @property {number | undefined} obscuration
+ *      The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only)
  *
  * @property {AstroTime} peak
  *     The date and time when the solar eclipse is darkest.
@@ -2596,11 +2610,12 @@ export declare function SearchLunarEclipse(date: FlexibleDateTime): LunarEclipse
  */
 export declare class GlobalSolarEclipseInfo {
     kind: EclipseKind;
+    obscuration: number | undefined;
     peak: AstroTime;
     distance: number;
     latitude?: number | undefined;
     longitude?: number | undefined;
-    constructor(kind: EclipseKind, peak: AstroTime, distance: number, latitude?: number | undefined, longitude?: number | undefined);
+    constructor(kind: EclipseKind, obscuration: number | undefined, peak: AstroTime, distance: number, latitude?: number | undefined, longitude?: number | undefined);
 }
 /**
  * @brief Searches for the next lunar eclipse in a series.
@@ -2690,6 +2705,13 @@ export declare class EclipseEvent {
  * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
  * Sun just right to completely block all sunlight from reaching the observer.
  *
+ * The `obscuration` field reports what fraction of the Sun's disc appears blocked
+ * by the Moon when viewed by the observer at the peak eclipse time.
+ * This is a value that ranges from 0 (no blockage) to 1 (total eclipse).
+ * The obscuration value will be between 0 and 1 for partial eclipses and annular eclipses.
+ * The value will be exactly 1 for total eclipses. Obscuration gives an indication
+ * of how dark the eclipse appears.
+ *
  * There are 5 "event" fields, each of which contains a time and a solar altitude.
  * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
  * The fields `partial_begin` and `partial_end` are always set, and indicate when
@@ -2701,6 +2723,9 @@ export declare class EclipseEvent {
  *
  * @property {EclipseKind} kind
  *      The type of solar eclipse found: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+ *
+ * @property {number} obscuration
+ *      The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak.
  *
  * @property {EclipseEvent} partial_begin
  *      The time and Sun altitude at the beginning of the eclipse.
@@ -2719,12 +2744,13 @@ export declare class EclipseEvent {
  */
 export declare class LocalSolarEclipseInfo {
     kind: EclipseKind;
+    obscuration: number;
     partial_begin: EclipseEvent;
     total_begin: EclipseEvent | undefined;
     peak: EclipseEvent;
     total_end: EclipseEvent | undefined;
     partial_end: EclipseEvent;
-    constructor(kind: EclipseKind, partial_begin: EclipseEvent, total_begin: EclipseEvent | undefined, peak: EclipseEvent, total_end: EclipseEvent | undefined, partial_end: EclipseEvent);
+    constructor(kind: EclipseKind, obscuration: number, partial_begin: EclipseEvent, total_begin: EclipseEvent | undefined, peak: EclipseEvent, total_end: EclipseEvent | undefined, partial_end: EclipseEvent);
 }
 /**
  * @brief Searches for a solar eclipse visible at a specific location on the Earth's surface.

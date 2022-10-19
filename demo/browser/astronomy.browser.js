@@ -7726,39 +7726,36 @@ function EarthShadow(time) {
     return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
 }
 function MoonShadow(time) {
-    // This is a variation on the logic in _EarthShadow().
-    // Instead of a heliocentric Earth and a geocentric Moon,
-    // we want a heliocentric Moon and a lunacentric Earth.
-    const h = CalcVsop(vsop.Earth, time); // heliocentric Earth
+    const s = GeoVector(Body.Sun, time, true);
     const m = GeoMoon(time); // geocentric Moon
     // Calculate lunacentric Earth.
     const e = new Vector(-m.x, -m.y, -m.z, m.t);
     // Convert geocentric moon to heliocentric Moon.
-    m.x += h.x;
-    m.y += h.y;
-    m.z += h.z;
+    m.x -= s.x;
+    m.y -= s.y;
+    m.z -= s.z;
     return CalcShadow(MOON_MEAN_RADIUS_KM, time, e, m);
 }
 function LocalMoonShadow(time, observer) {
     // Calculate observer's geocentric position.
-    // For efficiency, do this first, to populate the earth rotation parameters in 'time'.
-    // That way they can be recycled instead of recalculated.
     const pos = geo_pos(time, observer);
-    const h = CalcVsop(vsop.Earth, time); // heliocentric Earth
+    // Calculate light-travel and aberration corrected Sun.
+    const s = GeoVector(Body.Sun, time, true);
+    // Calculate geocentric Moon.
     const m = GeoMoon(time); // geocentric Moon
     // Calculate lunacentric location of an observer on the Earth's surface.
     const o = new Vector(pos[0] - m.x, pos[1] - m.y, pos[2] - m.z, time);
     // Convert geocentric moon to heliocentric Moon.
-    m.x += h.x;
-    m.y += h.y;
-    m.z += h.z;
+    m.x -= s.x;
+    m.y -= s.y;
+    m.z -= s.z;
     return CalcShadow(MOON_MEAN_RADIUS_KM, time, o, m);
 }
 function PlanetShadow(body, planet_radius_km, time) {
     // Calculate light-travel-corrected vector from Earth to planet.
-    const g = GeoVector(body, time, false);
+    const g = GeoVector(body, time, true);
     // Calculate light-travel-corrected vector from Earth to Sun.
-    const e = GeoVector(Body.Sun, time, false);
+    const e = GeoVector(Body.Sun, time, true);
     // Deduce light-travel-corrected vector from Sun to planet.
     const p = new Vector(g.x - e.x, g.y - e.y, g.z - e.z, time);
     // Calcluate Earth's position from the planet's point of view.
@@ -7874,6 +7871,23 @@ c // distance between the centers of the discs
     // Find the fractional area with respect to the first disc.
     return (lens1 + lens2) / (Math.PI * a * a);
 }
+function SolarEclipseObscuration(hm, // heliocentric Moon
+lo // lunacentric observer
+) {
+    // Find heliocentric observer.
+    const ho = new Vector(hm.x + lo.x, hm.y + lo.y, hm.z + lo.z, hm.t);
+    // Calculate the apparent angular radius of the Sun for the observer.
+    const sun_radius = Math.asin(SUN_RADIUS_AU / ho.Length());
+    // Calculate the apparent angular radius of the Moon for the observer.
+    const moon_radius = Math.asin(MOON_POLAR_RADIUS_AU / lo.Length());
+    // Calculate the apparent angular separation between the Sun's center and the Moon's center.
+    const sun_moon_separation = AngleBetween(lo, ho);
+    // Find the fraction of the Sun's apparent disc area that is covered by the Moon.
+    const obscuration = Obscuration(sun_radius, moon_radius, sun_moon_separation * exports.DEG2RAD);
+    // HACK: In marginal cases, we need to clamp obscuration to less than 1.0.
+    // This function is never called for total eclipses, so it should never return 1.0.
+    return Math.min(0.9999, obscuration);
+}
 /**
  * @brief Searches for a lunar eclipse.
  *
@@ -7961,8 +7975,22 @@ exports.SearchLunarEclipse = SearchLunarEclipse;
  * If `kind` has any other value, `latitude` and `longitude` are undefined and should
  * not be used.
  *
+ * For total or annular eclipses, the `obscuration` field holds the fraction (0, 1]
+ * of the Sun's apparent disc area that is blocked from view by the Moon's silhouette,
+ * as seen by an observer located at the geographic coordinates `latitude`, `longitude`
+ * at the darkest time `peak`. The value will always be 1 for total eclipses, and less than
+ * 1 for annular eclipses.
+ * For partial eclipses, `obscuration` is undefined and should not be used.
+ * This is because there is little practical use for an obscuration value of
+ * a partial eclipse without supplying a particular observation location.
+ * Developers who wish to find an obscuration value for partial solar eclipses should therefore use
+ * {@link SearchLocalSolarEclipse} and provide the geographic coordinates of an observer.
+ *
  * @property {EclipseKind} kind
  *     One of the following enumeration values: `EclipseKind.Partial`, `EclipseKind.Annular`, `EclipseKind.Total`.
+ *
+ * @property {number | undefined} obscuration
+ *      The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only)
  *
  * @property {AstroTime} peak
  *     The date and time when the solar eclipse is darkest.
@@ -7983,8 +8011,9 @@ exports.SearchLunarEclipse = SearchLunarEclipse;
  *     time indicated by `peak`; otherwise, `longitude` holds `undefined`.
  */
 class GlobalSolarEclipseInfo {
-    constructor(kind, peak, distance, latitude, longitude) {
+    constructor(kind, obscuration, peak, distance, latitude, longitude) {
         this.kind = kind;
+        this.obscuration = obscuration;
         this.peak = peak;
         this.distance = distance;
         this.latitude = latitude;
@@ -8028,6 +8057,7 @@ function GeoidIntersect(shadow) {
     const B = -2.0 * (v.x * e.x + v.y * e.y + v.z * e.z);
     const C = (e.x * e.x + e.y * e.y + e.z * e.z) - R * R;
     const radic = B * B - 4 * A * C;
+    let obscuration;
     if (radic > 0.0) {
         // Calculate the closer of the two intersection points.
         // This will be on the day side of the Earth.
@@ -8069,8 +8099,14 @@ function GeoidIntersect(shadow) {
         if (surface.r > 1.0e-9 || surface.r < 0.0)
             throw `Unexpected shadow distance from geoid intersection = ${surface.r}`;
         kind = EclipseKindFromUmbra(surface.k);
+        obscuration = (kind === EclipseKind.Total) ? 1.0 : SolarEclipseObscuration(shadow.dir, o);
     }
-    return new GlobalSolarEclipseInfo(kind, peak, distance, latitude, longitude);
+    else {
+        // This is a partial solar eclipse. It does not make practical sense to calculate obscuration.
+        // Anyone who wants obscuration should use Astronomy.SearchLocalSolarEclipse for a specific location on the Earth.
+        obscuration = undefined;
+    }
+    return new GlobalSolarEclipseInfo(kind, obscuration, peak, distance, latitude, longitude);
 }
 /**
  * @brief Searches for the next lunar eclipse in a series.
@@ -8202,6 +8238,13 @@ exports.EclipseEvent = EclipseEvent;
  * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
  * Sun just right to completely block all sunlight from reaching the observer.
  *
+ * The `obscuration` field reports what fraction of the Sun's disc appears blocked
+ * by the Moon when viewed by the observer at the peak eclipse time.
+ * This is a value that ranges from 0 (no blockage) to 1 (total eclipse).
+ * The obscuration value will be between 0 and 1 for partial eclipses and annular eclipses.
+ * The value will be exactly 1 for total eclipses. Obscuration gives an indication
+ * of how dark the eclipse appears.
+ *
  * There are 5 "event" fields, each of which contains a time and a solar altitude.
  * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
  * The fields `partial_begin` and `partial_end` are always set, and indicate when
@@ -8213,6 +8256,9 @@ exports.EclipseEvent = EclipseEvent;
  *
  * @property {EclipseKind} kind
  *      The type of solar eclipse found: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+ *
+ * @property {number} obscuration
+ *      The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak.
  *
  * @property {EclipseEvent} partial_begin
  *      The time and Sun altitude at the beginning of the eclipse.
@@ -8230,8 +8276,9 @@ exports.EclipseEvent = EclipseEvent;
  *      The time and Sun altitude at the end of the eclipse.
  */
 class LocalSolarEclipseInfo {
-    constructor(kind, partial_begin, total_begin, peak, total_end, partial_end) {
+    constructor(kind, obscuration, partial_begin, total_begin, peak, total_end, partial_end) {
         this.kind = kind;
+        this.obscuration = obscuration;
         this.partial_begin = partial_begin;
         this.total_begin = total_begin;
         this.peak = peak;
@@ -8269,7 +8316,8 @@ function LocalEclipse(shadow, observer) {
     else {
         kind = EclipseKind.Partial;
     }
-    return new LocalSolarEclipseInfo(kind, partial_begin, total_begin, peak, total_end, partial_end);
+    const obscuration = (kind === EclipseKind.Total) ? 1.0 : SolarEclipseObscuration(shadow.dir, shadow.target);
+    return new LocalSolarEclipseInfo(kind, obscuration, partial_begin, total_begin, peak, total_end, partial_end);
 }
 function LocalEclipseTransition(observer, direction, func, t1, t2) {
     function evaluate(time) {
