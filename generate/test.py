@@ -501,19 +501,21 @@ def SearchElongTest():
             return 1
     return 0
 
+
 def Elongation():
-    if 0 != TestElongFile('longitude/opposition_2018.txt', 0.0): return 1
-    if 0 != TestPlanetLongitudes(astronomy.Body.Mercury, "temp/py_longitude_Mercury.txt", "inf"): return 1
-    if 0 != TestPlanetLongitudes(astronomy.Body.Venus,   "temp/py_longitude_Venus.txt",   "inf"): return 1
-    if 0 != TestPlanetLongitudes(astronomy.Body.Mars,    "temp/py_longitude_Mars.txt",    "opp"): return 1
-    if 0 != TestPlanetLongitudes(astronomy.Body.Jupiter, "temp/py_longitude_Jupiter.txt", "opp"): return 1
-    if 0 != TestPlanetLongitudes(astronomy.Body.Saturn,  "temp/py_longitude_Saturn.txt",  "opp"): return 1
-    if 0 != TestPlanetLongitudes(astronomy.Body.Uranus,  "temp/py_longitude_Uranus.txt",  "opp"): return 1
-    if 0 != TestPlanetLongitudes(astronomy.Body.Neptune, "temp/py_longitude_Neptune.txt", "opp"): return 1
-    if 0 != TestPlanetLongitudes(astronomy.Body.Pluto,   "temp/py_longitude_Pluto.txt",   "opp"): return 1
-    if 0 != SearchElongTest(): return 1
-    print('PY Elongation: PASS')
-    return 0
+    return (
+        TestElongFile('longitude/opposition_2018.txt', 0.0) or
+        TestPlanetLongitudes(astronomy.Body.Mercury, "temp/py_longitude_Mercury.txt", "inf") or
+        TestPlanetLongitudes(astronomy.Body.Venus,   "temp/py_longitude_Venus.txt",   "inf") or
+        TestPlanetLongitudes(astronomy.Body.Mars,    "temp/py_longitude_Mars.txt",    "opp") or
+        TestPlanetLongitudes(astronomy.Body.Jupiter, "temp/py_longitude_Jupiter.txt", "opp") or
+        TestPlanetLongitudes(astronomy.Body.Saturn,  "temp/py_longitude_Saturn.txt",  "opp") or
+        TestPlanetLongitudes(astronomy.Body.Uranus,  "temp/py_longitude_Uranus.txt",  "opp") or
+        TestPlanetLongitudes(astronomy.Body.Neptune, "temp/py_longitude_Neptune.txt", "opp") or
+        TestPlanetLongitudes(astronomy.Body.Pluto,   "temp/py_longitude_Pluto.txt",   "opp") or
+        SearchElongTest() or
+        Pass('Elongation')
+    )
 
 #-----------------------------------------------------------------------------------------------------------
 
