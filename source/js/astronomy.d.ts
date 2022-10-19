@@ -2492,6 +2492,12 @@ export declare enum EclipseKind {
  * The `kind` field thus holds one of the enum values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
  * or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
  *
+ * The `obscuration` field holds a value in the range [0, 1] that indicates what fraction
+ * of the Moon's apparent disc area is covered by the Earth's umbra at the eclipse's peak.
+ * This indicates how dark the peak eclipse appears. For penumbral eclipses, the obscuration
+ * is 0, because the Moon does not pass through the Earth's umbra. For partial eclipses,
+ * the obscuration is somewhere between 0 and 1. For total lunar eclipses, the obscuration is 1.
+ *
  * Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
  *
  * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
@@ -2502,6 +2508,9 @@ export declare enum EclipseKind {
  *
  * @property {EclipseKind} kind
  *      The type of lunar eclipse found.
+ *
+ * @property {number} obscuration
+ *      The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra.
  *
  * @property {AstroTime} peak
  *      The time of the eclipse at its peak.
@@ -2518,11 +2527,12 @@ export declare enum EclipseKind {
  */
 export declare class LunarEclipseInfo {
     kind: EclipseKind;
+    obscuration: number;
     peak: AstroTime;
     sd_penum: number;
     sd_partial: number;
     sd_total: number;
-    constructor(kind: EclipseKind, peak: AstroTime, sd_penum: number, sd_partial: number, sd_total: number);
+    constructor(kind: EclipseKind, obscuration: number, peak: AstroTime, sd_penum: number, sd_partial: number, sd_total: number);
 }
 /**
  * @brief Searches for a lunar eclipse.

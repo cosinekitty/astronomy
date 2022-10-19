@@ -118,9 +118,10 @@ const EARTH_MEAN_RADIUS_KM = 6371.0; /* mean radius of the Earth's geoid, withou
 const EARTH_ATMOSPHERE_KM = 88.0; /* effective atmosphere thickness for lunar eclipses */
 const EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM;
 const MOON_EQUATORIAL_RADIUS_KM = 1738.1;
+const MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / exports.KM_PER_AU);
 const MOON_MEAN_RADIUS_KM = 1737.4;
 const MOON_POLAR_RADIUS_KM = 1736.0;
-const MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / exports.KM_PER_AU);
+const MOON_POLAR_RADIUS_AU = (MOON_POLAR_RADIUS_KM / exports.KM_PER_AU);
 const REFRACTION_NEAR_HORIZON = 34 / 60; // degrees of refractive "lift" seen for objects near horizon
 const EARTH_MOON_MASS_RATIO = 81.30056;
 /*
@@ -7601,6 +7602,12 @@ var EclipseKind;
  * The `kind` field thus holds one of the enum values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
  * or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
  *
+ * The `obscuration` field holds a value in the range [0, 1] that indicates what fraction
+ * of the Moon's apparent disc area is covered by the Earth's umbra at the eclipse's peak.
+ * This indicates how dark the peak eclipse appears. For penumbral eclipses, the obscuration
+ * is 0, because the Moon does not pass through the Earth's umbra. For partial eclipses,
+ * the obscuration is somewhere between 0 and 1. For total lunar eclipses, the obscuration is 1.
+ *
  * Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
  *
  * Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
@@ -7611,6 +7618,9 @@ var EclipseKind;
  *
  * @property {EclipseKind} kind
  *      The type of lunar eclipse found.
+ *
+ * @property {number} obscuration
+ *      The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra.
  *
  * @property {AstroTime} peak
  *      The time of the eclipse at its peak.
@@ -7626,8 +7636,9 @@ var EclipseKind;
  *
  */
 class LunarEclipseInfo {
-    constructor(kind, peak, sd_penum, sd_partial, sd_total) {
+    constructor(kind, obscuration, peak, sd_penum, sd_partial, sd_total) {
         this.kind = kind;
+        this.obscuration = obscuration;
         this.peak = peak;
         this.sd_penum = sd_penum;
         this.sd_partial = sd_partial;
@@ -7705,7 +7716,11 @@ function CalcShadow(body_radius_km, time, target, dir) {
     return new ShadowInfo(time, u, r, k, p, target, dir);
 }
 function EarthShadow(time) {
-    const e = CalcVsop(vsop.Earth, time);
+    // Light-travel and aberration corrected vector from the Earth to the Sun.
+    const s = GeoVector(Body.Sun, time, true);
+    // The vector e = -s is thus the path of sunlight through the center of the Earth.
+    const e = new Vector(-s.x, -s.y, -s.z, s.t);
+    // Geocentric moon.
     const m = GeoMoon(time);
     return CalcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e);
 }
@@ -7822,6 +7837,42 @@ function MoonEclipticLatitudeDegrees(time) {
     const moon = CalcMoon(time);
     return exports.RAD2DEG * moon.geo_eclip_lat;
 }
+function Obscuration(a, // radius of first disc
+b, // radius of second disc
+c // distance between the centers of the discs
+) {
+    if (a <= 0.0)
+        throw 'Radius of first disc must be positive.';
+    if (b <= 0.0)
+        throw 'Radius of second disc must be positive.';
+    if (c < 0.0)
+        throw 'Distance between discs is not allowed to be negative.';
+    if (c >= a + b) {
+        // The discs are too far apart to have any overlapping area.
+        return 0.0;
+    }
+    if (c == 0.0) {
+        // The discs have a common center. Therefore, one disc is inside the other.
+        return (a <= b) ? 1.0 : (b * b) / (a * a);
+    }
+    const x = (a * a - b * b + c * c) / (2 * c);
+    const radicand = a * a - x * x;
+    if (radicand <= 0.0) {
+        // The circumferences do not intersect, or are tangent.
+        // We already ruled out the case of non-overlapping discs.
+        // Therefore, one disc is inside the other.
+        return (a <= b) ? 1.0 : (b * b) / (a * a);
+    }
+    // The discs overlap fractionally in a pair of lens-shaped areas.
+    const y = Math.sqrt(radicand);
+    // Return the overlapping fractional area.
+    // There are two lens-shaped areas, one to the left of x, the other to the right of x.
+    // Each part is calculated by subtracting a triangular area from a sector's area.
+    const lens1 = a * a * Math.acos(x / a) - x * y;
+    const lens2 = b * b * Math.acos((c - x) / b) - (c - x) * y;
+    // Find the fractional area with respect to the first disc.
+    return (lens1 + lens2) / (Math.PI * a * a);
+}
 /**
  * @brief Searches for a lunar eclipse.
  *
@@ -7858,6 +7909,7 @@ function SearchLunarEclipse(date) {
             if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM) {
                 /* This is at least a penumbral eclipse. We will return a result. */
                 let kind = EclipseKind.Penumbral;
+                let obscuration = 0.0;
                 let sd_total = 0.0;
                 let sd_partial = 0.0;
                 let sd_penum = ShadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0);
@@ -7868,10 +7920,14 @@ function SearchLunarEclipse(date) {
                     if (shadow.r + MOON_MEAN_RADIUS_KM < shadow.k) {
                         /* This is a total eclipse. */
                         kind = EclipseKind.Total;
+                        obscuration = 1.0;
                         sd_total = ShadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, sd_partial);
                     }
+                    else {
+                        obscuration = Obscuration(MOON_MEAN_RADIUS_KM, shadow.k, shadow.r);
+                    }
                 }
-                return new LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total);
+                return new LunarEclipseInfo(kind, obscuration, shadow.time, sd_penum, sd_partial, sd_total);
             }
         }
         /* We didn't find an eclipse on this full moon, so search for the next one. */

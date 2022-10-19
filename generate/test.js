@@ -3170,6 +3170,58 @@ function DatesIssue250() {
 
 //-------------------------------------------------------------------------------------------------
 
+function LunarFractionCase(dateText, obscuration) {
+    // Search for the first lunar eclipse to occur after the given date.
+    const time = Astronomy.MakeTime(new Date(dateText));
+    const eclipse = Astronomy.SearchLunarEclipse(time);
+
+    // This should be a partial lunar eclipse.
+    if (eclipse.kind != Astronomy.EclipseKind.Partial) {
+        console.error(`JS LunarFractionCase(${dateText}) FAIL: expected partial eclipse, found ${eclipse.kind}.`);
+        return 1;
+    }
+
+    // The partial eclipse should always happen within 24 hours of the given date.
+    const dt = v(eclipse.peak.ut - time.ut);
+    if (dt < 0.0 || dt > 1.0) {
+        console.error(`JS LunarFractionCase(${dateText}) FAIL: eclipse occurs ${dt.toFixed(4)} days after search date.`);
+        return 1;
+    }
+
+    // Check accuracy of the calculated obscuration.
+    const diff = v(eclipse.obscuration - obscuration);
+    if (abs(diff) > 0.00763) {
+        console.error(`JS LunarFractionCase(${dateText}) FAIL: obscuration error = ${diff}, expected = ${obscuration}, actual = ${eclipse.obscuration}`);
+        return 1;
+    }
+
+    Debug(`JS LunarFractionCase(${dateText}) obscuration error = ${diff.toFixed(8)}`);
+    return 0;
+}
+
+function LunarFraction() {
+    // Verify calculation of the fraction of the Moon's disc covered by the Earth's umbra during a partial eclipse.
+    // Data for this is more tedious to gather, because Espenak data does not contain it.
+    // We already verify fraction=0.0 for penumbral eclipses and fraction=1.0 for total eclipses in LunarEclipseTest.
+    return (
+        LunarFractionCase('2010-06-26', 0.506) ||  // https://www.timeanddate.com/eclipse/lunar/2010-june-26
+        LunarFractionCase('2012-06-04', 0.304) ||  // https://www.timeanddate.com/eclipse/lunar/2012-june-4
+        LunarFractionCase('2013-04-25', 0.003) ||  // https://www.timeanddate.com/eclipse/lunar/2013-april-25
+        LunarFractionCase('2017-08-07', 0.169) ||  // https://www.timeanddate.com/eclipse/lunar/2017-august-7
+        LunarFractionCase('2019-07-16', 0.654) ||  // https://www.timeanddate.com/eclipse/lunar/2019-july-16
+        LunarFractionCase('2021-11-19', 0.991) ||  // https://www.timeanddate.com/eclipse/lunar/2021-november-19
+        LunarFractionCase('2023-10-28', 0.060) ||  // https://www.timeanddate.com/eclipse/lunar/2023-october-28
+        LunarFractionCase('2024-09-18', 0.035) ||  // https://www.timeanddate.com/eclipse/lunar/2024-september-18
+        LunarFractionCase('2026-08-28', 0.962) ||  // https://www.timeanddate.com/eclipse/lunar/2026-august-28
+        LunarFractionCase('2028-01-12', 0.024) ||  // https://www.timeanddate.com/eclipse/lunar/2028-january-12
+        LunarFractionCase('2028-07-06', 0.325) ||  // https://www.timeanddate.com/eclipse/lunar/2028-july-6
+        LunarFractionCase('2030-06-15', 0.464) ||  // https://www.timeanddate.com/eclipse/lunar/2030-june-15
+        Pass("LunarFraction")
+    );
+}
+
+//-------------------------------------------------------------------------------------------------
+
 const UnitTests = {
     aberration:             AberrationTest,
     axis:                   AxisTest,
@@ -3189,6 +3241,7 @@ const UnitTests = {
     lunar_apsis:            LunarApsis,
     lunar_eclipse:          LunarEclipse,
     lunar_eclipse_78:       LunarEclipseIssue78,
+    lunar_fraction:         LunarFraction,
     magnitude:              Magnitude,
     moon_nodes:             MoonNodes,
     moon_phase:             MoonPhase,

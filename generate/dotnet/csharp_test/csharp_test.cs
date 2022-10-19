@@ -2411,16 +2411,17 @@ namespace csharp_test
         static int LunarFractionCase(int year, int month, int day, double obscuration)
         {
             // Search for the first lunar eclipse to occur after the given date.
-            // It should always happen within 24 hours of the given date.
             AstroTime time = new AstroTime(year, month, day, 0, 0, 0.0);
             LunarEclipseInfo eclipse = Astronomy.SearchLunarEclipse(time);
 
+            // This should be a partial lunar eclipse.
             if (eclipse.kind != EclipseKind.Partial)
             {
                 Console.WriteLine($"C# LunarFractionCase({year:0000}-{month:00}-{day:00}): expected partial eclipse, but found {eclipse.kind}.");
                 return 1;
             }
 
+            // The partial eclipse should always happen within 24 hours of the given date.
             double dt = v(eclipse.peak.ut - time.ut);
             if (dt < 0.0 || dt > 1.0)
             {
@@ -2429,7 +2430,7 @@ namespace csharp_test
             }
 
             double diff = v(eclipse.obscuration - obscuration);
-            if (abs(diff) > 0.00901)
+            if (abs(diff) > 0.00763)
             {
                 Console.WriteLine($"C# LunarFractionCase({year:0000}-{month:00}-{day:00}) FAIL: obscuration error = {diff:F8}, expected = {obscuration:F3}, calculated = {eclipse.obscuration:F8}");
                 return 1;

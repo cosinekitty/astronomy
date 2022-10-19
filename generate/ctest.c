@@ -3728,7 +3728,7 @@ static int LunarFractionCase(int year, int month, int day, double obscuration)
         FAIL("C LunarFractionCase(%04d-%02d-%02d): eclipse occurs %0.4lf days after predicted date.\n", year, month, day, dt);
 
     diff = V(eclipse.obscuration - obscuration);
-    if (ABS(diff) > 0.00901)
+    if (ABS(diff) > 0.00763)
         FAIL("C LunarFractionCase(%04d-%02d-%02d) FAIL: obscuration error = %0.8lf, expected = %0.3lf, actual = %0.8lf\n", year, month, day, diff, obscuration, eclipse.obscuration);
     DEBUG("C LunarFractionCase(%04d-%02d-%02d) fraction error = %0.8lf\n", year, month, day, diff);
 
