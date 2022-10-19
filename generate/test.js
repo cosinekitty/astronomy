@@ -431,41 +431,59 @@ function LunarEclipse() {
     let eclipse = Astronomy.SearchLunarEclipse(new Date(Date.UTC(1701, 0)));
     for (let line of lines) {
         ++lnum;
+
+        // Make sure numeric data are finite values.
+        v(eclipse.obscuration);
+        v(eclipse.sd_partial);
+        v(eclipse.sd_penum);
+        v(eclipse.sd_total);
+
         if (line.length < 17) {
-            console.error(`JS TestLunarEclipse(${filename} line ${lnum}): line is too short.`);
+            console.error(`JS LunarEclipse(${filename} line ${lnum}): line is too short.`);
             return 1;
         }
         const time_text = line.substr(0, 17);
         const peak_time = Astronomy.MakeTime(new Date(time_text));
         const token = line.substr(17).trim().split(/\s+/);
         if (token.length !== 2) {
-            console.error(`JS TestLunarEclipse(${filename} line ${lnum}): invalid number of tokens.`);
+            console.error(`JS LunarEclipse(${filename} line ${lnum}): invalid number of tokens.`);
             return 1;
         }
         const partial_minutes = float(token[0]);
         const total_minutes = float(token[1]);
 
-        let valid = false;
+        // Verify that the calculated eclipse semi-durations are consistent with the kind.
+        // Verify that obscurations also make sense for the kind.
+        let sd_valid = false;
+        let frac_valid = false;
         switch (eclipse.kind) {
         case Astronomy.EclipseKind.Penumbral:
-            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial == 0.0) && (eclipse.sd_total == 0.0);
+            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial === 0.0) && (eclipse.sd_total === 0.0);
+            frac_valid = (eclipse.obscuration === 0.0);
             break;
 
         case Astronomy.EclipseKind.Partial:
-            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total == 0.0);
+            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total === 0.0);
+            frac_valid = (eclipse.obscuration > 0.0) && (eclipse.obscuration < 1.0);
             break;
 
         case Astronomy.EclipseKind.Total:
-            valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
+            sd_valid = (eclipse.sd_penum > 0.0) && (eclipse.sd_partial > 0.0) && (eclipse.sd_total > 0.0);
+            frac_valid = (eclipse.obscuration === 1.0);
             break;
 
         default:
-            console.error(`JS LunarEclipseTest(${filename} line ${lnum}): invalid eclipse kind ${eclipse.kind}.`);
+            console.error(`JS LunarEclipse(${filename} line ${lnum}): invalid eclipse kind ${eclipse.kind}.`);
             return 1;
         }
 
-        if (!valid) {
-            console.error(`JS LunarEclipseTest(${filename} line ${lnum}): invalid semidurations for kind ${kind}: penum=${sd_penum}, partial=${sd_partial}, total=${sd_total}.`);
+        if (!sd_valid) {
+            console.error(`JS LunarEclipse(${filename} line ${lnum}): invalid semidurations for kind ${kind}: penum=${sd_penum}, partial=${sd_partial}, total=${sd_total}.`);
+            return 1;
+        }
+
+        if (!frac_valid) {
+            console.error(`JS LunarEclipse(${filename} line ${lnum}): invalid obscuration ${eclipse.obscuration} for kind ${kind}.`);
             return 1;
         }
 
@@ -483,9 +501,9 @@ function LunarEclipse() {
         ++diff_count;
 
         if (diff_minutes > diff_limit) {
-            console.error(`JS LunarEclipseTest expected peak: ${peak_time}`);
-            console.error(`JS LunarEclipseTest found    peak: ${eclipse.peak}`);
-            console.error(`JS LunarEclipseTest(${filename} line ${lnum}): EXCESSIVE peak time error = ${diff_minutes} minutes (${diff_days} days).`);
+            console.error(`JS LunarEclipse expected peak: ${peak_time}`);
+            console.error(`JS LunarEclipse found    peak: ${eclipse.peak}`);
+            console.error(`JS LunarEclipse(${filename} line ${lnum}): EXCESSIVE peak time error = ${diff_minutes} minutes (${diff_days} days).`);
             return 1;
         }
 
@@ -499,7 +517,7 @@ function LunarEclipse() {
         ++diff_count;
 
         if (diff_minutes > diff_limit) {
-            console.error(`JS LunarEclipseTest(${filename} line ${lnum}): EXCESSIVE partial eclipse semiduration error: ${diff_minutes} minutes.`);
+            console.error(`JS LunarEclipse(${filename} line ${lnum}): EXCESSIVE partial eclipse semiduration error: ${diff_minutes} minutes.`);
             return 1;
         }
 
@@ -513,7 +531,7 @@ function LunarEclipse() {
         ++diff_count;
 
         if (diff_minutes > diff_limit) {
-            console.error(`JS LunarEclipseTest(${filename} line ${lnum}): EXCESSIVE total eclipse semiduration error: ${diff_minutes} minutes.`);
+            console.error(`JS LunarEclipse(${filename} line ${lnum}): EXCESSIVE total eclipse semiduration error: ${diff_minutes} minutes.`);
             return 1;
         }
 
@@ -524,7 +542,7 @@ function LunarEclipse() {
 
         eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
     }
-    console.log(`JS LunarEclipseTest: PASS (verified ${lnum}, skipped ${skip_count}, max_diff_minutes = ${max_diff_minutes}, avg_diff_minutes = ${sum_diff_minutes / diff_count}, moon calcs = ${Astronomy.CalcMoonCount})`);
+    console.log(`JS LunarEclipse: PASS (verified ${lnum}, skipped ${skip_count}, max_diff_minutes = ${max_diff_minutes}, avg_diff_minutes = ${sum_diff_minutes / diff_count}, moon calcs = ${Astronomy.CalcMoonCount})`);
     return 0;
 }
 
