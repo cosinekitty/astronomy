@@ -229,6 +229,7 @@ static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refra
 
 #define MOON_MEAN_RADIUS_KM         1737.4
 #define MOON_EQUATORIAL_RADIUS_AU   (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
+#define MOON_POLAR_RADIUS_AU        (MOON_POLAR_RADIUS_KM / KM_PER_AU)
 
 /* The inclination of the moon's rotation axis to the ecliptic plane, in radians. */
 #define MOON_AXIS_INCLINATION_RADIANS    (DEG2RAD * 1.543)
@@ -11133,7 +11134,7 @@ static double SolarEclipseObscuration(
     sun_radius = asin(SUN_RADIUS_AU / sun_au);
 
     /* Calculate the apparent angular radius of the Moon for the observer. */
-    moon_radius = asin((MOON_POLAR_RADIUS_KM / KM_PER_AU) / Astronomy_VectorLength(lo));
+    moon_radius = asin(MOON_POLAR_RADIUS_AU / Astronomy_VectorLength(lo));
 
     /* Calculate the apparent angular separation between the Sun's center and the Moon's center. */
     sun_moon_separation = Astronomy_AngleBetween(lo, ho);
