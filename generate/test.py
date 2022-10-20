@@ -1403,21 +1403,29 @@ def LunarEclipse():
                 return 1
             partial_minutes = float(token[0])
             total_minutes = float(token[1])
-            valid = False
+            sd_valid = False
+            frac_valid = False
             # Verify that the calculated eclipse semi-durations are consistent with the kind.
+            # Verify that obscurations also make sense for the kind.
             if eclipse.kind == astronomy.EclipseKind.Penumbral:
-                valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial == 0.0) and (eclipse.sd_total == 0.0)
+                sd_valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial == 0.0) and (eclipse.sd_total == 0.0)
+                frac_valid = (eclipse.obscuration == 0.0)
             elif eclipse.kind == astronomy.EclipseKind.Partial:
-                valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial > 0.0) and (eclipse.sd_total == 0.0)
+                sd_valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial > 0.0) and (eclipse.sd_total == 0.0)
+                frac_valid = (0.0 < eclipse.obscuration < 1.0)
             elif eclipse.kind == astronomy.EclipseKind.Total:
-                valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial > 0.0) and (eclipse.sd_total > 0.0)
+                sd_valid = (eclipse.sd_penum > 0.0) and (eclipse.sd_partial > 0.0) and (eclipse.sd_total > 0.0)
+                frac_valid = (eclipse.obscuration == 1.0)
             else:
                 print('PY LunarEclipse({} line {}): invalid eclipse kind {}.'.format(filename, lnum, eclipse.kind))
                 return 1
 
-            if not valid:
+            if not sd_valid:
                 print('PY LunarEclipse({} line {}): invalid semidurations.'.format(filename, lnum))
                 return 1
+
+            if not frac_valid:
+                print('PY LunarEclipse({} line {}): invalid obscuration {:0.8f} for eclipsekind {}.'.format(filename, lnum, eclipse.obscuration, eclipse.kind))
 
             # Check eclipse peak time.
             diff_days = eclipse.peak.ut - peak_time.ut
@@ -2876,6 +2884,51 @@ def DatesIssue250():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def LunarFractionCase(year, month, day, obscuration):
+    time = astronomy.Time.Make(year, month, day, 0, 0, 0.0)
+    eclipse = astronomy.SearchLunarEclipse(time)
+    # This should be a partial lunar eclipse.
+    if eclipse.kind != astronomy.EclipseKind.Partial:
+        print('PY LunarFractionCase({:04d}-{:02d}-{:02d}) FAIL: expected partial eclipse, but found {}.'.format(year, month, day, eclipse.kind))
+        return 1
+
+    # The partial eclipse should always happen within 24 hours of the given date.
+    dt = v(eclipse.peak.ut - time.ut)
+    if dt < 0.0 or dt > 1.0:
+        print('PY LunarFractionCase({:04d}-{:02d}-{:02d}) FAIL: eclipse occurs {:0.4f} days after predicted date.'.format(year, month, day, dt))
+        return 1
+
+    diff = v(eclipse.obscuration - obscuration)
+    if abs(diff) > 0.00763:
+        print('PY LunarFractionCase({:04d}-{:02d}-{:02d}) FAIL: excessive obscuration diff = {:0.8f}, expected = {:0.8f}, actual = {:0.8f}'.format(year, month, day, diff, obscuration, eclipse.obscuration))
+        return 1
+
+    Debug('PY LunarFractionCase({:04d}-{:02d}-{:02d}): obscuration diff = {:11.8f}'.format(year, month, day, diff))
+    return 0
+
+
+def LunarFraction():
+    # Verify calculation of the fraction of the Moon's disc covered by the Earth's umbra during a partial eclipse.
+    # Data for this is more tedious to gather, because Espenak data does not contain it.
+    # We already verify fraction=0.0 for penumbral eclipses and fraction=1.0 for total eclipses in LunarEclipseTest.
+    return (
+        LunarFractionCase(2010,  6, 26, 0.506) or  # https://www.timeanddate.com/eclipse/lunar/2010-june-26
+        LunarFractionCase(2012,  6,  4, 0.304) or  # https://www.timeanddate.com/eclipse/lunar/2012-june-4
+        LunarFractionCase(2013,  4, 25, 0.003) or  # https://www.timeanddate.com/eclipse/lunar/2013-april-25
+        LunarFractionCase(2017,  8,  7, 0.169) or  # https://www.timeanddate.com/eclipse/lunar/2017-august-7
+        LunarFractionCase(2019,  7, 16, 0.654) or  # https://www.timeanddate.com/eclipse/lunar/2019-july-16
+        LunarFractionCase(2021, 11, 19, 0.991) or  # https://www.timeanddate.com/eclipse/lunar/2021-november-19
+        LunarFractionCase(2023, 10, 28, 0.060) or  # https://www.timeanddate.com/eclipse/lunar/2023-october-28
+        LunarFractionCase(2024,  9, 18, 0.035) or  # https://www.timeanddate.com/eclipse/lunar/2024-september-18
+        LunarFractionCase(2026,  8, 28, 0.962) or  # https://www.timeanddate.com/eclipse/lunar/2026-august-28
+        LunarFractionCase(2028,  1, 12, 0.024) or  # https://www.timeanddate.com/eclipse/lunar/2028-january-12
+        LunarFractionCase(2028,  7,  6, 0.325) or  # https://www.timeanddate.com/eclipse/lunar/2028-july-6
+        LunarFractionCase(2030,  6, 15, 0.464) or  # https://www.timeanddate.com/eclipse/lunar/2030-june-15
+        Pass('LunarFraction')
+    )
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'axis':                     Axis,
@@ -2895,6 +2948,7 @@ UnitTests = {
     'lunar_apsis':              LunarApsis,
     'lunar_eclipse':            LunarEclipse,
     'lunar_eclipse_78':         LunarEclipseIssue78,
+    'lunar_fraction':           LunarFraction,
     'magnitude':                Magnitude,
     'moon':                     GeoMoon,
     'moon_nodes':               MoonNodes,

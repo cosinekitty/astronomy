@@ -221,6 +221,9 @@ class Vector:
     def __sub__(self, other):
         return Vector(self.x - other.x, self.y - other.y, self.z - other.z, self.t)
 
+    def __neg__(self):
+        return Vector(-self.x, -self.y, -self.z, self.t)
+
     def format(self, coord_format):
         """Returns a custom format string representation of the vector."""
         layout = '({:' + coord_format + '}, {:' + coord_format + '}, {:' + coord_format + '}, {})'
@@ -8506,9 +8509,12 @@ def _CalcShadow(body_radius_km, time, target, sdir):
 
 
 def _EarthShadow(time):
-    e = _CalcEarth(time)
+    # This function helps find when the Earth's shadow falls upon the Moon.
+    # Light-travel and aberration corrected vector from the Earth to the Sun.
+    # The negative vector -s is thus the path of sunlight through the center of the Earth.
+    s = GeoVector(Body.Sun, time, True)
     m = GeoMoon(time)
-    return _CalcShadow(_EARTH_ECLIPSE_RADIUS_KM, time, m, e)
+    return _CalcShadow(_EARTH_ECLIPSE_RADIUS_KM, time, m, -s)
 
 
 def _MoonShadow(time):
@@ -8628,6 +8634,12 @@ class LunarEclipseInfo:
     The `kind` field thus holds one of the values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
     or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
 
+    The `obscuration` field holds a value in the range [0, 1] that indicates what fraction
+    of the Moon's apparent disc area is covered by the Earth's umbra at the eclipse's peak.
+    This indicates how dark the peak eclipse appears. For penumbral eclipses, the obscuration
+    is 0, because the Moon does not pass through the Earth's umbra. For partial eclipses,
+    the obscuration is somewhere between 0 and 1. For total lunar eclipses, the obscuration is 1.
+
     Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
 
     Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
@@ -8640,6 +8652,8 @@ class LunarEclipseInfo:
     ----------
     kind : EclipseKind
          The type of lunar eclipse found.
+    obscuration : float
+        The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra.
     peak : Time
          The time of the eclipse at its peak.
     sd_penum : float
@@ -8649,16 +8663,18 @@ class LunarEclipseInfo:
     sd_total : float
          The semi-duration of the penumbral phase in minutes, or 0.0 if none.
     """
-    def __init__(self, kind, peak, sd_penum, sd_partial, sd_total):
+    def __init__(self, kind, obscuration, peak, sd_penum, sd_partial, sd_total):
         self.kind = kind
+        self.obscuration = obscuration
         self.peak = peak
         self.sd_penum = sd_penum
         self.sd_partial = sd_partial
         self.sd_total = sd_total
 
     def __repr__(self):
-        return 'LunarEclipseInfo({}, peak={}, sd_penum={}, sd_partial={}, sd_total={})'.format(
+        return 'LunarEclipseInfo({}, obscuration={}, peak={}, sd_penum={}, sd_partial={}, sd_total={})'.format(
             self.kind,
+            self.obscuration,
             repr(self.peak),
             self.sd_penum,
             self.sd_partial,
@@ -8989,6 +9005,47 @@ def _MoonEclipticLatitudeDegrees(time):
     moon = _CalcMoon(time)
     return math.degrees(moon.geo_eclip_lat)
 
+def _Obscuration(a, b, c):
+    # a = radius of first disc
+    # b = radius of second disc
+    # c = distance between the centers of the discs
+    if a <= 0.0:
+        raise Error('Radius of first disc must be positive.')
+
+    if b <= 0.0:
+        raise Error('Radius of second disc must be positive.')
+
+    if c < 0.0:
+        raise Error('Distance between discs is not allowed to be negative.')
+
+    if c >= a + b:
+        # The discs are too far apart to have any overlapping area
+        return 0.0
+
+    if c == 0.0:
+        # The discs have a common center. Therefore, one disc is inside the other.
+        return 1.0 if (a <= b) else (b*b)/(a*a)
+
+    x = (a*a - b*b + c*c) / (2.0*c)
+    radicand = a*a - x*x
+    if radicand <= 0.0:
+        # The circumferences do not intersect, or are tangent.
+        # We already ruled out the case of non-overlapping discs.
+        # Therefore, one disc is inside the other.
+        return 1.0 if (a <= b) else (b*b)/(a*a)
+
+    # The discs overlap fractionally in a pair of lens-shaped areas.
+    y = math.sqrt(radicand)
+
+    # Return the overlapping fractional area.
+    # There are two lens-shaped areas, one to the left of x, the other to the right of x.
+    # Each part is calculated by subtracting a triangular area from a sector's area.
+    lens1 = a*a*math.acos(x/a) - x*y
+    lens2 = b*b*math.acos((c-x)/b) - (c-x)*y
+
+    # Find the fractional area with respect to the first disc.
+    return (lens1 + lens2) / (math.pi*a*a)
+
 
 def SearchLunarEclipse(startTime):
     """Searches for a lunar eclipse.
@@ -9028,6 +9085,7 @@ def SearchLunarEclipse(startTime):
             if shadow.r < shadow.p + _MOON_MEAN_RADIUS_KM:
                 # This is at least a penumbral eclipse. We will return a result.
                 kind = EclipseKind.Penumbral
+                obscuration = 0.0
                 sd_total = 0.0
                 sd_partial = 0.0
                 sd_penum = _ShadowSemiDurationMinutes(shadow.time, shadow.p + _MOON_MEAN_RADIUS_KM, 200.0)
@@ -9040,9 +9098,12 @@ def SearchLunarEclipse(startTime):
                     if shadow.r + _MOON_MEAN_RADIUS_KM < shadow.k:
                         # This is a total eclipse.
                         kind = EclipseKind.Total
+                        obscuration = 1.0
                         sd_total = _ShadowSemiDurationMinutes(shadow.time, shadow.k - _MOON_MEAN_RADIUS_KM, sd_partial)
+                    else:
+                        obscuration = _Obscuration(_MOON_MEAN_RADIUS_KM, shadow.k, shadow.r)
 
-                return LunarEclipseInfo(kind, shadow.time, sd_penum, sd_partial, sd_total)
+                return LunarEclipseInfo(kind, obscuration, shadow.time, sd_penum, sd_partial, sd_total)
 
         # We didn't find an eclipse on this full moon, so search for the next one.
         fmtime = fullmoon.AddDays(10)

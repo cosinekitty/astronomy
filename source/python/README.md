@@ -702,6 +702,11 @@ Partial eclipses occur when part, but not all, of the Moon touches the Earth's u
 Total eclipses occur when the entire Moon passes into the Earth's umbra.
 The `kind` field thus holds one of the values `EclipseKind.Penumbral`, `EclipseKind.Partial`,
 or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
+The `obscuration` field holds a value in the range [0, 1] that indicates what fraction
+of the Moon's apparent disc area is covered by the Earth's umbra at the eclipse's peak.
+This indicates how dark the peak eclipse appears. For penumbral eclipses, the obscuration
+is 0, because the Moon does not pass through the Earth's umbra. For partial eclipses,
+the obscuration is somewhere between 0 and 1. For total lunar eclipses, the obscuration is 1.
 Field `peak` holds the date and time of the peak of the eclipse, when it is at its peak.
 Fields `sd_penum`, `sd_partial`, and `sd_total` hold the semi-duration of each phase
 of the eclipse, which is half of the amount of time the eclipse spends in each
@@ -712,6 +717,7 @@ may determine the date and time of the beginning/end of each eclipse phase.
 | Type | Attribute | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of lunar eclipse found. |
+| `float` | `obscuration` | The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra. |
 | [`Time`](#Time) | `peak` | The time of the eclipse at its peak. |
 | `float` | `sd_penum` | The semi-duration of the penumbral phase in minutes. |
 | `float` | `sd_partial` | The semi-duration of the penumbral phase in minutes, or 0.0 if none. |
