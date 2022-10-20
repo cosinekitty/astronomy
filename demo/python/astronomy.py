@@ -91,9 +91,10 @@ _EARTH_ATMOSPHERE_KM = 88.0         # effective atmosphere thickness for lunar e
 _EARTH_ECLIPSE_RADIUS_KM = _EARTH_MEAN_RADIUS_KM + _EARTH_ATMOSPHERE_KM
 
 _MOON_EQUATORIAL_RADIUS_KM = 1738.1
+_MOON_EQUATORIAL_RADIUS_AU = (_MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 _MOON_MEAN_RADIUS_KM       = 1737.4
 _MOON_POLAR_RADIUS_KM      = 1736.0
-_MOON_EQUATORIAL_RADIUS_AU = (_MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
+_MOON_POLAR_RADIUS_AU      = (_MOON_POLAR_RADIUS_KM / KM_PER_AU)
 
 _ASEC180 = 180.0 * 60.0 * 60.0
 _AU_PER_PARSEC = _ASEC180 / math.pi
@@ -8518,48 +8519,32 @@ def _EarthShadow(time):
 
 
 def _MoonShadow(time):
-    # This is a variation on the logic in _EarthShadow().
-    # Instead of a heliocentric Earth and a geocentric Moon,
-    # we want a heliocentric Moon and a lunacentric Earth.
-    h = _CalcEarth(time)    # heliocentric Earth
+    s = GeoVector(Body.Sun, time, True)
     m = GeoMoon(time)       # geocentric Moon
-    # Calculate lunacentric Earth.
-    e = Vector(-m.x, -m.y, -m.z, m.t)
-    # Convert geocentric moon to heliocentric Moon.
-    m.x += h.x
-    m.y += h.y
-    m.z += h.z
-    return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, e, m)
+    # -m  = lunacentric Earth
+    # m-s = heliocentric Moon
+    return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, -m, m-s)
 
 
 def _LocalMoonShadow(time, observer):
     # Calculate observer's geocentric position.
-    # For efficiency, do this first, to populate the earth rotation parameters in 'time'.
-    # That way they can be recycled instead of recalculated.
     pos = _geo_pos(time, observer)
-    h = _CalcEarth(time)     # heliocentric Earth
+    s = GeoVector(Body.Sun, time, True)
     m = GeoMoon(time)        # geocentric Moon
     # Calculate lunacentric location of an observer on the Earth's surface.
-    o = Vector(pos[0] - m.x, pos[1] - m.y, pos[2] - m.z, time)
-    # Convert geocentric moon to heliocentric Moon.
-    m.x += h.x
-    m.y += h.y
-    m.z += h.z
-    return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, o, m)
+    lo = Vector(pos[0] - m.x, pos[1] - m.y, pos[2] - m.z, time)
+    # m-s = heliocentric Moon
+    return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, lo, m-s)
 
 
 def _PlanetShadow(body, planet_radius_km, time):
     # Calculate light-travel-corrected vector from Earth to planet.
-    g = GeoVector(body, time, False)
+    p = GeoVector(body, time, True)
     # Calculate light-travel-corrected vector from Earth to Sun.
-    e = GeoVector(Body.Sun, time, False)
-    # Deduce light-travel-corrected vector from Sun to planet.
-    p = Vector(g.x - e.x, g.y - e.y, g.z - e.z, time)
-    # Calcluate Earth's position from the planet's point of view.
-    e.x = -g.x
-    e.y = -g.y
-    e.z = -g.z
-    return _CalcShadow(planet_radius_km, time, e, p)
+    s = GeoVector(Body.Sun, time, True)
+    # -p  = planetocentric Earth
+    # p-s = heliocentric planet
+    return _CalcShadow(planet_radius_km, time, -p, p-s)
 
 
 def _ShadowDistanceSlope(shadowfunc, time):
@@ -8705,10 +8690,23 @@ class GlobalSolarEclipseInfo:
     If `kind` has any other value, `latitude` and `longitude` are undefined and should
     not be used.
 
+    For total or annular eclipses, the `obscuration` field holds the fraction (0, 1]
+    of the Sun's apparent disc area that is blocked from view by the Moon's silhouette,
+    as seen by an observer located at the geographic coordinates `latitude`, `longitude`
+    at the darkest time `peak`. The value will always be 1 for total eclipses, and less than
+    1 for annular eclipses.
+    For partial eclipses, `obscuration` holds the value `None`.
+    This is because there is little practical use for an obscuration value of
+    a partial eclipse without supplying a particular observation location.
+    Developers who wish to find an obscuration value for partial solar eclipses should therefore use
+    #SearchLocalSolarEclipse and provide the geographic coordinates of an observer.
+
     Attributes
     ----------
     kind : EclipseKind
         The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+    obscuration : float
+        The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only).
     peak : Time
         The date and time when the solar eclipse is darkest.
         This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center.
@@ -8719,16 +8717,18 @@ class GlobalSolarEclipseInfo:
     longitude : float
         The geographic longitude at the center of the peak eclipse shadow.
     """
-    def __init__(self, kind, peak, distance, latitude, longitude):
+    def __init__(self, kind, obscuration, peak, distance, latitude, longitude):
         self.kind = kind
+        self.obscuration = obscuration
         self.peak = peak
         self.distance = distance
         self.latitude = latitude
         self.longitude = longitude
 
     def __repr__(self):
-        return 'GlobalSolarEclipseInfo({}, peak={}, distance={}, latitude={}, longitude={})'.format(
+        return 'GlobalSolarEclipseInfo({}, obscuration={}, peak={}, distance={}, latitude={}, longitude={})'.format(
             self.kind,
+            self.obscuration,
             repr(self.peak),
             self.distance,
             self.latitude,
@@ -8785,6 +8785,13 @@ class LocalSolarEclipseInfo:
     A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
     Sun just right to completely block all sunlight from reaching the observer.
 
+    The `obscuration` field reports what fraction of the Sun's disc appears blocked
+    by the Moon when viewed by the observer at the peak eclipse time.
+    This is a value that ranges from 0 (no blockage) to 1 (total eclipse).
+    The obscuration value will be between 0 and 1 for partial eclipses and annular eclipses.
+    The value will be exactly 1 for total eclipses. Obscuration gives an indication
+    of how dark the eclipse appears.
+
     There are 5 "event" fields, each of which contains a time and a solar altitude.
     Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
     The fields `partial_begin` and `partial_end` are always set, and indicate when
@@ -8798,6 +8805,8 @@ class LocalSolarEclipseInfo:
     ----------
     kind : EclipseKind
         The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
+    obscuration : float
+        The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak.
     partial_begin : EclipseEvent
         The time and Sun altitude at the beginning of the eclipse.
     total_begin : EclipseEvent
@@ -8809,8 +8818,9 @@ class LocalSolarEclipseInfo:
     partial_end : EclipseEvent
         The time and Sun altitude at the end of the eclipse.
     """
-    def __init__(self, kind, partial_begin, total_begin, peak, total_end, partial_end):
+    def __init__(self, kind, obscuration, partial_begin, total_begin, peak, total_end, partial_end):
         self.kind = kind
+        self.obscuration = obscuration
         self.partial_begin = partial_begin
         self.total_begin = total_begin
         self.peak = peak
@@ -8818,8 +8828,9 @@ class LocalSolarEclipseInfo:
         self.partial_end = partial_end
 
     def __repr__(self):
-        return 'LocalSolarEclipseInfo({}, partial_begin={}, total_begin={}, peak={}, total_end={}, partial_end={})'.format(
+        return 'LocalSolarEclipseInfo({}, obscuration={}, partial_begin={}, total_begin={}, peak={}, total_end={}, partial_end={})'.format(
             self.kind,
+            self.obscuration,
             repr(self.partial_begin),
             repr(self.total_begin),
             repr(self.peak),
@@ -8895,7 +8906,8 @@ def _LocalEclipse(shadow, observer):
         total_begin = None
         total_end = None
         kind = EclipseKind.Partial
-    return LocalSolarEclipseInfo(kind, partial_begin, total_begin, peak, total_end, partial_end)
+    obscuration = 1.0 if (kind == EclipseKind.Total) else _SolarEclipseObscuration(shadow.dir, shadow.target)
+    return LocalSolarEclipseInfo(kind, obscuration, partial_begin, total_begin, peak, total_end, partial_end)
 
 
 def _GeoidIntersect(shadow):
@@ -8985,8 +8997,13 @@ def _GeoidIntersect(shadow):
             raise Error('Unexpected shadow distance from geoid intersection = {}'.format(surface.r))
 
         kind = _EclipseKindFromUmbra(surface.k)
+        obscuration = 1.0 if (kind == EclipseKind.Total) else _SolarEclipseObscuration(shadow.dir, o)
+    else:
+        # This is a partial solar eclipse. It does not make practical sense to calculate obscuration.
+        # Anyone who wants obscuration should use SearchLocalSolarEclipse for a specific location on the Earth.
+        obscuration = None
 
-    return GlobalSolarEclipseInfo(kind, peak, distance, latitude, longitude)
+    return GlobalSolarEclipseInfo(kind, obscuration, peak, distance, latitude, longitude)
 
 
 def _ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes):
@@ -9045,6 +9062,28 @@ def _Obscuration(a, b, c):
 
     # Find the fractional area with respect to the first disc.
     return (lens1 + lens2) / (math.pi*a*a)
+
+
+def _SolarEclipseObscuration(hm, lo):
+    # hm = heliocentric Moon
+    # lo = lunacentric observer
+    # Find heliocentric observer
+    ho = hm + lo
+    # Calculate the apparent angular radius of the Sun for the observer.
+    sun_radius = math.asin(_SUN_RADIUS_AU / ho.Length())
+
+    # Calculate the apparent angular radius of the Moon for the observer.
+    moon_radius = math.asin(_MOON_POLAR_RADIUS_AU / lo.Length())
+
+    # Calculate the apparent angular separation between the Sun's center and the Moon's center.
+    sun_moon_separation = math.radians(AngleBetween(lo, ho))
+
+    # Find the fraction of the Sun's apparent disc area that is covered by the Moon.
+    obscuration = _Obscuration(sun_radius, moon_radius, sun_moon_separation)
+
+    # HACK: In marginal cases, we need to clamp obscuration to less than 1.0.
+    # This function is never called for total eclipses, so it should never return 1.0.
+    return min(0.9999, obscuration)
 
 
 def SearchLunarEclipse(startTime):

@@ -19,6 +19,10 @@ def Pass(funcname):
     print('PY {}: PASS'.format(funcname))
     return 0
 
+def Fail(funcname, reason):
+    print('PY {} FAIL: {}'.format(funcname, reason))
+    return 1
+
 def v(x):
     # Verify that a number is really numeric
     if not isinstance(x, (int, float)):
@@ -1392,6 +1396,13 @@ def LunarEclipse():
         diff_limit = 2.0
         for line in infile:
             lnum += 1
+
+            # Make sure numeric data are finite numbers.
+            v(eclipse.obscuration)
+            v(eclipse.sd_partial)
+            v(eclipse.sd_penum)
+            v(eclipse.sd_total)
+
             if len(line) < 17:
                 print('PY LunarEclipse({} line {}): line is too short.'.format(filename, lnum))
                 return 1
@@ -1543,7 +1554,7 @@ def GlobalSolarEclipse():
 
             # Validate the eclipse prediction.
             diff_minutes = (24 * 60) * vabs(diff_days)
-            if diff_minutes > 6.93:
+            if diff_minutes > 7.56:
                 print('PY GlobalSolarEclipse({} line {}): EXCESSIVE TIME ERROR = {} minutes'.format(filename, lnum, diff_minutes))
                 return 1
 
@@ -1566,6 +1577,23 @@ def GlobalSolarEclipse():
                         return 1
                     if diff_angle > max_angle:
                         max_angle = diff_angle
+
+            # Verify the obscuration value is consistent with the eclipse kind.
+            if eclipse.kind == astronomy.EclipseKind.Partial:
+                if eclipse.obscuration is not None:
+                    print('PY GlobalSolarEclipse({} line {}): Expected obscuration = None for partial eclipse, but found {}'.format(filename, lnum, eclipse.obscuration))
+                    return 1
+            elif eclipse.kind == astronomy.EclipseKind.Annular:
+                if not (0.8 < v(eclipse.obscuration) < 1.0):
+                    print('PY GlobalSolarEclipse({} line {}): Invalid obscuration = {:0.8f} for annular eclipse.'.format(filename, lnum, eclipse.obscuration))
+                    return 1
+            elif eclipse.kind == astronomy.EclipseKind.Total:
+                if v(eclipse.obscuration) != 1.0:
+                    print('PY GlobalSolarEclipse({} line {}): Invalid obscuration = {:0.8f} for total eclipse.'.format(filename, lnum, eclipse.obscuration))
+                    return 1
+            else:
+                print('PY GlobalSolarEclipse({} line {}): Unhandled eclipse kind {}'.format(filename, lnum, eclipse.kind))
+                return 1
 
             eclipse = astronomy.NextGlobalSolarEclipse(eclipse.peak)
 
@@ -1591,11 +1619,11 @@ def LocalSolarEclipse1():
         lnum = 0
         for line in infile:
             lnum += 1
+            funcname = 'LocalSolarEclipse({} line {})'.format(filename, lnum)
             # 1889-12-22T12:54:15Z   -6 T   -12.7   -12.8
             token = line.split()
             if len(token) != 5:
-                print('PY LocalSolarEclipse1({} line {}): invalid token count = {}'.format(filename, lnum, len(token)))
-                return 1
+                return Fail(funcname, 'invalid token count = {}'.format(len(token)))
             peak = astronomy.Time.Parse(token[0])
             #typeChar = token[2]
             lat = float(token[3])
@@ -1613,20 +1641,30 @@ def LocalSolarEclipse1():
                 continue
 
             diff_minutes = (24 * 60) * vabs(diff_days)
-            if diff_minutes > 7.14:
-                print('PY LocalSolarEclipse1({} line {}): EXCESSIVE TIME ERROR = {} minutes'.format(filename, lnum, diff_minutes))
-                return 1
+            if diff_minutes > 7.734:
+                return Fail(funcname, 'EXCESSIVE TIME ERROR = {} minutes'.format(diff_minutes))
 
             if diff_minutes > max_minutes:
                 max_minutes = diff_minutes
 
+            # Verify obscuration makes sense for this kind of eclipse.
+            v(eclipse.obscuration)
+            if eclipse.kind in [astronomy.EclipseKind.Annular, astronomy.EclipseKind.Partial]:
+                frac_valid = (0.0 < eclipse.obscuration < 1.0)
+            elif eclipse.kind == astronomy.EclipseKind.Total:
+                frac_valid = (eclipse.obscuration == 1.0)
+            else:
+                return Fail(funcname, 'Invalid eclipse kind {}'.format(eclipse.kind))
+            if not frac_valid:
+                return Fail(funcname, 'Invalid eclipse obscuration {:0.8f} for {} eclipse.'.format(eclipse.obscuration, eclipse.kind))
+
+    funcname = 'LocalSolarEclipse1({})'.format(filename)
+
     if lnum != expected_count:
-        print('PY LocalSolarEclipse1: WRONG LINE COUNT = {}, expected {}'.format(lnum, expected_count))
-        return 1
+        return Fail(funcname, 'WRONG LINE COUNT = {}, expected {}'.format(lnum, expected_count))
 
     if skip_count > 6:
-        print('PY LocalSolarEclipse1: EXCESSIVE SKIP COUNT = {}'.format(skip_count))
-        return 1
+        return Fail(funcname, 'EXCESSIVE SKIP COUNT = {}'.format(skip_count))
 
     print('PY LocalSolarEclipse1: PASS ({} verified, {} skipped, max minutes = {})'.format(lnum, skip_count, max_minutes))
     return 0
@@ -1667,11 +1705,13 @@ def LocalSolarEclipse2():
             max_minutes = diff_minutes
         if diff_minutes > 1.0:
             raise Exception('CheckEvent({} line {}): EXCESSIVE TIME ERROR: {} minutes.'.format(filename, lnum, diff_minutes))
-        diff_alt = vabs(expect.altitude - calc.altitude)
-        if diff_alt > max_degrees:
-            max_degrees = diff_alt
-        if diff_alt > 0.5:
-            raise Exception('CheckEvent({} line {}): EXCESSIVE ALTITUDE ERROR: {} degrees.'.format(filename, lnum, diff_alt))
+        # Ignore discrepancies for negative altitudes, because of quirky and irrelevant differences in refraction models.
+        if expect.altitude >= 0.0:
+            diff_alt = vabs(expect.altitude - calc.altitude)
+            if diff_alt > max_degrees:
+                max_degrees = diff_alt
+            if diff_alt > 0.5:
+                raise Exception('CheckEvent({} line {}): EXCESSIVE ALTITUDE ERROR: {} degrees.'.format(filename, lnum, diff_alt))
 
     with open(filename, 'rt') as infile:
         for line in infile:
@@ -1712,11 +1752,84 @@ def LocalSolarEclipse2():
 
 
 def LocalSolarEclipse():
-    if 0 != LocalSolarEclipse1():
-        return 1
-    if 0 != LocalSolarEclipse2():
-        return 1
+    return (
+        LocalSolarEclipse1() or
+        LocalSolarEclipse2()
+    )
+
+#-----------------------------------------------------------------------------------------------------------
+
+def GlobalAnnularCase(year, month, day, obscuration):
+    # Search for the first solar eclipse that occurs after the given date.
+    time = astronomy.Time.Make(year, month, day, 0, 0, 0.0)
+    eclipse = astronomy.SearchGlobalSolarEclipse(time)
+    funcname = 'GlobalAnnularCase({:04d}-{:02d}-{:02d})'.format(year, month, day)
+
+    # Verify the eclipse is within 1 day after the search basis time.
+    dt = v(eclipse.peak.ut - time.ut)
+    if not (0.0 <= dt <= 1.0):
+        return Fail(funcname, 'found eclipse {:0.4f} days after search time.'.format(dt))
+
+    # Verify we found an annular solar eclipse.
+    if eclipse.kind != astronomy.EclipseKind.Annular:
+        return Fail(funcname, 'expected annular eclipse but found {}'.format(eclipse.kind))
+
+    # Check how accurately we calculated obscuration.
+    diff = v(eclipse.obscuration - obscuration)
+    if abs(diff) > 0.0000904:
+        return Fail(funcname, 'excessive obscuration error = {:0.8f}, expected = {:0.8f}, actual = {:0.8f}'.format(diff, obscuration, eclipse.obscuration))
+
+    Debug('{}: obscuration error = {:11.8f}'.format(funcname, diff))
     return 0
+
+
+def LocalSolarCase(year, month, day, latitude, longitude, kind, obscuration, tolerance):
+    funcname = 'LocalSolarCase({:04d}-{:02d}-{:02d})'.format(year, month, day)
+    time = astronomy.Time.Make(year, month, day, 0, 0, 0.0)
+    observer = astronomy.Observer(latitude, longitude, 0.0)
+    eclipse = astronomy.SearchLocalSolarEclipse(time, observer)
+    dt = v(eclipse.peak.time.ut - time.ut)
+    if not (0.0 <= dt <= 1.0):
+        return Fail(funcname, 'eclipse found {:0.4f} days after search date'.format(dt))
+
+    if eclipse.kind != kind:
+        return Fail(funcname, 'expected {} eclipse, but found {}.'.format(kind, eclipse.kind))
+
+    diff = v(eclipse.obscuration - obscuration)
+    if diff > tolerance:
+        return Fail(funcname, 'obscuration diff = {:0.8f}, expected = {:0.8f}, actual = {:0.8f}'.format(diff, obscuration, eclipse.obscuration))
+
+    Debug('{}: obscuration diff = {:11.8f}'.format(funcname, diff))
+    return 0
+
+
+def SolarFraction():
+    return (
+        # Verify global solar eclipse obscurations for annular eclipses only.
+        # This is because they are the only nontrivial values for global solar eclipses.
+        # The trivial values are all validated exactly by GlobalSolarEclipseTest().
+
+        GlobalAnnularCase(2023, 10, 14, 0.90638) or    # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
+        GlobalAnnularCase(2024, 10,  2, 0.86975) or    # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
+        GlobalAnnularCase(2027,  2,  6, 0.86139) or    # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2027Feb06Aprime.html
+        GlobalAnnularCase(2028,  1, 26, 0.84787) or    # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2028Jan26Aprime.html
+        GlobalAnnularCase(2030,  6,  1, 0.89163) or    # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html
+
+        # Verify obscuration values for specific locations on the Earth.
+        # Local solar eclipse calculations include obscuration for all types of eclipse, not just annular and total.
+        LocalSolarCase(2023, 10, 14,  11.3683,  -83.1017, astronomy.EclipseKind.Annular, 0.90638, 0.000080) or  # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
+        LocalSolarCase(2023, 10, 14,  25.78,    -80.22,   astronomy.EclipseKind.Partial, 0.578,   0.000023) or  # https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22023&lat=25.78&lon=-80.22&label=Miami%2C+FL&height=0&submit=Get+Data
+        LocalSolarCase(2023, 10, 14,  30.2666,  -97.7000, astronomy.EclipseKind.Partial, 0.8867,  0.001016) or  # http://astro.ukho.gov.uk/eclipse/0332023/Austin_TX_United_States_2023Oct14.png
+        LocalSolarCase(2024,  4,  8,  25.2900, -104.1383, astronomy.EclipseKind.Total,   1.0,     0.0     ) or  # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Apr08Tprime.html
+        LocalSolarCase(2024,  4,  8,  37.76,   -122.44,   astronomy.EclipseKind.Partial, 0.340,   0.000604) or  # https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=12024&lat=37.76&lon=-122.44&label=San+Francisco%2C+CA&height=0&submit=Get+Data
+        LocalSolarCase(2024, 10,  2, -21.9533, -114.5083, astronomy.EclipseKind.Annular, 0.86975, 0.000061) or  # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
+        LocalSolarCase(2024, 10,  2, -33.468,   -70.636,  astronomy.EclipseKind.Partial, 0.436,   0.000980) or  # https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22024&lat=-33.468&lon=-70.636&label=Santiago%2C+Chile&height=0&submit=Get+Data
+        LocalSolarCase(2030,  6,  1,  56.525,    80.0617, astronomy.EclipseKind.Annular, 0.89163, 0.000067) or  # https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html
+        LocalSolarCase(2030,  6,  1,  40.388,    49.914,  astronomy.EclipseKind.Partial, 0.67240, 0.000599) or  # http://xjubier.free.fr/en/site_pages/SolarEclipseCalc_Diagram.html
+        LocalSolarCase(2030,  6,  1,  40.3667,   49.8333, astronomy.EclipseKind.Partial, 0.6736,  0.001464) or  # http://astro.ukho.gov.uk/eclipse/0132030/Baku_Azerbaijan_2030Jun01.png
+
+        Pass('SolarFraction')
+    )
 
 #-----------------------------------------------------------------------------------------------------------
 
@@ -2964,6 +3077,7 @@ UnitTests = {
     'seasons':                  Seasons,
     'seasons187':               SeasonsIssue187,
     'sidereal':                 SiderealTime,
+    'solar_fraction':           SolarFraction,
     'time':                     AstroTime,
     'topostate':                TopoState,
     'transit':                  Transit,

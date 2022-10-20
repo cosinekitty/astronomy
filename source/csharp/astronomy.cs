@@ -8818,14 +8818,14 @@ namespace CosineKitty
         internal static ShadowInfo PlanetShadow(Body body, double planet_radius_km, AstroTime time)
         {
             // Calculate light-travel-corrected vector from Earth to planet.
-            AstroVector g = GeoVector(body, time, Aberration.None);
+            AstroVector p = GeoVector(body, time, Aberration.Corrected);
 
             // Calculate light-travel-corrected vector from Earth to Sun.
-            AstroVector e = GeoVector(Body.Sun, time, Aberration.None);
+            AstroVector s = GeoVector(Body.Sun, time, Aberration.Corrected);
 
-            // -g  = planetcentric Earth
-            // g-e = heliocentric planet
-            return CalcShadow(planet_radius_km, time, -g, g-e);
+            // -p  = planetcentric Earth
+            // p-s = heliocentric planet
+            return CalcShadow(planet_radius_km, time, -p, p-s);
         }
 
 
