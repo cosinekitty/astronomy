@@ -948,7 +948,7 @@ function LocalSolarCase(dateText, latitude, longitude, kind, obscuration, tolera
     }
 
     const diff = v(eclipse.obscuration - obscuration);
-    if (diff > tolerance) {
+    if (abs(diff) > tolerance) {
         console.error(`JS LocalSolarCase(${dateText}) FAIL: obscuration diff = ${diff}, expected = ${obscuration}, actual = ${eclipse.obscuration}.`);
         return 1;
     }

@@ -179,9 +179,10 @@ private const val EARTH_MEAN_RADIUS_KM = 6371.0    // mean radius of the Earth's
 private const val EARTH_ATMOSPHERE_KM = 88.0       // effective atmosphere thickness for lunar eclipses
 private const val EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM
 private const val MOON_EQUATORIAL_RADIUS_KM = 1738.1
+private const val MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
 private const val MOON_MEAN_RADIUS_KM       = 1737.4
 private const val MOON_POLAR_RADIUS_KM      = 1736.0
-private const val MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
+private const val MOON_POLAR_RADIUS_AU      = (MOON_POLAR_RADIUS_KM / KM_PER_AU)
 private const val ANGVEL = 7.2921150e-5
 private const val SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592
 private const val MEAN_SYNODIC_MONTH = 29.530588     // average number of days for Moon to return to the same phase
@@ -1790,6 +1791,12 @@ enum class EclipseKind {
  * The `kind` field thus holds `EclipseKind.Penumbral`, `EclipseKind.Partial`,
  * or `EclipseKind.Total`, depending on the kind of lunar eclipse found.
  *
+ * The `obscuration` field holds a value in the range [0, 1] that indicates what fraction
+ * of the Moon's apparent disc area is covered by the Earth's umbra at the eclipse's peak.
+ * This indicates how dark the peak eclipse appears. For penumbral eclipses, the obscuration
+ * is 0, because the Moon does not pass through the Earth's umbra. For partial eclipses,
+ * the obscuration is somewhere between 0 and 1. For total lunar eclipses, the obscuration is 1.
+ *
  * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
  *
  * Fields `sdPenum`, `sdPartial`, and `sdTotal` hold the semi-duration of each phase
@@ -1803,6 +1810,11 @@ class LunarEclipseInfo(
      * The type of lunar eclipse found.
      */
     val kind: EclipseKind,
+
+    /**
+     * The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra.
+     */
+    val obscuration: Double,
 
     /**
      * The time of the eclipse at its peak.
@@ -1848,12 +1860,28 @@ class LunarEclipseInfo(
  * onto the daytime side of the Earth at the instant of the eclipse's peak.
  * If `kind` has any other value, `latitude` and `longitude` are undefined and should
  * not be used.
+ *
+ * For total or annular eclipses, the `obscuration` field holds the fraction (0, 1]
+ * of the Sun's apparent disc area that is blocked from view by the Moon's silhouette,
+ * as seen by an observer located at the geographic coordinates `latitude`, `longitude`
+ * at the darkest time `peak`. The value will always be 1 for total eclipses, and less than
+ * 1 for annular eclipses.
+ * For partial eclipses, `obscuration` is undefined and should not be used.
+ * This is because there is little practical use for an obscuration value of
+ * a partial eclipse without supplying a particular observation location.
+ * Developers who wish to find an obscuration value for partial solar eclipses should therefore use
+ * [searchLocalSolarEclipse] and provide the geographic coordinates of an observer.
  */
 class GlobalSolarEclipseInfo(
     /**
      * The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
      */
     val kind: EclipseKind,
+
+    /**
+     * The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only).
+     */
+    val obscuration: Double,
 
     /**
      * The date and time when the solar eclipse is darkest.
@@ -1922,6 +1950,13 @@ class EclipseEvent (
  * A total eclipse occurs when the Moon is close enough to the Earth and aligned with the
  * Sun just right to completely block all sunlight from reaching the observer.
  *
+ * The `obscuration` field reports what fraction of the Sun's disc appears blocked
+ * by the Moon when viewed by the observer at the peak eclipse time.
+ * This is a value that ranges from 0 (no blockage) to 1 (total eclipse).
+ * The obscuration value will be between 0 and 1 for partial eclipses and annular eclipses.
+ * The value will be exactly 1 for total eclipses. Obscuration gives an indication
+ * of how dark the eclipse appears.
+ *
  * There are 5 "event" fields, each of which contains a time and a solar altitude.
  * Field `peak` holds the date and time of the center of the eclipse, when it is at its peak.
  * The fields `partialBegin` and `partialEnd` are always set, and indicate when
@@ -1936,6 +1971,11 @@ class LocalSolarEclipseInfo (
      * The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
      */
     val kind: EclipseKind,
+
+    /**
+     * The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak.
+     */
+    val obscuration: Double,
 
     /**
      * The time and Sun altitude at the beginning of the eclipse.
@@ -2054,44 +2094,42 @@ internal fun calcShadow(
 
 internal fun earthShadow(time: Time): ShadowInfo {
     // This function helps find when the Earth's shadow falls upon the Moon.
-    val e = helioEarthPos(time)
+    val s = geoVector(Body.Sun, time, Aberration.Corrected)
     val m = geoMoon(time)
-    return calcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, e)
+    return calcShadow(EARTH_ECLIPSE_RADIUS_KM, time, m, -s)
 }
 
 internal fun moonShadow(time: Time): ShadowInfo {
     // This function helps find when the Moon's shadow falls upon the Earth.
-    // This is a variation on the logic in EarthShadow().
-    // Instead of a heliocentric Earth and a geocentric Moon,
-    // we want a heliocentric Moon and a lunacentric Earth.
-
-    val e = helioEarthPos(time)
+    val s = geoVector(Body.Sun, time, Aberration.Corrected)
     val m = geoMoon(time)
 
     // -m  = lunacentric Earth
-    // m+e = heliocentric Moon
-    return calcShadow(MOON_MEAN_RADIUS_KM, time, -m, m+e)
+    // m-s = heliocentric Moon
+    return calcShadow(MOON_MEAN_RADIUS_KM, time, -m, m-s)
 }
 
 internal fun localMoonShadow(time: Time, observer: Observer): ShadowInfo {
     // Calculate observer's geocentric position.
-    // For efficiency, do this first, to populate the earth rotation parameters in 'time'.
-    // That way they can be recycled instead of recalculated.
     val o = geoPos(time, observer)
-    val h = helioEarthPos(time)
+
+    // Calculate light-travel and aberration corrected Sun.
+    val s = geoVector(Body.Sun, time, Aberration.Corrected)
+
+    // Calculate geocentric Moon.
     val m = geoMoon(time)
 
     // o-m = lunacentric observer
-    // m+h = heliocentric Moon
-    return calcShadow(MOON_MEAN_RADIUS_KM, time, o-m, m+h)
+    // m-s = heliocentric Moon
+    return calcShadow(MOON_MEAN_RADIUS_KM, time, o-m, m-s)
 }
 
 internal fun planetShadow(body: Body, planetRadiusKm: Double, time: Time): ShadowInfo {
     // Calculate light-travel-corrected vector from Earth to planet.
-    val g = geoVector(body, time, Aberration.None)
+    val g = geoVector(body, time, Aberration.Corrected)
 
     // Calculate light-travel-corrected vector from Earth to Sun.
-    val e = geoVector(Body.Sun, time, Aberration.None)
+    val e = geoVector(Body.Sun, time, Aberration.Corrected)
 
     // -g  = planetocentric Earth
     // g-e = heliocentric planet
@@ -2136,7 +2174,6 @@ internal fun peakEarthShadow(searchCenterTime: Time): ShadowInfo {
         throw InternalError("Failed to find Earth peak shadow event.")
     return earthShadow(tx)
 }
-
 
 internal val moonShadowSlopeContext = SearchContext { time ->
     val dt = 1.0 / SECONDS_PER_DAY
@@ -2196,6 +2233,69 @@ internal fun planetTransitBoundary(body: Body, planetRadiusKm: Double, t1: Time,
     } ?: throw InternalError("Planet transit boundary search failed.")
 }
 
+internal fun discObscuration(a: Double, b: Double, c: Double): Double {
+    // a = radius of first disc
+    // b = radius of second disc
+    // c = distance between centers of discs
+    if (a <= 0.0) throw InternalError("Radius of first disc must be positive.")
+    if (b <= 0.0) throw InternalError("Radius of second disc must be positive.")
+    if (c < 0.0) throw InternalError("Distance between discs is not allowed to be negative.")
+
+    if (c >= a + b) {
+        // The discs are too far apart to have any overlapping area.
+        return 0.0
+    }
+
+    if (c == 0.0) {
+        // The discs have a common center. Therefore, one disc is inside the other.
+        return if (a <= b) 1.0 else (b*b)/(a*a)
+    }
+
+    val x = (a*a - b*b + c*c) / (2*c)
+    val radicand = a*a - x*x
+    if (radicand <= 0.0) {
+        // The circumferences do not intersect, or are tangent.
+        // We already ruled out the case of non-overlapping discs.
+        // Therefore, one disc is inside the other.
+        return if (a <= b) 1.0 else (b*b)/(a*a)
+    }
+
+    // The discs overlap fractionally in a pair of lens-shaped areas.
+
+    val y = sqrt(radicand)
+
+    // Return the overlapping fractional area.
+    // There are two lens-shaped areas, one to the left of x, the other to the right of x.
+    // Each part is calculated by subtracting a triangular area from a sector's area.
+    val lens1 = a*a*acos(x/a) - x*y
+    val lens2 = b*b*acos((c-x)/b) - (c-x)*y
+
+    // Find the fractional area with respect to the first disc.
+    return (lens1 + lens2) / (PI*a*a)
+}
+
+
+internal fun solarEclipseObscuration(hm: Vector, lo: Vector): Double {
+    // Find heliocentric observer.
+    val ho = hm + lo
+
+    // Calculate the apparent angular radius of the Sun for the observer.
+    val sunRadius = asin(SUN_RADIUS_AU / ho.length())
+
+    // Calculate the apparent angular radius of the Moon for the observer.
+    val moonRadius = asin(MOON_POLAR_RADIUS_AU / lo.length())
+
+    // Calculate the apparent angular separation between the Sun's center and the Moon's center.
+    val sunMoonSeparation = lo.angleWith(ho).degreesToRadians()
+
+    // Find the fraction of the Sun's apparent disc area that is covered by the Moon.
+    val obscuration = discObscuration(sunRadius, moonRadius, sunMoonSeparation)
+
+    // HACK: In marginal cases, we need to clamp obscuration to less than 1.0.
+    // This function is never called for total eclipses, so it should never return 1.0.
+    return min(0.9999, obscuration)
+}
+
 
 /**
  * Searches for a lunar eclipse.
@@ -2234,6 +2334,7 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
             if (shadow.r < shadow.p + MOON_MEAN_RADIUS_KM) {
                 // This is at least a penumbral eclipse. We will return a result.
                 var kind = EclipseKind.Penumbral
+                var obscuration = 0.0
                 val sdPenum = shadowSemiDurationMinutes(shadow.time, shadow.p + MOON_MEAN_RADIUS_KM, 200.0)
                 var sdPartial = 0.0
                 var sdTotal = 0.0
@@ -2246,11 +2347,14 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
                     if (shadow.r + MOON_MEAN_RADIUS_KM < shadow.k) {
                         // This is a total eclipse.
                         kind = EclipseKind.Total
+                        obscuration = 1.0
                         sdTotal = shadowSemiDurationMinutes(shadow.time, shadow.k - MOON_MEAN_RADIUS_KM, sdPartial)
+                    } else {
+                        obscuration = discObscuration(MOON_MEAN_RADIUS_KM, shadow.k, shadow.r)
                     }
                 }
 
-                return LunarEclipseInfo(kind, shadow.time, sdPenum, sdPartial, sdTotal)
+                return LunarEclipseInfo(kind, obscuration, shadow.time, sdPenum, sdPartial, sdTotal)
             }
         }
 
@@ -2324,6 +2428,7 @@ internal fun eclipseKindFromUmbra(k: Double) = (
 
 internal fun geoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
     var kind = EclipseKind.Partial
+    var obscuration = Double.NaN
     var latitude = Double.NaN
     var longitude = Double.NaN
 
@@ -2385,9 +2490,10 @@ internal fun geoidIntersect(shadow: ShadowInfo): GlobalSolarEclipseInfo {
             throw InternalError("Invalid surface distance from intersection.")
 
         kind = eclipseKindFromUmbra(surface.k)
+        obscuration = if (kind == EclipseKind.Total) 1.0 else solarEclipseObscuration(shadow.dir, luna)
     }
 
-    return GlobalSolarEclipseInfo(kind, shadow.time, shadow.r, latitude, longitude)
+    return GlobalSolarEclipseInfo(kind, obscuration, shadow.time, shadow.r, latitude, longitude)
 }
 
 
@@ -2549,7 +2655,8 @@ internal fun localEclipse(shadow: ShadowInfo, observer: Observer): LocalSolarEcl
     } else {
         kind = EclipseKind.Partial
     }
-    return LocalSolarEclipseInfo(kind, partialBegin, totalBegin, peak, totalEnd, partialEnd)
+    val obscuration = if (kind == EclipseKind.Total) 1.0 else solarEclipseObscuration(shadow.dir, shadow.target)
+    return LocalSolarEclipseInfo(kind, obscuration, partialBegin, totalBegin, peak, totalEnd, partialEnd)
 }
 
 

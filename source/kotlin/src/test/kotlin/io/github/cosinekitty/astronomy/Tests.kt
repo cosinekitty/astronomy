@@ -1364,19 +1364,34 @@ class Tests {
         var eclipse: LunarEclipseInfo = searchLunarEclipse(Time(1701, 1, 1, 0, 0, 0.0))
         for (line in infile.readLines()) {
             ++lnum
+
+            assertTrue(eclipse.obscuration.isFinite())
+            assertTrue(eclipse.sdPartial.isFinite())
+            assertTrue(eclipse.sdPenum.isFinite())
+            assertTrue(eclipse.sdTotal.isFinite())
+
             val tokens = tokenize(line, 3, filename, lnum)
             val peakTime = parseDate(tokens[0])
             val partialMinutes = tokens[1].toDouble()
             val totalMinutes = tokens[2].toDouble()
 
             // Verify that the calculated semi-durations are consistent with the kind of eclipse.
-            val valid: Boolean = when (eclipse.kind) {
+            val sd_valid: Boolean = when (eclipse.kind) {
                 EclipseKind.Penumbral -> (eclipse.sdPenum > 0.0) && (eclipse.sdPartial == 0.0) && (eclipse.sdTotal == 0.0)
                 EclipseKind.Partial   -> (eclipse.sdPenum > 0.0) && (eclipse.sdPartial >  0.0) && (eclipse.sdTotal == 0.0)
                 EclipseKind.Total     -> (eclipse.sdPenum > 0.0) && (eclipse.sdPartial >  0.0) && (eclipse.sdTotal >  0.0)
                 else                  -> fail("Invalid lunar eclipse kind: ${eclipse.kind}")
             }
-            assertTrue(valid, "$filename line $lnum: invalid semiduration(s) for kind ${eclipse.kind}")
+            assertTrue(sd_valid, "$filename line $lnum: invalid semiduration(s) for kind ${eclipse.kind}")
+
+            // Verify that obscurations make sense for the eclipse kind.
+            val frac_valid: Boolean = when (eclipse.kind) {
+                EclipseKind.Penumbral -> (eclipse.obscuration == 0.0)
+                EclipseKind.Partial   -> (eclipse.obscuration > 0.0) && (eclipse.obscuration < 1.0)
+                EclipseKind.Total     -> (eclipse.obscuration == 1.0)
+                else                  -> fail("Invalid lunar eclipse kind: ${eclipse.kind}")
+            }
+            assertTrue(frac_valid, "$filename line $lnum: invalid obscuration ${eclipse.obscuration} for kind ${eclipse.kind}")
 
             // Check eclipse peak time
             val peakDiffDays = eclipse.peak.ut - peakTime.ut
@@ -1436,7 +1451,7 @@ class Tests {
 
             // Validate the eclipse prediction.
             val diffMinutes = MINUTES_PER_DAY * abs(diffDays)
-            assertTrue(diffMinutes < 6.93, "$filename line $lnum: excessive time error = $diffMinutes minutes; expected $peak, found ${eclipse.peak}")
+            assertTrue(diffMinutes < 7.56, "$filename line $lnum: excessive time error = $diffMinutes minutes; expected $peak, found ${eclipse.peak}")
 
             // Validate the eclipse kind, but only when it is not a "glancing" eclipse.
             if (eclipse.distance < 6360.0)
@@ -1450,6 +1465,13 @@ class Tests {
                     val diffAngle = angleDiff(lat, lon, eclipse.latitude, eclipse.longitude)
                     assertTrue(diffAngle < 0.247, "$filename line $lnum: excessive geographic location error = $diffAngle degrees.")
                 }
+            }
+
+            when (eclipse.kind) {
+                EclipseKind.Partial ->  assertTrue(eclipse.obscuration.isNaN(), "$filename line $lnum: expected NAN obscuration.")
+                EclipseKind.Annular ->  assertTrue(eclipse.obscuration > 0.8 && eclipse.obscuration < 1.0, "$filename line $lnum: invalid obscuration ${eclipse.obscuration} for annular eclipse.")
+                EclipseKind.Total   ->  assertTrue(eclipse.obscuration == 1.0, "$filename line $lnum: invalid obscuration ${eclipse.obscuration} for total eclipse.")
+                else                ->  fail("$filename line $lnum: invalid eclipse kind ${eclipse.kind}")
             }
 
             eclipse = nextGlobalSolarEclipse(eclipse.peak)
@@ -1501,8 +1523,20 @@ class Tests {
                 continue
             }
 
+            when (eclipse.kind) {
+                EclipseKind.Annular,
+                EclipseKind.Partial ->
+                    assertTrue(eclipse.obscuration > 0.0 && eclipse.obscuration < 1.0, "$filename line $lnum: Invalid obscuration ${eclipse.obscuration} for ${eclipse.kind} eclipse.")
+
+                EclipseKind.Total ->
+                    assertTrue(eclipse.obscuration == 1.0, "$filename line $lnum: Invalid obscuration ${eclipse.obscuration} for {eclipse.kind} eclipse.")
+
+                else ->
+                    fail("$filename line $lnum: Invalid eclipse kind ${eclipse.kind}")
+            }
+
             val diffMinutes = MINUTES_PER_DAY * abs(diffDays)
-            assertTrue(diffMinutes < 7.14, "$filename line $lnum: excessive time error = $diffMinutes minutes")
+            assertTrue(diffMinutes < 7.734, "$filename line $lnum: excessive time error = $diffMinutes minutes")
         }
 
         assertTrue(skipCount <= 6, "$filename: excessive skip count = $skipCount")
@@ -1573,8 +1607,82 @@ class Tests {
         assertTrue(evt != null, "$filename line $lnum: eclipse $name was not supposed to be null.")
         val diffMinutes = MINUTES_PER_DAY * abs(expectedTime.ut - evt.time.ut)
         assertTrue(diffMinutes < 1.0, "$filename line $lnum: excessive time error for $name: $diffMinutes minutes.")
-        val diffAlt = abs(expectedAltitude - evt.altitude)
-        assertTrue(diffAlt < 0.5, "$filename line $lnum: excessive altitude error for $name: $diffAlt degrees.")
+        // Ignore discrepancies for negative altitudes, because of quirky and irrelevant differences in refraction models.
+        if (expectedAltitude >= 0.0) {
+            val diffAlt = abs(expectedAltitude - evt.altitude)
+            assertTrue(diffAlt < 0.5, "$filename line $lnum: excessive altitude error for $name: $diffAlt degrees.")
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    private fun globalAnnularCase(year: Int, month: Int, day: Int, obscuration: Double) {
+        // Search for the first solar eclipse that occurs after the given date.
+        val time = Time(year, month, day, 0, 0, 0.0)
+        val eclipse = searchGlobalSolarEclipse(time)
+
+        // Verify the eclipse is within 1 day after the search basis time.
+        val dt = eclipse.peak.ut - time.ut
+        assertTrue(dt >= 0.0 && dt <= 1.0, "$time: found eclipse $dt days after search time.")
+
+        // Verify we found an annular solar eclipse.
+        assertTrue(eclipse.kind == EclipseKind.Annular, "$time: expected annular eclipse but found ${eclipse.kind}")
+
+        // Check how accurately we calculated obscuration.
+        val diff = eclipse.obscuration - obscuration
+        assertTrue(abs(diff) < 0.0000904, "$time: excessive obscuration error $diff")
+    }
+
+    private fun localSolarCase(
+        year: Int,
+        month: Int,
+        day: Int,
+        latitude: Double,
+        longitude: Double,
+        kind: EclipseKind,
+        obscuration: Double,
+        tolerance: Double
+    ) {
+        val time = Time(year, month, day, 0, 0, 0.0)
+        val observer = Observer(latitude, longitude, 0.0)
+        val eclipse = searchLocalSolarEclipse(time, observer)
+        val dt = eclipse.peak.time.ut - time.ut
+        assertTrue(dt >= 0.0 && dt <= 1.0, "$time: found eclipse $dt days after search time.")
+        assertTrue(eclipse.kind == kind, "$time: expected $kind eclipse, but found ${eclipse.kind}")
+        val diff = eclipse.obscuration - obscuration
+        assertTrue(abs(diff) <= tolerance, "$time: excessive obscuration error $diff")
+    }
+
+    @Test
+    fun `Solar eclipse obscuration`() {
+        // Verify global solar eclipse obscurations for annular eclipses only.
+        // This is because they are the only nontrivial values for global solar eclipses.
+        // The trivial values are all validated exactly by GlobalSolarEclipseTest().
+        globalAnnularCase(2023, 10, 14, 0.90638)  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
+        globalAnnularCase(2024, 10,  2, 0.86975)  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
+        globalAnnularCase(2027,  2,  6, 0.86139)  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2027Feb06Aprime.html
+        globalAnnularCase(2028,  1, 26, 0.84787)  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2028Jan26Aprime.html
+        globalAnnularCase(2030,  6,  1, 0.89163)  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html
+
+        // Verify obscuration values for specific locations on the Earth.
+        // Local solar eclipse calculations include obscuration for all types of eclipse, not just annular and total.
+        localSolarCase(2023, 10, 14,  11.3683,  -83.1017, EclipseKind.Annular, 0.90638, 0.000080)  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
+        localSolarCase(2023, 10, 14,  25.78,    -80.22,   EclipseKind.Partial, 0.578,   0.000023)  // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22023&lat=25.78&lon=-80.22&label=Miami%2C+FL&height=0&submit=Get+Data
+        localSolarCase(2023, 10, 14,  30.2666,  -97.7000, EclipseKind.Partial, 0.8867,  0.001016)  // http://astro.ukho.gov.uk/eclipse/0332023/Austin_TX_United_States_2023Oct14.png
+        localSolarCase(2024,  4,  8,  25.2900, -104.1383, EclipseKind.Total,   1.0,     0.0     )  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Apr08Tprime.html
+        localSolarCase(2024,  4,  8,  37.76,   -122.44,   EclipseKind.Partial, 0.340,   0.000604)  // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=12024&lat=37.76&lon=-122.44&label=San+Francisco%2C+CA&height=0&submit=Get+Data
+        localSolarCase(2024, 10,  2, -21.9533, -114.5083, EclipseKind.Annular, 0.86975, 0.000061)  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
+        localSolarCase(2024, 10,  2, -33.468,   -70.636,  EclipseKind.Partial, 0.436,   0.000980)  // https://aa.usno.navy.mil/calculated/eclipse/solar?eclipse=22024&lat=-33.468&lon=-70.636&label=Santiago%2C+Chile&height=0&submit=Get+Data
+        localSolarCase(2030,  6,  1,  56.525,    80.0617, EclipseKind.Annular, 0.89163, 0.000067)  // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2030Jun01Aprime.html
+        localSolarCase(2030,  6,  1,  40.388,    49.914,  EclipseKind.Partial, 0.67240, 0.000599)  // http://xjubier.free.fr/en/site_pages/SolarEclipseCalc_Diagram.html
+        localSolarCase(2030,  6,  1,  40.3667,   49.8333, EclipseKind.Partial, 0.6736,  0.001464)  // http://astro.ukho.gov.uk/eclipse/0132030/Baku_Azerbaijan_2030Jun01.png
+    }
+
+    //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Lunar eclipse obscuration`() {
+
     }
 
     //----------------------------------------------------------------------------------------

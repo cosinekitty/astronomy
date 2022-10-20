@@ -2929,7 +2929,7 @@ namespace csharp_test
             }
 
             double diff = v(eclipse.obscuration - obscuration);
-            if (diff > tolerance)
+            if (Math.Abs(diff) > tolerance)
             {
                 Console.WriteLine($"C# LocalSolarCase({year:0000}-{month:00}-{day:00}) FAIL: obscuration diff = {diff:F8}, expected = {obscuration:F8}, calculated = {eclipse.obscuration:F8}.");
                 return 1;
@@ -2943,7 +2943,6 @@ namespace csharp_test
             // Verify global solar eclipse obscurations for annular eclipses only.
             // This is because they are the only nontrivial values for global solar eclipses.
             // The trivial values are all validated exactly by GlobalSolarEclipseTest().
-
             if (0 != GlobalAnnularCase(2023, 10, 14, 0.90638)) return 1;    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2023Oct14Aprime.html
             if (0 != GlobalAnnularCase(2024, 10,  2, 0.86975)) return 1;    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2024Oct02Aprime.html
             if (0 != GlobalAnnularCase(2027,  2,  6, 0.86139)) return 1;    // https://www.eclipsewise.com/solar/SEprime/2001-2100/SE2027Feb06Aprime.html

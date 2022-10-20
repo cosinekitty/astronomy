@@ -1796,7 +1796,7 @@ def LocalSolarCase(year, month, day, latitude, longitude, kind, obscuration, tol
         return Fail(funcname, 'expected {} eclipse, but found {}.'.format(kind, eclipse.kind))
 
     diff = v(eclipse.obscuration - obscuration)
-    if diff > tolerance:
+    if abs(diff) > tolerance:
         return Fail(funcname, 'obscuration diff = {:0.8f}, expected = {:0.8f}, actual = {:0.8f}'.format(diff, obscuration, eclipse.obscuration))
 
     Debug('{}: obscuration diff = {:11.8f}'.format(funcname, diff))
