@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.cosinekitty"
-version = "2.1.6"
+version = "2.1.7"
 
 repositories {
     mavenCentral()

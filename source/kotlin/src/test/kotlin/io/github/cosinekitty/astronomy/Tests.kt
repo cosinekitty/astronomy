@@ -1680,9 +1680,40 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
+    private fun lunarFractionCase(year: Int, month: Int, day: Int, obscuration: Double) {
+        // Search for the first lunar eclipse to occur after the given date.
+        val time = Time(year, month, day, 0, 0, 0.0)
+        val eclipse = searchLunarEclipse(time)
+
+        // This should be a partial lunar eclipse.
+        assertTrue(eclipse.kind == EclipseKind.Partial, "$time: expected partial eclipse, but found ${eclipse.kind}")
+
+        // The partial eclipse should always happen within 24 hours of the given date.
+        val dt = eclipse.peak.ut - time.ut
+        assertTrue(dt >= 0.0 && dt <= 1.0, "$time: eclipse occurs $dt days after the search time.")
+
+        val diff = eclipse.obscuration - obscuration
+        assertTrue(abs(diff) < 0.00763, "$time: obscuration error = $diff, expected $obscuration, found ${eclipse.obscuration}")
+    }
+
     @Test
     fun `Lunar eclipse obscuration`() {
+        // Verify calculation of the fraction of the Moon's disc covered by the Earth's umbra during a partial eclipse.
+        // Data for this is more tedious to gather, because Espenak data does not contain it.
+        // We already verify fraction=0.0 for penumbral eclipses and fraction=1.0 for total eclipses in LunarEclipseTest.
 
+        lunarFractionCase(2010,  6, 26, 0.506)  // https://www.timeanddate.com/eclipse/lunar/2010-june-26
+        lunarFractionCase(2012,  6,  4, 0.304)  // https://www.timeanddate.com/eclipse/lunar/2012-june-4
+        lunarFractionCase(2013,  4, 25, 0.003)  // https://www.timeanddate.com/eclipse/lunar/2013-april-25
+        lunarFractionCase(2017,  8,  7, 0.169)  // https://www.timeanddate.com/eclipse/lunar/2017-august-7
+        lunarFractionCase(2019,  7, 16, 0.654)  // https://www.timeanddate.com/eclipse/lunar/2019-july-16
+        lunarFractionCase(2021, 11, 19, 0.991)  // https://www.timeanddate.com/eclipse/lunar/2021-november-19
+        lunarFractionCase(2023, 10, 28, 0.060)  // https://www.timeanddate.com/eclipse/lunar/2023-october-28
+        lunarFractionCase(2024,  9, 18, 0.035)  // https://www.timeanddate.com/eclipse/lunar/2024-september-18
+        lunarFractionCase(2026,  8, 28, 0.962)  // https://www.timeanddate.com/eclipse/lunar/2026-august-28
+        lunarFractionCase(2028,  1, 12, 0.024)  // https://www.timeanddate.com/eclipse/lunar/2028-january-12
+        lunarFractionCase(2028,  7,  6, 0.325)  // https://www.timeanddate.com/eclipse/lunar/2028-july-6
+        lunarFractionCase(2030,  6, 15, 0.464)  // https://www.timeanddate.com/eclipse/lunar/2030-june-15
     }
 
     //----------------------------------------------------------------------------------------
