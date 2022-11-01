@@ -6371,9 +6371,11 @@ $ASTRO_IAU_DATA()
             return eclip.elon;
         }
 
-        private static double PlanetOrbitalPeriod(Body body)
+        /// <summary>Returns the average number of days it takes for a planet to orbit the Sun.</summary>
+        /// <param name="body">One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.</param>
+        /// <returns>The mean orbital period of the body in days.</returns>
+        public static double PlanetOrbitalPeriod(Body body)
         {
-            // Returns the number of days it takes for a planet to orbit the Sun.
             switch (body)
             {
                 case Body.Mercury:  return     87.969;

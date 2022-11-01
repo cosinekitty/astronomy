@@ -1303,24 +1303,6 @@ namespace csharp_test
             new elong_test_t( Body.Venus,   "2018-08-07T17:02Z", "2018-08-17T17:02Z", 45.90, Visibility.Evening )
         };
 
-        static double PlanetOrbitalPeriod(Body body)
-        {
-            switch (body)
-            {
-            case Body.Mercury:  return     87.969;
-            case Body.Venus:    return    224.701;
-            case Body.Earth:    return    365.256;
-            case Body.Mars:     return    686.980;
-            case Body.Jupiter:  return   4332.589;
-            case Body.Saturn:   return  10759.22;
-            case Body.Uranus:   return  30685.4;
-            case Body.Neptune:  return  60189.0;
-            case Body.Pluto:    return  90560.0;
-            default:
-                throw new ArgumentException(string.Format("Invalid body {0}", body));
-            }
-        }
-
         static int PlanetApsisTest()
         {
             const double degree_threshold = 0.1;
@@ -1328,7 +1310,7 @@ namespace csharp_test
             var start_time = new AstroTime(1700, 1, 1, 0, 0, 0);
             for (Body body = Body.Mercury; body <= Body.Pluto; ++body)
             {
-                double period = PlanetOrbitalPeriod(body);
+                double period = Astronomy.PlanetOrbitalPeriod(body);
                 double max_dist_ratio = 0.0;
                 double max_diff_days = 0.0;
                 double min_interval = -1.0;

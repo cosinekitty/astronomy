@@ -1376,6 +1376,17 @@ This is a convenience wrapper around the functions
 | [`Body`](#Body) | `body` | The planet for which to find a series of consecutive aphelia/perihelia. Not allowed to be `Body.Sun` or `Body.Moon`. |
 | [`AstroTime`](#AstroTime) | `startTime` | Specifies the time to begin searching for consecutive planetary apsides. |
 
+<a name="Astronomy.PlanetOrbitalPeriod"></a>
+### Astronomy.PlanetOrbitalPeriod(body) &#8658; `double`
+
+**Returns the average number of days it takes for a planet to orbit the Sun.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto. |
+
+**Returns:** The mean orbital period of the body in days.
+
 <a name="Astronomy.RefractionAngle"></a>
 ### Astronomy.RefractionAngle(refraction, altitude) &#8658; `double`
 
