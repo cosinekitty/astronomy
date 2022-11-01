@@ -149,6 +149,17 @@ export declare enum Body {
     SSB = "SSB",
     EMB = "EMB"
 }
+/**
+ * @brief Returns the mean orbital period of a planet in days.
+ *
+ * @param {Body} body
+ *      One of: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.
+ *
+ * @returns {number}
+ *      The approximate average time it takes for the planet to travel once around the Sun.
+ *      The value is expressed in days.
+ */
+export declare function OrbitalPeriod(body: Body): number;
 export declare function DeltaT_EspenakMeeus(ut: number): number;
 export declare type DeltaTimeFunction = (ut: number) => number;
 export declare function DeltaT_JplHorizons(ut: number): number;

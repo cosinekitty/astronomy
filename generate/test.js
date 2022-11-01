@@ -987,22 +987,11 @@ function SolarFraction() {
 
 
 function PlanetApsis() {
-    const Planet = {
-        Mercury: { OrbitalPeriod:    87.969 },
-        Venus:   { OrbitalPeriod:   224.701 },
-        Earth:   { OrbitalPeriod:   365.256 },
-        Mars:    { OrbitalPeriod:   686.980 },
-        Jupiter: { OrbitalPeriod:  4332.589 },
-        Saturn:  { OrbitalPeriod: 10759.22  },
-        Uranus:  { OrbitalPeriod: 30685.4   },
-        Neptune: { OrbitalPeriod: 60189.0   },
-        Pluto:   { OrbitalPeriod: 90560.0   }
-    };
     const start_time = Astronomy.MakeTime(new Date('1700-01-01T00:00:00Z'));
     let pindex = 0;
     for (let body of ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto']) {
         let count = 1;
-        const period = Planet[body].OrbitalPeriod;
+        const period = Astronomy.OrbitalPeriod(body);
         let min_interval = -1.0;
         let max_interval = -1.0;
         let max_diff_days = 0.0;

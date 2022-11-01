@@ -2187,6 +2187,21 @@ The inverse of this function is also available: [VectorObserver](#VectorObserver
 
 * * *
 
+<a name="OrbitalPeriod"></a>
+
+## OrbitalPeriod(body) ⇒ <code>number</code>
+**Kind**: global function  
+**Returns**: <code>number</code> - The approximate average time it takes for the planet to travel once around the Sun.
+     The value is expressed in days.  
+**Brief**: Returns the mean orbital period of a planet in days.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | [<code>Body</code>](#Body) | One of: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto. |
+
+
+* * *
+
 <a name="PairLongitude"></a>
 
 ## PairLongitude(body1, body2, date) ⇒ <code>number</code>

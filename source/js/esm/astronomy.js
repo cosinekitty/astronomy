@@ -280,6 +280,21 @@ const Planet = {
     Neptune: { OrbitalPeriod: 60189.0 },
     Pluto: { OrbitalPeriod: 90560.0 }
 };
+/**
+ * @brief Returns the mean orbital period of a planet in days.
+ *
+ * @param {Body} body
+ *      One of: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.
+ *
+ * @returns {number}
+ *      The approximate average time it takes for the planet to travel once around the Sun.
+ *      The value is expressed in days.
+ */
+export function OrbitalPeriod(body) {
+    if (body in Planet)
+        return Planet[body].OrbitalPeriod;
+    throw `Unknown orbital period for: ${body}`;
+}
 const vsop = {
     Mercury: [
         [
