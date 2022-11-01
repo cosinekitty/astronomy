@@ -2345,6 +2345,20 @@ A pivoted matrix object.
 
 ---
 
+<a name="PlanetOrbitalPeriod"></a>
+### PlanetOrbitalPeriod(body)
+
+**Returns the average number of days it takes for a planet to orbit the Sun.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto. |
+
+**Returns**: `float`
+The mean orbital period of the body in days.
+
+---
+
 <a name="RefractionAngle"></a>
 ### RefractionAngle(refraction, altitude)
 

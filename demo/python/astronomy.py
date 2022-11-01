@@ -420,6 +420,23 @@ class NoConvergeError(Error):
     def __init__(self):
         Error.__init__(self, 'Numeric solver did not converge - please report issue at https://github.com/cosinekitty/astronomy/issues')
 
+def PlanetOrbitalPeriod(body):
+    """Returns the average number of days it takes for a planet to orbit the Sun.
+
+    Parameters
+    ----------
+    body : Body
+        One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.
+
+    Returns
+    -------
+    float
+        The mean orbital period of the body in days.
+    """
+    if isinstance(body, Body) and (0 <= body.value < len(_PlanetOrbitalPeriod)):
+        return _PlanetOrbitalPeriod[body.value]
+    raise InvalidBodyError()
+
 def _SynodicPeriod(body):
     if body == Body.Earth:
         raise EarthNotAllowedError()

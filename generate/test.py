@@ -1265,24 +1265,12 @@ def Refraction():
 
 #-----------------------------------------------------------------------------------------------------------
 
-PlanetOrbitalPeriod = {
-    astronomy.Body.Mercury:     87.969,
-    astronomy.Body.Venus:      224.701,
-    astronomy.Body.Earth:      365.256,
-    astronomy.Body.Mars:       686.980,
-    astronomy.Body.Jupiter:   4332.589,
-    astronomy.Body.Saturn:   10759.22,
-    astronomy.Body.Uranus:   30685.4,
-    astronomy.Body.Neptune:  60189.0,
-    astronomy.Body.Pluto:    90560.0
-}
-
 def PlanetApsis():
     start_time = astronomy.Time.Make(1700, 1, 1, 0, 0, 0)
     body = astronomy.Body.Mercury
     while body.value <= astronomy.Body.Pluto.value:
         count = 1
-        period = PlanetOrbitalPeriod[body]
+        period = astronomy.PlanetOrbitalPeriod(body)
         filename = os.path.join('apsides', 'apsis_{}.txt'.format(body.value))
         min_interval = -1.0
         max_diff_days = 0.0
