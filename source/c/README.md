@@ -1852,6 +1852,28 @@ For example, if you have rotation matrix that converts ecliptic coordinates (ECL
 
 ---
 
+<a name="Astronomy_PlanetOrbitalPeriod"></a>
+### Astronomy_PlanetOrbitalPeriod(body) &#8658; `double`
+
+**Returns the average number of days it takes for a planet to orbit the Sun.** 
+
+
+
+
+
+**Returns:**  The mean orbital period of the body, or 0.0 if the `body` parameter is not valid. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.  | 
+
+
+
+
+---
+
 <a name="Astronomy_Refraction"></a>
 ### Astronomy_Refraction(refraction, altitude) &#8658; `double`
 

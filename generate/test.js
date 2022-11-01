@@ -991,7 +991,7 @@ function PlanetApsis() {
     let pindex = 0;
     for (let body of ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto']) {
         let count = 1;
-        const period = Astronomy.OrbitalPeriod(body);
+        const period = Astronomy.PlanetOrbitalPeriod(body);
         let min_interval = -1.0;
         let max_interval = -1.0;
         let max_diff_days = 0.0;

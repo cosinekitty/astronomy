@@ -385,9 +385,11 @@ static int IsSuperiorPlanet(astro_body_t body)
 }
 
 /**
- * @brief Returns the number of days it takes for a planet to orbit the Sun.
+ * @brief Returns the average number of days it takes for a planet to orbit the Sun.
+ * @param body One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.
+ * @return The mean orbital period of the body, or 0.0 if the `body` parameter is not valid.
  */
-static double PlanetOrbitalPeriod(astro_body_t body)
+double Astronomy_PlanetOrbitalPeriod(astro_body_t body)
 {
     switch (body)
     {
@@ -594,7 +596,7 @@ static astro_func_result_t SynodicPeriod(astro_body_t body)
         return result;
     }
 
-    Tp = PlanetOrbitalPeriod(body);
+    Tp = Astronomy_PlanetOrbitalPeriod(body);
     if (Tp <= 0.0)
         return FuncError(ASTRO_INVALID_BODY);
 
@@ -8802,7 +8804,7 @@ static astro_apsis_t BruteSearchPlanetApsis(astro_body_t body, astro_time_t star
         Sample points around this orbital arc and find when the distance
         is greatest and smallest.
     */
-    period = PlanetOrbitalPeriod(body);
+    period = Astronomy_PlanetOrbitalPeriod(body);
     t1 = Astronomy_AddDays(startTime, period * ( -30.0 / 360.0));
     t2 = Astronomy_AddDays(startTime, period * (+270.0 / 360.0));
     t_min = t_max = t1;
@@ -8909,7 +8911,7 @@ astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startT
     if (body == BODY_NEPTUNE || body == BODY_PLUTO)
         return BruteSearchPlanetApsis(body, startTime);
 
-    orbit_period_days = PlanetOrbitalPeriod(body);
+    orbit_period_days = Astronomy_PlanetOrbitalPeriod(body);
     if (orbit_period_days == 0.0)
         return ApsisError(ASTRO_INVALID_BODY);      /* The body must be a planet. */
 
@@ -9014,7 +9016,7 @@ astro_apsis_t Astronomy_NextPlanetApsis(astro_body_t body, astro_apsis_t apsis)
     if (apsis.kind != APSIS_APOCENTER && apsis.kind != APSIS_PERICENTER)
         return ApsisError(ASTRO_INVALID_PARAMETER);
 
-    skip = 0.25 * PlanetOrbitalPeriod(body);        /* skip 1/4 of an orbit before starting search again */
+    skip = 0.25 * Astronomy_PlanetOrbitalPeriod(body);        /* skip 1/4 of an orbit before starting search again */
     if (skip <= 0.0)
         return ApsisError(ASTRO_INVALID_BODY);      /* body must be a planet */
 

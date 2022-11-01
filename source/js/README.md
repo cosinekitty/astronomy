@@ -2187,21 +2187,6 @@ The inverse of this function is also available: [VectorObserver](#VectorObserver
 
 * * *
 
-<a name="OrbitalPeriod"></a>
-
-## OrbitalPeriod(body) ⇒ <code>number</code>
-**Kind**: global function  
-**Returns**: <code>number</code> - The approximate average time it takes for the planet to travel once around the Sun.
-     The value is expressed in days.  
-**Brief**: Returns the mean orbital period of a planet in days.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| body | [<code>Body</code>](#Body) | One of: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto. |
-
-
-* * *
-
 <a name="PairLongitude"></a>
 
 ## PairLongitude(body1, body2, date) ⇒ <code>number</code>
@@ -2257,6 +2242,21 @@ reorient ECL coordinates to the orientation of your telescope camera.
 | rotation | [<code>RotationMatrix</code>](#RotationMatrix) | The input rotation matrix. |
 | axis | <code>number</code> | An integer that selects which coordinate axis to rotate around:      0 = x, 1 = y, 2 = z. Any other value will cause an exception. |
 | angle | <code>number</code> | An angle in degrees indicating the amount of rotation around the specified axis.      Positive angles indicate rotation counterclockwise as seen from the positive      direction along that axis, looking towards the origin point of the orientation system.      Any finite number of degrees is allowed, but best precision will result from      keeping `angle` in the range [-360, +360]. |
+
+
+* * *
+
+<a name="PlanetOrbitalPeriod"></a>
+
+## PlanetOrbitalPeriod(body) ⇒ <code>number</code>
+**Kind**: global function  
+**Returns**: <code>number</code> - The approximate average time it takes for the planet to travel once around the Sun.
+     The value is expressed in days.  
+**Brief**: Returns the mean orbital period of a planet in days.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | [<code>Body</code>](#Body) | One of: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto. |
 
 
 * * *

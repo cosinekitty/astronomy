@@ -159,7 +159,7 @@ export declare enum Body {
  *      The approximate average time it takes for the planet to travel once around the Sun.
  *      The value is expressed in days.
  */
-export declare function OrbitalPeriod(body: Body): number;
+export declare function PlanetOrbitalPeriod(body: Body): number;
 export declare function DeltaT_EspenakMeeus(ut: number): number;
 export declare type DeltaTimeFunction = (ut: number) => number;
 export declare function DeltaT_JplHorizons(ut: number): number;

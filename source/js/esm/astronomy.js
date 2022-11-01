@@ -290,7 +290,7 @@ const Planet = {
  *      The approximate average time it takes for the planet to travel once around the Sun.
  *      The value is expressed in days.
  */
-export function OrbitalPeriod(body) {
+export function PlanetOrbitalPeriod(body) {
     if (body in Planet)
         return Planet[body].OrbitalPeriod;
     throw `Unknown orbital period for: ${body}`;

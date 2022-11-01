@@ -2364,22 +2364,6 @@ fail:
     return error;
 }
 
-static double PlanetOrbitalPeriod(astro_body_t body)
-{
-    switch (body)
-    {
-    case BODY_MERCURY:  return     87.969;
-    case BODY_VENUS:    return    224.701;
-    case BODY_EARTH:    return    365.256;
-    case BODY_MARS:     return    686.980;
-    case BODY_JUPITER:  return   4332.589;
-    case BODY_SATURN:   return  10759.22;
-    case BODY_URANUS:   return  30685.4;
-    case BODY_NEPTUNE:  return  60189.0;
-    case BODY_PLUTO:    return  90560.0;
-    default:            return  0.0;        /* invalid body */
-    }
-}
 
 static int PlanetApsis(void)
 {
@@ -2406,7 +2390,7 @@ static int PlanetApsis(void)
 
     for (body = BODY_MERCURY; body <= BODY_PLUTO; ++body)
     {
-        period = PlanetOrbitalPeriod(body);
+        period = Astronomy_PlanetOrbitalPeriod(body);
         max_dist_ratio = 0.0;
         max_diff_days = 0.0;
         snprintf(filename, sizeof(filename)-1, "apsides/apsis_%d.txt", (int)body);
