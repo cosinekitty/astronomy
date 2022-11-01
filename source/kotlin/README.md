@@ -25,7 +25,7 @@ allprojects {
 Now add the dependency:
 ```kotlin
 dependencies {
-    implementation("io.github.cosinekitty:astronomy:2.1.7")
+    implementation("io.github.cosinekitty:astronomy:2.1.8")
 }
 ```
 
