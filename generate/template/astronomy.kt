@@ -7736,8 +7736,13 @@ fun planetApsidesAfter(body: Body, startTime: Time): Sequence<ApsisInfo> =
     generateSequence(searchPlanetApsis(body, startTime)) { nextPlanetApsis(body, it) }
 
 
-
-internal fun planetOrbitalPeriod(body: Body): Double =
+/**
+ * Returns the average number of days it takes for a planet to orbit the Sun.
+ *
+ * @param body
+ * One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.
+ */
+fun planetOrbitalPeriod(body: Body): Double =
     body.orbitalPeriod ?: throw InvalidBodyException(body)
 
 

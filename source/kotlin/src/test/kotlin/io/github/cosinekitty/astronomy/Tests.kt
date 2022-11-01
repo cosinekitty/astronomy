@@ -2487,21 +2487,6 @@ class Tests {
 
     //----------------------------------------------------------------------------------------
 
-    private fun planetOrbitalPeriod(body: Body): Double =
-        when (body) {
-            Body.Mercury  ->     87.969
-            Body.Venus    ->    224.701
-            Body.Earth    ->    365.256
-            Body.Mars     ->    686.980
-            Body.Jupiter  ->   4332.589
-            Body.Saturn   ->  10759.22
-            Body.Uranus   ->  30685.4
-            Body.Neptune  ->  60189.0
-            Body.Pluto    ->  90560.0
-            else -> fail("Invalid body $body")
-        }
-
-
     @Test
     fun `Search planetary apsides`() {
         val startTime = Time(1700, 1, 1, 0, 0, 0.0)
