@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 REM --------------------------------------------------------------------------------
 REM     Astronomy Engine - GitHub Actions steps for Windows.
 REM     This batch file is executed on every push to GitHub.
@@ -11,7 +12,16 @@ echo.commit_hook: Repo root = %cd%
 echo.commit_hook: Installing Doxygen.
 md bin
 cd bin
-curl -o doxygen.zip https://www.doxygen.nl/files/doxygen-1.9.4.windows.x64.bin.zip || exit /b 1
+set DOXYGENURL=
+for /f %%x in ('py doxygen_download_link.py') do (
+    set DOXYGENURL=%%x
+)
+if not defined DOXYGENURL (
+    echo.commit_hook: FAIL: could not determine URL to download Doxygen binaries for Windows.
+    exit /b 1
+)
+echo.commit_hook: Downloading: !DOXYGENURL!
+curl -o doxygen.zip !DOXYGENURL! || exit /b 1
 7z x doxygen.zip || exit /b 1
 del doxygen.zip
 
