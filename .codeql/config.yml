@@ -1,0 +1,4 @@
+paths-ignore:
+  - 'generate/template/astronomy.*'
+  - 'generate/eclipse/*.html'
+  - '**/astronomy.browser.js'

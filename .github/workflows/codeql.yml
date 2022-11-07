@@ -31,9 +31,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: +security-and-quality
-          paths-ignore: 'generate/template/astronomy.*'
-          paths-ignore: 'generate/eclipse/*.html'
-          paths-ignore: '**/astronomy.browser.js'
+          config-file: .codeql/config.yml
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
