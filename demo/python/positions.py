@@ -12,7 +12,7 @@
 #   program uses the computer's current date and time.
 #
 import sys
-from astronomy import Body, Time, Refraction, Equator, Horizon
+from astronomy import Body, Refraction, Equator, Horizon
 from astro_demo_common import ParseArgs
 
 if __name__ == '__main__':

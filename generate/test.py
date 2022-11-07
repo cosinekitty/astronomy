@@ -189,7 +189,7 @@ def Seasons(filename = 'seasons/seasons.txt'):
             minute = int(m.group(5))
             name = m.group(6)
             if year != current_year:
-                current_year = current_year
+                current_year = year
                 seasons = astronomy.Seasons(year)
             correct_time = astronomy.Time.Make(year, month, day, hour, minute, 0)
             if name == 'Equinox':
@@ -1007,7 +1007,7 @@ def Test_GAL_EQJ_NOVAS(filename):
             gal_sphere = astronomy.SphereFromVector(gal_vec)
             dlat = gal_sphere.lat - glat
             dlon = math.cos(math.radians(glat)) * (gal_sphere.lon - glon)
-            diff = 3600.0 * math.sqrt(dlon*dlon + dlat*dlat)
+            diff = 3600.0 * math.hypot(dlon, dlat)
             if diff > THRESHOLD_SECONDS:
                 print('PY Test_GAL_EQJ_NOVAS({} line {}): EXCESSIVE ERROR = {:0.3f}'.format(filename, lnum, diff))
                 sys.exit(1)
@@ -2165,7 +2165,6 @@ class JplStateRecord:
 
 
 def JplHorizonsStateVectors(filename):
-    stateList = []
     with open(filename, 'rt') as infile:
         lnum = 0
         part = 0
@@ -2199,6 +2198,7 @@ def JplHorizonsStateVectors(filename):
                     vx, vy, vz = float(match.group(1)), float(match.group(2)), float(match.group(3))
                     yield JplStateRecord(lnum, astronomy.StateVector(rx, ry, rz, vx, vy, vz, time))
                 part = (part + 1) % 3
+    return 0
 
 
 def VerifyStateBody(func, filename, r_thresh, v_thresh):
@@ -2899,7 +2899,7 @@ def GravSimFile(filename, originBody, nsteps, rthresh, vthresh):
     max_rdiff = 0.0
     max_vdiff = 0.0
     for rec in JplHorizonsStateVectors(filename):
-        if sim == None:
+        if sim is None:
             sim = astronomy.GravitySimulator(originBody, rec.state.t, [rec.state])
             time = rec.state.t
             smallBodyArray = sim.Update(time)

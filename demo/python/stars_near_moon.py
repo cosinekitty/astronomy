@@ -11,7 +11,7 @@
 #
 import sys
 import csv
-from astronomy import Body, GeoMoon, ObserverVector, Spherical, VectorFromSphere, AngleBetween
+from astronomy import GeoMoon, ObserverVector, Spherical, VectorFromSphere, AngleBetween
 from astro_demo_common import ParseArgs
 
 if __name__ == '__main__':

@@ -317,7 +317,7 @@ function MoonReversePhase(longitude) {
     const ut1 = utList[k];
     const ut2 = utList[k+1];
     for (i = 1; i < nslots; ++i) {
-        const ut = ut1 + (i/nslots)*(ut2 - ut1)
+        const ut = ut1 + (i/nslots)*(ut2 - ut1);
         time = Astronomy.MakeTime(ut);
 
         const before = Astronomy.SearchMoonPhase(longitude, time, -40);

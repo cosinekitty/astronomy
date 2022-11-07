@@ -60,8 +60,6 @@ EUROPA_RADIUS_KM   = 1560.8     #<const> The mean radius of Jupiter's moon Europ
 GANYMEDE_RADIUS_KM = 2631.2     #<const> The mean radius of Jupiter's moon Ganymede, expressed in kilometers.
 CALLISTO_RADIUS_KM = 2410.3     #<const> The mean radius of Jupiter's moon Callisto, expressed in kilometers.
 
-_CalcMoonCount = 0
-
 _RAD2HOUR  =  3.819718634205488         # 12/pi = factor to convert radians to sidereal hours
 _HOUR2RAD  =  0.2617993877991494365     # pi/12 = factor to convert sidereal hours to radians
 _DAYS_PER_TROPICAL_YEAR = 365.24217
@@ -1872,9 +1870,6 @@ class _moonpos:
         self.distance_au = dist
 
 def _CalcMoon(time):
-    global _CalcMoonCount
-    _CalcMoonCount += 1
-
     T = time.tt / 36525
     ex = _Array2(-6, 6, 1, 4)
 
@@ -3489,10 +3484,6 @@ def _VsopDeriv(formula, t):
     return deriv
 
 _DAYS_PER_MILLENNIUM = 365250.0
-_LON_INDEX = 0
-_LAT_INDEX = 1
-_RAD_INDEX = 2
-
 
 def _VsopRotate(eclip):
     # Convert ecliptic cartesian coordinates to equatorial cartesian coordinates.
@@ -5859,6 +5850,8 @@ def SearchMaxElongation(body, startTime):
         # We never need to search more than twice.
         startTime = t2.AddDays(1.0)
         iter_count += 1
+
+    raise InternalError()   # should never take more than 2 iterations
 
 
 def _sun_offset(targetLon, time):

@@ -9,7 +9,6 @@
 #
 
 import sys
-import math
 from astronomy import *
 
 UsageText = r'''

@@ -61,5 +61,7 @@ def FindMaxMagEvents(filename):
                 prev_item = None
                 first_brightest_item = None
         #print('min_rlon={:0.2f}, max_rlon={:0.2f}'.format(min_rlon, max_rlon))
-        
-FindMaxMagEvents('Venus2.txt')
+
+if __name__ == '__main__':
+    FindMaxMagEvents('Venus2.txt')
+    sys.exit(0)

@@ -57,6 +57,7 @@ def FindConstellationChanges(body, startTime, stopTime, dayIncrement):
             # No constellation change in this time step. Try again on the next time step.
             c1 = c2
             t1 = t2
+    return 0
 
 #------------------------------------------------------------------------------
 

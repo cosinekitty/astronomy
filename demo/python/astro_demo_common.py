@@ -5,7 +5,6 @@
 #   Utility functions shared by Python demo programs.
 #
 import sys
-import re
 import astronomy
 
 def ParseArgs(args):
