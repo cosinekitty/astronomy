@@ -6,7 +6,7 @@ def _LoadFile(filename):
 
 setup(
     name='astronomy-engine',
-    version='2.1.8',
+    version='2.1.9',
     description='Astronomy calculation for Sun, Moon, and planets.',
     long_description=_LoadFile('README.md'),
     long_description_content_type='text/markdown',
