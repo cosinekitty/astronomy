@@ -4,7 +4,7 @@
       <GenerateDocumentationFile>true</GenerateDocumentationFile>
       <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
       <PackageId>CosineKitty.AstronomyEngine</PackageId>
-      <PackageVersion>2.1.8</PackageVersion>
+      <PackageVersion>2.1.9</PackageVersion>
       <RepositoryUrl>https://github.com/cosinekitty/astronomy</RepositoryUrl>
       <Authors>Don Cross</Authors>
       <Title>Astronomy Engine</Title>

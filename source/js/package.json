@@ -1,21 +1,16 @@
 {
   "name": "astronomy-engine",
-  "version": "2.1.8",
+  "version": "2.1.9",
   "description": "Astronomy calculation for Sun, Moon, and planets.",
-  "main": "./astronomy.js",
-  "module": "./esm/astronomy.js",
-  "typings": "./astronomy.d.ts",
-  "files": [
-    "esm/astronomy.js",
-    "astronomy.d.ts",
-    "astronomy.js",
-    "astronomy.min.js",
-    "astronomy.browser.js",
-    "astronomy.browser.min.js"
-  ],
+  "author": "Donald Cross",
+  "license": "MIT",
+  "homepage": "https://github.com/cosinekitty/astronomy#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cosinekitty/astronomy.git"
+    "url": "https://github.com/cosinekitty/astronomy"
+  },
+  "bugs": {
+    "url": "https://github.com/cosinekitty/astronomy/issues"
   },
   "keywords": [
     "astronomy",
@@ -32,11 +27,22 @@
     "constellation",
     "orbit"
   ],
-  "author": "Donald Cross",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/cosinekitty/astronomy/issues"
+  "files": [
+    "esm/astronomy.js",
+    "astronomy.d.ts",
+    "astronomy.js",
+    "astronomy.min.js",
+    "astronomy.browser.js",
+    "astronomy.browser.min.js"
+  ],
+  "exports": {
+    ".": {
+      "require": "./astronomy.js",
+      "import": "./esm/astronomy.js"
+    }
   },
-  "homepage": "https://github.com/cosinekitty/astronomy#readme",
+  "main": "./astronomy.js",
+  "module": "./esm/astronomy.js",
+  "types": "./astronomy.d.ts",
   "sideEffects": false
 }
