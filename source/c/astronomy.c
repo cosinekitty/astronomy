@@ -7660,7 +7660,7 @@ static astro_func_result_t altitude_diff(void *context, astro_time_t time)
         return FuncError(ofdate.status);
 
     hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-    result.value = p->direction * (hor.altitude + RAD2DEG*(p->body_radius_au / ofdate.dist) + p->altitude_bias);
+    result.value = p->direction * (hor.altitude + RAD2DEG*asin(p->body_radius_au / ofdate.dist) + p->altitude_bias);
     result.status = ASTRO_SUCCESS;
     return result;
 }
