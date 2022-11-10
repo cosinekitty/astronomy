@@ -6385,27 +6385,20 @@ astro_hour_angle_t Astronomy_SearchHourAngleEx(
 }
 
 /** @cond DOXYGEN_SKIP */
-typedef struct
-{
-    astro_body_t        body;
-    int                 direction;
-    astro_observer_t    observer;
-    double              body_radius_au;
-}
-context_peak_altitude_t;
 
 typedef struct
 {
     astro_body_t        body;
-    int                 direction;
+    int                 direction;          // search option: +1 = rise, -1 = set
     astro_observer_t    observer;
-    double              altitude;
+    double              body_radius_au;
+    double              altitude_bias;
 }
-context_search_altitude_t;
+context_altitude_t;
 
 #define CALC_ALTITUDE(altitude,time)  \
     do {    \
-        astro_func_result_t result = altitude_error_func(altitude_error_context, time); \
+        astro_func_result_t result = altitude_diff(&context, time); \
         if (result.status != ASTRO_SUCCESS)     \
             return SearchError(result.status);  \
         altitude = searchDir * result.value;    \
@@ -6416,16 +6409,35 @@ context_search_altitude_t;
 
 /** @endcond */
 
+static astro_func_result_t altitude_diff(void *context, astro_time_t time)
+{
+    astro_func_result_t result;
+    astro_equatorial_t ofdate;
+    astro_horizon_t hor;
+    const context_altitude_t *p = (const context_altitude_t *)context;
+
+    ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
+    if (ofdate.status != ASTRO_SUCCESS)
+        return FuncError(ofdate.status);
+
+    hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
+    result.value = p->direction * (hor.altitude + RAD2DEG*(p->body_radius_au / ofdate.dist) + p->altitude_bias);
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
 
 static astro_search_result_t InternalSearchAltitude(
     astro_body_t body,
     astro_observer_t observer,
+    astro_direction_t direction,
     astro_time_t startTime,
     double limitDays,
-    astro_search_func_t altitude_error_func,
-    void *altitude_error_context)
+    double bodyRadiusAu,
+    double altitudeBias)
 {
     astro_search_result_t result;
+    context_altitude_t context;
     astro_time_t t1, t2, st1, st2;
     double a1, a2;
     const double searchDir = (limitDays < 0.0) ? -1.0 : +1.0;
@@ -6433,6 +6445,12 @@ static astro_search_result_t InternalSearchAltitude(
 
     if (body == BODY_EARTH)
         return SearchError(ASTRO_EARTH_NOT_ALLOWED);
+
+    context.body = body;
+    context.direction = (int)direction;
+    context.observer = observer;
+    context.body_radius_au = bodyRadiusAu;
+    context.altitude_bias = altitudeBias;
 
     t1 = startTime;
     CALC_ALTITUDE(a1, t1);
@@ -6454,7 +6472,7 @@ static astro_search_result_t InternalSearchAltitude(
                 st1 = t1;
                 st2 = t2;
             }
-            result = Astronomy_Search(altitude_error_func, altitude_error_context, st1, st2, 1.0);
+            result = Astronomy_Search(altitude_diff, &context, st1, st2, 1.0);
             if (result.status == ASTRO_SUCCESS)
             {
                 /* If we found the rise/set event, but it falls outside limitDays, fail the search. */
@@ -6477,53 +6495,6 @@ static astro_search_result_t InternalSearchAltitude(
         t1 = t2;
         a1 = a2;
     }
-}
-
-
-static astro_func_result_t peak_altitude(void *context, astro_time_t time)
-{
-    astro_func_result_t result;
-    astro_equatorial_t ofdate;
-    astro_horizon_t hor;
-    const context_peak_altitude_t *p = (const context_peak_altitude_t *) context;
-
-    /*
-        Return the angular altitude above or below the horizon
-        of the highest part (the peak) of the given object.
-        This is defined as the apparent altitude of the center of the body plus
-        the body's angular radius.
-        The 'direction' parameter controls whether the angle is measured
-        positive above the horizon or positive below the horizon,
-        depending on whether the caller wants rise times or set times, respectively.
-    */
-
-    ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
-    if (ofdate.status != ASTRO_SUCCESS)
-        return FuncError(ofdate.status);
-
-    /* We calculate altitude without refraction, then add fixed refraction near the horizon. */
-    /* This gives us the time of rise/set without the extra work. */
-    hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-    result.value = p->direction * (hor.altitude + RAD2DEG*(p->body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON);
-    result.status = ASTRO_SUCCESS;
-    return result;
-}
-
-static astro_func_result_t altitude_error(void *context, astro_time_t time)
-{
-    astro_func_result_t result;
-    astro_equatorial_t ofdate;
-    astro_horizon_t hor;
-    const context_search_altitude_t *p = (const context_search_altitude_t *) context;
-
-    ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
-    if (ofdate.status != ASTRO_SUCCESS)
-        return FuncError(ofdate.status);
-
-    hor = Astronomy_Horizon(&time, p->observer, ofdate.ra, ofdate.dec, REFRACTION_NONE);
-    result.value = p->direction * (hor.altitude - p->altitude);
-    result.status = ASTRO_SUCCESS;
-    return result;
 }
 
 
@@ -6585,23 +6556,19 @@ astro_search_result_t Astronomy_SearchRiseSet(
     astro_time_t startTime,
     double limitDays)
 {
-    context_peak_altitude_t context;
+    double body_radius_au;
 
     if (body == BODY_EARTH)
         return SearchError(ASTRO_EARTH_NOT_ALLOWED);
 
-    /* Set up the context structure for the search function 'peak_altitude'. */
-    context.body = body;
-    context.direction = (int)direction;
-    context.observer = observer;
     switch (body)
     {
-    case BODY_SUN:  context.body_radius_au = SUN_RADIUS_AU;                 break;
-    case BODY_MOON: context.body_radius_au = MOON_EQUATORIAL_RADIUS_AU;     break;
-    default:        context.body_radius_au = 0.0;                           break;
+    case BODY_SUN:  body_radius_au = SUN_RADIUS_AU;                 break;
+    case BODY_MOON: body_radius_au = MOON_EQUATORIAL_RADIUS_AU;     break;
+    default:        body_radius_au = 0.0;                           break;
     }
 
-    return InternalSearchAltitude(body, observer, startTime, limitDays, peak_altitude, &context);
+    return InternalSearchAltitude(body, observer, direction, startTime, limitDays, body_radius_au, REFRACTION_NEAR_HORIZON);
 }
 
 
@@ -6668,14 +6635,7 @@ astro_search_result_t Astronomy_SearchAltitude(
     double limitDays,
     double altitude)
 {
-    context_search_altitude_t context;
-
-    context.body = body;
-    context.direction = direction;
-    context.observer = observer;
-    context.altitude = altitude;
-
-    return InternalSearchAltitude(body, observer, startTime, limitDays, altitude_error, &context);
+    return InternalSearchAltitude(body, observer, direction, startTime, limitDays, 0.0, altitude);
 }
 
 
