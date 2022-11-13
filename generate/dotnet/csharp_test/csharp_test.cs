@@ -780,7 +780,7 @@ namespace csharp_test
                 AstroTime r_evt = null, s_evt = null;     // rise event, set event: search results
                 AstroTime a_evt = null, b_evt = null;     // chronologically first and second events
                 Direction a_dir = Direction.Rise, b_dir = Direction.Rise;
-                const double nudge_days = 0.01;
+                const double nudge_days = 1.0e-5;   // just under 1 second
                 double sum_minutes = 0.0;
                 double max_minutes = 0.0;
 
@@ -872,7 +872,7 @@ namespace csharp_test
 
                     if (a_dir != direction)
                     {
-                        Console.WriteLine("C# RiseSetTest({0} line {1}): expected dir={2} but found {3}", filename, lnum, a_dir, direction);
+                        Console.WriteLine("C# RiseSetTest({0} line {1}): expected dir={2} but found {3}", filename, lnum, direction, a_dir);
                         return 1;
                     }
 
@@ -881,7 +881,7 @@ namespace csharp_test
                     if (error_minutes > max_minutes)
                         max_minutes = error_minutes;
 
-                    if (error_minutes > 0.57)
+                    if (error_minutes > 1.16)
                     {
                         Console.WriteLine("C# RiseSetTest({0} line {1}): excessive prediction time error = {2} minutes.", filename, lnum, error_minutes);
                         return 1;
@@ -932,7 +932,7 @@ namespace csharp_test
                 diff = SECONDS_PER_DAY * abs(result.ut - ut2);
                 if (diff > maxDiff) maxDiff = diff;
             }
-            if (maxDiff > 0.9)
+            if (maxDiff > 0.13)
             {
                 Console.WriteLine($"C# RiseSetSlot({dir}): EXCESSIVE slot-test discrepancy = {maxDiff:F6} seconds.");
                 return 1;
@@ -999,7 +999,7 @@ namespace csharp_test
                 time = result.AddDays(-nudge);
             }
 
-            if (maxDiff > 0.982)
+            if (maxDiff > 0.1)
             {
                 Console.WriteLine($"C# RiseSetReverse: EXCESSIVE forward/backward discrepancy = {maxDiff:F6} seconds.");
                 return 1;

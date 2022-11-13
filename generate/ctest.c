@@ -1758,7 +1758,7 @@ static int RiseSetSlot(double ut1, double ut2, astro_direction_t dir, astro_obse
         diff = SECONDS_PER_DAY * ABS(result.time.ut - ut2);
         if (diff > maxDiff) maxDiff = diff;
     }
-    if (maxDiff > 0.9)
+    if (maxDiff > 0.13)
         FAIL("C RiseSetSlot(dir=%d): EXCESSIVE slot-test discrepancy = %0.6lf seconds.\n", dir, maxDiff);
     DEBUG("C RiseSetSlot(dir=%d): slot discrepancy = %0.6lf seconds.\n", dir, maxDiff);
     error = 0;
@@ -1822,7 +1822,7 @@ static int RiseSetReverse(void)
         if (diff > maxDiff) maxDiff = diff;
         time = Astronomy_AddDays(result.time, -nudge);
     }
-    if (maxDiff > 0.982)
+    if (maxDiff > 0.1)
         FAIL("C RiseSetReverse: EXCESSIVE forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
     DEBUG("C RiseSetReverse: forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
 

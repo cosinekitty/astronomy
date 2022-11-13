@@ -1678,75 +1678,29 @@ namespace CosineKitty
         }
     }
 
-    internal class SearchContext_AltitudeError: SearchContext
+    internal class SearchContext_Altitude: SearchContext
     {
         private readonly Body body;
         private readonly int direction;
         private readonly Observer observer;
-        private readonly double altitude;
+        private readonly double bodyRadiusAu;
+        private readonly double targetAltitude;
 
-        public SearchContext_AltitudeError(Body body, Direction direction, Observer observer, double altitude)
+        public SearchContext_Altitude(Body body, Direction direction, Observer observer, double bodyRadiusAu, double targetAltitude)
         {
             this.body = body;
             this.direction = (int)direction;
             this.observer = observer;
-            this.altitude = altitude;
+            this.bodyRadiusAu = bodyRadiusAu;
+            this.targetAltitude = targetAltitude;
         }
 
         public override double Eval(AstroTime time)
         {
             Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
             Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
-            return direction * (hor.altitude - altitude);
-        }
-    }
-
-    internal class SearchContext_PeakAltitude: SearchContext
-    {
-        private readonly Body body;
-        private readonly int direction;
-        private readonly Observer observer;
-        private readonly double body_radius_au;
-
-        public SearchContext_PeakAltitude(Body body, Direction direction, Observer observer)
-        {
-            this.body = body;
-            this.direction = (int)direction;
-            this.observer = observer;
-
-            switch (body)
-            {
-                case Body.Sun:
-                    this.body_radius_au = Astronomy.SUN_RADIUS_AU;
-                    break;
-
-                case Body.Moon:
-                    this.body_radius_au = Astronomy.MOON_EQUATORIAL_RADIUS_AU;
-                    break;
-
-                default:
-                    this.body_radius_au = 0.0;
-                    break;
-            }
-        }
-
-        public override double Eval(AstroTime time)
-        {
-            // Return the angular altitude above or below the horizon
-            // of the highest part (the peak) of the given object.
-            // This is defined as the apparent altitude of the center of the body plus
-            // the body's angular radius.
-            // The 'direction' parameter controls whether the angle is measured
-            // positive above the horizon or positive below the horizon,
-            // depending on whether the caller wants rise times or set times, respectively.
-
-            Equatorial ofdate = Astronomy.Equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected);
-
-            // We calculate altitude without refraction, then add fixed refraction near the horizon.
-            // This gives us the time of rise/set without the extra work.
-            Topocentric hor = Astronomy.Horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None);
-
-            return direction * (hor.altitude + Astronomy.RAD2DEG*(body_radius_au / ofdate.dist) + Astronomy.REFRACTION_NEAR_HORIZON);
+            double altitude = hor.altitude + Astronomy.RAD2DEG*Math.Asin(bodyRadiusAu / ofdate.dist);
+            return direction*(altitude - targetAltitude);
         }
     }
 
@@ -7011,186 +6965,251 @@ namespace CosineKitty
             return Search(moon_offset, t1, t2, 0.1);
         }
 
-        private static AstroTime ForwardSearchAltitude(
+
+        private struct AscentInfo
+        {
+            public bool valid;
+            public AstroTime tx;
+            public AstroTime ty;
+            public double ax;
+            public double ay;
+
+            public static readonly AscentInfo Fail = new AscentInfo { valid = false };
+
+            public override string ToString() =>
+                valid ? $"AscentInfo(tx={tx}, ty={ty}, ax={ax}, ay={ay})" : "AscentInfo.Fail";
+        }
+
+
+        private static AscentInfo FindAscent(
+            int depth,
+            SearchContext_Altitude context,
+            double max_deriv_alt,
+            AstroTime t1,
+            AstroTime t2,
+            double a1,
+            double a2)
+        {
+            // See if we can find any time interval where the altitude-diff function
+            // rises from non-positive to positive.
+
+            if (a1 < 0.0 && a2 >= 0.0)
+            {
+                // Trivial success case: the endpoints already rise through zero.
+                return new AscentInfo { valid = true, tx = t1, ty = t2, ax = a1, ay = a2 };
+            }
+
+            if (a1 >= 0.0 && a2 < 0.0)
+            {
+                // Trivial failure case: Assume Nyquist condition prevents an ascent.
+                return AscentInfo.Fail;
+            }
+
+            if (depth > 17)
+            {
+                // Safety valve: do not allow unlimited recursion.
+                // This should never happen if the rest of the logic is working correctly,
+                // so fail the whole search if it does happen. It's a bug!
+                throw new InternalError("Excessive recursion in rise/set ascent search.");
+            }
+
+            // Both altitudes are on the same side of zero: both are negative, or both are non-negative.
+            // There could be a convex "hill" or a concave "valley" that passes through zero.
+            // In polar regions sometimes there is a rise/set or set/rise pair within minutes of each other.
+            // For example, the Moon can be below the horizon, then the very top of it becomes
+            // visible (moonrise) for a few minutes, then it moves sideways and down below
+            // the horizon again (moonset). We want to catch these cases.
+            // However, for efficiency and practicality concerns, because the rise/set search itself
+            // has a 0.1 second threshold, we do not worry about rise/set pairs that are less than
+            // one second apart. These are marginal cases that are rendered highly uncertain
+            // anyway, due to unpredictable atmospheric refraction conditions (air temperature and pressure).
+
+            double dt = (t2.ut - t1.ut) / 2;
+            if (dt * SECONDS_PER_DAY < 1.0)
+                return new AscentInfo { valid = false };
+
+            // Is it possible to reach zero from the altitude that is closer to zero?
+            double da = Math.Min(Math.Abs(a1), Math.Abs(a2));
+
+            // Without loss of generality, assume |a1| <= |a2|.
+            // (Reverse the argument in the case |a2| < |a1|.)
+            // Imagine you have to "drive" from a1 to 0, then back to a2.
+            // You can't go faster than max_deriv_alt. If you can't reach 0 in half the time,
+            // you certainly don't have time to reach 0, turn around, and still make your way
+            // back up to a2 (which is at least as far from 0 than a1 is) in the time interval dt.
+            // Therefore, the time threshold is half the time interval, or dt/2.
+            if (da > max_deriv_alt*(dt / 2))
+            {
+                // Prune: the altitude cannot change fast enough to reach zero.
+                return AscentInfo.Fail;
+            }
+
+            // Bisect the time interval and evaluate the altitude at the midpoint.
+            var tmid = new AstroTime((t1.ut + t2.ut)/2);
+            double amid = context.Eval(tmid);
+
+            // Recurse to the left interval.
+            AscentInfo ascent = FindAscent(1+depth, context, max_deriv_alt, t1, tmid, a1, amid);
+            if (!ascent.valid)
+            {
+                // Recurse to the right interval.
+                ascent = FindAscent(1+depth, context, max_deriv_alt, tmid, t2, amid, a2);
+            }
+
+            return ascent;
+        }
+
+
+        private static double MaxAltitudeSlope(Body body, double latitude)
+        {
+            // Calculate the maximum possible rate that this body's altitude
+            // could change [degrees/day] as seen by this observer.
+            // First use experimentally determined extreme bounds by body
+            // of how much topocentric RA and DEC can change per rate of time.
+            // We need minimum possible d(RA)/dt, and maximum possible magnitude of d(DEC)/dt.
+            // Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
+
+            double deriv_ra;
+            double deriv_dec;
+
+            switch (body)
+            {
+            case Body.Moon:
+                deriv_ra  = +4.5;
+                deriv_dec = +8.2;
+                break;
+
+            case Body.Sun:
+                deriv_ra  = +0.8;
+                deriv_dec = +0.5;
+                break;
+
+            case Body.Mercury:
+                deriv_ra  = -1.6;
+                deriv_dec = +1.0;
+                break;
+
+            case Body.Venus:
+                deriv_ra  = -0.8;
+                deriv_dec = +0.6;
+                break;
+
+            case Body.Mars:
+                deriv_ra  = -0.5;
+                deriv_dec = +0.4;
+                break;
+
+            case Body.Jupiter:
+            case Body.Saturn:
+            case Body.Uranus:
+            case Body.Neptune:
+            case Body.Pluto:
+                deriv_ra  = -0.2;
+                deriv_dec = +0.2;
+                break;
+
+            case Body.Earth:
+                throw new EarthNotAllowedException();
+
+            default:
+                throw new InvalidBodyException(body);
+            }
+
+            double latrad = DEG2RAD * latitude;
+            return Math.Abs(((360.0 / SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra)*Math.Cos(latrad)) + Math.Abs(deriv_dec*Math.Sin(latrad));
+        }
+
+        private const double RISE_SET_DT = 0.42;    // 10.08 hours: Nyquist-safe for 22-hour period.
+
+        private static AstroTime InternalSearchAltitude(
             Body body,
             Observer observer,
             Direction direction,
             AstroTime startTime,
             double limitDays,
-            SearchContext context)
+            double bodyRadiusAu,
+            double targetAltitude)
         {
-            if (body == Body.Earth)
-                throw new EarthNotAllowedException();
+            double max_deriv_alt = MaxAltitudeSlope(body, observer.latitude);
+            var context = new SearchContext_Altitude(body, direction, observer, bodyRadiusAu, targetAltitude);
 
-            double ha_before, ha_after;
-            switch (direction)
+            // We allow searching forward or backward in time.
+            // But we want to keep t1 < t2, so we need a few if/else statements.
+            AstroTime t1, t2;
+            double a1, a2;
+            if (limitDays < 0.0)
             {
-                case Direction.Rise:
-                    ha_before = 12.0;   // minimum altitude (bottom) happens BEFORE the body rises.
-                    ha_after = 0.0;     // maximum altitude (culmination) happens AFTER the body rises.
-                    break;
-
-                case Direction.Set:
-                    ha_before = 0.0;    // culmination happens BEFORE the body sets.
-                    ha_after = 12.0;    // bottom happens AFTER the body sets.
-                    break;
-
-                default:
-                    throw new ArgumentException(string.Format("Unsupported direction value {0}", direction));
-            }
-
-            // We cannot possibly satisfy a forward search without a positive time limit.
-            if (limitDays <= 0.0)
-                return null;
-
-            // See if the body is currently above/below the horizon.
-            // If we are looking for next rise time and the body is below the horizon,
-            // we use the current time as the lower time bound and the next culmination
-            // as the upper bound.
-            // If the body is above the horizon, we search for the next bottom and use it
-            // as the lower bound and the next culmination after that bottom as the upper bound.
-            // The same logic applies for finding set times, only we swap the hour angles.
-
-            HourAngleInfo evt_before, evt_after;
-            double alt_before = context.Eval(startTime);
-            AstroTime time_before;
-            if (alt_before > 0.0)
-            {
-                // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-                evt_before = SearchHourAngle(body, observer, ha_before, startTime, +1);
-                time_before = evt_before.time;
-                alt_before = context.Eval(time_before);
+                t1 = null;
+                t2 = startTime;
+                a1 = double.NaN;
+                a2 = context.Eval(t2);
             }
             else
             {
-                // We are before or at the sought event, so we find the next "after" event (bottom/culm),
-                // and use the current time as the "before" event.
-                time_before = startTime;
+                t1 = startTime;
+                t2 = null;
+                a1 = context.Eval(t1);
+                a2 = double.NaN;
             }
-
-            evt_after = SearchHourAngle(body, observer, ha_after, time_before, +1);
-            double alt_after = context.Eval(evt_after.time);
 
             for(;;)
             {
-                if (alt_before <= 0.0 && alt_after > 0.0)
+                if (limitDays < 0.0)
                 {
-                    // Search the time window for the desired event.
-                    AstroTime time = Search(context, time_before, evt_after.time, 1.0);
-                    if (time != null)
-                    {
-                        // If we found the rise/set time, but it falls outside limitDays, fail the search.
-                        if (time.ut > startTime.ut + limitDays)
-                            return null;
-
-                        // The search succeeded.
-                        return time;
-                    }
+                    t1 = t2.AddDays(-RISE_SET_DT);
+                    a1 = context.Eval(t1);
+                }
+                else
+                {
+                    t2 = t1.AddDays(+RISE_SET_DT);
+                    a2 = context.Eval(t2);
                 }
 
-                // If we didn't find the desired event, use evt_after.time to find the next before-event.
-                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, +1);
+                AscentInfo ascent = FindAscent(0, context, max_deriv_alt, t1, t2, a1, a2);
+                if (ascent.valid)
+                {
+                    // We found a time interval [t1, t2] that contains an alt-diff
+                    // rising from negative a1 to non-negative a2.
+                    // Search for the time where the root occurs.
+                    AstroTime time = Search(context, ascent.tx, ascent.ty, 0.1);
+                    if (time != null)
+                    {
+                        // Now that we have a solution, we have to check whether it goes outside the time bounds.
+                        if (limitDays < 0.0)
+                        {
+                            if (time.ut < startTime.ut + limitDays)
+                                return null;
+                        }
+                        else
+                        {
+                            if (time.ut > startTime.ut + limitDays)
+                                return null;
+                        }
+                        return time;    // success!
+                    }
 
-                if (evt_before.time.ut >= startTime.ut + limitDays)
-                    return null;
+                    // The search should have succeeded. Something is wrong with the ascent finder!
+                    throw new InternalError($"Rise/set search failed after finding {ascent}");
+                }
 
-                evt_after  = SearchHourAngle(body, observer, ha_after, evt_before.time, +1);
-
-                time_before = evt_before.time;
-
-                alt_before = context.Eval(evt_before.time);
-                alt_after = context.Eval(evt_after.time);
+                // There is no ascent in this interval, so keep searching.
+                if (limitDays < 0.0)
+                {
+                    if (t1.ut < startTime.ut + limitDays)
+                        return null;
+                    t2 = t1;
+                    a2 = a1;
+                }
+                else
+                {
+                    if (t2.ut > startTime.ut + limitDays)
+                        return null;
+                    t1 = t2;
+                    a1 = a2;
+                }
             }
         }
 
-        private static AstroTime BackwardSearchAltitude(
-            Body body,
-            Observer observer,
-            Direction direction,
-            AstroTime startTime,
-            double limitDays,
-            SearchContext context)
-        {
-            if (body == Body.Earth)
-                throw new EarthNotAllowedException();
-
-            double ha_before, ha_after;
-            switch (direction)
-            {
-                case Direction.Rise:
-                    ha_before = 12.0;   // minimum altitude (bottom) happens BEFORE the body rises.
-                    ha_after = 0.0;     // maximum altitude (culmination) happens AFTER the body rises.
-                    break;
-
-                case Direction.Set:
-                    ha_before = 0.0;    // culmination happens BEFORE the body sets.
-                    ha_after = 12.0;    // bottom happens AFTER the body sets.
-                    break;
-
-                default:
-                    throw new ArgumentException(string.Format("Unsupported direction value {0}", direction));
-            }
-
-            // We cannot possibly satisfy a backward search without a negative time limit.
-            if (limitDays >= 0.0)
-                return null;
-
-            // See if the body is currently above/below the horizon.
-            // If we are looking for previous rise time and the body is above the horizon,
-            // we use the current time as the upper time bound and the previous bottom as the lower time bound.
-            // If the body is below the horizon, we search for the previous culmination and use it
-            // as the upper time bound. Then we search for the bottom before that culmination and
-            // use it as the lower time bound.
-            // The same logic applies for finding set times; altitude_error_func and
-            // altitude_error_context ensure that the desired event is represented
-            // by ascending through zero, so the Search function works correctly.
-
-            HourAngleInfo evt_before, evt_after;
-            double alt_after = context.Eval(startTime);
-            AstroTime time_after;
-            if (alt_after < 0.0)
-            {
-                evt_after = SearchHourAngle(body, observer, ha_after, startTime, -1);
-                time_after = evt_after.time;
-                alt_after = context.Eval(time_after);
-            }
-            else
-            {
-                time_after = startTime;
-            }
-
-            evt_before = SearchHourAngle(body, observer, ha_before, time_after, -1);
-            double alt_before = context.Eval(evt_before.time);
-
-            for(;;)
-            {
-                if (alt_before <= 0.0 && alt_after > 0.0)
-                {
-                    // Search the time window for the desired event.
-                    AstroTime time = Search(context, evt_before.time, time_after, 1.0);
-                    if (time != null)
-                    {
-                        // If we found the rise/set time, but it falls outside limitDays, fail the search.
-                        if (time.ut < startTime.ut + limitDays)
-                            return null;
-
-                        // The search succeeded.
-                        return time;
-                    }
-                }
-
-                evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, -1);
-
-                if (evt_after.time.ut <= startTime.ut + limitDays)
-                    return null;
-
-                evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, -1);
-
-                time_after = evt_after.time;
-                alt_before = context.Eval(evt_before.time);
-                alt_after = context.Eval(evt_after.time);
-            }
-        }
 
         /// <summary>
         /// Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
@@ -7248,10 +7267,23 @@ namespace CosineKitty
             AstroTime startTime,
             double limitDays)
         {
-            var peak_altitude = new SearchContext_PeakAltitude(body, direction, observer);
-            return (limitDays < 0.0)
-                ? BackwardSearchAltitude(body, observer, direction, startTime, limitDays, peak_altitude)
-                : ForwardSearchAltitude( body, observer, direction, startTime, limitDays, peak_altitude);
+            double bodyRadiusAu;
+            switch (body)
+            {
+                case Body.Sun:
+                    bodyRadiusAu = SUN_RADIUS_AU;
+                    break;
+
+                case Body.Moon:
+                    bodyRadiusAu = MOON_EQUATORIAL_RADIUS_AU;
+                    break;
+
+                default:
+                    bodyRadiusAu = 0.0;
+                    break;
+            }
+
+            return InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, -REFRACTION_NEAR_HORIZON);
         }
 
         /// <summary>
@@ -7315,10 +7347,7 @@ namespace CosineKitty
             double limitDays,
             double altitude)
         {
-            var altitude_error = new SearchContext_AltitudeError(body, direction, observer, altitude);
-            return (limitDays < 0.0)
-                ? BackwardSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error)
-                : ForwardSearchAltitude( body, observer, direction, startTime, limitDays, altitude_error);
+            return InternalSearchAltitude(body, observer, direction, startTime, limitDays, 0.0, altitude);
         }
 
         /// <summary>

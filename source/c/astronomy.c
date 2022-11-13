@@ -7643,9 +7643,6 @@ context_altitude_t;
         altitude = altdiff_result.value;    \
     } while (0)
 
-#define OUT_OF_BOUNDS(u)  \
-    ((limitDays < 0.0) ? (u < startTime.ut + limitDays) : (u > startTime.ut + limitDays))
-
 static const double RISE_SET_DT = 0.42;    /* 10.08 hours: Nyquist-safe for 22-hour period. */
 
 typedef struct
@@ -7728,6 +7725,12 @@ static ascent_t FindAscent(
         return ascent;
     }
 
+    if (a1 >= 0.0 && a2 < 0.0)
+    {
+        /* Trivial failure case: Assume Nyquist condition prevents an ascent. */
+        return AscentError(ASTRO_SEARCH_FAILURE);
+    }
+
     if (depth > 17)
     {
         /*
@@ -7736,12 +7739,6 @@ static ascent_t FindAscent(
             so fail the whole search if it does happen. It's a bug!
         */
         return AscentError(ASTRO_NO_CONVERGE);
-    }
-
-    if (a1 >= 0.0 && a2 < 0.0)
-    {
-        /* Trivial failure case: Assume Nyquist condition prevents an ascent. */
-        return AscentError(ASTRO_SEARCH_FAILURE);
     }
 
     /*
@@ -7813,8 +7810,6 @@ static astro_search_result_t InternalSearchAltitude(
     astro_time_t t1, t2;
     double a1 = 0.0, a2 = 0.0;
     double deriv_ra, deriv_dec, max_deriv_alt, latrad;
-    const double searchDir = (limitDays < 0.0) ? -1.0 : +1.0;
-    const double deltaDays = searchDir * RISE_SET_DT;
 
     /*
         Calculate the maximum possible rate that this body's altitude
@@ -7878,7 +7873,7 @@ static astro_search_result_t InternalSearchAltitude(
 
     /* We allow searching forward or backward in time. */
     /* But we want to keep t1 < t2, so we need a few if/else statements. */
-    if (deltaDays < 0.0)
+    if (limitDays < 0.0)
     {
         t2 = startTime;
         ALTDIFF(a2, t2, &context);
@@ -7891,14 +7886,14 @@ static astro_search_result_t InternalSearchAltitude(
 
     for(;;)
     {
-        if (deltaDays < 0.0)
+        if (limitDays < 0.0)
         {
-            t1 = Astronomy_AddDays(t2, deltaDays);
+            t1 = Astronomy_AddDays(t2, -RISE_SET_DT);
             ALTDIFF(a1, t1, &context);
         }
         else
         {
-            t2 = Astronomy_AddDays(t1, deltaDays);
+            t2 = Astronomy_AddDays(t1, +RISE_SET_DT);
             ALTDIFF(a2, t2, &context);
         }
 
@@ -7912,9 +7907,16 @@ static astro_search_result_t InternalSearchAltitude(
             if (result.status == ASTRO_SUCCESS)
             {
                 /* Now that we have a solution, we have to check whether it goes outside the time bounds. */
-                if (OUT_OF_BOUNDS(result.time.ut))
-                    return SearchError(ASTRO_SEARCH_FAILURE);
-
+                if (limitDays < 0.0)
+                {
+                    if (result.time.ut < startTime.ut + limitDays)
+                        return SearchError(ASTRO_SEARCH_FAILURE);
+                }
+                else
+                {
+                    if (result.time.ut > startTime.ut + limitDays)
+                        return SearchError(ASTRO_SEARCH_FAILURE);
+                }
                 return result;  /* success! */
             }
 
@@ -7931,7 +7933,7 @@ static astro_search_result_t InternalSearchAltitude(
             return SearchError(ascent.status);
         }
 
-        if (deltaDays < 0.0)
+        if (limitDays < 0.0)
         {
             if (t1.ut < startTime.ut + limitDays)
                 return SearchError(ASTRO_SEARCH_FAILURE);
