@@ -2333,7 +2333,7 @@ export function Horizon(date, observer, ra, dec, refraction) {
     let une = [-sinlat * coslon, -sinlat * sinlon, coslat];
     let uwe = [sinlon, -coslon, 0];
     // Correct the vectors uze, une, uwe for the Earth's rotation by calculating
-    // sideral time. Call spin() for each uncorrected vector to rotate about
+    // sidereal time. Call spin() for each uncorrected vector to rotate about
     // the Earth's axis to yield corrected unit vectors uz, un, uw.
     // Multiply sidereal hours by -15 to convert to degrees and flip eastward
     // rotation of the Earth to westward apparent movement of objects with time.

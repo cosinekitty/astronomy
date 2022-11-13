@@ -1620,7 +1620,7 @@ static int RiseSet(void)
     double error_minutes, rms_minutes;
     double sum_minutes = 0.0;
     double max_minutes = 0.0;
-    const double nudge_days = 0.01;
+    const double nudge_days = 1.0e-5;    /* just under 1 second */
 
     observer.latitude = observer.longitude = observer.height = NAN;
     current_body = BODY_INVALID;
@@ -1707,9 +1707,6 @@ static int RiseSet(void)
             s_search_date = Astronomy_AddDays(s_evt.time, nudge_days);
         }
 
-        if (a_dir != direction)
-            FAIL("C RiseSet(%s line %d): expected dir=%d but found %d\n", filename, lnum, a_dir, direction);
-
         error_minutes = (24.0 * 60.0) * ABS(a_evt.time.tt - correct_date.tt);
         sum_minutes += error_minutes * error_minutes;
         if (error_minutes > max_minutes)
@@ -1717,6 +1714,9 @@ static int RiseSet(void)
 
         if (error_minutes > 1.16)
             FAIL("C RiseSet(%s line %d): excessive prediction time error = %lg minutes.\n", filename, lnum, error_minutes);
+
+        if (a_dir != direction)
+            FAIL("C RiseSet(%s line %d): expected dir=%d but found %d\n", filename, lnum, direction, a_dir);
     }
 
     rms_minutes = V(sqrt(sum_minutes / lnum));

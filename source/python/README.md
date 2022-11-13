@@ -3242,7 +3242,7 @@ To convert to degrees, multiply the return value by 15.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Time`](#Time) | `time` | The date and time for which to find GAST. As an optimization, this function caches the sideral time value in `time`, unless it has already been cached, in which case the cached value is reused. |
+| [`Time`](#Time) | `time` | The date and time for which to find GAST. As an optimization, this function caches the sidereal time value in `time`, unless it has already been cached, in which case the cached value is reused. |
 
 **Returns**: `float`
 GAST expressed in sidereal hours.

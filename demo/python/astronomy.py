@@ -1733,7 +1733,7 @@ def SiderealTime(time):
     ----------
     time : Time
         The date and time for which to find GAST.
-        As an optimization, this function caches the sideral time value in `time`,
+        As an optimization, this function caches the sidereal time value in `time`,
         unless it has already been cached, in which case the cached value is reused.
 
     Returns
@@ -5206,7 +5206,7 @@ def Horizon(time, observer, ra, dec, refraction):
     uwe = [sinlon, -coslon, 0.0]
 
     # Correct the vectors uze, une, uwe for the Earth's rotation by calculating
-    # sideral time. Call spin() for each uncorrected vector to rotate about
+    # sidereal time. Call spin() for each uncorrected vector to rotate about
     # the Earth's axis to yield corrected unit vectors uz, un, uw.
     # Multiply sidereal hours by -15 to convert to degrees and flip eastward
     # rotation of the Earth to westward apparent movement of objects with time.
