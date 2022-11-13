@@ -1685,11 +1685,11 @@ static int RiseSet(void)
         {
             r_evt = Astronomy_SearchRiseSet(body, observer, DIRECTION_RISE, r_search_date, 366.0);
             if (r_evt.status != ASTRO_SUCCESS)
-                FAIL("C RiseSet(%s line %d): did not find %s rise event.\n", filename, lnum, name);
+                FAIL("C RiseSet(%s line %d): did not find %s rise event: status = %d\n", filename, lnum, name, r_evt.status);
 
             s_evt = Astronomy_SearchRiseSet(body, observer, DIRECTION_SET, s_search_date, 366.0);
             if (s_evt.status != ASTRO_SUCCESS)
-                FAIL("C RiseSet(%s line %d): did not find %s set event.\n", filename, lnum, name);
+                FAIL("C RiseSet(%s line %d): did not find %s set event: status = %d\n", filename, lnum, name, s_evt.status);
 
             /* Expect the current event to match the earlier of the found dates. */
             if (r_evt.time.tt < s_evt.time.tt)

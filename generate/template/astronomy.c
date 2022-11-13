@@ -6446,6 +6446,16 @@ static astro_func_result_t altitude_diff(void *context, astro_time_t time)
 }
 
 
+static ascent_t AscentError(astro_status_t status)
+{
+    ascent_t ascent;
+    ascent.ax = ascent.ay = NAN;
+    ascent.tx = ascent.ty = TimeError();
+    ascent.status = status;
+    return ascent;
+}
+
+
 static ascent_t FindAscent(
     int depth,
     context_altitude_t *context,
@@ -6479,38 +6489,63 @@ static ascent_t FindAscent(
         return ascent;
     }
 
+    if (depth > 17)
+    {
+        /*
+            Safety valve: do not allow unlimited recursion.
+            This should never happen if the rest of the logic is working correctly,
+            so fail the whole search if it does happen. It's a bug!
+        */
+        return AscentError(ASTRO_NO_CONVERGE);
+    }
+
     if (a1 >= 0.0 && a2 < 0.0)
     {
         /* Trivial failure case: Assume Nyquist condition prevents an ascent. */
-        memset(&ascent, 0, sizeof(ascent));
-        ascent.status = ASTRO_SEARCH_FAILURE;
-        return ascent;
+        return AscentError(ASTRO_SEARCH_FAILURE);
     }
+
+    /*
+        Both altitudes are on the same side of zero: both are negative, or both are non-negative.
+        There could be a convex "hill" or a concave "valley" that passes through zero.
+        In polar regions sometimes there is a rise/set or set/rise pair within minutes of each other.
+        For example, the Moon can be below the horizon, then the very top of it becomes
+        visible (moonrise) for a few minutes, then it moves sideways and down below
+        the horizon again (moonset). We want to catch these cases.
+        However, for efficiency and practicality concerns, because the rise/set search itself
+        has a 0.1 second threshold, we do not worry about rise/set pairs that are less than
+        one second apart. These are marginal cases that are rendered highly uncertain
+        anyway, due to unpredictable atmospheric refraction conditions (air temperature and pressure).
+    */
+    dt = (t2.ut - t1.ut) / 2;
+    if (dt * SECONDS_PER_DAY < 1.0)
+        return AscentError(ASTRO_SEARCH_FAILURE);
 
     /* Is it possible to reach zero from the altitude that is closer to zero? */
     abs_a1 = fabs(a1);
     abs_a2 = fabs(a2);
     da = (abs_a1 < abs_a2) ? abs_a1 : abs_a2;
 
-    /* Tricky: dt = half the interval, because the farther altitude would take at least as long. */
-    dt = (t2.ut - t1.ut) / 2.0;
-    if (da > max_deriv_alt * dt)
+    /*
+        Without loss of generality, assume |a1| <= |a2|.
+        (Reverse the argument in the case |a2| < |a1|.)
+        Imagine you have to "drive" from a1 to 0, then back to a2.
+        You can't go faster than max_deriv_alt. If you can't reach 0 in half the time,
+        you certainly don't have time to reach 0, turn around, and still make your way
+        back up to a2 (which is at least as far from 0 than a1 is) in the time interval dt.
+        Therefore, the time threshold is half the time interval, or dt/2.
+    */
+    if (da > max_deriv_alt*(dt / 2))
     {
         /* Prune: the altitude cannot change fast enough to reach zero. */
-        memset(&ascent, 0, sizeof(ascent));
-        ascent.status = ASTRO_SEARCH_FAILURE;
-        return ascent;
+        return AscentError(ASTRO_SEARCH_FAILURE);
     }
 
     /* Bisect the time interval and evaluate the altitude at the midpoint. */
     tm = Astronomy_TimeFromDays((t1.ut + t2.ut)/2);
     alt = altitude_diff(context, tm);
     if (alt.status != ASTRO_SUCCESS)
-    {
-        memset(&ascent, 0, sizeof(ascent));
-        ascent.status = alt.status;
-        return ascent;
-    }
+        return AscentError(ASTRO_SEARCH_FAILURE);
 
     /* Recurse to the left interval. */
     ascent = FindAscent(1+depth, context, max_deriv_alt, t1, tm, a1, alt.value);
