@@ -6450,7 +6450,7 @@ static ascent_t FindAscent(
     double a2)
 {
     ascent_t ascent;
-    double da;
+    double da, dt, abs_a1, abs_a2;
     astro_time_t tm;
     astro_func_result_t alt;
 
@@ -6458,45 +6458,33 @@ static ascent_t FindAscent(
     /* rises from non-positive to positive. */
     /* Return ASTRO_SUCCESS if we do, ASTRO_SEARCH_FAILURE if we don't, or some other status for error cases. */
 
-    if (a1 < 0.0)
+    if (a1 < 0.0 && a2 >= 0.0)
     {
-        if (a2 >= 0.0)
-        {
-            /* Trivial success case: the endpoints already rise through zero. */
-            ascent.status = ASTRO_SUCCESS;
-            ascent.tx = t1;
-            ascent.ty = t2;
-            ascent.ax = a1;
-            ascent.ay = a2;
-            return ascent;
-        }
-
-        /*
-            Search for a convex curve that ascends, then descends, through zero.
-            But first try to prune based on maximum altitude slope.
-            Both altitudes are negative. Is it possible to rise to a positive value in
-            from the higher of the two altitudes in half the time interval?
-        */
-        da = fabs((a1 > a2) ? a1 : a2);
-    }
-    else    /* a1 >= 0.0*/
-    {
-        if (a2 < 0.0)
-        {
-            /* Trivial failure case: Assume Nyquist condition prevents an ascent. */
-            memset(&ascent, 0, sizeof(ascent));
-            ascent.status = ASTRO_SEARCH_FAILURE;
-            return ascent;
-        }
-
-        /*
-            Search for concave curve that descends through zero, then rises again through zero.
-            See the mirror image case above for more details.
-        */
-        da = fabs((a1 < a2) ? a1 : a2);
+        /* Trivial success case: the endpoints already rise through zero. */
+        ascent.status = ASTRO_SUCCESS;
+        ascent.tx = t1;
+        ascent.ty = t2;
+        ascent.ax = a1;
+        ascent.ay = a2;
+        return ascent;
     }
 
-    if (da > max_deriv_alt*(t2.ut - t1.ut)/2)
+    if (a1 >= 0.0 && a2 < 0.0)
+    {
+        /* Trivial failure case: Assume Nyquist condition prevents an ascent. */
+        memset(&ascent, 0, sizeof(ascent));
+        ascent.status = ASTRO_SEARCH_FAILURE;
+        return ascent;
+    }
+
+    /* Is it possible to reach zero from the altitude that is closer to zero? */
+    abs_a1 = fabs(a1);
+    abs_a2 = fabs(a2);
+    da = (abs_a1 < abs_a2) ? abs_a1 : abs_a2;
+
+    /* Tricky: dt = half the interval, because the farther altitude would take at least as long. */
+    dt = (t2.ut - t1.ut) / 2.0;
+    if (da > max_deriv_alt * dt)
     {
         /* Prune: the altitude cannot change fast enough to reach zero. */
         memset(&ascent, 0, sizeof(ascent));
