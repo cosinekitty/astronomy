@@ -7658,6 +7658,9 @@ typedef struct
 }
 ascent_t;
 
+int _AltitudeDiffCallCount;
+int _FindAscentMaxRecursionDepth;
+
 /** @endcond */
 
 static astro_func_result_t altitude_diff(void *context, astro_time_t time)
@@ -7667,6 +7670,8 @@ static astro_func_result_t altitude_diff(void *context, astro_time_t time)
     astro_horizon_t hor;
     double altitude;
     const context_altitude_t *p = (const context_altitude_t *)context;
+
+    ++_AltitudeDiffCallCount;   /* for internal performance testing */
 
     ofdate = Astronomy_Equator(p->body, &time, p->observer, EQUATOR_OF_DATE, ABERRATION);
     if (ofdate.status != ASTRO_SUCCESS)
@@ -7681,6 +7686,7 @@ static astro_func_result_t altitude_diff(void *context, astro_time_t time)
 
 
 static ascent_t FindAscent(
+    int depth,
     context_altitude_t *context,
     double max_deriv_alt,
     astro_time_t t1,
@@ -7692,6 +7698,10 @@ static ascent_t FindAscent(
     double da, dt, abs_a1, abs_a2;
     astro_time_t tm;
     astro_func_result_t alt;
+
+    /* For internal performance testing. */
+    if (depth > _FindAscentMaxRecursionDepth)
+        _FindAscentMaxRecursionDepth = depth;
 
     /* See if we can find any time interval where the altitude-diff function */
     /* rises from non-positive to positive. */
@@ -7742,11 +7752,11 @@ static ascent_t FindAscent(
     }
 
     /* Recurse to the left interval. */
-    ascent = FindAscent(context, max_deriv_alt, t1, tm, a1, alt.value);
+    ascent = FindAscent(1+depth, context, max_deriv_alt, t1, tm, a1, alt.value);
     if (ascent.status == ASTRO_SEARCH_FAILURE)
     {
         /* Recurse to the right interval. */
-        ascent = FindAscent(context, max_deriv_alt, tm, t2, alt.value, a2);
+        ascent = FindAscent(1+depth, context, max_deriv_alt, tm, t2, alt.value, a2);
     }
 
     return ascent;
@@ -7857,7 +7867,7 @@ static astro_search_result_t InternalSearchAltitude(
             ALTDIFF(a2, t2, &context);
         }
 
-        ascent = FindAscent(&context, max_deriv_alt, t1, t2, a1, a2);
+        ascent = FindAscent(0, &context, max_deriv_alt, t1, t2, a1, a2);
         if (ascent.status == ASTRO_SUCCESS)
         {
             /* We found a time interval [t1, t2] that contains an alt-diff */

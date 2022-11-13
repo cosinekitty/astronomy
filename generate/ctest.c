@@ -1621,6 +1621,11 @@ static int RiseSet(void)
     double sum_minutes = 0.0;
     double max_minutes = 0.0;
     const double nudge_days = 1.0e-5;    /* just under 1 second */
+    extern int _AltitudeDiffCallCount;          /* undocumented global var used for performance testing only */
+    extern int _FindAscentMaxRecursionDepth;    /* undocumented global var used for performance testing only */
+
+    _AltitudeDiffCallCount = 0;
+    _FindAscentMaxRecursionDepth = -1;
 
     observer.latitude = observer.longitude = observer.height = NAN;
     current_body = BODY_INVALID;
@@ -1720,7 +1725,7 @@ static int RiseSet(void)
     }
 
     rms_minutes = V(sqrt(sum_minutes / lnum));
-    printf("C RiseSet: passed %d lines: time errors in minutes: rms=%0.4lf, max=%0.4lf\n", lnum, rms_minutes, max_minutes);
+    printf("C RiseSet: passed %d lines: time errors in minutes: rms=%0.4lf, max=%0.4lf, recur=%d, altcount=%d\n", lnum, rms_minutes, max_minutes, _FindAscentMaxRecursionDepth, _AltitudeDiffCallCount);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
