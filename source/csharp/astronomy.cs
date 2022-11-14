@@ -7335,6 +7335,8 @@ namespace CosineKitty
             double limitDays,
             double altitude)
         {
+            if (altitude < -90.0 || altitude > +90.0)
+                throw new ArgumentOutOfRangeException(nameof(altitude));
             return InternalSearchAltitude(body, observer, direction, startTime, limitDays, 0.0, altitude);
         }
 

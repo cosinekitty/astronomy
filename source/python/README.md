@@ -2773,7 +2773,7 @@ the function returns `None`.
 ---
 
 <a name="SearchAltitude"></a>
-### SearchAltitude(body, observer, direction, dateStart, limitDays, altitude)
+### SearchAltitude(body, observer, direction, startTime, limitDays, altitude)
 
 **Finds the next time a body reaches a given altitude.**
 
