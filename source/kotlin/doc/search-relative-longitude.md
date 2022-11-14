@@ -2,7 +2,7 @@
 
 # searchRelativeLongitude
 
-fun [searchRelativeLongitude](search-relative-longitude.md)(body: [Body](-body/index.md), targetRelativeLongitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), startTime: [Time](-time/index.md)): [Time](-time/index.md)
+fun [searchRelativeLongitude](search-relative-longitude.md)(body: [Body](-body/index.md), targetRelativeLongitude: Double, startTime: [Time](-time/index.md)): [Time](-time/index.md)
 
 Searches for the time when the Earth and another planet are separated by a specified angle in ecliptic longitude, as seen from the Sun.
 

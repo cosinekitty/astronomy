@@ -2,6 +2,6 @@
 
 # HOUR2RAD
 
-const val [HOUR2RAD](-h-o-u-r2-r-a-d.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html) = 0.26179938779914946
+const val [HOUR2RAD](-h-o-u-r2-r-a-d.md): Double = 0.26179938779914946
 
 The factor to convert sidereal hours to radians = pi/12.

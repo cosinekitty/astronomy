@@ -1620,7 +1620,12 @@ static int RiseSet(void)
     double error_minutes, rms_minutes;
     double sum_minutes = 0.0;
     double max_minutes = 0.0;
-    const double nudge_days = 0.01;
+    const double nudge_days = 1.0e-5;    /* just under 1 second */
+    extern int _AltitudeDiffCallCount;          /* undocumented global var used for performance testing only */
+    extern int _FindAscentMaxRecursionDepth;    /* undocumented global var used for performance testing only */
+
+    _AltitudeDiffCallCount = 0;
+    _FindAscentMaxRecursionDepth = -1;
 
     observer.latitude = observer.longitude = observer.height = NAN;
     current_body = BODY_INVALID;
@@ -1680,11 +1685,11 @@ static int RiseSet(void)
         {
             r_evt = Astronomy_SearchRiseSet(body, observer, DIRECTION_RISE, r_search_date, 366.0);
             if (r_evt.status != ASTRO_SUCCESS)
-                FAIL("C RiseSet(%s line %d): did not find %s rise event.\n", filename, lnum, name);
+                FAIL("C RiseSet(%s line %d): did not find %s rise event: status = %d\n", filename, lnum, name, r_evt.status);
 
             s_evt = Astronomy_SearchRiseSet(body, observer, DIRECTION_SET, s_search_date, 366.0);
             if (s_evt.status != ASTRO_SUCCESS)
-                FAIL("C RiseSet(%s line %d): did not find %s set event.\n", filename, lnum, name);
+                FAIL("C RiseSet(%s line %d): did not find %s set event: status = %d\n", filename, lnum, name, s_evt.status);
 
             /* Expect the current event to match the earlier of the found dates. */
             if (r_evt.time.tt < s_evt.time.tt)
@@ -1707,20 +1712,20 @@ static int RiseSet(void)
             s_search_date = Astronomy_AddDays(s_evt.time, nudge_days);
         }
 
-        if (a_dir != direction)
-            FAIL("C RiseSet(%s line %d): expected dir=%d but found %d\n", filename, lnum, a_dir, direction);
-
         error_minutes = (24.0 * 60.0) * ABS(a_evt.time.tt - correct_date.tt);
         sum_minutes += error_minutes * error_minutes;
         if (error_minutes > max_minutes)
             max_minutes = error_minutes;
 
-        if (error_minutes > 0.57)
+        if (error_minutes > 1.16)
             FAIL("C RiseSet(%s line %d): excessive prediction time error = %lg minutes.\n", filename, lnum, error_minutes);
+
+        if (a_dir != direction)
+            FAIL("C RiseSet(%s line %d): expected dir=%d but found %d\n", filename, lnum, direction, a_dir);
     }
 
     rms_minutes = V(sqrt(sum_minutes / lnum));
-    printf("C RiseSet: passed %d lines: time errors in minutes: rms=%0.4lf, max=%0.4lf\n", lnum, rms_minutes, max_minutes);
+    printf("C RiseSet: passed %d lines: time errors in minutes: rms=%0.4lf, max=%0.4lf, recur=%d, altcount=%d\n", lnum, rms_minutes, max_minutes, _FindAscentMaxRecursionDepth, _AltitudeDiffCallCount);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -1753,7 +1758,7 @@ static int RiseSetSlot(double ut1, double ut2, astro_direction_t dir, astro_obse
         diff = SECONDS_PER_DAY * ABS(result.time.ut - ut2);
         if (diff > maxDiff) maxDiff = diff;
     }
-    if (maxDiff > 0.9)
+    if (maxDiff > 0.13)
         FAIL("C RiseSetSlot(dir=%d): EXCESSIVE slot-test discrepancy = %0.6lf seconds.\n", dir, maxDiff);
     DEBUG("C RiseSetSlot(dir=%d): slot discrepancy = %0.6lf seconds.\n", dir, maxDiff);
     error = 0;
@@ -1817,7 +1822,7 @@ static int RiseSetReverse(void)
         if (diff > maxDiff) maxDiff = diff;
         time = Astronomy_AddDays(result.time, -nudge);
     }
-    if (maxDiff > 0.982)
+    if (maxDiff > 0.1)
         FAIL("C RiseSetReverse: EXCESSIVE forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
     DEBUG("C RiseSetReverse: forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
 

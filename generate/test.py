@@ -683,7 +683,7 @@ def RiseSetSlot(ut1, ut2, direction, observer):
         diff = SECONDS_PER_DAY * vabs(result.ut - ut2)
         maxDiff = max(maxDiff, diff)
 
-    if maxDiff > 0.9:
+    if maxDiff > 0.13:
         print('PY RiseSetSlot: EXCESSIVE {} slot-test discrepancy = {:0.6f} seconds.'.format(direction, maxDiff))
         return 1
     Debug('PY RiseSetSlot: {} slot-test discrepancy = {:0.6f} seconds.'.format(direction, maxDiff))
@@ -733,7 +733,7 @@ def RiseSetReverse():
         maxDiff = max(maxDiff, diff)
         time = result.AddDays(-nudge)
 
-    if maxDiff > 0.982:
+    if maxDiff > 0.1:
         print('PY RiseSetReverse: EXCESSIVE forward/backward discrepancy = {:0.6f} seconds.'.format(maxDiff))
         return 1
     Debug('PY RiseSetReverse: forward/backward discrepancy = {:0.6f} seconds.'.format(maxDiff))
@@ -826,13 +826,13 @@ def RiseSet(filename = 'riseset/riseset.txt'):
                 s_search_date = s_evt.AddDays(nudge_days)
 
             if a_dir != direction:
-                print('PY RiseSet({} line {}): expected dir={} but found {}'.format(filename, lnum, a_dir, direction))
+                print('PY RiseSet({} line {}): expected dir={} but found {}'.format(filename, lnum, direction, a_dir))
                 return 1
 
             error_minutes = (24.0 * 60.0) * vabs(a_evt.tt - correct_time.tt)
             sum_minutes += error_minutes ** 2
             max_minutes = vmax(max_minutes, error_minutes)
-            if error_minutes > 0.57:
+            if error_minutes > 1.16:
                 print('PY RiseSet({} line {}): excessive prediction time error = {} minutes.'.format(filename, lnum, error_minutes))
                 print('    correct = {}, calculated = {}'.format(correct_time, a_evt))
                 return 1

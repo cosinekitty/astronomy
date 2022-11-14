@@ -2,6 +2,6 @@
 
 # length
 
-fun [length](length.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [length](length.md)(): Double
 
 The total distance in AU represented by this vector.

@@ -2,7 +2,7 @@
 
 # EquatorEpoch
 
-enum [EquatorEpoch](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[EquatorEpoch](index.md)&gt; 
+enum [EquatorEpoch](index.md) : Enum&lt;[EquatorEpoch](index.md)&gt; 
 
 Selects the date for which the Earth's equator is to be used for representing equatorial coordinates.
 

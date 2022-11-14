@@ -2,6 +2,6 @@
 
 # symbol
 
-val [symbol](symbol.md): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)
+val [symbol](symbol.md): String
 
 3-character mnemonic symbol for the constellation, e.g. "Ori".

@@ -2,7 +2,7 @@
 
 # GlobalSolarEclipseInfo
 
-class [GlobalSolarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), peak: [Time](../-time/index.md), distance: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+class [GlobalSolarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: Double, peak: [Time](../-time/index.md), distance: Double, latitude: Double, longitude: Double)
 
 Reports the time and geographic location of the peak of a solar eclipse.
 
@@ -20,15 +20,15 @@ For total or annular eclipses, the obscuration field holds the fraction (0, 1] o
 
 | | |
 |---|---|
-| [GlobalSolarEclipseInfo](-global-solar-eclipse-info.md)<br>fun [GlobalSolarEclipseInfo](-global-solar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), peak: [Time](../-time/index.md), distance: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
+| [GlobalSolarEclipseInfo](-global-solar-eclipse-info.md)<br>fun [GlobalSolarEclipseInfo](-global-solar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: Double, peak: [Time](../-time/index.md), distance: Double, latitude: Double, longitude: Double) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [distance](distance.md)<br>val [distance](distance.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
+| [distance](distance.md)<br>val [distance](distance.md): Double<br>The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
 | [kind](kind.md)<br>val [kind](kind.md): [EclipseKind](../-eclipse-kind/index.md)<br>The type of solar eclipse: EclipseKind.Partial, EclipseKind.Annular, or EclipseKind.Total. |
-| [latitude](latitude.md)<br>val [latitude](latitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The geographic latitude at the center of the peak eclipse shadow. |
-| [longitude](longitude.md)<br>val [longitude](longitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The geographic longitude at the center of the peak eclipse shadow. |
-| [obscuration](obscuration.md)<br>val [obscuration](obscuration.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only). |
+| [latitude](latitude.md)<br>val [latitude](latitude.md): Double<br>The geographic latitude at the center of the peak eclipse shadow. |
+| [longitude](longitude.md)<br>val [longitude](longitude.md): Double<br>The geographic longitude at the center of the peak eclipse shadow. |
+| [obscuration](obscuration.md)<br>val [obscuration](obscuration.md): Double<br>The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only). |
 | [peak](peak.md)<br>val [peak](peak.md): [Time](../-time/index.md)<br>The date and time when the solar eclipse is darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. |

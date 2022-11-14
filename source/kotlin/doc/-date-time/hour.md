@@ -2,6 +2,6 @@
 
 # hour
 
-val [hour](hour.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)
+val [hour](hour.md): Int
 
 The hour of the day, 0..23.

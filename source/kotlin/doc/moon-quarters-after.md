@@ -2,7 +2,7 @@
 
 # moonQuartersAfter
 
-fun [moonQuartersAfter](moon-quarters-after.md)(startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)&lt;[MoonQuarterInfo](-moon-quarter-info/index.md)&gt;
+fun [moonQuartersAfter](moon-quarters-after.md)(startTime: [Time](-time/index.md)): Sequence&lt;[MoonQuarterInfo](-moon-quarter-info/index.md)&gt;
 
 Enumerates a series of consecutive moon quarter phase events.
 

@@ -2,4 +2,4 @@
 
 # Equatorial
 
-fun [Equatorial](-equatorial.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), vec: [Vector](../-vector/index.md))
+fun [Equatorial](-equatorial.md)(ra: Double, dec: Double, dist: Double, vec: [Vector](../-vector/index.md))

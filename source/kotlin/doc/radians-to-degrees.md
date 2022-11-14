@@ -2,6 +2,6 @@
 
 # radiansToDegrees
 
-fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[radiansToDegrees](radians-to-degrees.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun Double.[radiansToDegrees](radians-to-degrees.md)(): Double
 
 Convert an angle expressed in radians to an angle expressed in degrees.

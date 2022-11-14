@@ -2,7 +2,7 @@
 
 # lunarApsidesAfter
 
-fun [lunarApsidesAfter](lunar-apsides-after.md)(startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)&lt;[ApsisInfo](-apsis-info/index.md)&gt;
+fun [lunarApsidesAfter](lunar-apsides-after.md)(startTime: [Time](-time/index.md)): Sequence&lt;[ApsisInfo](-apsis-info/index.md)&gt;
 
 Enumerates a series of consecutive lunar apsides that occur after a given time.
 

@@ -2,6 +2,6 @@
 
 # diamDeg
 
-val [diamDeg](diam-deg.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [diamDeg](diam-deg.md): Double
 
 The apparent angular diameter of the Moon, in degrees, as seen from the center of the Earth.

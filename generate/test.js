@@ -1438,7 +1438,7 @@ function RiseSet() {
             max_minutes = error_minutes;
             Debug(`Line ${evt.lnum} : error = ${error_minutes.toFixed(4)}`);
         }
-        if (error_minutes > 0.57) {
+        if (error_minutes > 1.16) {
             console.log(`Expected ${evt.date.toISOString()}`);
             console.log(`Found    ${a_date.toString()}`);
             Fail("Excessive prediction time error.");
@@ -1476,7 +1476,7 @@ function RiseSetSlot(ut1, ut2, dir, observer) {
         if (diff > maxDiff) maxDiff = diff;
     }
 
-    if (maxDiff > 0.9) {
+    if (maxDiff > 0.13) {
         console.error(`JS RiseSetSlot(${dir}): EXCESSIVE slot-test discrepancy = ${maxDiff.toFixed(6)} seconds.`);
         return 1;
     }
@@ -1534,7 +1534,7 @@ function RiseSetReverse() {
         time = result.AddDays(-nudge);
     }
 
-    if (maxDiff > 0.982) {
+    if (maxDiff > 0.1) {
         console.error(`C# RiseSetReverse: EXCESSIVE forward/backward discrepancy = ${maxDiff.toFixed(6)} seconds.`);
         return 1;
     }

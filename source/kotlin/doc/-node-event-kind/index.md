@@ -2,7 +2,7 @@
 
 # NodeEventKind
 
-enum [NodeEventKind](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[NodeEventKind](index.md)&gt; 
+enum [NodeEventKind](index.md) : Enum&lt;[NodeEventKind](index.md)&gt; 
 
 Indicates whether a crossing through the ecliptic plane is ascending or descending.
 

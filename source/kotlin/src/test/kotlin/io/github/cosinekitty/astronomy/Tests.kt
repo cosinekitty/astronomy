@@ -1135,7 +1135,7 @@ class Tests {
             // Expect the current search result to match the earlier of the found dates.
             assertTrue(aDir == direction, "$filename line $lnum: expected direction $direction, bound found $aDir")
             val errorMinutes = (24.0 * 60.0) * abs(aEvt.tt - correctDate.tt)
-            assertTrue(errorMinutes < 0.57, "$filename line $lnum: excessive prediction time error = $errorMinutes minutes.")
+            assertTrue(errorMinutes < 1.16, "$filename line $lnum: excessive prediction time error = $errorMinutes minutes.")
         }
     }
 
@@ -1157,7 +1157,7 @@ class Tests {
             result = searchRiseSet(Body.Sun, observer, dir, time, +1.0) ?:
                 fail("Forward slot search failed for $dir after $time")
             diff = 86400.0 * abs(result.ut - ut2)
-            if (diff > 0.9)
+            if (diff > 0.13)
                 fail("Forward slot search: excessive error = $diff seconds at i=$i, time=$time, dir=$dir")
 
             ++i
@@ -1211,7 +1211,7 @@ class Tests {
             --i
         }
 
-        if (maxDiff > 0.982)
+        if (maxDiff > 0.1)
             fail("Excessive forward/reverse rise/set discrepancy = $maxDiff seconds.")
 
         // All even indexes in utList hold sunrise times.

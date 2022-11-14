@@ -2,6 +2,6 @@
 
 # year
 
-val [year](year.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)
+val [year](year.md): Int
 
 The integer year value.

@@ -2,7 +2,7 @@
 
 # tt
 
-val [tt](tt.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [tt](tt.md): Double
 
 Terrestrial Time days since noon on January 1, 2000.
 

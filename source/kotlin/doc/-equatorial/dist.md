@@ -2,6 +2,6 @@
 
 # dist
 
-val [dist](dist.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [dist](dist.md): Double
 
 Distance to the celestial body in AU.

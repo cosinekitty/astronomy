@@ -2,6 +2,6 @@
 
 # KM_PER_AU
 
-const val [KM_PER_AU](-k-m_-p-e-r_-a-u.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html) = 1.4959787069098932E8
+const val [KM_PER_AU](-k-m_-p-e-r_-a-u.md): Double = 1.4959787069098932E8
 
 The number of kilometers in one astronomical unit (AU).

@@ -2,6 +2,6 @@
 
 # dot
 
-infix fun [dot](dot.md)(other: [Vector](index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+infix fun [dot](dot.md)(other: [Vector](index.md)): Double
 
 Takes the dot product of two vectors.

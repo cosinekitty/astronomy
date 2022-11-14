@@ -2,4 +2,4 @@
 
 # EclipseEvent
 
-fun [EclipseEvent](-eclipse-event.md)(time: [Time](../-time/index.md), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+fun [EclipseEvent](-eclipse-event.md)(time: [Time](../-time/index.md), altitude: Double)

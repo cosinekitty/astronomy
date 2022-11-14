@@ -2,7 +2,7 @@
 
 # angleFromSun
 
-fun [angleFromSun](angle-from-sun.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [angleFromSun](angle-from-sun.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): Double
 
 Returns the angle between the given body and the Sun, as seen from the Earth.
 

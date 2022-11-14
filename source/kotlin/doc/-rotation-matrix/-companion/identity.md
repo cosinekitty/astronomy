@@ -3,7 +3,7 @@
 # identity
 
 
-@[JvmStatic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-static/index.html)
+@JvmStatic
 
 fun [identity](identity.md)(): [RotationMatrix](../index.md)
 

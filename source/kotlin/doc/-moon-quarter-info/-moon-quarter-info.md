@@ -2,4 +2,4 @@
 
 # MoonQuarterInfo
 
-fun [MoonQuarterInfo](-moon-quarter-info.md)(quarter: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), time: [Time](../-time/index.md))
+fun [MoonQuarterInfo](-moon-quarter-info.md)(quarter: Int, time: [Time](../-time/index.md))

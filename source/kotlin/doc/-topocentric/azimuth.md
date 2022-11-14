@@ -2,6 +2,6 @@
 
 # azimuth
 
-val [azimuth](azimuth.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [azimuth](azimuth.md): Double
 
 Compass direction around the horizon in degrees. 0=North, 90=East, 180=South, 270=West.

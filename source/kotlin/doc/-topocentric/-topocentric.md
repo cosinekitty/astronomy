@@ -2,4 +2,4 @@
 
 # Topocentric
 
-fun [Topocentric](-topocentric.md)(azimuth: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+fun [Topocentric](-topocentric.md)(azimuth: Double, altitude: Double, ra: Double, dec: Double)

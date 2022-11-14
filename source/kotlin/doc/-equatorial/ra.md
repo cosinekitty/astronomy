@@ -2,6 +2,6 @@
 
 # ra
 
-val [ra](ra.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [ra](ra.md): Double
 
 Right ascension in sidereal hours.

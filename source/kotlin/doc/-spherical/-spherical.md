@@ -2,4 +2,4 @@
 
 # Spherical
 
-fun [Spherical](-spherical.md)(lat: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), lon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+fun [Spherical](-spherical.md)(lat: Double, lon: Double, dist: Double)

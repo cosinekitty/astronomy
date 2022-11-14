@@ -2,6 +2,6 @@
 
 # second
 
-val [second](second.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [second](second.md): Double
 
 The floating point second value in the half-open range [0, 60).

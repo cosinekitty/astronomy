@@ -2,6 +2,6 @@
 
 # distanceKm
 
-val [distanceKm](distance-km.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [distanceKm](distance-km.md): Double
 
 The distance between the centers of the bodies in kilometers.

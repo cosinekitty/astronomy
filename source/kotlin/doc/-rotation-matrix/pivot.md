@@ -2,7 +2,7 @@
 
 # pivot
 
-fun [pivot](pivot.md)(axis: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), angle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [RotationMatrix](index.md)
+fun [pivot](pivot.md)(axis: Int, angle: Double): [RotationMatrix](index.md)
 
 Re-orients the rotation matrix by pivoting it by an angle around one of its axes.
 

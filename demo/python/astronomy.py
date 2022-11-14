@@ -159,7 +159,7 @@ def MassProduct(body):
     if body == Body.Uranus:   return _URANUS_GM
     if body == Body.Neptune:  return _NEPTUNE_GM
     if body == Body.Pluto:    return _PLUTO_GM
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 @enum.unique
 class _PrecessDir(enum.Enum):
@@ -384,8 +384,8 @@ class EarthNotAllowedError(Error):
 
 class InvalidBodyError(Error):
     """The celestial body is not allowed for this calculation."""
-    def __init__(self):
-        Error.__init__(self, 'Invalid astronomical body.')
+    def __init__(self, body):
+        Error.__init__(self, 'This body is not valid, or is not supported for this calculation: {}'.format(body))
 
 class BadVectorError(Error):
     """A vector magnitude is too small to have a direction in space."""
@@ -433,13 +433,13 @@ def PlanetOrbitalPeriod(body):
     """
     if isinstance(body, Body) and (0 <= body.value < len(_PlanetOrbitalPeriod)):
         return _PlanetOrbitalPeriod[body.value]
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 def _SynodicPeriod(body):
     if body == Body.Earth:
         raise EarthNotAllowedError()
     if body.value < 0 or body.value >= len(_PlanetOrbitalPeriod):
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
     if body == Body.Moon:
         return _MEAN_SYNODIC_MONTH
     return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
@@ -1731,7 +1731,7 @@ def SiderealTime(time):
     ----------
     time : Time
         The date and time for which to find GAST.
-        As an optimization, this function caches the sideral time value in `time`,
+        As an optimization, this function caches the sidereal time value in `time`,
         unless it has already been cached, in which case the cached value is reused.
 
     Returns
@@ -4444,7 +4444,7 @@ def HelioVector(body, time):
     if body == Body.SSB:
         return _CalcSolarSystemBarycenter(time)
 
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 
 def HelioDistance(body, time):
@@ -4773,7 +4773,7 @@ def BaryState(body, time):
             time
         )
 
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 
 def HelioState(body, time):
@@ -4842,7 +4842,7 @@ def HelioState(body, time):
             time
         )
 
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 
 def Equator(body, time, observer, ofdate, aberration):
@@ -5197,7 +5197,7 @@ def Horizon(time, observer, ra, dec, refraction):
     uwe = [sinlon, -coslon, 0.0]
 
     # Correct the vectors uze, une, uwe for the Earth's rotation by calculating
-    # sideral time. Call spin() for each uncorrected vector to rotate about
+    # sidereal time. Call spin() for each uncorrected vector to rotate about
     # the Earth's axis to yield corrected unit vectors uz, un, uw.
     # Multiply sidereal hours by -15 to convert to degrees and flip eastward
     # rotation of the Earth to westward apparent movement of objects with time.
@@ -5488,7 +5488,7 @@ def EclipticLongitude(body, time):
         An angular value in degrees indicating the ecliptic longitude of the body.
     """
     if body == Body.Sun:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
     hv = HelioVector(body, time)
     eclip = Ecliptic(hv)
     return eclip.elon
@@ -5706,7 +5706,7 @@ def SearchRelativeLongitude(body, targetRelLon, startTime):
     if body == Body.Earth:
         raise EarthNotAllowedError()
     if body in (Body.Moon, Body.Sun):
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
     syn = _SynodicPeriod(body)
     direction = +1 if _IsSuperiorPlanet(body) else -1
     # Iterate until we converge on the desired event.
@@ -5778,7 +5778,7 @@ def SearchMaxElongation(body, startTime):
         s1 = 40.0
         s2 = 50.0
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
     syn = _SynodicPeriod(body)
     iter_count = 1
     while iter_count <= 2:
@@ -6178,7 +6178,7 @@ def _VisualMagnitude(body, phase, helio_dist, geo_dist):
     elif body == Body.Pluto:
         c0 = -1.00; c1 = +4.00
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     x = phase / 100.0
     mag = c0 + x*(c1 + x*(c2 + x*c3))
@@ -6291,7 +6291,7 @@ def SearchPeakMagnitude(body, startTime):
     s1 = 10.0
     s2 = 30.0
     if body != Body.Venus:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     iter_count = 1
     while iter_count <= 2:
@@ -6494,145 +6494,179 @@ class Direction(enum.Enum):
     Rise = +1
     Set  = -1
 
-def _ForwardSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error_func, altitude_error_context):
-    if body == Body.Earth:
-        raise EarthNotAllowedError()
+class _AscentInfo:
+    def __init__(self, tx, ty, ax, ay):
+        self.tx = tx
+        self.ty = ty
+        self.ax = ax
+        self.ay = ay
 
-    if direction == Direction.Rise:
-        ha_before = 12.0    # minimum altitude (bottom) happens BEFORE the body rises.
-        ha_after  =  0.0    # maximum altitude (culmination) happens AFTER the body rises.
-    elif direction == Direction.Set:
-        ha_before =  0.0    # culmination happens BEFORE the body sets.
-        ha_after  = 12.0    # bottom happens AFTER the body sets.
-    else:
-        raise Error('Invalid value for direction parameter')
+    def __str__(self):
+        return 'AscentInfo(tx={}, ty={}, ax={}, ay={})'.format(self.tx, self.ty, self.ax, self.ay)
 
-    # We cannot possibly satisfy a forward search without a positive time limit.
-    if limitDays <= 0.0:
-        return None
-
-    # See if the body is currently above/below the horizon.
-    # If we are looking for next rise time and the body is below the horizon,
-    # we use the current time as the lower time bound and the next culmination
-    # as the upper bound.
-    # If the body is above the horizon, we search for the next bottom and use it
-    # as the lower bound and the next culmination after that bottom as the upper bound.
-    # The same logic applies for finding set times, only we swap the hour angles.
-    time_start = startTime
-    alt_before = altitude_error_func(altitude_error_context, time_start)
-    if alt_before > 0.0:
-        # We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-        evt_before = SearchHourAngle(body, observer, ha_before, time_start, +1)
-        time_before = evt_before.time
-        alt_before = altitude_error_func(altitude_error_context, time_before)
-    else:
-        # We are before or at the sought ebvent, so we find the next "after" event (bottom/culm),
-        # and use the current time as the "before" event.
-        time_before = time_start
-
-    evt_after = SearchHourAngle(body, observer, ha_after, time_before, +1)
-    alt_after = altitude_error_func(altitude_error_context, evt_after.time)
-
-    while True:
-        if alt_before <= 0.0 and alt_after > 0.0:
-            # Search between the "before time" and the "after time" for the desired event.
-            event_time = Search(altitude_error_func, altitude_error_context, time_before, evt_after.time, 1.0)
-            if event_time is not None:
-                # If we found the rise/set time, but it falls outside limitDays, fail the search.
-                if event_time.ut > startTime.ut + limitDays:
-                    return None
-                # The search succeeded.
-                return event_time
-        # We didn't find the desired event, so use the "after" time to find the next "before" event.
-        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, +1)
-        if evt_before.time.ut >= time_start.ut + limitDays:
-            return None
-        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, +1)
-        time_before = evt_before.time
-        alt_before = altitude_error_func(altitude_error_context, evt_before.time)
-        alt_after = altitude_error_func(altitude_error_context, evt_after.time)
-
-def _BackwardSearchAltitude(body, observer, direction, startTime, limitDays, altitude_error_func, altitude_error_context):
-    if body == Body.Earth:
-        raise EarthNotAllowedError()
-
-    if direction == Direction.Rise:
-        ha_before = 12.0    # minimum altitude (bottom) happens BEFORE the body rises.
-        ha_after  =  0.0    # maximum altitude (culmination) happens AFTER the body rises.
-    elif direction == Direction.Set:
-        ha_before =  0.0    # culmination happens BEFORE the body sets.
-        ha_after  = 12.0    # bottom happens AFTER the body sets.
-    else:
-        raise Error('Invalid value for direction parameter')
-
-    # We cannot possibly satisfy a backward search without a negative time limit.
-    if limitDays >= 0.0:
-        return None
-
-    # See if the body is currently above/below the horizon.
-    # If we are looking for previous rise time and the body is above the horizon,
-    # we use the current time as the upper time bound and the previous bottom as the lower time bound.
-    # If the body is below the horizon, we search for the previous culmination and use it
-    # as the upper time bound. Then we search for the bottom before that culmination and
-    # use it as the lower time bound.
-    # The same logic applies for finding set times; altitude_error_func and
-    # altitude_error_context ensure that the desired event is represented
-    # by ascending through zero, so the Search function works correctly.
-    time_start = startTime
-    alt_after = altitude_error_func(altitude_error_context, time_start)
-    if alt_after < 0.0:
-        evt_after = SearchHourAngle(body, observer, ha_after, time_start, -1)
-        time_after = evt_after.time
-        alt_after = altitude_error_func(altitude_error_context, time_after)
-    else:
-        time_after = time_start
-
-    evt_before = SearchHourAngle(body, observer, ha_before, time_after, -1)
-    alt_before = altitude_error_func(altitude_error_context, evt_before.time)
-
-    while True:
-        if alt_before <= 0.0 and alt_after > 0.0:
-            # Search between the "before time" and the "after time" for the desired event.
-            event_time = Search(altitude_error_func, altitude_error_context, evt_before.time, time_after, 1.0)
-            if event_time is not None:
-                # If we found the rise/set time, but it falls outside limitDays, fail the search.
-                if event_time.ut < startTime.ut + limitDays:
-                    return None
-                # The search succeeded.
-                return event_time
-        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, -1)
-        if evt_after.time.ut <= time_start.ut + limitDays:
-            return None
-        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, -1)
-        time_after = evt_after.time
-        alt_before = altitude_error_func(altitude_error_context, evt_before.time)
-        alt_after = altitude_error_func(altitude_error_context, evt_after.time)
-
-
-class _peak_altitude_context:
-    def __init__(self, body, direction, observer, body_radius_au):
+class _altitude_context:
+    def __init__(self, body, direction, observer, bodyRadiusAu, targetAltitude):
         self.body = body
         self.direction = direction
         self.observer = observer
-        self.body_radius_au = body_radius_au
+        self.bodyRadiusAu = bodyRadiusAu
+        self.targetAltitude = targetAltitude
 
-
-def _peak_altitude(context, time):
-    # Return the angular altitude above or below the horizon
-    # of the highest part (the peak) of the given object.
-    # This is defined as the apparent altitude of the center of the body plus
-    # the body's angular radius.
-    # The 'direction' parameter controls whether the angle is measured
-    # positive above the horizon or positive below the horizon,
-    # depending on whether the caller wants rise times or set times, respectively.
-
+def _altdiff(context, time):
     ofdate = Equator(context.body, time, context.observer, True, True)
-
-    # We calculate altitude without refraction, then add fixed refraction near the horizon.
-    # This gives us the time of rise/set without the extra work.
     hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
-    alt = hor.altitude + math.degrees(context.body_radius_au / ofdate.dist)
-    return context.direction.value * (alt + _REFRACTION_NEAR_HORIZON)
+    altitude = hor.altitude + math.degrees(math.asin(context.bodyRadiusAu / ofdate.dist))
+    return context.direction.value*(altitude - context.targetAltitude)
+
+def _MaxAltitudeSlope(body, latitude):
+    # Calculate the maximum possible rate that this body's altitude
+    # could change [degrees/day] as seen by this observer.
+    # First use experimentally determined extreme bounds for this body
+    # of how much topocentric RA and DEC can ever change per rate of time.
+    # We need minimum possible d(RA)/dt, and maximum possible magnitude of d(DEC)/dt.
+    # Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
+    # Then calculate the resulting maximum possible altitude change rate.
+
+    if not (-90.0 <= latitude <= +90.0):
+        raise Error('Invalid geographic latitude: {}'.format(latitude))
+
+    if body == Body.Moon:
+        deriv_ra  = +4.5
+        deriv_dec = +8.2
+    elif body == Body.Sun:
+        deriv_ra  = +0.8
+        deriv_dec = +0.5
+    elif body == Body.Mercury:
+        deriv_ra  = -1.6
+        deriv_dec = +1.0
+    elif body == Body.Venus:
+        deriv_ra  = -0.8
+        deriv_dec = +0.6
+    elif body == Body.Mars:
+        deriv_ra  = -0.5
+        deriv_dec = +0.4
+    elif body in [Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]:
+        deriv_ra  = -0.2
+        deriv_dec = +0.2
+    elif body == Body.Earth:
+        raise EarthNotAllowedError()
+    else:
+        raise InvalidBodyError(body)
+
+    latrad = math.radians(latitude)
+    return abs(((360.0 / _SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra)*math.cos(latrad)) + abs(deriv_dec*math.sin(latrad))
+
+
+def _FindAscent(depth, context, max_deriv_alt, t1, t2, a1, a2):
+    # See if we can find any time interval where the altitude-diff function
+    # rises from non-positive to positive.
+
+    if a1 < 0.0 and a2 >= 0.0:
+        # Trivial success case: the endpoints already rise through zero.
+        return _AscentInfo(t1, t2, a1, a2)
+
+    if a1 >= 0.0 and a2 < 0.0:
+        # Trivial failure case: Assume Nyquist condition prevents an ascent.
+        return None
+
+    if depth > 17:
+        # Safety valve: do not allow unlimited recursion.
+        # This should never happen if the rest of the logic is working correctly,
+        # so fail the whole search if it does happen. It's a bug!
+        raise InternalError()
+
+    # Both altitudes are on the same side of zero: both are negative, or both are non-negative.
+    # There could be a convex "hill" or a concave "valley" that passes through zero.
+    # In polar regions sometimes there is a rise/set or set/rise pair within minutes of each other.
+    # For example, the Moon can be below the horizon, then the very top of it becomes
+    # visible (moonrise) for a few minutes, then it moves sideways and down below
+    # the horizon again (moonset). We want to catch these cases.
+    # However, for efficiency and practicality concerns, because the rise/set search itself
+    # has a 0.1 second threshold, we do not worry about rise/set pairs that are less than
+    # one second apart. These are marginal cases that are rendered highly uncertain
+    # anyway, due to unpredictable atmospheric refraction conditions (air temperature and pressure).
+
+    dt = t2.ut - t1.ut
+    if dt * _SECONDS_PER_DAY < 1.0:
+        return None
+
+    # Is it possible to reach zero from the altitude that is closer to zero?
+    da = min(abs(a1), abs(a2))
+
+    # Without loss of generality, assume |a1| <= |a2|.
+    # (Reverse the argument in the case |a2| < |a1|.)
+    # Imagine you have to "drive" from a1 to 0, then back to a2.
+    # You can't go faster than max_deriv_alt. If you can't reach 0 in half the time,
+    # you certainly don't have time to reach 0, turn around, and still make your way
+    # back up to a2 (which is at least as far from 0 than a1 is) in the time interval dt.
+    # Therefore, the time threshold is half the time interval, or dt/2.
+    if da > max_deriv_alt*(dt / 2):
+        # Prune: the altitude cannot change fast enough to reach zero.
+        return None
+
+    # Bisect the time interval and evaluate the altitude at the midpoint.
+    tmid = Time((t1.ut + t2.ut)/2)
+    amid = _altdiff(context, tmid)
+
+    return (
+        _FindAscent(1+depth, context, max_deriv_alt, t1, tmid, a1, amid) or
+        _FindAscent(1+depth, context, max_deriv_alt, tmid, t2, amid, a2)
+    )
+
+
+def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, targetAltitude):
+    if not (-90.0 <= targetAltitude <= +90.0):
+        raise Error('Invalid target altitude angle: {}'.format(targetAltitude))
+
+    RISE_SET_DT = 0.42  # 10.08 hours: Nyquist-safe for 22-hour period.
+    max_deriv_alt = _MaxAltitudeSlope(body, observer.latitude)
+    context = _altitude_context(body, direction, observer, bodyRadiusAu, targetAltitude)
+
+    # We allow searching forward or backward in time.
+    # But we want to keep t1 < t2, so we need a few if/else statements.
+    t1 = startTime
+    t2 = t1
+    a1 = _altdiff(context, t1)
+    a2 = a1
+
+    while True:
+        if limitDays < 0.0:
+            t1 = t2.AddDays(-RISE_SET_DT)
+            a1 = _altdiff(context, t1)
+        else:
+            t2 = t1.AddDays(+RISE_SET_DT)
+            a2 = _altdiff(context, t2)
+
+        ascent = _FindAscent(0, context, max_deriv_alt, t1, t2, a1, a2)
+        if ascent:
+            # We found a time interval [t1, t2] that contains an alt-diff
+            # rising from negative a1 to non-negative a2.
+            # Search for the time where the root occurs.
+            time = Search(_altdiff, context, ascent.tx, ascent.ty, 0.1)
+            if time:
+                # Now that we have a solution, we have to check whether it goes outside the time bounds.
+                if limitDays < 0.0:
+                    if time.ut < startTime.ut + limitDays:
+                        return None
+                else:
+                    if time.ut > startTime.ut + limitDays:
+                        return None
+                return time     # success!
+
+            # The search should have succeeded. Something is wrong with the ascent finder!
+            raise InternalError()
+
+        # There is no ascent in this interval, so keep searching.
+        if limitDays < 0.0:
+            if t1.ut < startTime.ut + limitDays:
+                return None
+            t2 = t1
+            a2 = a1
+        else:
+            if t2.ut > startTime.ut + limitDays:
+                return None
+            t1 = t2
+            a1 = a2
 
 
 def SearchRiseSet(body, observer, direction, startTime, limitDays):
@@ -6681,36 +6715,16 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
         If the rise or set time is found within the specified time window,
         this function returns that time. Otherwise, it returns `None`.
     """
-    if body == Body.Earth:
-        raise EarthNotAllowedError()
-
     if body == Body.Sun:
-        body_radius = _SUN_RADIUS_AU
+        bodyRadiusAu = _SUN_RADIUS_AU
     elif body == Body.Moon:
-        body_radius = _MOON_EQUATORIAL_RADIUS_AU
+        bodyRadiusAu = _MOON_EQUATORIAL_RADIUS_AU
     else:
-        body_radius = 0.0
-
-    context = _peak_altitude_context(body, direction, observer, body_radius)
-    if limitDays < 0.0:
-        return _BackwardSearchAltitude(body, observer, direction, startTime, limitDays, _peak_altitude, context)
-    return _ForwardSearchAltitude(body, observer, direction, startTime, limitDays, _peak_altitude, context)
+        bodyRadiusAu = 0.0
+    return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, -_REFRACTION_NEAR_HORIZON)
 
 
-class _altitude_error_context:
-    def __init__(self, body, direction, observer, altitude):
-        self.body = body
-        self.direction = direction
-        self.observer = observer
-        self.altitude = altitude
-
-def _altitude_error_func(context, time):
-    ofdate = Equator(context.body, time, context.observer, True, True)
-    hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
-    return context.direction.value * (hor.altitude - context.altitude)
-
-
-def SearchAltitude(body, observer, direction, dateStart, limitDays, altitude):
+def SearchAltitude(body, observer, direction, startTime, limitDays, altitude):
     """Finds the next time a body reaches a given altitude.
 
     Finds when the given body ascends or descends through a given
@@ -6760,12 +6774,7 @@ def SearchAltitude(body, observer, direction, dateStart, limitDays, altitude):
         If the altitude event time is found within the specified time window,
         this function returns that time. Otherwise, it returns `None`.
     """
-    if not (-90.0 <= altitude <= +90.0):
-        raise Error('Invalid altitude: {}'.format(altitude))
-    context = _altitude_error_context(body, direction, observer, altitude)
-    if limitDays < 0.0:
-        return _BackwardSearchAltitude(body, observer, direction, dateStart, limitDays, _altitude_error_func, context)
-    return _ForwardSearchAltitude(body, observer, direction, dateStart, limitDays, _altitude_error_func, context)
+    return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, 0.0, altitude)
 
 class SeasonInfo:
     """The dates and times of changes of season for a given calendar year.
@@ -9414,7 +9423,7 @@ def SearchTransit(body, startTime):
     elif body == Body.Venus:
         planet_radius_km = 6051.8
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     search_time = startTime
     while True:
@@ -9996,7 +10005,7 @@ def RotationAxis(body, time):
         w = 302.695 + 56.3625225*d
 
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     # Calculate the north pole vector using the given angles.
     radlat = math.radians(dec)

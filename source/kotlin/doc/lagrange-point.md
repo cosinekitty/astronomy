@@ -2,7 +2,7 @@
 
 # lagrangePoint
 
-fun [lagrangePoint](lagrange-point.md)(point: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), time: [Time](-time/index.md), majorBody: [Body](-body/index.md), minorBody: [Body](-body/index.md)): [StateVector](-state-vector/index.md)
+fun [lagrangePoint](lagrange-point.md)(point: Int, time: [Time](-time/index.md), majorBody: [Body](-body/index.md), minorBody: [Body](-body/index.md)): [StateVector](-state-vector/index.md)
 
 Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
 

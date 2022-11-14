@@ -2,6 +2,6 @@
 
 # toDays
 
-fun [toDays](to-days.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [toDays](to-days.md)(): Double
 
 Convert this date and time to the floating point number of days since the J2000 epoch.

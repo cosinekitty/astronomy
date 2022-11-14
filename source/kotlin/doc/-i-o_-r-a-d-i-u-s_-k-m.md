@@ -2,6 +2,6 @@
 
 # IO_RADIUS_KM
 
-const val [IO_RADIUS_KM](-i-o_-r-a-d-i-u-s_-k-m.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html) = 1821.6
+const val [IO_RADIUS_KM](-i-o_-r-a-d-i-u-s_-k-m.md): Double = 1821.6
 
 The mean radius of Jupiter's moon Io, expressed in kilometers.

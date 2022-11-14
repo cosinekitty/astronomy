@@ -2,7 +2,7 @@
 
 # refractionAngle
 
-fun [refractionAngle](refraction-angle.md)(refraction: [Refraction](-refraction/index.md), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [refractionAngle](refraction-angle.md)(refraction: [Refraction](-refraction/index.md), altitude: Double): Double
 
 Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
 

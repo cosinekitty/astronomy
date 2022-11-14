@@ -2,7 +2,7 @@
 
 # TransitInfo
 
-class [TransitInfo](index.md)(start: [Time](../-time/index.md), peak: [Time](../-time/index.md), finish: [Time](../-time/index.md), separation: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+class [TransitInfo](index.md)(start: [Time](../-time/index.md), peak: [Time](../-time/index.md), finish: [Time](../-time/index.md), separation: Double)
 
 Information about a transit of Mercury or Venus, as seen from the Earth.
 
@@ -16,7 +16,7 @@ The calculations are performed from the point of view of a geocentric observer.
 
 | | |
 |---|---|
-| [TransitInfo](-transit-info.md)<br>fun [TransitInfo](-transit-info.md)(start: [Time](../-time/index.md), peak: [Time](../-time/index.md), finish: [Time](../-time/index.md), separation: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
+| [TransitInfo](-transit-info.md)<br>fun [TransitInfo](-transit-info.md)(start: [Time](../-time/index.md), peak: [Time](../-time/index.md), finish: [Time](../-time/index.md), separation: Double) |
 
 ## Properties
 
@@ -24,5 +24,5 @@ The calculations are performed from the point of view of a geocentric observer.
 |---|---|
 | [finish](finish.md)<br>val [finish](finish.md): [Time](../-time/index.md)<br>Date and time at the end of the transit. |
 | [peak](peak.md)<br>val [peak](peak.md): [Time](../-time/index.md)<br>Date and time of the peak of the transit. |
-| [separation](separation.md)<br>val [separation](separation.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Angular separation in arcminutes between the centers of the Sun and the planet at time peak. |
+| [separation](separation.md)<br>val [separation](separation.md): Double<br>Angular separation in arcminutes between the centers of the Sun and the planet at time peak. |
 | [start](start.md)<br>val [start](start.md): [Time](../-time/index.md)<br>Date and time at the beginning of the transit. |

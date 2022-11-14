@@ -2,7 +2,7 @@
 
 # observerGravity
 
-fun [observerGravity](observer-gravity.md)(latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), height: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [observerGravity](observer-gravity.md)(latitude: Double, height: Double): Double
 
 Calculates the gravitational acceleration experienced by an observer on the Earth.
 

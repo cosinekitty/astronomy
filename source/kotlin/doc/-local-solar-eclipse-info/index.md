@@ -2,7 +2,7 @@
 
 # LocalSolarEclipseInfo
 
-class [LocalSolarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), partialBegin: [EclipseEvent](../-eclipse-event/index.md), totalBegin: [EclipseEvent](../-eclipse-event/index.md)?, peak: [EclipseEvent](../-eclipse-event/index.md), totalEnd: [EclipseEvent](../-eclipse-event/index.md)?, partialEnd: [EclipseEvent](../-eclipse-event/index.md))
+class [LocalSolarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: Double, partialBegin: [EclipseEvent](../-eclipse-event/index.md), totalBegin: [EclipseEvent](../-eclipse-event/index.md)?, peak: [EclipseEvent](../-eclipse-event/index.md), totalEnd: [EclipseEvent](../-eclipse-event/index.md)?, partialEnd: [EclipseEvent](../-eclipse-event/index.md))
 
 Information about a solar eclipse as seen by an observer at a given time and geographic location.
 
@@ -18,14 +18,14 @@ There are 5 "event" fields, each of which contains a time and a solar altitude. 
 
 | | |
 |---|---|
-| [LocalSolarEclipseInfo](-local-solar-eclipse-info.md)<br>fun [LocalSolarEclipseInfo](-local-solar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), partialBegin: [EclipseEvent](../-eclipse-event/index.md), totalBegin: [EclipseEvent](../-eclipse-event/index.md)?, peak: [EclipseEvent](../-eclipse-event/index.md), totalEnd: [EclipseEvent](../-eclipse-event/index.md)?, partialEnd: [EclipseEvent](../-eclipse-event/index.md)) |
+| [LocalSolarEclipseInfo](-local-solar-eclipse-info.md)<br>fun [LocalSolarEclipseInfo](-local-solar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: Double, partialBegin: [EclipseEvent](../-eclipse-event/index.md), totalBegin: [EclipseEvent](../-eclipse-event/index.md)?, peak: [EclipseEvent](../-eclipse-event/index.md), totalEnd: [EclipseEvent](../-eclipse-event/index.md)?, partialEnd: [EclipseEvent](../-eclipse-event/index.md)) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
 | [kind](kind.md)<br>val [kind](kind.md): [EclipseKind](../-eclipse-kind/index.md)<br>The type of solar eclipse: EclipseKind.Partial, EclipseKind.Annular, or EclipseKind.Total. |
-| [obscuration](obscuration.md)<br>val [obscuration](obscuration.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak. |
+| [obscuration](obscuration.md)<br>val [obscuration](obscuration.md): Double<br>The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak. |
 | [partialBegin](partial-begin.md)<br>val [partialBegin](partial-begin.md): [EclipseEvent](../-eclipse-event/index.md)<br>The time and Sun altitude at the beginning of the eclipse. |
 | [partialEnd](partial-end.md)<br>val [partialEnd](partial-end.md): [EclipseEvent](../-eclipse-event/index.md)<br>The time and Sun altitude at the end of the eclipse. |
 | [peak](peak.md)<br>val [peak](peak.md): [EclipseEvent](../-eclipse-event/index.md)<br>The time and Sun altitude when the eclipse reaches its peak. |

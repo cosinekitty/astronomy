@@ -2,6 +2,6 @@
 
 # distanceAu
 
-val [distanceAu](distance-au.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [distanceAu](distance-au.md): Double
 
 The distance between the centers of the bodies in astronomical units.

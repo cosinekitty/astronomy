@@ -2,7 +2,7 @@
 
 # Direction
 
-enum [Direction](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[Direction](index.md)&gt; 
+enum [Direction](index.md) : Enum&lt;[Direction](index.md)&gt; 
 
 Selects whether to search for a rising event or a setting event for a celestial body.
 
@@ -17,5 +17,5 @@ Selects whether to search for a rising event or a setting event for a celestial 
 
 | Name | Summary |
 |---|---|
-| [sign](sign.md)<br>val [sign](sign.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>A numeric value that is helpful in formulas involving rise/set. The sign is +1 for a rising event, or -1 for a setting event. |
+| [sign](sign.md)<br>val [sign](sign.md): Int<br>A numeric value that is helpful in formulas involving rise/set. The sign is +1 for a rising event, or -1 for a setting event. |
 

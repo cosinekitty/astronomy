@@ -2,7 +2,7 @@
 
 # ut
 
-val [ut](ut.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [ut](ut.md): Double
 
 UT1/UTC number of days since noon on January 1, 2000.
 

@@ -2,6 +2,6 @@
 
 # lat
 
-val [lat](lat.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [lat](lat.md): Double
 
 The latitude angle: -90..+90 degrees.

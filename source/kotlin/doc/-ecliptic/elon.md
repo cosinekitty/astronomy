@@ -2,6 +2,6 @@
 
 # elon
 
-val [elon](elon.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [elon](elon.md): Double
 
 Longitude in degrees around the ecliptic plane prograde from the equinox.

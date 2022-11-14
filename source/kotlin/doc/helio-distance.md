@@ -2,7 +2,7 @@
 
 # helioDistance
 
-fun [helioDistance](helio-distance.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [helioDistance](helio-distance.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): Double
 
 Calculates the distance between a body and the Sun at a given time.
 

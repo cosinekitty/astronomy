@@ -2,7 +2,7 @@
 
 # Spherical
 
-data class [Spherical](index.md)(lat: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), lon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
+data class [Spherical](index.md)(lat: Double, lon: Double, dist: Double)
 
 Spherical coordinates: latitude, longitude, distance.
 
@@ -10,7 +10,7 @@ Spherical coordinates: latitude, longitude, distance.
 
 | | |
 |---|---|
-| [Spherical](-spherical.md)<br>fun [Spherical](-spherical.md)(lat: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), lon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dist: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
+| [Spherical](-spherical.md)<br>fun [Spherical](-spherical.md)(lat: Double, lon: Double, dist: Double) |
 
 ## Functions
 
@@ -23,6 +23,6 @@ Spherical coordinates: latitude, longitude, distance.
 
 | Name | Summary |
 |---|---|
-| [dist](dist.md)<br>val [dist](dist.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Distance in AU. |
-| [lat](lat.md)<br>val [lat](lat.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The latitude angle: -90..+90 degrees. |
-| [lon](lon.md)<br>val [lon](lon.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The longitude angle: 0..360 degrees. |
+| [dist](dist.md)<br>val [dist](dist.md): Double<br>Distance in AU. |
+| [lat](lat.md)<br>val [lat](lat.md): Double<br>The latitude angle: -90..+90 degrees. |
+| [lon](lon.md)<br>val [lon](lon.md): Double<br>The longitude angle: 0..360 degrees. |
