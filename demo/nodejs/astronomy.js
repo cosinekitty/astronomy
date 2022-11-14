@@ -4800,23 +4800,7 @@ function BodyRadiusAu(body) {
  */
 function SearchRiseSet(body, observer, direction, dateStart, limitDays) {
     const body_radius_au = BodyRadiusAu(body);
-    function peak_altitude(t) {
-        // Return the angular altitude above or below the horizon
-        // of the highest part (the peak) of the given object.
-        // This is defined as the apparent altitude of the center of the body plus
-        // the body's angular radius.
-        // The 'direction' variable in the enclosing function controls
-        // whether the angle is measured positive above the horizon or
-        // positive below the horizon, depending on whether the caller
-        // wants rise times or set times, respectively.
-        const ofdate = Equator(body, t, observer, true, true);
-        const hor = Horizon(t, observer, ofdate.ra, ofdate.dec);
-        const alt = hor.altitude + exports.RAD2DEG * (body_radius_au / ofdate.dist) + REFRACTION_NEAR_HORIZON;
-        return direction * alt;
-    }
-    return ((limitDays < 0)
-        ? BackwardSearchAltitude(body, observer, direction, dateStart, limitDays, peak_altitude)
-        : ForwardSearchAltitude(body, observer, direction, dateStart, limitDays, peak_altitude));
+    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, body_radius_au, -REFRACTION_NEAR_HORIZON);
 }
 exports.SearchRiseSet = SearchRiseSet;
 /**
@@ -4875,149 +4859,176 @@ exports.SearchRiseSet = SearchRiseSet;
 function SearchAltitude(body, observer, direction, dateStart, limitDays, altitude) {
     if (!Number.isFinite(altitude) || altitude < -90 || altitude > +90)
         throw `Invalid altitude angle: ${altitude}`;
-    function altitude_error(t) {
-        const ofdate = Equator(body, t, observer, true, true);
-        const hor = Horizon(t, observer, ofdate.ra, ofdate.dec);
-        return direction * (hor.altitude - altitude);
-    }
-    return ((limitDays < 0)
-        ? BackwardSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error)
-        : ForwardSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error));
+    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, 0, altitude);
 }
 exports.SearchAltitude = SearchAltitude;
-function ForwardSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error) {
-    VerifyObserver(observer);
-    VerifyNumber(limitDays);
-    if (body === Body.Earth)
-        throw 'Cannot find altitude event for the Earth.';
-    let ha_before, ha_after;
-    if (direction === +1) {
-        ha_before = 12; // minimum altitude (bottom) happens BEFORE the body rises.
-        ha_after = 0; // maximum altitude (culmination) happens AFTER the body rises.
-    }
-    else if (direction === -1) {
-        ha_before = 0; // culmination happens BEFORE the body sets.
-        ha_after = 12; // bottom happens AFTER the body sets.
-    }
-    else {
-        throw `Invalid direction parameter ${direction} -- must be +1 or -1`;
-    }
-    // We cannot possibly satisfy a forward search without a positive time limit.
-    if (limitDays <= 0)
-        return null;
-    // See if the body is currently above/below the horizon.
-    // If we are looking for next rise time and the body is below the horizon,
-    // we use the current time as the lower time bound and the next culmination
-    // as the upper bound.
-    // If the body is above the horizon, we search for the next bottom and use it
-    // as the lower bound and the next culmination after that bottom as the upper bound.
-    // The same logic applies for finding set times, only we swap the hour angles.
-    // The peak_altitude() function already considers the 'direction' parameter.
-    let time_start = MakeTime(dateStart);
-    let time_before;
-    let evt_before;
-    let evt_after;
-    let error_before = altitude_error(time_start);
-    let error_after;
-    if (error_before > 0) {
-        // We are past the sought event, so we have to wait for the next "before" event (culm/bottom).
-        evt_before = SearchHourAngle(body, observer, ha_before, time_start, +1);
-        time_before = evt_before.time;
-        error_before = altitude_error(time_before);
-    }
-    else {
-        // We are before or at the sought event, so we find the next "after" event (bottom/culm),
-        // and use the current time as the "before" event.
-        time_before = time_start;
-    }
-    evt_after = SearchHourAngle(body, observer, ha_after, time_before, +1);
-    error_after = altitude_error(evt_after.time);
-    while (true) {
-        if (error_before <= 0 && error_after > 0) {
-            // Search between evt_before and evt_after for the desired event.
-            let tx = Search(altitude_error, time_before, evt_after.time, { init_f1: error_before, init_f2: error_after });
-            if (tx) {
-                // If we found the rise/set time, but it falls outside limitDays, fail the search.
-                if (tx.ut > time_start.ut + limitDays)
-                    return null;
-                // The search succeeded.
-                return tx;
-            }
-        }
-        // If we didn't find the desired event, use time_after to find the next before-event.
-        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, +1);
-        if (evt_before.time.ut >= time_start.ut + limitDays)
-            return null;
-        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, +1);
-        time_before = evt_before.time;
-        error_before = altitude_error(evt_before.time);
-        error_after = altitude_error(evt_after.time);
+class AscentInfo {
+    constructor(tx, ty, ax, ay) {
+        this.tx = tx;
+        this.ty = ty;
+        this.ax = ax;
+        this.ay = ay;
     }
 }
-function BackwardSearchAltitude(body, observer, direction, dateStart, limitDays, altitude_error) {
+function FindAscent(depth, altdiff, max_deriv_alt, t1, t2, a1, a2) {
+    // See if we can find any time interval where the altitude-diff function
+    // rises from non-positive to positive.
+    if (a1 < 0.0 && a2 >= 0.0) {
+        // Trivial success case: the endpoints already rise through zero.
+        return new AscentInfo(t1, t2, a1, a2);
+    }
+    if (a1 >= 0.0 && a2 < 0.0) {
+        // Trivial failure case: Assume Nyquist condition prevents an ascent.
+        return null;
+    }
+    if (depth > 17) {
+        // Safety valve: do not allow unlimited recursion.
+        // This should never happen if the rest of the logic is working correctly,
+        // so fail the whole search if it does happen. It's a bug!
+        throw `Excessive recursion in rise/set ascent search.`;
+    }
+    // Both altitudes are on the same side of zero: both are negative, or both are non-negative.
+    // There could be a convex "hill" or a concave "valley" that passes through zero.
+    // In polar regions sometimes there is a rise/set or set/rise pair within minutes of each other.
+    // For example, the Moon can be below the horizon, then the very top of it becomes
+    // visible (moonrise) for a few minutes, then it moves sideways and down below
+    // the horizon again (moonset). We want to catch these cases.
+    // However, for efficiency and practicality concerns, because the rise/set search itself
+    // has a 0.1 second threshold, we do not worry about rise/set pairs that are less than
+    // one second apart. These are marginal cases that are rendered highly uncertain
+    // anyway, due to unpredictable atmospheric refraction conditions (air temperature and pressure).
+    const dt = t2.ut - t1.ut;
+    if (dt * SECONDS_PER_DAY < 1.0)
+        return null;
+    // Is it possible to reach zero from the altitude that is closer to zero?
+    const da = Math.min(Math.abs(a1), Math.abs(a2));
+    // Without loss of generality, assume |a1| <= |a2|.
+    // (Reverse the argument in the case |a2| < |a1|.)
+    // Imagine you have to "drive" from a1 to 0, then back to a2.
+    // You can't go faster than max_deriv_alt. If you can't reach 0 in half the time,
+    // you certainly don't have time to reach 0, turn around, and still make your way
+    // back up to a2 (which is at least as far from 0 than a1 is) in the time interval dt.
+    // Therefore, the time threshold is half the time interval, or dt/2.
+    if (da > max_deriv_alt * (dt / 2)) {
+        // Prune: the altitude cannot change fast enough to reach zero.
+        return null;
+    }
+    // Bisect the time interval and evaluate the altitude at the midpoint.
+    const tmid = new AstroTime((t1.ut + t2.ut) / 2);
+    const amid = altdiff(tmid);
+    // Use recursive bisection to search for a solution bracket.
+    return (FindAscent(1 + depth, altdiff, max_deriv_alt, t1, tmid, a1, amid) ||
+        FindAscent(1 + depth, altdiff, max_deriv_alt, tmid, t2, amid, a2));
+}
+function MaxAltitudeSlope(body, latitude) {
+    // Calculate the maximum possible rate that this body's altitude
+    // could change [degrees/day] as seen by this observer.
+    // First use experimentally determined extreme bounds by body
+    // of how much topocentric RA and DEC can change per rate of time.
+    // We need minimum possible d(RA)/dt, and maximum possible magnitude of d(DEC)/dt.
+    // Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
+    let deriv_ra;
+    let deriv_dec;
+    switch (body) {
+        case Body.Moon:
+            deriv_ra = +4.5;
+            deriv_dec = +8.2;
+            break;
+        case Body.Sun:
+            deriv_ra = +0.8;
+            deriv_dec = +0.5;
+            break;
+        case Body.Mercury:
+            deriv_ra = -1.6;
+            deriv_dec = +1.0;
+            break;
+        case Body.Venus:
+            deriv_ra = -0.8;
+            deriv_dec = +0.6;
+            break;
+        case Body.Mars:
+            deriv_ra = -0.5;
+            deriv_dec = +0.4;
+            break;
+        case Body.Jupiter:
+        case Body.Saturn:
+        case Body.Uranus:
+        case Body.Neptune:
+        case Body.Pluto:
+            deriv_ra = -0.2;
+            deriv_dec = +0.2;
+            break;
+        default:
+            throw `Body not allowed for altitude search: ${body}`;
+    }
+    const latrad = exports.DEG2RAD * latitude;
+    return Math.abs(((360.0 / SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra) * Math.cos(latrad)) + Math.abs(deriv_dec * Math.sin(latrad));
+}
+function InternalSearchAltitude(body, observer, direction, dateStart, limitDays, bodyRadiusAu, targetAltitude) {
     VerifyObserver(observer);
     VerifyNumber(limitDays);
-    if (body === Body.Earth)
-        throw 'Cannot find altitude event for the Earth.';
-    let ha_before, ha_after;
-    if (direction === +1) {
-        ha_before = 12; // minimum altitude (bottom) happens BEFORE the body rises.
-        ha_after = 0; // maximum altitude (culmination) happens AFTER the body rises.
+    const RISE_SET_DT = 0.42; // 10.08 hours: Nyquist-safe for 22-hour period.
+    const max_deriv_alt = MaxAltitudeSlope(body, observer.latitude);
+    function altdiff(time) {
+        const ofdate = Equator(body, time, observer, true, true);
+        const hor = Horizon(time, observer, ofdate.ra, ofdate.dec);
+        const altitude = hor.altitude + exports.RAD2DEG * Math.asin(bodyRadiusAu / ofdate.dist);
+        return direction * (altitude - targetAltitude);
     }
-    else if (direction === -1) {
-        ha_before = 0; // culmination happens BEFORE the body sets.
-        ha_after = 12; // bottom happens AFTER the body sets.
-    }
-    else {
-        throw `Invalid direction parameter ${direction} -- must be +1 or -1`;
-    }
-    // We cannot possibly satisfy a backward search without a negative time limit.
-    if (limitDays >= 0)
-        return null;
-    // See if the body is currently above/below the horizon.
-    // If we are looking for previous rise time and the body is above the horizon,
-    // we use the current time as the upper time bound and the previous bottom as the lower time bound.
-    // If the body is below the horizon, we search for the previous culmination and use it
-    // as the upper time bound. Then we search for the bottom before that culmination and
-    // use it as the lower time bound.
-    // The same logic applies for finding set times; altitude_error_func and
-    // altitude_error_context ensure that the desired event is represented
-    // by ascending through zero, so the Search function works correctly.
-    let time_start = MakeTime(dateStart);
-    let time_after;
-    let evt_before;
-    let evt_after;
-    let error_after = altitude_error(time_start);
-    let error_before;
-    if (error_after < 0) {
-        evt_after = SearchHourAngle(body, observer, ha_after, time_start, -1);
-        time_after = evt_after.time;
-        error_after = altitude_error(time_after);
-    }
-    else {
-        time_after = time_start;
-    }
-    evt_before = SearchHourAngle(body, observer, ha_before, time_after, -1);
-    error_before = altitude_error(evt_before.time);
-    while (true) {
-        if (error_before <= 0 && error_after > 0) {
-            // Search between evt_before and evt_after for the desired event.
-            let tx = Search(altitude_error, evt_before.time, time_after, { init_f1: error_before, init_f2: error_after });
-            if (tx) {
-                // If we found the rise/set time, but it falls outside limitDays, fail the search.
-                if (tx.ut < time_start.ut + limitDays)
-                    return null;
-                // The search succeeded.
-                return tx;
-            }
+    // We allow searching forward or backward in time.
+    // But we want to keep t1 < t2, so we need a few if/else statements.
+    const startTime = MakeTime(dateStart);
+    let t1 = startTime;
+    let t2 = startTime;
+    let a1 = altdiff(t1);
+    let a2 = a1;
+    for (;;) {
+        if (limitDays < 0.0) {
+            t1 = t2.AddDays(-RISE_SET_DT);
+            a1 = altdiff(t1);
         }
-        evt_after = SearchHourAngle(body, observer, ha_after, evt_before.time, -1);
-        if (evt_after.time.ut <= time_start.ut + limitDays)
-            return null;
-        evt_before = SearchHourAngle(body, observer, ha_before, evt_after.time, -1);
-        time_after = evt_before.time;
-        error_before = altitude_error(evt_before.time);
-        error_after = altitude_error(evt_after.time);
+        else {
+            t2 = t1.AddDays(+RISE_SET_DT);
+            a2 = altdiff(t2);
+        }
+        const ascent = FindAscent(0, altdiff, max_deriv_alt, t1, t2, a1, a2);
+        if (ascent) {
+            // We found a time interval [t1, t2] that contains an alt-diff
+            // rising from negative a1 to non-negative a2.
+            // Search for the time where the root occurs.
+            const time = Search(altdiff, ascent.tx, ascent.ty, {
+                dt_tolerance_seconds: 0.1,
+                init_f1: ascent.ax,
+                init_f2: ascent.ay
+            });
+            if (time) {
+                // Now that we have a solution, we have to check whether it goes outside the time bounds.
+                if (limitDays < 0.0) {
+                    if (time.ut < startTime.ut + limitDays)
+                        return null;
+                }
+                else {
+                    if (time.ut > startTime.ut + limitDays)
+                        return null;
+                }
+                return time; // success!
+            }
+            // The search should have succeeded. Something is wrong with the ascent finder!
+            throw `Rise/set search failed after finding ascent: t1=${t1}, t2=${t2}, a1=${a1}, a2=${a2}`;
+        }
+        // There is no ascent in this interval, so keep searching.
+        if (limitDays < 0.0) {
+            if (t1.ut < startTime.ut + limitDays)
+                return null;
+            t2 = t1;
+            a2 = a1;
+        }
+        else {
+            if (t2.ut > startTime.ut + limitDays)
+                return null;
+            t1 = t2;
+            a1 = a2;
+        }
     }
 }
 /**
