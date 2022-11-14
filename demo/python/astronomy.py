@@ -161,7 +161,7 @@ def MassProduct(body):
     if body == Body.Uranus:   return _URANUS_GM
     if body == Body.Neptune:  return _NEPTUNE_GM
     if body == Body.Pluto:    return _PLUTO_GM
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 @enum.unique
 class _PrecessDir(enum.Enum):
@@ -386,8 +386,8 @@ class EarthNotAllowedError(Error):
 
 class InvalidBodyError(Error):
     """The celestial body is not allowed for this calculation."""
-    def __init__(self):
-        Error.__init__(self, 'Invalid astronomical body.')
+    def __init__(self, body):
+        Error.__init__(self, 'This body is not valid, or is not supported for this calculation: {}'.format(body))
 
 class BadVectorError(Error):
     """A vector magnitude is too small to have a direction in space."""
@@ -435,13 +435,13 @@ def PlanetOrbitalPeriod(body):
     """
     if isinstance(body, Body) and (0 <= body.value < len(_PlanetOrbitalPeriod)):
         return _PlanetOrbitalPeriod[body.value]
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 def _SynodicPeriod(body):
     if body == Body.Earth:
         raise EarthNotAllowedError()
     if body.value < 0 or body.value >= len(_PlanetOrbitalPeriod):
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
     if body == Body.Moon:
         return _MEAN_SYNODIC_MONTH
     return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
@@ -4453,7 +4453,7 @@ def HelioVector(body, time):
     if body == Body.SSB:
         return _CalcSolarSystemBarycenter(time)
 
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 
 def HelioDistance(body, time):
@@ -4782,7 +4782,7 @@ def BaryState(body, time):
             time
         )
 
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 
 def HelioState(body, time):
@@ -4851,7 +4851,7 @@ def HelioState(body, time):
             time
         )
 
-    raise InvalidBodyError()
+    raise InvalidBodyError(body)
 
 
 def Equator(body, time, observer, ofdate, aberration):
@@ -5497,7 +5497,7 @@ def EclipticLongitude(body, time):
         An angular value in degrees indicating the ecliptic longitude of the body.
     """
     if body == Body.Sun:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
     hv = HelioVector(body, time)
     eclip = Ecliptic(hv)
     return eclip.elon
@@ -5715,7 +5715,7 @@ def SearchRelativeLongitude(body, targetRelLon, startTime):
     if body == Body.Earth:
         raise EarthNotAllowedError()
     if body in (Body.Moon, Body.Sun):
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
     syn = _SynodicPeriod(body)
     direction = +1 if _IsSuperiorPlanet(body) else -1
     # Iterate until we converge on the desired event.
@@ -5787,7 +5787,7 @@ def SearchMaxElongation(body, startTime):
         s1 = 40.0
         s2 = 50.0
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
     syn = _SynodicPeriod(body)
     iter_count = 1
     while iter_count <= 2:
@@ -6185,7 +6185,7 @@ def _VisualMagnitude(body, phase, helio_dist, geo_dist):
     elif body == Body.Pluto:
         c0 = -1.00; c1 = +4.00
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     x = phase / 100.0
     mag = c0 + x*(c1 + x*(c2 + x*c3))
@@ -6298,7 +6298,7 @@ def SearchPeakMagnitude(body, startTime):
     s1 = 10.0
     s2 = 30.0
     if body != Body.Venus:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     iter_count = 1
     while iter_count <= 2:
@@ -6528,10 +6528,14 @@ def _altdiff(context, time):
 def _MaxAltitudeSlope(body, latitude):
     # Calculate the maximum possible rate that this body's altitude
     # could change [degrees/day] as seen by this observer.
-    # First use experimentally determined extreme bounds by body
-    # of how much topocentric RA and DEC can change per rate of time.
+    # First use experimentally determined extreme bounds for this body
+    # of how much topocentric RA and DEC can ever change per rate of time.
     # We need minimum possible d(RA)/dt, and maximum possible magnitude of d(DEC)/dt.
     # Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
+    # Then calculate the resulting maximum possible altitude change rate.
+
+    if not (-90.0 <= latitude <= +90.0):
+        raise Error('Invalid geographic latitude: {}'.format(latitude))
 
     if body == Body.Moon:
         deriv_ra  = +4.5
@@ -6554,7 +6558,7 @@ def _MaxAltitudeSlope(body, latitude):
     elif body == Body.Earth:
         raise EarthNotAllowedError()
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     latrad = math.radians(latitude)
     return abs(((360.0 / _SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra)*math.cos(latrad)) + abs(deriv_dec*math.sin(latrad))
@@ -6618,6 +6622,9 @@ def _FindAscent(depth, context, max_deriv_alt, t1, t2, a1, a2):
 
 
 def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, targetAltitude):
+    if not (-90.0 <= targetAltitude <= +90.0):
+        raise Error('Invalid target altitude angle: {}'.format(targetAltitude))
+
     RISE_SET_DT = 0.42  # 10.08 hours: Nyquist-safe for 22-hour period.
     max_deriv_alt = _MaxAltitudeSlope(body, observer.latitude)
     context = _altitude_context(body, direction, observer, bodyRadiusAu, targetAltitude)
@@ -6774,8 +6781,6 @@ def SearchAltitude(body, observer, direction, startTime, limitDays, altitude):
         If the altitude event time is found within the specified time window,
         this function returns that time. Otherwise, it returns `None`.
     """
-    if not (-90.0 <= altitude <= +90.0):
-        raise Error('Invalid altitude: {}'.format(altitude))
     return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, 0.0, altitude)
 
 class SeasonInfo:
@@ -9425,7 +9430,7 @@ def SearchTransit(body, startTime):
     elif body == Body.Venus:
         planet_radius_km = 6051.8
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     search_time = startTime
     while True:
@@ -10007,7 +10012,7 @@ def RotationAxis(body, time):
         w = 302.695 + 56.3625225*d
 
     else:
-        raise InvalidBodyError()
+        raise InvalidBodyError(body)
 
     # Calculate the north pole vector using the given angles.
     radlat = math.radians(dec)

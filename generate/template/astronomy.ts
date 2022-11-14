@@ -4475,10 +4475,14 @@ function FindAscent(
 function MaxAltitudeSlope(body: Body, latitude: number): number {
     // Calculate the maximum possible rate that this body's altitude
     // could change [degrees/day] as seen by this observer.
-    // First use experimentally determined extreme bounds by body
-    // of how much topocentric RA and DEC can change per rate of time.
+    // First use experimentally determined extreme bounds for this body
+    // of how much topocentric RA and DEC can ever change per rate of time.
     // We need minimum possible d(RA)/dt, and maximum possible magnitude of d(DEC)/dt.
     // Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
+    // Then calculate the resulting maximum possible altitude change rate.
+
+    if (latitude < -90 || latitude > +90)
+        throw `Invalid geographic latitude: ${latitude}`;
 
     let deriv_ra  : number;
     let deriv_dec : number;
@@ -4539,6 +4543,11 @@ function InternalSearchAltitude(
 {
     VerifyObserver(observer);
     VerifyNumber(limitDays);
+    VerifyNumber(bodyRadiusAu);
+    VerifyNumber(targetAltitude);
+
+    if (targetAltitude < -90 || targetAltitude > +90)
+        throw `Invalid target altitude angle: ${targetAltitude}`;
 
     const RISE_SET_DT = 0.42;    // 10.08 hours: Nyquist-safe for 22-hour period.
     const max_deriv_alt = MaxAltitudeSlope(body, observer.latitude);

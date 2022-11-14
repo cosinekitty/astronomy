@@ -6396,14 +6396,6 @@ typedef struct
 }
 context_altitude_t;
 
-#define ALTDIFF(altitude, time, context)  \
-    do {    \
-        astro_func_result_t altdiff_result = altitude_diff(context, time); \
-        if (altdiff_result.status != ASTRO_SUCCESS)     \
-            return SearchError(altdiff_result.status);  \
-        altitude = altdiff_result.value;    \
-    } while (0)
-
 static const double RISE_SET_DT = 0.42;    /* 10.08 hours: Nyquist-safe for 22-hour period. */
 
 typedef struct
@@ -6556,29 +6548,26 @@ static ascent_t FindAscent(
 }
 
 
-static astro_search_result_t InternalSearchAltitude(
-    astro_body_t body,
-    astro_observer_t observer,
-    astro_direction_t direction,
-    astro_time_t startTime,
-    double limitDays,
-    double bodyRadiusAu,
-    double targetAltitude)
+static astro_func_result_t MaxAltitudeSlope(astro_body_t body, double latitude)
 {
-    astro_search_result_t result;
-    context_altitude_t context;
-    ascent_t ascent;
-    astro_time_t t1, t2;
-    double a1 = 0.0, a2 = 0.0;
-    double deriv_ra, deriv_dec, max_deriv_alt, latrad;
+    astro_func_result_t result;
+    double deriv_ra, deriv_dec, latrad;
+
+    if (!isfinite(latitude) || latitude < -90.0 || latitude > +90.0)
+    {
+        result.value = NAN;
+        result.status = ASTRO_INVALID_PARAMETER;
+        return result;
+    }
 
     /*
         Calculate the maximum possible rate that this body's altitude
         could change [degrees/day] as seen by this observer.
-        First use experimentally determined extreme bounds by body
-        of how much topocentric RA and DEC can change per rate of time.
+        First use experimentally determined extreme bounds for this body
+        of how much topocentric RA and DEC can ever change per rate of time.
         We need minimum possible d(RA)/dt, and maximum possible magnitude of d(DEC)/dt.
         Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
+        Then calculate the resulting maximum possible altitude change rate.
     */
     switch (body)
     {
@@ -6617,14 +6606,46 @@ static astro_search_result_t InternalSearchAltitude(
         break;
 
     case BODY_EARTH:
-        return SearchError(ASTRO_EARTH_NOT_ALLOWED);
+        result.value = NAN;
+        result.status = ASTRO_EARTH_NOT_ALLOWED;
+        return result;
 
     default:
-        return SearchError(ASTRO_INVALID_BODY);
+        result.value = NAN;
+        result.status = ASTRO_INVALID_BODY;
+        return result;
     }
 
-    latrad = DEG2RAD * observer.latitude;
-    max_deriv_alt = fabs(((360.0 / SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra)*cos(latrad)) + fabs(deriv_dec*sin(latrad));
+    latrad = DEG2RAD * latitude;
+    result.value = fabs(((360.0 / SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra)*cos(latrad)) + fabs(deriv_dec*sin(latrad));
+    result.status = isfinite(result.value) ? ASTRO_SUCCESS : ASTRO_INTERNAL_ERROR;
+    return result;
+}
+
+
+static astro_search_result_t InternalSearchAltitude(
+    astro_body_t body,
+    astro_observer_t observer,
+    astro_direction_t direction,
+    astro_time_t startTime,
+    double limitDays,
+    double bodyRadiusAu,
+    double targetAltitude)
+{
+    astro_search_result_t search_result;
+    astro_func_result_t func_result;
+    context_altitude_t context;
+    ascent_t ascent;
+    astro_time_t t1, t2;
+    double a1, a2, max_deriv_alt;
+
+    if (!isfinite(targetAltitude) || targetAltitude < -90.0 || targetAltitude > +90.0)
+        return SearchError(ASTRO_INVALID_PARAMETER);
+
+    func_result = MaxAltitudeSlope(body, observer.latitude);
+    if (func_result.status != ASTRO_SUCCESS)
+        return SearchError(ASTRO_SUCCESS);
+    max_deriv_alt = func_result.value;
 
     context.body = body;
     context.direction = (int)direction;
@@ -6635,20 +6656,28 @@ static astro_search_result_t InternalSearchAltitude(
     /* We allow searching forward or backward in time. */
     /* But we want to keep t1 < t2, so we need a few if/else statements. */
     t1 = t2 = startTime;
-    ALTDIFF(a2, t2, &context);
-    a1 = a2;
+    func_result = altitude_diff(&context, t2);
+    if (func_result.status != ASTRO_SUCCESS)
+        return SearchError(func_result.status);
+    a1 = a2 = func_result.value;
 
     for(;;)
     {
         if (limitDays < 0.0)
         {
             t1 = Astronomy_AddDays(t2, -RISE_SET_DT);
-            ALTDIFF(a1, t1, &context);
+            func_result = altitude_diff(&context, t1);
+            if (func_result.status != ASTRO_SUCCESS)
+                return SearchError(func_result.status);
+            a1 = func_result.value;
         }
         else
         {
             t2 = Astronomy_AddDays(t1, +RISE_SET_DT);
-            ALTDIFF(a2, t2, &context);
+            func_result = altitude_diff(&context, t2);
+            if (func_result.status != ASTRO_SUCCESS)
+                return SearchError(func_result.status);
+            a2 = func_result.value;
         }
 
         ascent = FindAscent(0, &context, max_deriv_alt, t1, t2, a1, a2);
@@ -6657,24 +6686,24 @@ static astro_search_result_t InternalSearchAltitude(
             /* We found a time interval [t1, t2] that contains an alt-diff */
             /* rising from negative a1 to non-negative a2. */
             /* Search for the time where the root occurs. */
-            result = Astronomy_Search(altitude_diff, &context, ascent.tx, ascent.ty, 0.1);
-            if (result.status == ASTRO_SUCCESS)
+            search_result = Astronomy_Search(altitude_diff, &context, ascent.tx, ascent.ty, 0.1);
+            if (search_result.status == ASTRO_SUCCESS)
             {
                 /* Now that we have a solution, we have to check whether it goes outside the time bounds. */
                 if (limitDays < 0.0)
                 {
-                    if (result.time.ut < startTime.ut + limitDays)
+                    if (search_result.time.ut < startTime.ut + limitDays)
                         return SearchError(ASTRO_SEARCH_FAILURE);
                 }
                 else
                 {
-                    if (result.time.ut > startTime.ut + limitDays)
+                    if (search_result.time.ut > startTime.ut + limitDays)
                         return SearchError(ASTRO_SEARCH_FAILURE);
                 }
-                return result;  /* success! */
+                return search_result;  /* success! */
             }
 
-            /* The search should have succeeded. Something is wrong with the ascent finder! */
+            /* The search should have succeeded. Something is wrong with FindAscent! */
             return SearchError(ASTRO_INTERNAL_ERROR);
         }
         else if (ascent.status == ASTRO_SEARCH_FAILURE)
@@ -6764,10 +6793,6 @@ astro_search_result_t Astronomy_SearchRiseSet(
     double limitDays)
 {
     double body_radius_au;
-
-    if (body == BODY_EARTH)
-        return SearchError(ASTRO_EARTH_NOT_ALLOWED);
-
     switch (body)
     {
     case BODY_SUN:  body_radius_au = SUN_RADIUS_AU;                 break;

@@ -6248,10 +6248,14 @@ private fun findAscent(
 private fun maxAltitudeSlope(body: Body, latitude: Double): Double {
     // Calculate the maximum possible rate that this body's altitude
     // could change [degrees/day] as seen by this observer.
-    // First use experimentally determined extreme bounds by body
-    // of how much topocentric RA and DEC can change per rate of time.
+    // First use experimentally determined extreme bounds for this body
+    // of how much topocentric RA and DEC can ever change per rate of time.
     // We need minimum possible d(RA)/dt, and maximum possible magnitude of d(DEC)/dt.
     // Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
+    // Then calculate the resulting maximum possible altitude change rate.
+
+    if (!latitude.isFinite() || latitude < -90.0 || latitude > +90.0)
+        throw IllegalArgumentException("Invalid geographic latitude: $latitude")
 
     val derivRa: Double
     val derivDec: Double
@@ -6324,6 +6328,9 @@ private fun internalSearchAltitude(
     bodyRadiusAu: Double,
     targetAltitude: Double
 ): Time? {
+    if (!targetAltitude.isFinite() || targetAltitude < -90.0 || targetAltitude > +90.0)
+        throw IllegalArgumentException("Target altitude is not valid: $targetAltitude")
+
     val maxDerivAlt = maxAltitudeSlope(body, observer.latitude)
     val context = SearchContext_Altitude(body, direction, observer, bodyRadiusAu, targetAltitude)
 
