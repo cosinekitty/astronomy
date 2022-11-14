@@ -2,6 +2,6 @@
 
 # y
 
-val [y](y.md): Double
+val [y](y.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 A Cartesian y-coordinate expressed in AU.

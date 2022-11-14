@@ -2,6 +2,6 @@
 
 # longitude
 
-val [longitude](longitude.md): Double
+val [longitude](longitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 The geographic longitude at the center of the peak eclipse shadow.

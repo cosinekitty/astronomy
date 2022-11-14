@@ -2,4 +2,4 @@
 
 # Ecliptic
 
-fun [Ecliptic](-ecliptic.md)(vec: [Vector](../-vector/index.md), elat: Double, elon: Double)
+fun [Ecliptic](-ecliptic.md)(vec: [Vector](../-vector/index.md), elat: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), elon: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))

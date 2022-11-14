@@ -2,7 +2,7 @@
 
 # update
 
-fun [update](update.md)(time: [Time](../-time/index.md)): Array&lt;[StateVector](../-state-vector/index.md)&gt;
+fun [update](update.md)(time: [Time](../-time/index.md)): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;
 
 Advances the gravity simulation by a small time step.
 

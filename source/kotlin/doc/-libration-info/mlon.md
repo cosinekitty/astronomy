@@ -2,6 +2,6 @@
 
 # mlon
 
-val [mlon](mlon.md): Double
+val [mlon](mlon.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Moon's geocentric ecliptic longitude.

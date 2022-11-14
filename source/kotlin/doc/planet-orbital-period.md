@@ -2,7 +2,7 @@
 
 # planetOrbitalPeriod
 
-fun [planetOrbitalPeriod](planet-orbital-period.md)(body: [Body](-body/index.md)): Double
+fun [planetOrbitalPeriod](planet-orbital-period.md)(body: [Body](-body/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Returns the average number of days it takes for a planet to orbit the Sun.
 

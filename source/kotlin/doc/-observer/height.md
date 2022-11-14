@@ -2,6 +2,6 @@
 
 # height
 
-val [height](height.md): Double
+val [height](height.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 The height above (positive) or below (negative) sea level, expressed in meters.

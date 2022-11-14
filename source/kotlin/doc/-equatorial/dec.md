@@ -2,6 +2,6 @@
 
 # dec
 
-val [dec](dec.md): Double
+val [dec](dec.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Declination in degrees.

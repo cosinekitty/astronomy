@@ -2,7 +2,7 @@
 
 # Refraction
 
-enum [Refraction](index.md) : Enum&lt;[Refraction](index.md)&gt; 
+enum [Refraction](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[Refraction](index.md)&gt; 
 
 Selects whether to correct for atmospheric refraction, and if so, how.
 

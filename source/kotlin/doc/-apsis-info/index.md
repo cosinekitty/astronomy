@@ -2,7 +2,7 @@
 
 # ApsisInfo
 
-class [ApsisInfo](index.md)(time: [Time](../-time/index.md), kind: [ApsisKind](../-apsis-kind/index.md), distanceAu: Double)
+class [ApsisInfo](index.md)(time: [Time](../-time/index.md), kind: [ApsisKind](../-apsis-kind/index.md), distanceAu: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 An apsis event: pericenter (closest approach) or apocenter (farthest distance).
 
@@ -16,13 +16,13 @@ This data structure is returned by [searchLunarApsis](../search-lunar-apsis.md) 
 
 | | |
 |---|---|
-| [ApsisInfo](-apsis-info.md)<br>fun [ApsisInfo](-apsis-info.md)(time: [Time](../-time/index.md), kind: [ApsisKind](../-apsis-kind/index.md), distanceAu: Double) |
+| [ApsisInfo](-apsis-info.md)<br>fun [ApsisInfo](-apsis-info.md)(time: [Time](../-time/index.md), kind: [ApsisKind](../-apsis-kind/index.md), distanceAu: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [distanceAu](distance-au.md)<br>val [distanceAu](distance-au.md): Double<br>The distance between the centers of the bodies in astronomical units. |
-| [distanceKm](distance-km.md)<br>val [distanceKm](distance-km.md): Double<br>The distance between the centers of the bodies in kilometers. |
+| [distanceAu](distance-au.md)<br>val [distanceAu](distance-au.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The distance between the centers of the bodies in astronomical units. |
+| [distanceKm](distance-km.md)<br>val [distanceKm](distance-km.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The distance between the centers of the bodies in kilometers. |
 | [kind](kind.md)<br>val [kind](kind.md): [ApsisKind](../-apsis-kind/index.md)<br>Whether this is a pericenter or apocenter event. |
 | [time](time.md)<br>val [time](time.md): [Time](../-time/index.md)<br>The date and time of the apsis. |

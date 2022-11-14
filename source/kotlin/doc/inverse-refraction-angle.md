@@ -2,7 +2,7 @@
 
 # inverseRefractionAngle
 
-fun [inverseRefractionAngle](inverse-refraction-angle.md)(refraction: [Refraction](-refraction/index.md), bentAltitude: Double): Double
+fun [inverseRefractionAngle](inverse-refraction-angle.md)(refraction: [Refraction](-refraction/index.md), bentAltitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Calculates the inverse of an atmospheric refraction angle.
 

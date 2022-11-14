@@ -2,7 +2,7 @@
 
 # ApsisKind
 
-enum [ApsisKind](index.md) : Enum&lt;[ApsisKind](index.md)&gt; 
+enum [ApsisKind](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[ApsisKind](index.md)&gt; 
 
 The type of apsis: pericenter (closest approach) or apocenter (farthest distance).
 

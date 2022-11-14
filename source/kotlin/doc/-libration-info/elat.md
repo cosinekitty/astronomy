@@ -2,6 +2,6 @@
 
 # elat
 
-val [elat](elat.md): Double
+val [elat](elat.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 Sub-Earth libration ecliptic latitude angle, in degrees.

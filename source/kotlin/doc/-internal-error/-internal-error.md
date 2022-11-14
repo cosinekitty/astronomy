@@ -2,4 +2,4 @@
 
 # InternalError
 
-fun [InternalError](-internal-error.md)(message: String)
+fun [InternalError](-internal-error.md)(message: [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html))

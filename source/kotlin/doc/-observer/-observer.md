@@ -2,4 +2,4 @@
 
 # Observer
 
-fun [Observer](-observer.md)(latitude: Double, longitude: Double, height: Double)
+fun [Observer](-observer.md)(latitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), longitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), height: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))

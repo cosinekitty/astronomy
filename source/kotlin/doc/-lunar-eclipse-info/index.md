@@ -2,7 +2,7 @@
 
 # LunarEclipseInfo
 
-class [LunarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: Double, peak: [Time](../-time/index.md), sdPenum: Double, sdPartial: Double, sdTotal: Double)
+class [LunarEclipseInfo](index.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), peak: [Time](../-time/index.md), sdPenum: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), sdPartial: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), sdTotal: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))
 
 Information about a lunar eclipse.
 
@@ -20,15 +20,15 @@ Fields sdPenum, sdPartial, and sdTotal hold the semi-duration of each phase of t
 
 | | |
 |---|---|
-| [LunarEclipseInfo](-lunar-eclipse-info.md)<br>fun [LunarEclipseInfo](-lunar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: Double, peak: [Time](../-time/index.md), sdPenum: Double, sdPartial: Double, sdTotal: Double) |
+| [LunarEclipseInfo](-lunar-eclipse-info.md)<br>fun [LunarEclipseInfo](-lunar-eclipse-info.md)(kind: [EclipseKind](../-eclipse-kind/index.md), obscuration: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), peak: [Time](../-time/index.md), sdPenum: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), sdPartial: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), sdTotal: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
 | [kind](kind.md)<br>val [kind](kind.md): [EclipseKind](../-eclipse-kind/index.md)<br>The type of lunar eclipse found. |
-| [obscuration](obscuration.md)<br>val [obscuration](obscuration.md): Double<br>The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra. |
+| [obscuration](obscuration.md)<br>val [obscuration](obscuration.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The peak fraction of the Moon's apparent disc that is covered by the Earth's umbra. |
 | [peak](peak.md)<br>val [peak](peak.md): [Time](../-time/index.md)<br>The time of the eclipse at its peak. |
-| [sdPartial](sd-partial.md)<br>val [sdPartial](sd-partial.md): Double<br>The semi-duration of the partial phase in minutes, or 0.0 if none. |
-| [sdPenum](sd-penum.md)<br>val [sdPenum](sd-penum.md): Double<br>The semi-duration of the penumbral phase in minutes. |
-| [sdTotal](sd-total.md)<br>val [sdTotal](sd-total.md): Double<br>The semi-duration of the total phase in minutes, or 0.0 if none. |
+| [sdPartial](sd-partial.md)<br>val [sdPartial](sd-partial.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The semi-duration of the partial phase in minutes, or 0.0 if none. |
+| [sdPenum](sd-penum.md)<br>val [sdPenum](sd-penum.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The semi-duration of the penumbral phase in minutes. |
+| [sdTotal](sd-total.md)<br>val [sdTotal](sd-total.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The semi-duration of the total phase in minutes, or 0.0 if none. |

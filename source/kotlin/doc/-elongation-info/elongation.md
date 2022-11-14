@@ -2,6 +2,6 @@
 
 # elongation
 
-val [elongation](elongation.md): Double
+val [elongation](elongation.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
 
 The angle in degrees between the body and the Sun, as seen from the Earth.

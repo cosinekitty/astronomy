@@ -12,4 +12,4 @@ This interface must be implemented for callers of [search](../search.md) in orde
 
 | Name | Summary |
 |---|---|
-| [eval](eval.md)<br>abstract fun [eval](eval.md)(time: [Time](../-time/index.md)): Double<br>Evaluates a scalar function at a given time. |
+| [eval](eval.md)<br>abstract fun [eval](eval.md)(time: [Time](../-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Evaluates a scalar function at a given time. |
