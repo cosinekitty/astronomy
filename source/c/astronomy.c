@@ -7873,16 +7873,9 @@ static astro_search_result_t InternalSearchAltitude(
 
     /* We allow searching forward or backward in time. */
     /* But we want to keep t1 < t2, so we need a few if/else statements. */
-    if (limitDays < 0.0)
-    {
-        t2 = startTime;
-        ALTDIFF(a2, t2, &context);
-    }
-    else
-    {
-        t1 = startTime;
-        ALTDIFF(a1, t1, &context);
-    }
+    t1 = t2 = startTime;
+    ALTDIFF(a2, t2, &context);
+    a1 = a2;
 
     for(;;)
     {

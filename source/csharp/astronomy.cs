@@ -7024,7 +7024,7 @@ namespace CosineKitty
             // one second apart. These are marginal cases that are rendered highly uncertain
             // anyway, due to unpredictable atmospheric refraction conditions (air temperature and pressure).
 
-            double dt = (t2.ut - t1.ut) / 2;
+            double dt = t2.ut - t1.ut;
             if (dt * SECONDS_PER_DAY < 1.0)
                 return new AscentInfo { valid = false };
 
@@ -7135,22 +7135,10 @@ namespace CosineKitty
 
             // We allow searching forward or backward in time.
             // But we want to keep t1 < t2, so we need a few if/else statements.
-            AstroTime t1, t2;
-            double a1, a2;
-            if (limitDays < 0.0)
-            {
-                t1 = null;
-                t2 = startTime;
-                a1 = double.NaN;
-                a2 = context.Eval(t2);
-            }
-            else
-            {
-                t1 = startTime;
-                t2 = null;
-                a1 = context.Eval(t1);
-                a2 = double.NaN;
-            }
+            AstroTime t1 = startTime;
+            AstroTime t2 = t1;
+            double a1 = context.Eval(t1);
+            double a2 = a1;
 
             for(;;)
             {
