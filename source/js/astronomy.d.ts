@@ -147,8 +147,43 @@ export declare enum Body {
     Neptune = "Neptune",
     Pluto = "Pluto",
     SSB = "SSB",
-    EMB = "EMB"
+    EMB = "EMB",
+    Star1 = "Star1",
+    Star2 = "Star2",
+    Star3 = "Star3",
+    Star4 = "Star4",
+    Star5 = "Star5",
+    Star6 = "Star6",
+    Star7 = "Star7",
+    Star8 = "Star8"
 }
+/**
+ * @brief Assign equatorial coordinates to a user-defined star.
+ *
+ * Some Astronomy Engine functions allow their `body` parameter to
+ * be a user-defined fixed point in the sky, loosely called a "star".
+ * This function assigns a right ascension and declination
+ * to one of the eight user-defined stars `Star1`..`Star8`.
+ *
+ * A star that has not been defined through a call to `DefineStar`
+ * defaults to the coordinates RA=0, DEC=0.
+ * Once defined, the star keeps the updated coordinates until
+ * a subsequent call to `DefineStar` replaces the coordinates with new values.
+ *
+ * @param {Body} body
+ *      One of the eight user-defined star identifiers:
+ *      `Star1`, `Star2`, `Star3`, `Star4`, `Star5`, `Star6`, `Star7`, or `Star8`.
+ *
+ * @param {number} ra
+ *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+ *      The value is in units of sidereal hours, and must be within the half-open range [0, 24).
+ *
+ * @param {number} dec
+ *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+ *      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
+ *      and must be within the closed range [-90, +90].
+ */
+export declare function DefineStar(body: Body, ra: number, dec: number): void;
 /**
  * @brief Returns the mean orbital period of a planet in days.
  *

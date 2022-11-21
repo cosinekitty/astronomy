@@ -83,24 +83,26 @@ function AstroCheck() {
     var stop = Astronomy.MakeTime(new Date('2200-01-01T00:00:00Z'));
     var body, pos, hor, dt, j2000, ofdate, time;
     const observer = new Astronomy.Observer(29, -81, 10);
+    const bodylist = [
+        Astronomy.Body.Sun, Astronomy.Body.Mercury, Astronomy.Body.Venus, Astronomy.Body.Earth, Astronomy.Body.Mars,
+        Astronomy.Body.Jupiter, Astronomy.Body.Saturn, Astronomy.Body.Uranus, Astronomy.Body.Neptune, Astronomy.Body.Pluto,
+        Astronomy.Body.SSB, Astronomy.Body.EMB
+    ];
 
     console.log(`o ${observer.latitude.toFixed(6)} ${observer.longitude.toFixed(6)} ${observer.height.toFixed(6)}`);
 
     dt = (10 + Math.PI/100);       // 10.03141592... days; exercise different times of day
     while (date.tt < stop.tt) {
         time = Astronomy.MakeTime(date);
+        for (body of bodylist) {
+            pos = Astronomy.HelioVector(body, date);
+            console.log(`v ${body} ${pos.t.tt.toExponential(18)} ${pos.x.toExponential(18)} ${pos.y.toExponential(18)} ${pos.z.toExponential(18)}`);
 
-        for (body in Astronomy.Body) {
-            if (body !== 'Moon') {
-                pos = Astronomy.HelioVector(body, date);
-                console.log(`v ${body} ${pos.t.tt.toExponential(18)} ${pos.x.toExponential(18)} ${pos.y.toExponential(18)} ${pos.z.toExponential(18)}`);
-
-                if (body !== 'Earth' && body !== 'EMB' && body !== 'SSB') {
-                    j2000 = Astronomy.Equator(body, date, observer, false, false);
-                    ofdate = Astronomy.Equator(body, date, observer, true, true);
-                    hor = Astronomy.Horizon(date, observer, ofdate.ra, ofdate.dec);
-                    console.log(`s ${body} ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${j2000.ra.toExponential(18)} ${j2000.dec.toExponential(18)} ${j2000.dist.toExponential(18)} ${hor.azimuth.toExponential(18)} ${hor.altitude.toExponential(18)}`);
-                }
+            if (body !== 'Earth' && body !== 'EMB' && body !== 'SSB') {
+                j2000 = Astronomy.Equator(body, date, observer, false, false);
+                ofdate = Astronomy.Equator(body, date, observer, true, true);
+                hor = Astronomy.Horizon(date, observer, ofdate.ra, ofdate.dec);
+                console.log(`s ${body} ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${j2000.ra.toExponential(18)} ${j2000.dec.toExponential(18)} ${j2000.dist.toExponential(18)} ${hor.azimuth.toExponential(18)} ${hor.altitude.toExponential(18)}`);
             }
         }
         pos = Astronomy.GeoMoon(date);
@@ -3376,6 +3378,17 @@ function LunarFraction() {
 
 //-------------------------------------------------------------------------------------------------
 
+function StarRiseSetCulm() {
+    // Coordinates of M31 = Andromeda Galaxy.
+    // http://ned.ipac.caltech.edu/cgi-bin/objsearch?objname=M+031&extend=no&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=RA+or+Longitude&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES
+    const ra  =  0 + (42 / 60) + (44.3 / 3600);
+    const dec = 41 + (16 / 60) + ( 9.0 / 3600);
+    Astronomy.DefineStar(Astronomy.Body.Star1, ra, dec);
+    return Pass("StarRiseSetCulm");
+}
+
+//-------------------------------------------------------------------------------------------------
+
 const UnitTests = {
     aberration:             AberrationTest,
     axis:                   AxisTest,
@@ -3410,6 +3423,7 @@ const UnitTests = {
     seasons187:             SeasonsIssue187,
     sidereal:               SiderealTimeTest,
     solar_fraction:         SolarFraction,
+    star_risesetculm:       StarRiseSetCulm,
     topostate:              TopoStateTest,
     transit:                Transit,
     twilight:               TwilightTest,

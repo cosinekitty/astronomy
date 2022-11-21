@@ -53,17 +53,20 @@ function DisplayEvent(name, evt) {
 
 function Demo() {
     if (process.argv.length === 4 || process.argv.length === 5) {
+        const bodylist = [
+            Astronomy.Body.Sun,     Astronomy.Body.Moon,
+            Astronomy.Body.Mercury, Astronomy.Body.Venus,  Astronomy.Body.Mars,    Astronomy.Body.Jupiter,
+            Astronomy.Body.Saturn,  Astronomy.Body.Uranus, Astronomy.Body.Neptune, Astronomy.Body.Pluto
+        ];
         const latitude  = ParseNumber(process.argv[2]);
         const longitude = ParseNumber(process.argv[3]);
         const observer = new Astronomy.Observer(latitude, longitude, 0);
         const date = (process.argv.length === 5) ? ParseDate(process.argv[4]) : new Date();
         console.log('search   : ' + date.toISOString());
 
-        for (let body in Astronomy.Body) {
-            if (body !== Astronomy.Body.Earth && body !== Astronomy.Body.EMB && body !== Astronomy.Body.SSB) {
-                let culm = Astronomy.SearchHourAngle(body, observer, 0, date);
-                DisplayEvent(body, culm);
-            }
+        for (let body of bodylist) {
+            let culm = Astronomy.SearchHourAngle(body, observer, 0, date);
+            DisplayEvent(body, culm);
         }
 
         process.exit(0);

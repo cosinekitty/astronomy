@@ -7,14 +7,14 @@ Fail()
 
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
-time node test.js astro_check > temp/js_check.txt || Fail "Problem running JavaScript astro_check."
+time node --trace-uncaught test.js astro_check > temp/js_check.txt || Fail "Problem running JavaScript astro_check."
 ./generate $1 check temp/js_check.txt || Fail "Verification failure for JavaScript unit test output."
 
 echo ""
 echo "$0: Running check against JPL Horizons data."
 ./jplcheck || Fail "Error in JPL check."
 
-node test.js $1 all || Fail "Failed JavaScript unit tests."
+node --trace-uncaught test.js $1 all || Fail "Failed JavaScript unit tests."
 
 echo ""
 echo "$0: Verifying elongation output."

@@ -1321,6 +1321,31 @@ the returned vector's `t` field rather than the backdated time.
 
 * * *
 
+<a name="DefineStar"></a>
+
+## DefineStar(body, ra, dec)
+**Kind**: global function  
+**Brief**: Assign equatorial coordinates to a user-defined star.
+
+Some Astronomy Engine functions allow their `body` parameter to
+be a user-defined fixed point in the sky, loosely called a "star".
+This function assigns a right ascension and declination
+to one of the eight user-defined stars `Star1`..`Star8`.
+
+A star that has not been defined through a call to `DefineStar`
+defaults to the coordinates RA=0, DEC=0.
+Once defined, the star keeps the updated coordinates until
+a subsequent call to `DefineStar` replaces the coordinates with new values.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| body | [<code>Body</code>](#Body) | One of the eight user-defined star identifiers:      `Star1`, `Star2`, `Star3`, `Star4`, `Star5`, `Star6`, `Star7`, or `Star8`. |
+| ra | <code>number</code> | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).      The value is in units of sidereal hours, and must be within the half-open range [0, 24). |
+| dec | <code>number</code> | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,      and must be within the closed range [-90, +90]. |
+
+
+* * *
+
 <a name="Ecliptic"></a>
 
 ## Ecliptic(equ) ⇒ [<code>EclipticCoordinates</code>](#EclipticCoordinates)

@@ -8,7 +8,7 @@ Fail()
 TestDemo()
 {
     echo "Testing Node.js demo: $1"
-    node $* > test/$1.txt || Fail "Error running $1.js."
+    node --trace-uncaught $* > test/$1.txt || Fail "Error running $1.js."
     diff {correct,test}/$1.txt || Fail "Incorrect output from $1.js."
 }
 
@@ -29,7 +29,7 @@ TestDemo triangulate 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12
 
 echo "Testing Node.js demo: gravity"
 for latitude in {0..90}; do
-    node gravity ${latitude} 0 >> test/gravity.txt || Fail "Error running gravity.js."
+    node --trace-uncaught gravity ${latitude} 0 >> test/gravity.txt || Fail "Error running gravity.js."
 done
 diff {correct,test}/gravity.txt || Fail "Incorrect output from gravity.js."
 
