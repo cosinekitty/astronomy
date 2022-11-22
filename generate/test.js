@@ -3405,10 +3405,10 @@ function StarRiseSetCulm() {
 
     const observer = new Astronomy.Observer(+25.77, -80.19, 0.0);
     return (
-        StarRiseSetCulmCase('Sirius', 6 + 45/60 + 9.0/3600, -(16 + 43/60 + 6/3600), 8.6, observer, '2022-11-21', '02:37', '08:06', '13:34') ||
-        StarRiseSetCulmCase('Sirius', 6 + 45/60 + 9.0/3600, -(16 + 43/60 + 6/3600), 8.6, observer, '2022-11-25', '02:22', '07:50', '13:18') ||
-        StarRiseSetCulmCase('Canopus', 6 + 23/60 + 57.10988/3600, -(52 + 41/60 + 44.3810/3600), 310, observer, '2022-11-21', '04:17', '07:44', '11:11') ||
-        StarRiseSetCulmCase('Canopus', 6 + 23/60 + 57.10988/3600, -(52 + 41/60 + 44.3810/3600), 310, observer, '2022-11-25', '04:01', '07:28', '10:56') ||
+        StarRiseSetCulmCase('Sirius', 6.7525, -16.7183, 8.6, observer, '2022-11-21', '02:37', '08:06', '13:34') ||
+        StarRiseSetCulmCase('Sirius', 6.7525, -16.7183, 8.6, observer, '2022-11-25', '02:22', '07:50', '13:18') ||
+        StarRiseSetCulmCase('Canopus', 6.3992, -52.6956, 310, observer, '2022-11-21', '04:17', '07:44', '11:11') ||
+        StarRiseSetCulmCase('Canopus', 6.3992, -52.6956, 310, observer, '2022-11-25', '04:01', '07:28', '10:56') ||
         Pass('StarRiseSetCulm')
     );
 }

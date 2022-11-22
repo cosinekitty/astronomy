@@ -481,6 +481,35 @@ Uses the computer's system clock to find the current UTC date and time with 1-se
 
 ---
 
+<a name="Astronomy_DefineStar"></a>
+### Astronomy_DefineStar(body, ra, dec, distanceLightYears) &#8658; [`astro_status_t`](#astro_status_t)
+
+**Assign equatorial coordinates to a user-defined star.** 
+
+
+
+Some Astronomy Engine functions allow their `body` parameter to be a user-defined fixed point in the sky, loosely called a "star". This function assigns a right ascension, declination, and distance to one of the eight user-defined stars `BODY_STAR1` .. `BODY_STAR8`.
+
+A star that has not been defined through a call to `Astronomy_DefineStar` defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year. Once defined, the star keeps the given coordinates until a subsequent call to `Astronomy_DefineStar` replaces the coordinates with new values.
+
+
+
+**Returns:**  `ASTRO_SUCCESS` indicates the star has been defined. Any other value indicates an error, in which case no change has taken place to any of the star definitions. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`astro_body_t`](#astro_body_t) | `body` |  One of the eight user-defined star identifiers: `BODY_STAR1` .. `BODY_STAR8`. | 
+| `double` | `ra` |  The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of sidereal hours, and must be within the half-open range [0, 24). | 
+| `double` | `dec` |  The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of degrees north (positive) or south (negative) of the J2000 equator, and must be within the closed range [-90, +90]. | 
+| `double` | `distanceLightYears` |  The distance between the star and the Sun, expressed in light-years. This value is used to calculate the tiny parallax shift as seen by an observer on Earth. If you don't know the distance to the star, using a large value like 1000 will generally work well. The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations. | 
+
+
+
+
+---
+
 <a name="Astronomy_DeltaT_EspenakMeeus"></a>
 ### Astronomy_DeltaT_EspenakMeeus(ut) &#8658; `double`
 
@@ -3130,6 +3159,21 @@ This is the inverse function of [`Astronomy_ObserverVector`](#Astronomy_Observer
 
 ---
 
+<a name="AU_PER_LY"></a>
+### `AU_PER_LY`
+
+**The number of astronomical units per light-year.** 
+
+
+
+```C
+#define AU_PER_LY  63241.07708807546
+```
+
+
+
+---
+
 <a name="CALLISTO_RADIUS_KM"></a>
 ### `CALLISTO_RADIUS_KM`
 
@@ -3676,6 +3720,14 @@ Aberration correction is useful to improve accuracy of coordinates of apparent l
 | `BODY_MOON` |  Moon  |
 | `BODY_EMB` |  Earth/Moon Barycenter  |
 | `BODY_SSB` |  Solar System Barycenter  |
+| `BODY_STAR1` |  user-defined star #1  |
+| `BODY_STAR2` |  user-defined star #2  |
+| `BODY_STAR3` |  user-defined star #3  |
+| `BODY_STAR4` |  user-defined star #4  |
+| `BODY_STAR5` |  user-defined star #5  |
+| `BODY_STAR6` |  user-defined star #6  |
+| `BODY_STAR7` |  user-defined star #7  |
+| `BODY_STAR8` |  user-defined star #8  |
 
 
 

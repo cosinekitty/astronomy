@@ -115,7 +115,94 @@ struct astro_grav_sim_s
     gravsim_endpoint_t *prev;
     gravsim_endpoint_t *curr;
 };
+
+typedef struct
+{
+    double ra;
+    double dec;
+    double dist;
+}
+stardef_t;
+
 /** @endcond */
+
+#define NSTARS 8
+static stardef_t StarTable[NSTARS] =
+{
+    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR1
+    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR2
+    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR3
+    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR4
+    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR5
+    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR6
+    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR7
+    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR8
+};
+
+#define IsUserDefinedStar(body)     (((body) >= BODY_STAR1) && ((body) <= BODY_STAR8))
+
+static stardef_t *StarDef(astro_body_t body)
+{
+    return IsUserDefinedStar(body) ? &StarTable[body - BODY_STAR1] : NULL;
+}
+
+/**
+ * @brief Assign equatorial coordinates to a user-defined star.
+ *
+ * Some Astronomy Engine functions allow their `body` parameter to
+ * be a user-defined fixed point in the sky, loosely called a "star".
+ * This function assigns a right ascension, declination, and distance
+ * to one of the eight user-defined stars `BODY_STAR1` .. `BODY_STAR8`.
+ *
+ * A star that has not been defined through a call to `Astronomy_DefineStar`
+ * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+ * Once defined, the star keeps the given coordinates until
+ * a subsequent call to `Astronomy_DefineStar` replaces the coordinates with new values.
+ *
+ * @param body
+ *      One of the eight user-defined star identifiers: `BODY_STAR1` .. `BODY_STAR8`.
+ *
+ * @param ra
+ *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+ *      The value is in units of sidereal hours, and must be within the half-open range [0, 24).
+ *
+ * @param dec
+ *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+ *      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
+ *      and must be within the closed range [-90, +90].
+ *
+ * @param distanceLightYears
+ *      The distance between the star and the Sun, expressed in light-years.
+ *      This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
+ *      If you don't know the distance to the star, using a large value like 1000 will generally work well.
+ *      The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
+ *
+ * @return
+ *      `ASTRO_SUCCESS` indicates the star has been defined. Any other value indicates an error,
+ *      in which case no change has taken place to any of the star definitions.
+ */
+astro_status_t Astronomy_DefineStar(astro_body_t body, double ra, double dec, double distanceLightYears)
+{
+    stardef_t *star = StarDef(body);
+
+    if (star == NULL)
+        return ASTRO_INVALID_BODY;
+
+    if (!isfinite(ra) || ra < 0.0 || ra >= 24.0)
+        return ASTRO_INVALID_PARAMETER;
+
+    if (!isfinite(dec) || dec < -90.0 || dec > +90.0)
+        return ASTRO_INVALID_PARAMETER;
+
+    if (!isfinite(distanceLightYears) || distanceLightYears < 1.0)
+        return ASTRO_INVALID_PARAMETER;
+
+    star->ra   = ra;
+    star->dec  = dec;
+    star->dist = distanceLightYears * AU_PER_LY;
+
+    return ASTRO_SUCCESS;
+}
 
 static const terse_vector_t VecZero = { 0.0, 0.0, 0.0 };
 

@@ -1337,7 +1337,7 @@ the returned vector's `t` field rather than the backdated time.
 
 Some Astronomy Engine functions allow their `body` parameter to
 be a user-defined fixed point in the sky, loosely called a "star".
-This function assigns a right ascension and declination
+This function assigns a right ascension, declination, and distance
 to one of the eight user-defined stars `Star1`..`Star8`.
 
 A star that has not been defined through a call to `DefineStar`

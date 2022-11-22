@@ -221,6 +221,7 @@ static int DE405_Check(void);
 static int AxisTest(void);
 static int SiderealTimeTest(void);
 static int DatesIssue250(void);
+static int StarRiseSetCulm(void);
 
 #if PERFORMANCE_TESTS
 static int MapPerformanceTest(void);
@@ -278,6 +279,7 @@ static unit_test_t UnitTests[] =
     {"seasons187",              SeasonsIssue187},
     {"sidereal",                SiderealTimeTest},
     {"solar_fraction",          SolarFractionTest},
+    {"star_risesetculm",        StarRiseSetCulm},
     {"time",                    Test_AstroTime},
     {"topostate",               TopoStateTest},
     {"transit",                 Transit},
@@ -7052,6 +7054,51 @@ static int DatesIssue250(void)
     CHECK(CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.325Z"));
     CHECK(CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.041Z"));
     printf("C DatesIssue250: PASS\n");
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int StarRiseSetCulmCase(
+    const char *starName,
+    double ra,
+    double dec,
+    double distLy,
+    astro_observer_t observer,
+    int year,
+    int month,
+    int day,
+    int riseHour,
+    int riseMinute,
+    int culmHour,
+    int culmMinute,
+    int setHour,
+    int setMinute)
+{
+    int error;
+    astro_status_t status;
+
+    status = Astronomy_DefineStar(BODY_STAR1, ra, dec, distLy);
+    if (status != ASTRO_SUCCESS)
+        FAIL("StarRiseSetCulm(%s): Astronomy_DefineStar returned %d.\n", starName, status);
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int StarRiseSetCulm(void)
+{
+    int error;
+    astro_observer_t observer = Astronomy_MakeObserver(+25.77, -80.19, 0.0);
+
+    CHECK(StarRiseSetCulmCase("Sirius",   6.7525, -16.7183,   8.6, observer, 2022, 11, 21,  2, 37,  8,  6, 13, 34));
+    CHECK(StarRiseSetCulmCase("Sirius",   6.7525, -16.7183,   8.6, observer, 2022, 11, 25,  2, 22,  7, 50, 13, 18));
+    CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 21,  4, 17,  7, 44, 11, 11));
+    CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56));
+
+    printf("StarRiseSetCulm: PASS\n");
 fail:
     return error;
 }

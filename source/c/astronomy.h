@@ -42,12 +42,17 @@ extern "C" {
  */
 #define C_AUDAY     173.1446326846693
 
-
 /**
  * \def KM_PER_AU
  * @brief The number of kilometers in one astronomical unit (AU).
  */
 #define KM_PER_AU   1.4959787069098932e+8
+
+/**
+ * \def AU_PER_LY
+ * @brief The number of astronomical units per light-year.
+ */
+#define AU_PER_LY   63241.07708807546
 
 /**
  * \def DEG2RAD
@@ -437,7 +442,15 @@ typedef enum
     BODY_SUN,               /**< Sun */
     BODY_MOON,              /**< Moon */
     BODY_EMB,               /**< Earth/Moon Barycenter */
-    BODY_SSB                /**< Solar System Barycenter */
+    BODY_SSB,               /**< Solar System Barycenter */
+    BODY_STAR1 = 101,       /**< user-defined star #1 */
+    BODY_STAR2,             /**< user-defined star #2 */
+    BODY_STAR3,             /**< user-defined star #3 */
+    BODY_STAR4,             /**< user-defined star #4 */
+    BODY_STAR5,             /**< user-defined star #5 */
+    BODY_STAR6,             /**< user-defined star #6 */
+    BODY_STAR7,             /**< user-defined star #7 */
+    BODY_STAR8,             /**< user-defined star #8 */
 }
 astro_body_t;
 
@@ -1373,6 +1386,13 @@ astro_vector_t Astronomy_BackdatePosition(
     astro_body_t observerBody,
     astro_body_t targetBody,
     astro_aberration_t aberration
+);
+
+astro_status_t Astronomy_DefineStar(
+    astro_body_t body,
+    double ra,
+    double dec,
+    double distanceLightYears
 );
 
 #ifdef __cplusplus
