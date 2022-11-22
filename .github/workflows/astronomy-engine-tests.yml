@@ -12,7 +12,7 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       uses: microsoft/setup-msbuild@v1.1
     - name: Init dotnet core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
     - name: Init Python 3.7
@@ -27,10 +27,10 @@ jobs:
     - name: Install documentation tools macOS
       if: startsWith(matrix.os, 'macOS')
       run: HOMEBREW_NO_AUTO_UPDATE=1 brew install doxygen
-    - name: Init Node.js 14.x
-      uses: actions/setup-node@v2
+    - name: Init Node.js 16
+      uses: actions/setup-node@v3
       with:
-        node-version: 14.x
+        node-version: 16
     - name: set up JDK 11
       uses: actions/setup-java@v3
       with:
