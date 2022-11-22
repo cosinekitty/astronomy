@@ -14,11 +14,30 @@ namespace csharp_test
     {
         static bool Verbose;
         const double SECONDS_PER_DAY = 86400.0;
+        const double MINUTES_PER_DAY =  1440.0;
 
         static void Debug(string format, params object[] args)
         {
             if (Verbose)
                 Console.WriteLine(format, args);
+        }
+
+        static int Pass(string name)
+        {
+            Console.WriteLine(name + ": PASS");
+            return 0;
+        }
+
+        static int Fail(string message)
+        {
+            Console.WriteLine(message);
+            return 1;
+        }
+
+        static bool BoolFail(string message)
+        {
+            Console.WriteLine(message);
+            return false;
         }
 
         struct Test
@@ -64,6 +83,7 @@ namespace csharp_test
             new Test("seasons187", SeasonsIssue187),
             new Test("sidereal", SiderealTimeTest),
             new Test("solar_fraction", SolarFractionTest),
+            new Test("star_risesetculm", StarRiseSetCulm),
             new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
             new Test("barystate", BaryStateTest),
@@ -4239,6 +4259,62 @@ namespace csharp_test
             double magSquared = correct.vx*correct.vx + correct.vy*correct.vy + correct.vz*correct.vz;
             double radians = sqrt(diffSquared / magSquared);
             return (60.0 * Astronomy.RAD2DEG) * radians;
+        }
+
+        //-----------------------------------------------------------------------------------------
+
+        static bool StarRiseSetCulmCase(
+            string starName,
+            double ra,
+            double dec,
+            double distLy,
+            Observer observer,
+            int year,
+            int month,
+            int day,
+            int riseHour,
+            int riseMinute,
+            int culmHour,
+            int culmMinute,
+            int setHour,
+            int setMinute)
+        {
+            // Calculate expected event times.
+            var expectedRiseTime = new AstroTime(year, month, day, riseHour, riseMinute, 0.0);
+            var expectedCulmTime = new AstroTime(year, month, day, culmHour, culmMinute, 0.0);
+            var expectedSetTime  = new AstroTime(year, month, day, setHour,  setMinute,  0.0);
+
+            // Define a custom star object.
+            Astronomy.DefineStar(Body.Star1, ra, dec, distLy);
+
+            // Use Astronomy Engine to search for event times.
+            var searchTime = new AstroTime(year, month, day, 0, 0, 0.0);
+            var rise = Astronomy.SearchRiseSet(Body.Star1, observer, Direction.Rise, searchTime, 1.0);
+            var culm = Astronomy.SearchHourAngle(Body.Star1, observer, 0.0, searchTime, +1);
+            var set = Astronomy.SearchRiseSet(Body.Star1, observer, Direction.Set, searchTime, 1.0);
+
+            // Compare expected times with calculated times.
+            double rdiff = MINUTES_PER_DAY * abs(expectedRiseTime.ut - rise.ut);
+            double cdiff = MINUTES_PER_DAY * abs(expectedCulmTime.ut - culm.time.ut);
+            double sdiff = MINUTES_PER_DAY * abs(expectedSetTime.ut - set.ut);
+
+            Debug($"StarRiseSetCulmTime({starName}): minutes rdiff = {rdiff:F4}, cdiff = {cdiff:F4}, sdiff = {sdiff:F4}");
+
+            if (rdiff > 0.5) return BoolFail($"StarRiseSetCulmTime({starName}): excessive rise time error = {rdiff:F4} minutes.");
+            if (cdiff > 0.5) return BoolFail($"StarRiseSetCulmTime({starName}): excessive culm time error = {cdiff:F4} minutes.");
+            if (sdiff > 0.5) return BoolFail($"StarRiseSetCulmTime({starName}): excessive set time error = {sdiff:F4} minutes.");
+            return true;
+        }
+
+        static int StarRiseSetCulm()
+        {
+            var observer = new Observer(+25.77, -80.19, 0.0);
+            return (
+                StarRiseSetCulmCase("Sirius",   6.7525, -16.7183,   8.6, observer, 2022, 11, 21,  2, 37,  8,  6, 13, 34) &&
+                StarRiseSetCulmCase("Sirius",   6.7525, -16.7183,   8.6, observer, 2022, 11, 25,  2, 22,  7, 50, 13, 18) &&
+                StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 21,  4, 17,  7, 44, 11, 11) &&
+                StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56)
+            ) ? Pass("StarRiseSetCulm") : 1;
         }
 
         //-----------------------------------------------------------------------------------------

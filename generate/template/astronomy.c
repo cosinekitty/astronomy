@@ -3925,6 +3925,15 @@ astro_vector_t Astronomy_CorrectLightTravel(
             return pos;
 
         distance = Astronomy_VectorLength(pos);
+
+        /*
+            This solver does not support more than one light-day of distance,
+            because that would cause convergence problems and inaccurate
+            values for stellar aberration angles.
+        */
+        if (distance > C_AUDAY)
+            return VecError(ASTRO_INVALID_PARAMETER, time);
+
         ltime2 = Astronomy_AddDays(time, -distance/C_AUDAY);
         dt = fabs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9)        /* 86.4 microseconds */

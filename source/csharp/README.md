@@ -177,6 +177,14 @@ movement through the Solar System.
 
 ---
 
+<a name="Astronomy.AU_PER_LY"></a>
+### `const double Astronomy.AU_PER_LY = 63241.07708807546;`
+
+**The number of astronomical units in one light-year.**
+
+
+---
+
 <a name="Astronomy.C_AUDAY"></a>
 ### `const double Astronomy.C_AUDAY = 173.1446326846693;`
 
@@ -426,6 +434,28 @@ the returned vector's `t` field rather than the backdated time.
 | [`AstroTime`](#AstroTime) | `time` | The observation time for which to solve for light travel delay. |
 
 **Returns:** The position vector at the solved backdated time. The `t` field holds the time that light left the observed body to arrive at the observer at the observation time.
+
+<a name="Astronomy.DefineStar"></a>
+### Astronomy.DefineStar(body, ra, dec, distanceLightYears) &#8658; `void`
+
+**Assign equatorial coordinates to a user-defined star.**
+
+Some Astronomy Engine functions allow their `body` parameter to
+be a user-defined fixed point in the sky, loosely called a "star".
+This function assigns a right ascension, declination, and distance
+to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
+
+A star that has not been defined through a call to `DefineStar`
+defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+Once defined, the star keeps the given coordinates until
+a subsequent call to `DefineStar` replaces the coordinates with new values.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`. |
+| `double` | `ra` | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of sidereal hours, and must be within the half-open range [0, 24). |
+| `double` | `dec` | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of degrees north (positive) or south (negative) of the J2000 equator, and must be within the closed range [-90, +90]. |
+| `double` | `distanceLightYears` | The distance between the star and the Sun, expressed in light-years. This value is used to calculate the tiny parallax shift as seen by an observer on Earth. If you don't know the distance to the star, using a large value like 1000 will generally work well. The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations. |
 
 <a name="Astronomy.DeltaT_EspenakMeeus"></a>
 ### Astronomy.DeltaT_EspenakMeeus(ut) &#8658; `double`
@@ -2556,6 +2586,14 @@ It is expressed in the equatorial J2000 system (EQJ).
 | `Moon` | The Earth's natural satellite, the Moon. |
 | `EMB` | The Earth/Moon Barycenter. |
 | `SSB` | The Solar System Barycenter. |
+| `Star1` | User-defined star #1. |
+| `Star2` | User-defined star #2. |
+| `Star3` | User-defined star #3. |
+| `Star4` | User-defined star #4. |
+| `Star5` | User-defined star #5. |
+| `Star6` | User-defined star #6. |
+| `Star7` | User-defined star #7. |
+| `Star8` | User-defined star #8. |
 
 ---
 

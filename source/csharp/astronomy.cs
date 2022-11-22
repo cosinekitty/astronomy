@@ -157,6 +157,46 @@ namespace CosineKitty
         /// The Solar System Barycenter.
         /// </summary>
         SSB,
+
+        /// <summary>
+        /// User-defined star #1.
+        /// </summary>
+        Star1 = 101,
+
+        /// <summary>
+        /// User-defined star #2.
+        /// </summary>
+        Star2,
+
+        /// <summary>
+        /// User-defined star #3.
+        /// </summary>
+        Star3,
+
+        /// <summary>
+        /// User-defined star #4.
+        /// </summary>
+        Star4,
+
+        /// <summary>
+        /// User-defined star #5.
+        /// </summary>
+        Star5,
+
+        /// <summary>
+        /// User-defined star #6.
+        /// </summary>
+        Star6,
+
+        /// <summary>
+        /// User-defined star #7.
+        /// </summary>
+        Star7,
+
+        /// <summary>
+        /// User-defined star #8.
+        /// </summary>
+        Star8,
     }
 
     /// <summary>
@@ -2771,6 +2811,11 @@ namespace CosineKitty
         /// </summary>
         public const double C_AUDAY = 173.1446326846693;
 
+        /// <summary>
+        /// The number of astronomical units in one light-year.
+        /// </summary>
+        public const double AU_PER_LY = 63241.07708807546;
+
         private const double DAYS_PER_TROPICAL_YEAR = 365.24217;
         private const double ASEC360 = 1296000.0;
         private const double ASEC2RAD = 4.848136811095359935899141e-6;
@@ -2827,6 +2872,93 @@ namespace CosineKitty
         internal const double PLUTO_GM   = 0.2188699765425970e-11;
 
         internal const double MOON_GM = EARTH_GM / EARTH_MOON_MASS_RATIO;
+
+        private static bool isfinite(double x)
+        {
+            return !double.IsNaN(x) && !double.IsInfinity(x);
+        }
+
+        private class StarDef
+        {
+            public double ra;       // heliocentric right ascension in EQJ
+            public double dec;      // heliocentric declination in EQJ
+            public double dist;     // heliocentric distance in AU
+
+            public StarDef()
+            {
+                ra = 0.0;
+                dec = 0.0;
+                dist = AU_PER_LY;
+            }
+        };
+
+        private static readonly StarDef[] StarTable = InitStarTable();
+
+        private static StarDef[] InitStarTable()
+        {
+            var table = new StarDef[8];
+            for (int i = 0; i < table.Length; ++i)
+                table[i] = new StarDef();
+            return table;
+        }
+
+        private static bool IsUserDefinedStar(Body body) =>
+            (body >= Body.Star1) && (body <= Body.Star8);
+
+        private static StarDef GetStar(Body body) =>
+            IsUserDefinedStar(body) ? StarTable[(int)body - (int)Body.Star1] : null;
+
+        /// <summary>
+        /// Assign equatorial coordinates to a user-defined star.
+        /// </summary>
+        /// <remarks>
+        /// Some Astronomy Engine functions allow their `body` parameter to
+        /// be a user-defined fixed point in the sky, loosely called a "star".
+        /// This function assigns a right ascension, declination, and distance
+        /// to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
+        ///
+        /// A star that has not been defined through a call to `DefineStar`
+        /// defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+        /// Once defined, the star keeps the given coordinates until
+        /// a subsequent call to `DefineStar` replaces the coordinates with new values.
+        /// </remarks>
+        /// <param name="body">
+        /// One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`.
+        /// </param>
+        /// <param name="ra">
+        /// The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+        /// The value is in units of sidereal hours, and must be within the half-open range [0, 24).
+        /// </param>
+        /// <param name="dec">
+        /// The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+        /// The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
+        /// and must be within the closed range [-90, +90].
+        /// </param>
+        /// <param name="distanceLightYears">
+        /// The distance between the star and the Sun, expressed in light-years.
+        /// This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
+        /// If you don't know the distance to the star, using a large value like 1000 will generally work well.
+        /// The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
+        /// </param>
+        public static void DefineStar(Body body, double ra, double dec, double distanceLightYears)
+        {
+            StarDef star = GetStar(body);
+            if (star == null)
+                throw new ArgumentException($"Body must be a user-defined star, not {body}.");
+
+            if (!isfinite(ra) || ra < 0.0 || ra >= 24.0)
+                throw new ArgumentException($"Invalid right ascension for star: {ra}");
+
+            if (!isfinite(dec) || dec < -90.0 || dec > +90.0)
+                throw new ArgumentException($"Invalid declination for star: {dec}");
+
+            if (!isfinite(distanceLightYears) || distanceLightYears < 1.0)
+                throw new ArgumentException($"Invalid heliocentric distance for star: {distanceLightYears}");
+
+            star.ra = ra;
+            star.dec = dec;
+            star.dist = distanceLightYears * AU_PER_LY;
+        }
 
         /// <summary>
         /// Returns the product of mass and universal gravitational constant of a Solar System body.
@@ -5499,6 +5631,9 @@ namespace CosineKitty
         /// <returns>A heliocentric position vector of the center of the given body.</returns>
         public static AstroVector HelioVector(Body body, AstroTime time)
         {
+            if (GetStar(body) is StarDef star)
+                return VectorFromSphere(new Spherical(star.dec, 15*star.ra, star.dist), time);
+
             AstroVector earth, geomoon;
 
             switch (body)
@@ -5625,7 +5760,13 @@ namespace CosineKitty
             for (int iter = 0; iter < 10; ++iter)
             {
                 AstroVector pos = func.Position(ltime);
-                AstroTime ltime2 = time.AddDays(-pos.Length() / Astronomy.C_AUDAY);
+                // This solver does not support more than one light-day of distance,
+                // because that would cause convergence problems and inaccurate
+                // values for stellar aberration angles.
+                double lt = pos.Length() / C_AUDAY;
+                if (lt > 1.0)
+                    throw new ArgumentException("Object is too distant for light-travel solver.");
+                AstroTime ltime2 = time.AddDays(-lt);
                 double dt = Math.Abs(ltime2.tt - ltime.tt);
                 if (dt < 1.0e-9)        // 86.4 microseconds
                     return pos;
@@ -5719,6 +5860,34 @@ namespace CosineKitty
             Body targetBody,
             Aberration aberration)
         {
+            if (IsUserDefinedStar(targetBody))
+            {
+                // This is a user-defined star, which must be treated as a special case.
+                // First, we assume its heliocentric position does not change with time.
+                // Second, we assume its heliocentric position has already been corrected
+                // for light-travel time, its coordinates given as it appears on Earth at the present.
+                // Therefore, no backdating is applied.
+                AstroVector tvec = HelioVector(targetBody, time);
+                switch (aberration)
+                {
+                    case Aberration.None:
+                        // No correction is needed. Simply return the star's current position as seen from the observer.
+                        return tvec - HelioVector(observerBody, time);
+
+                    case Aberration.Corrected:
+                        // (Observer velocity) - (light vector) = (Aberration-corrected direction to target body).
+                        // Note that this is an approximation, because technically the light vector should
+                        // be measured in barycentric coordinates, not heliocentric. The error is very small.
+                        StateVector ostate = HelioState(observerBody, time);
+                        AstroVector rvec = tvec - ostate.Position();
+                        double s = C_AUDAY / rvec.Length();    // conversion factor from relative distance to speed of light
+                        return rvec + ostate.Velocity()/s;
+
+                    default:
+                        throw new ArgumentException($"Unsupported aberration option: {aberration}");
+                }
+            }
+
             AstroVector observerPos;
             switch (aberration)
             {
@@ -7107,6 +7276,22 @@ namespace CosineKitty
             case Body.Pluto:
                 deriv_ra  = -0.2;
                 deriv_dec = +0.2;
+                break;
+
+            case Body.Star1:
+            case Body.Star2:
+            case Body.Star3:
+            case Body.Star4:
+            case Body.Star5:
+            case Body.Star6:
+            case Body.Star7:
+            case Body.Star8:
+                // The minimum allowed heliocentric distance of a user-defined star
+                // is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
+                // Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
+                // generous safety buffer of 0.008 degrees.
+                deriv_ra  = -0.008;
+                deriv_dec = +0.008;
                 break;
 
             case Body.Earth:
@@ -9720,10 +9905,10 @@ namespace CosineKitty
             if (point < 1 || point > 5)
                 throw new ArgumentException($"Invalid lagrange point {point}");
 
-            if (double.IsNaN(major_mass) || double.IsInfinity(major_mass) || major_mass <= 0.0)
+            if (!isfinite(major_mass) || major_mass <= 0.0)
                 throw new ArgumentException("Major mass must be a positive number.");
 
-            if (double.IsNaN(minor_mass) || double.IsInfinity(minor_mass) || minor_mass <= 0.0)
+            if (!isfinite(minor_mass) || minor_mass <= 0.0)
                 throw new ArgumentException("Minor mass must be a positive number.");
 
             // Find the relative position vector <dx, dy, dz>.
@@ -9973,7 +10158,7 @@ namespace CosineKitty
                 throw new ArgumentException($"Invalid coordinate axis = {axis}. Must be 0..2.");
 
             // Check for an invalid angle value.
-            if (double.IsNaN(angle) || double.IsInfinity(angle))
+            if (!isfinite(angle))
                 throw new ArgumentException("Angle is not a finite number.");
 
             double radians = angle * DEG2RAD;

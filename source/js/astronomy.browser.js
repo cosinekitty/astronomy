@@ -3772,6 +3772,9 @@ function CorrectLightTravel(func, time) {
     for (let iter = 0; iter < 10; ++iter) {
         const pos = func.Position(ltime);
         const lt = pos.Length() / exports.C_AUDAY;
+        // This solver does not support more than one light-day of distance,
+        // because that would cause convergence problems and inaccurate
+        // values for stellar aberration angles.
         if (lt > 1.0)
             throw `Object is too distant for light-travel solver.`;
         const ltime2 = time.AddDays(-lt);
