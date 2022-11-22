@@ -38,6 +38,7 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 #define PI      3.14159265358979323846
 
 #define SECONDS_PER_DAY     (24 * 3600)
+#define MINUTES_PER_DAY     (24 * 60)
 
 #define CHECK(x)        do{if(0 != (error = (x))) goto fail;}while(0)
 #define FAIL(...)       do{printf(__VA_ARGS__); error = 1; goto fail;}while(0)
@@ -7078,10 +7079,47 @@ static int StarRiseSetCulmCase(
 {
     int error;
     astro_status_t status;
+    astro_time_t searchTime, expectedRiseTime, expectedSetTime, expectedCulmTime;
+    astro_search_result_t rise, set;
+    astro_hour_angle_t culm;
+    double rdiff, cdiff, sdiff;
+
+    /* Calculate expected event times. */
+
+    expectedRiseTime = Astronomy_MakeTime(year, month, day, riseHour, riseMinute, 0.0);
+    expectedCulmTime = Astronomy_MakeTime(year, month, day, culmHour, culmMinute, 0.0);
+    expectedSetTime  = Astronomy_MakeTime(year, month, day, setHour,  setMinute,  0.0);
+
+    /* Define a custom star object. */
 
     status = Astronomy_DefineStar(BODY_STAR1, ra, dec, distLy);
     if (status != ASTRO_SUCCESS)
         FAIL("StarRiseSetCulm(%s): Astronomy_DefineStar returned %d.\n", starName, status);
+
+    /* Use Astronomy Engine to search for event times. */
+
+    searchTime = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
+
+    rise = Astronomy_SearchRiseSet(BODY_STAR1, observer, DIRECTION_RISE, searchTime, 1.0);
+    CHECK_STATUS(rise);
+
+    culm = Astronomy_SearchHourAngleEx(BODY_STAR1, observer, 0.0, searchTime, +1);
+    CHECK_STATUS(culm);
+
+    set = Astronomy_SearchRiseSet(BODY_STAR1, observer, DIRECTION_SET, searchTime, 1.0);
+    CHECK_STATUS(set);
+
+    /* Compare expected times with calculated times. */
+
+    rdiff = MINUTES_PER_DAY * ABS(expectedRiseTime.ut - rise.time.ut);
+    cdiff = MINUTES_PER_DAY * ABS(expectedCulmTime.ut - culm.time.ut);
+    sdiff = MINUTES_PER_DAY * ABS(expectedSetTime.ut  - set.time.ut);
+
+    DEBUG("StarRiseSetCulmCase(%s): minutes rdiff = %0.4lf, cdiff = %0.4lf, sdiff = %0.4lf\n", starName, rdiff, cdiff, sdiff);
+
+    if (rdiff > 0.5) FAIL("StarRiseSetCulmCase(%s): exccessive rise time error = %0.4lf minutes.\n", starName, rdiff);
+    if (cdiff > 0.5) FAIL("StarRiseSetCulmCase(%s): exccessive culm time error = %0.4lf minutes.\n", starName, cdiff);
+    if (sdiff > 0.5) FAIL("StarRiseSetCulmCase(%s): exccessive set time error = %0.4lf minutes.\n", starName, sdiff);
 
     error = 0;
 fail:

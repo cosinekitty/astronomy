@@ -3737,6 +3737,7 @@ astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time)
  * @param body
  *      A body for which to calculate a heliocentric position: the Sun, Moon, any of the planets,
  *      the Solar System Barycenter (SSB), or the Earth Moon Barycenter (EMB).
+ *      Can also be a star defined by #Astronomy_DefineStar.
  * @param time  The date and time for which to calculate the position.
  * @return      A heliocentric position vector of the center of the given body.
  */
@@ -3744,6 +3745,18 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 {
     astro_vector_t vector, earth;
     body_state_t bstate;
+    stardef_t *star;
+
+    star = StarDef(body);
+    if (star != NULL)
+    {
+        astro_spherical_t sphere;
+        sphere.lat = star->dec;
+        sphere.lon = 15.0 * star->ra;
+        sphere.dist = star->dist;
+        sphere.status = ASTRO_SUCCESS;
+        return Astronomy_VectorFromSphere(sphere, time);
+    }
 
     switch (body)
     {
@@ -4018,31 +4031,91 @@ astro_vector_t Astronomy_BackdatePosition(
     astro_body_t targetBody,
     astro_aberration_t aberration)
 {
-    backdate_context_t context;
-
-    context.observerBody = observerBody;
-    context.targetBody   = targetBody;
-    context.aberration   = aberration;
-    switch (aberration)
+    if (IsUserDefinedStar(targetBody))
     {
-    case NO_ABERRATION:
-        /* Without aberration, we need the observer body position at the observation time only. */
-        /* For efficiency, calculate it once and hold onto it, so `BodyPosition` can keep using it. */
-        context.observerPos = Astronomy_HelioVector(observerBody, time);
-        break;
+        /*
+            This is a user-defined star, which must be treated as a special case.
+            First, we assume its heliocentric position does not change with time.
+            Second, we assume its heliocentric position has already been corrected
+            for light-travel time, its coordinates given as it appears on Earth at the present.
+            Therefore, no backdating is applied.
+        */
+        astro_vector_t ovec, tvec, vec;
+        double rx, ry, rz, s;
+        astro_state_vector_t ostate;
 
-    case ABERRATION:
-        /* With aberration, `BackdatePosition` will calculate the observer body state at different times. */
-        /* Therefore, do not waste time calculating it at the observation time. */
-        /* Initialize the memory with an explicitly invalid value. */
-        context.observerPos = VecError(ASTRO_NOT_INITIALIZED, time);
-        break;
+        tvec = Astronomy_HelioVector(targetBody, time);
+        if (tvec.status != ASTRO_SUCCESS)
+            return tvec;
 
-    default:
-        return VecError(ASTRO_INVALID_PARAMETER, time);
+        switch (aberration)
+        {
+        case NO_ABERRATION:
+            /* Return the star's position as seen from the observer. */
+            ovec = Astronomy_HelioVector(observerBody, time);
+            if (ovec.status != ASTRO_SUCCESS)
+                return ovec;
+            vec.x = tvec.x - ovec.x;
+            vec.y = tvec.y - ovec.y;
+            vec.z = tvec.z - ovec.z;
+            vec.t = time;
+            vec.status = ASTRO_SUCCESS;
+            return vec;
+
+        case ABERRATION:
+            /*
+                (Observer velocity) - (light vector) = (Aberration-corrected direction to target body).
+                Note that this is an approximation, because technically the light vector should
+                be measured in barycentric coordinates, not heliocentric. The error is very small.
+            */
+            ostate = Astronomy_HelioState(observerBody, time);
+            if (ostate.status != ASTRO_SUCCESS)
+                return VecError(ostate.status, time);
+
+            rx = tvec.x - ostate.x;
+            ry = tvec.y - ostate.y;
+            rz = tvec.z - ostate.z;
+            s = C_AUDAY / sqrt(rx*rx + ry*ry + rz*rz);
+
+            vec.x = rx + ostate.vx/s;
+            vec.y = ry + ostate.vy/s;
+            vec.z = rz + ostate.vz/s;
+            vec.t = time;
+            vec.status = ASTRO_SUCCESS;
+            return vec;
+
+        default:
+            return VecError(ASTRO_INVALID_PARAMETER, time);
+        }
     }
+    else
+    {
+        backdate_context_t context;
 
-    return Astronomy_CorrectLightTravel(&context, BodyPosition, time);
+        context.observerBody = observerBody;
+        context.targetBody   = targetBody;
+        context.aberration   = aberration;
+        switch (aberration)
+        {
+        case NO_ABERRATION:
+            /* Without aberration, we need the observer body position at the observation time only. */
+            /* For efficiency, calculate it once and hold onto it, so `BodyPosition` can keep using it. */
+            context.observerPos = Astronomy_HelioVector(observerBody, time);
+            break;
+
+        case ABERRATION:
+            /* With aberration, `BackdatePosition` will calculate the observer body state at different times. */
+            /* Therefore, do not waste time calculating it at the observation time. */
+            /* Initialize the memory with an explicitly invalid value. */
+            context.observerPos = VecError(ASTRO_NOT_INITIALIZED, time);
+            break;
+
+        default:
+            return VecError(ASTRO_INVALID_PARAMETER, time);
+        }
+
+        return Astronomy_CorrectLightTravel(&context, BodyPosition, time);
+    }
 }
 
 
@@ -4067,7 +4140,9 @@ astro_vector_t Astronomy_BackdatePosition(
  * causing the apparent direction of the body to be shifted due to transverse
  * movement of the Earth with respect to the rays of light coming from that body.
  *
- * @param body          A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
+ * @param body
+ *      A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.
+ *      Can also be a star defined by #Astronomy_DefineStar.
  * @param time          The date and time for which to calculate the position.
  * @param aberration    `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.
  * @return              A geocentric position vector of the center of the given body.
@@ -6697,6 +6772,24 @@ static astro_func_result_t MaxAltitudeSlope(astro_body_t body, double latitude)
         result.status = ASTRO_EARTH_NOT_ALLOWED;
         return result;
 
+    case BODY_STAR1:
+    case BODY_STAR2:
+    case BODY_STAR3:
+    case BODY_STAR4:
+    case BODY_STAR5:
+    case BODY_STAR6:
+    case BODY_STAR7:
+    case BODY_STAR8:
+        /*
+            The minimum allowed heliocentric distance of a user-defined star
+            is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
+            Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
+            generous safety buffer of 0.008 degrees.
+        */
+        deriv_ra  = -0.008;
+        deriv_dec = +0.008;
+        break;
+
     default:
         result.value = NAN;
         result.status = ASTRO_INVALID_BODY;
@@ -6731,7 +6824,7 @@ static astro_search_result_t InternalSearchAltitude(
 
     func_result = MaxAltitudeSlope(body, observer.latitude);
     if (func_result.status != ASTRO_SUCCESS)
-        return SearchError(ASTRO_SUCCESS);
+        return SearchError(func_result.status);
     max_deriv_alt = func_result.value;
 
     context.body = body;

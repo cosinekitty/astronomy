@@ -851,7 +851,7 @@ Also, the position can optionally be corrected for [aberration](https://en.wikip
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets.  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, or any of the planets. Can also be a star defined by [`Astronomy_DefineStar`](#Astronomy_DefineStar).  | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the position.  | 
 | [`astro_aberration_t`](#astro_aberration_t) | `aberration` |  `ABERRATION` to correct for aberration, or `NO_ABERRATION` to leave uncorrected.  | 
 
@@ -1119,7 +1119,7 @@ If given an invalid value for `body`, this function will fail. The caller should
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, any of the planets, the Solar System Barycenter (SSB), or the Earth Moon Barycenter (EMB).  | 
+| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric position: the Sun, Moon, any of the planets, the Solar System Barycenter (SSB), or the Earth Moon Barycenter (EMB). Can also be a star defined by [`Astronomy_DefineStar`](#Astronomy_DefineStar).  | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the position.  | 
 
 

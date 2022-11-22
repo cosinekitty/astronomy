@@ -3391,7 +3391,7 @@ function StarRiseSetCulmCase(starName, ra, dec, distLy, observer, searchDateText
     const rdiff = MINUTES_PER_DAY * abs(expectedRiseTime.ut - riseTime.ut);
     const cdiff = MINUTES_PER_DAY * abs(expectedCulmTime.ut - culm.time.ut);
     const sdiff = MINUTES_PER_DAY * abs(expectedSetTime.ut - setTime.ut);
-    Debug(`StarRiseSetCulmCase(${starName}): rise=${riseTime} (err=${rdiff.toFixed(2)} min), culm=${culm.time} (err=${cdiff.toFixed(2)} min), set=${setTime} (err=${sdiff.toFixed(2)} min).`);
+    Debug(`StarRiseSetCulmCase(${starName}): rise=${riseTime} (err=${rdiff.toFixed(4)} min), culm=${culm.time} (err=${cdiff.toFixed(4)} min), set=${setTime} (err=${sdiff.toFixed(4)} min).`);
     if (rdiff > 0.5) Fail(`StarRiseSetCulmCase(${starName}): excessive rise time error = ${rdiff} minutes.`);
     if (cdiff > 0.5) Fail(`StarRiseSetCulmCase(${starName}): excessive culm time error = ${cdiff} minutes.`);
     if (sdiff > 0.5) Fail(`StarRiseSetCulmCase(${starName}): excessive set time error = ${sdiff} minutes.`);
