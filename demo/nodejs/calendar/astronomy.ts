@@ -47,6 +47,11 @@ export const C_AUDAY = 173.1446326846693;
 export const KM_PER_AU = 1.4959787069098932e+8;
 
 /**
+ * @brief The number of astronomical units per light-year.
+ */
+export const AU_PER_LY = 63241.07708807546;
+
+/**
  * @brief The factor to convert degrees to radians = pi/180.
  */
 export const DEG2RAD = 0.017453292519943296;
@@ -323,20 +328,21 @@ const StarList = [
 
 
 interface StarDef {
-    ra: number,
-    dec: number
+    ra: number,     // EQJ right ascension
+    dec: number,    // EQJ declination
+    dist: number    // heliocentric distance in AU
 };
 
 
 const StarTable: StarDef[] = [
-    { ra: 0, dec: 0 },   // Body.Star1
-    { ra: 0, dec: 0 },   // Body.Star2
-    { ra: 0, dec: 0 },   // Body.Star3
-    { ra: 0, dec: 0 },   // Body.Star4
-    { ra: 0, dec: 0 },   // Body.Star5
-    { ra: 0, dec: 0 },   // Body.Star6
-    { ra: 0, dec: 0 },   // Body.Star7
-    { ra: 0, dec: 0 },   // Body.Star8
+    { ra: 0, dec: 0, dist: AU_PER_LY },   // Body.Star1
+    { ra: 0, dec: 0, dist: AU_PER_LY },   // Body.Star2
+    { ra: 0, dec: 0, dist: AU_PER_LY },   // Body.Star3
+    { ra: 0, dec: 0, dist: AU_PER_LY },   // Body.Star4
+    { ra: 0, dec: 0, dist: AU_PER_LY },   // Body.Star5
+    { ra: 0, dec: 0, dist: AU_PER_LY },   // Body.Star6
+    { ra: 0, dec: 0, dist: AU_PER_LY },   // Body.Star7
+    { ra: 0, dec: 0, dist: AU_PER_LY },   // Body.Star8
 ];
 
 
@@ -349,8 +355,8 @@ const StarTable: StarDef[] = [
  * to one of the eight user-defined stars `Star1`..`Star8`.
  *
  * A star that has not been defined through a call to `DefineStar`
- * defaults to the coordinates RA=0, DEC=0.
- * Once defined, the star keeps the updated coordinates until
+ * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+ * Once defined, the star keeps the given coordinates until
  * a subsequent call to `DefineStar` replaces the coordinates with new values.
  *
  * @param {Body} body
@@ -365,14 +371,21 @@ const StarTable: StarDef[] = [
  *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
  *      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
  *      and must be within the closed range [-90, +90].
+ *
+ * @param {number} distanceLightYears
+ *      The distance between the star and the Sun, expressed in light-years.
+ *      This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
+ *      If you don't know the distance to the star, using a large value like 1000 will generally work well.
+ *      The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
  */
-export function DefineStar(body: Body, ra: number, dec: number) {
+export function DefineStar(body: Body, ra: number, dec: number, distanceLightYears: number) {
     const index = StarList.indexOf(body);
     if (index < 0)
         throw `Invalid star body: ${body}`;
 
     VerifyNumber(ra);
     VerifyNumber(dec);
+    VerifyNumber(distanceLightYears);
 
     if (ra < 0 || ra >= 24)
         throw `Invalid right ascension for star: ${ra}`;
@@ -380,7 +393,10 @@ export function DefineStar(body: Body, ra: number, dec: number) {
     if (dec < -90 || dec > +90)
         throw `Invalid declination for star: ${dec}`;
 
-    StarTable[index] = { ra: ra, dec: dec };
+    if (distanceLightYears < 1)
+        throw `Invalid star distance: ${distanceLightYears}`;
+
+    StarTable[index] = { ra: ra, dec: dec, dist: distanceLightYears * AU_PER_LY };
 }
 
 
@@ -4066,6 +4082,7 @@ export function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo {
  *      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,
  *      `Body.Uranus`, `Body.Neptune`, `Body.Pluto`,
  *      `Body.SSB`, or `Body.EMB`.
+ *      Also allowed to be a user-defined star created by {@link DefineStar}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
@@ -4074,6 +4091,14 @@ export function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo {
  */
 export function HelioVector(body: Body, date: FlexibleDateTime): Vector {
     var time = MakeTime(date);
+
+    const starIndex = StarList.indexOf(body);
+    if (starIndex >= 0) {
+        const star = StarTable[starIndex];
+        const sphere = new Spherical(star.dec, 15*star.ra, star.dist);
+        return VectorFromSphere(sphere, time);
+    }
+
     if (body in vsop)
         return CalcVsop(vsop[body], time);
     if (body === Body.Pluto) {
@@ -4179,16 +4204,19 @@ export abstract class PositionFunction {
  */
 export function CorrectLightTravel(func: PositionFunction, time: AstroTime): Vector {
     let ltime = time;
-    let dt: number;
+    let dt: number = 0;
     for (let iter = 0; iter < 10; ++iter) {
         const pos = func.Position(ltime);
-        const ltime2 = time.AddDays(-pos.Length() / C_AUDAY);
+        const lt = pos.Length() / C_AUDAY;
+        if (lt > 1.0)
+            throw `Object is too distant for light-travel solver.`;
+        const ltime2 = time.AddDays(-lt);
         dt = Math.abs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9)        // 86.4 microseconds
             return pos;
         ltime = ltime2;
     }
-    throw "Light-travel time solver did not converge.";
+    throw `Light-travel time solver did not converge: dt = ${dt}`;
 }
 
 
@@ -4279,6 +4307,26 @@ export function BackdatePosition(
 ): Vector {
     VerifyBoolean(aberration);
     const time = MakeTime(date);
+    if (StarList.indexOf(targetBody) >= 0) {
+        // This is a user-defined star, which must be treated as a special case.
+        // First, we assume its heliocentric position does not change with time.
+        // Second, we assume its heliocentric position has already been corrected
+        // for light-travel time, its coordinates given as it appears on Earth at the present.
+        // Therefore, no backdating is applied.
+        const tvec = HelioVector(targetBody, time);
+        if (aberration) {
+            // (Observer velocity) - (light vector) = (Aberration-corrected direction to target body).
+            // Note that this is an approximation, because technically the light vector should
+            // be measured in barycentric coordinates, not heliocentric. The error is very small.
+            const ostate = HelioState(observerBody, time);
+            const rvec = new Vector(tvec.x-ostate.x, tvec.y-ostate.y, tvec.z-ostate.z, time);
+            const s = C_AUDAY / rvec.Length();    // conversion factor from relative distance to speed of light
+            return new Vector(rvec.x + ostate.vx/s, rvec.y + ostate.vy/s, rvec.z + ostate.vz/s, time);
+        }
+        // No correction is needed. Simply return the star's current position as seen from the observer.
+        const ovec = HelioVector(observerBody, time);
+        return new Vector(tvec.x-ovec.x, tvec.y-ovec.y, tvec.z-ovec.z, time);
+    }
     let observerPos: Vector;
     if (aberration) {
         // With aberration, `BackdatePosition` will calculate `observerPos` at different times.
@@ -4311,6 +4359,7 @@ export function BackdatePosition(
  *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,
  *      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,
  *      `Body.Uranus`, `Body.Neptune`, or `Body.Pluto`.
+ *      Also allowed to be a user-defined star created with {@link DefineStar}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
@@ -5605,6 +5654,22 @@ function MaxAltitudeSlope(body: Body, latitude: number): number {
     case Body.Pluto:
         deriv_ra  = -0.2;
         deriv_dec = +0.2;
+        break;
+
+    case Body.Star1:
+    case Body.Star2:
+    case Body.Star3:
+    case Body.Star4:
+    case Body.Star5:
+    case Body.Star6:
+    case Body.Star7:
+    case Body.Star8:
+        // The minimum allowed heliocentric distance of a user-defined star
+        // is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
+        // Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
+        // generous safety buffer of 0.008 degrees.
+        deriv_ra  = -0.008;
+        deriv_dec = +0.008;
         break;
 
     default:

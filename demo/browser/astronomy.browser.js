@@ -34,9 +34,9 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JupiterMoons = exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.SiderealTime = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.PlanetOrbitalPeriod = exports.DefineStar = exports.Body = exports.AngleBetween = exports.MassProduct = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.KM_PER_AU = exports.C_AUDAY = void 0;
-exports.RotateState = exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.ApsisKind = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = exports.BackdatePosition = exports.CorrectLightTravel = exports.PositionFunction = exports.HelioDistance = exports.HelioVector = void 0;
-exports.GravitySimulator = exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = void 0;
+exports.JupiterMoonsInfo = exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.SiderealTime = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.PlanetOrbitalPeriod = exports.DefineStar = exports.Body = exports.AngleBetween = exports.MassProduct = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.AU_PER_LY = exports.KM_PER_AU = exports.C_AUDAY = void 0;
+exports.RotateVector = exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.ApsisKind = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = exports.BackdatePosition = exports.CorrectLightTravel = exports.PositionFunction = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = void 0;
+exports.GravitySimulator = exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -45,6 +45,10 @@ exports.C_AUDAY = 173.1446326846693;
  * @brief The number of kilometers per astronomical unit.
  */
 exports.KM_PER_AU = 1.4959787069098932e+8;
+/**
+ * @brief The number of astronomical units per light-year.
+ */
+exports.AU_PER_LY = 63241.07708807546;
 /**
  * @brief The factor to convert degrees to radians = pi/180.
  */
@@ -286,14 +290,14 @@ const StarList = [
 ];
 ;
 const StarTable = [
-    { ra: 0, dec: 0 },
-    { ra: 0, dec: 0 },
-    { ra: 0, dec: 0 },
-    { ra: 0, dec: 0 },
-    { ra: 0, dec: 0 },
-    { ra: 0, dec: 0 },
-    { ra: 0, dec: 0 },
-    { ra: 0, dec: 0 },
+    { ra: 0, dec: 0, dist: exports.AU_PER_LY },
+    { ra: 0, dec: 0, dist: exports.AU_PER_LY },
+    { ra: 0, dec: 0, dist: exports.AU_PER_LY },
+    { ra: 0, dec: 0, dist: exports.AU_PER_LY },
+    { ra: 0, dec: 0, dist: exports.AU_PER_LY },
+    { ra: 0, dec: 0, dist: exports.AU_PER_LY },
+    { ra: 0, dec: 0, dist: exports.AU_PER_LY },
+    { ra: 0, dec: 0, dist: exports.AU_PER_LY },
 ];
 /**
  * @brief Assign equatorial coordinates to a user-defined star.
@@ -304,8 +308,8 @@ const StarTable = [
  * to one of the eight user-defined stars `Star1`..`Star8`.
  *
  * A star that has not been defined through a call to `DefineStar`
- * defaults to the coordinates RA=0, DEC=0.
- * Once defined, the star keeps the updated coordinates until
+ * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+ * Once defined, the star keeps the given coordinates until
  * a subsequent call to `DefineStar` replaces the coordinates with new values.
  *
  * @param {Body} body
@@ -320,18 +324,27 @@ const StarTable = [
  *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
  *      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
  *      and must be within the closed range [-90, +90].
+ *
+ * @param {number} distanceLightYears
+ *      The distance between the star and the Sun, expressed in light-years.
+ *      This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
+ *      If you don't know the distance to the star, using a large value like 1000 will generally work well.
+ *      The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
  */
-function DefineStar(body, ra, dec) {
+function DefineStar(body, ra, dec, distanceLightYears) {
     const index = StarList.indexOf(body);
     if (index < 0)
         throw `Invalid star body: ${body}`;
     VerifyNumber(ra);
     VerifyNumber(dec);
+    VerifyNumber(distanceLightYears);
     if (ra < 0 || ra >= 24)
         throw `Invalid right ascension for star: ${ra}`;
     if (dec < -90 || dec > +90)
         throw `Invalid declination for star: ${dec}`;
-    StarTable[index] = { ra: ra, dec: dec };
+    if (distanceLightYears < 1)
+        throw `Invalid star distance: ${distanceLightYears}`;
+    StarTable[index] = { ra: ra, dec: dec, dist: distanceLightYears * exports.AU_PER_LY };
 }
 exports.DefineStar = DefineStar;
 var PrecessDirection;
@@ -3640,6 +3653,7 @@ exports.JupiterMoons = JupiterMoons;
  *      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,
  *      `Body.Uranus`, `Body.Neptune`, `Body.Pluto`,
  *      `Body.SSB`, or `Body.EMB`.
+ *      Also allowed to be a user-defined star created by {@link DefineStar}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
@@ -3648,6 +3662,12 @@ exports.JupiterMoons = JupiterMoons;
  */
 function HelioVector(body, date) {
     var time = MakeTime(date);
+    const starIndex = StarList.indexOf(body);
+    if (starIndex >= 0) {
+        const star = StarTable[starIndex];
+        const sphere = new Spherical(star.dec, 15 * star.ra, star.dist);
+        return VectorFromSphere(sphere, time);
+    }
     if (body in vsop)
         return CalcVsop(vsop[body], time);
     if (body === Body.Pluto) {
@@ -3748,16 +3768,19 @@ exports.PositionFunction = PositionFunction;
  */
 function CorrectLightTravel(func, time) {
     let ltime = time;
-    let dt;
+    let dt = 0;
     for (let iter = 0; iter < 10; ++iter) {
         const pos = func.Position(ltime);
-        const ltime2 = time.AddDays(-pos.Length() / exports.C_AUDAY);
+        const lt = pos.Length() / exports.C_AUDAY;
+        if (lt > 1.0)
+            throw `Object is too distant for light-travel solver.`;
+        const ltime2 = time.AddDays(-lt);
         dt = Math.abs(ltime2.tt - ltime.tt);
         if (dt < 1.0e-9) // 86.4 microseconds
             return pos;
         ltime = ltime2;
     }
-    throw "Light-travel time solver did not converge.";
+    throw `Light-travel time solver did not converge: dt = ${dt}`;
 }
 exports.CorrectLightTravel = CorrectLightTravel;
 class BodyPosition extends PositionFunction {
@@ -3834,6 +3857,26 @@ class BodyPosition extends PositionFunction {
 function BackdatePosition(date, observerBody, targetBody, aberration) {
     VerifyBoolean(aberration);
     const time = MakeTime(date);
+    if (StarList.indexOf(targetBody) >= 0) {
+        // This is a user-defined star, which must be treated as a special case.
+        // First, we assume its heliocentric position does not change with time.
+        // Second, we assume its heliocentric position has already been corrected
+        // for light-travel time, its coordinates given as it appears on Earth at the present.
+        // Therefore, no backdating is applied.
+        const tvec = HelioVector(targetBody, time);
+        if (aberration) {
+            // (Observer velocity) - (light vector) = (Aberration-corrected direction to target body).
+            // Note that this is an approximation, because technically the light vector should
+            // be measured in barycentric coordinates, not heliocentric. The error is very small.
+            const ostate = HelioState(observerBody, time);
+            const rvec = new Vector(tvec.x - ostate.x, tvec.y - ostate.y, tvec.z - ostate.z, time);
+            const s = exports.C_AUDAY / rvec.Length(); // conversion factor from relative distance to speed of light
+            return new Vector(rvec.x + ostate.vx / s, rvec.y + ostate.vy / s, rvec.z + ostate.vz / s, time);
+        }
+        // No correction is needed. Simply return the star's current position as seen from the observer.
+        const ovec = HelioVector(observerBody, time);
+        return new Vector(tvec.x - ovec.x, tvec.y - ovec.y, tvec.z - ovec.z, time);
+    }
     let observerPos;
     if (aberration) {
         // With aberration, `BackdatePosition` will calculate `observerPos` at different times.
@@ -3866,6 +3909,7 @@ exports.BackdatePosition = BackdatePosition;
  *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,
  *      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,
  *      `Body.Uranus`, `Body.Neptune`, or `Body.Pluto`.
+ *      Also allowed to be a user-defined star created with {@link DefineStar}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
@@ -5024,6 +5068,21 @@ function MaxAltitudeSlope(body, latitude) {
         case Body.Pluto:
             deriv_ra = -0.2;
             deriv_dec = +0.2;
+            break;
+        case Body.Star1:
+        case Body.Star2:
+        case Body.Star3:
+        case Body.Star4:
+        case Body.Star5:
+        case Body.Star6:
+        case Body.Star7:
+        case Body.Star8:
+            // The minimum allowed heliocentric distance of a user-defined star
+            // is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
+            // Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
+            // generous safety buffer of 0.008 degrees.
+            deriv_ra = -0.008;
+            deriv_dec = +0.008;
             break;
         default:
             throw `Body not allowed for altitude search: ${body}`;

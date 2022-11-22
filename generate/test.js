@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const Astronomy = require('../source/js/astronomy.min.js');
+const MINUTES_PER_DAY = 1440;
 const SECONDS_PER_DAY = 86400;
 let Verbose = false;
 
@@ -3378,13 +3379,38 @@ function LunarFraction() {
 
 //-------------------------------------------------------------------------------------------------
 
+function StarRiseSetCulmCase(starName, ra, dec, distLy, observer, searchDateText, riseText, culmText, setText) {
+    Astronomy.DefineStar(Astronomy.Body.Star1, ra, dec, distLy);
+    const searchTime = new Astronomy.AstroTime(new Date(searchDateText));
+    const riseTime = Astronomy.SearchRiseSet(Astronomy.Body.Star1, observer, +1, searchTime, 1.0);
+    const setTime  = Astronomy.SearchRiseSet(Astronomy.Body.Star1, observer, -1, searchTime, 1.0);
+    const culm = Astronomy.SearchHourAngle(Astronomy.Body.Star1, observer, 0.0, searchTime);
+    const expectedRiseTime = new Astronomy.AstroTime(new Date(searchDateText + 'T' + riseText + 'Z'));
+    const expectedCulmTime = new Astronomy.AstroTime(new Date(searchDateText + 'T' + culmText + 'Z'));
+    const expectedSetTime = new Astronomy.AstroTime(new Date(searchDateText + 'T' + setText + 'Z'));
+    const rdiff = MINUTES_PER_DAY * abs(expectedRiseTime.ut - riseTime.ut);
+    const cdiff = MINUTES_PER_DAY * abs(expectedCulmTime.ut - culm.time.ut);
+    const sdiff = MINUTES_PER_DAY * abs(expectedSetTime.ut - setTime.ut);
+    Debug(`StarRiseSetCulmCase(${starName}): rise=${riseTime} (err=${rdiff.toFixed(2)} min), culm=${culm.time} (err=${cdiff.toFixed(2)} min), set=${setTime} (err=${sdiff.toFixed(2)} min).`);
+    if (rdiff > 0.5) Fail(`StarRiseSetCulmCase(${starName}): excessive rise time error = ${rdiff} minutes.`);
+    if (cdiff > 0.5) Fail(`StarRiseSetCulmCase(${starName}): excessive culm time error = ${cdiff} minutes.`);
+    if (sdiff > 0.5) Fail(`StarRiseSetCulmCase(${starName}): excessive set time error = ${sdiff} minutes.`);
+    return 0;
+}
+
 function StarRiseSetCulm() {
-    // Coordinates of M31 = Andromeda Galaxy.
-    // http://ned.ipac.caltech.edu/cgi-bin/objsearch?objname=M+031&extend=no&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=RA+or+Longitude&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES
-    const ra  =  0 + (42 / 60) + (44.3 / 3600);
-    const dec = 41 + (16 / 60) + ( 9.0 / 3600);
-    Astronomy.DefineStar(Astronomy.Body.Star1, ra, dec);
-    return Pass("StarRiseSetCulm");
+    // https://aa.usno.navy.mil/calculated/mrst?body=-20&date=2022-11-21&reps=5&lat=25.77&lon=-80.19&label=&tz=0.00&tz_sign=-1&height=0&submit=Get+Data
+    //       Date               Rise  Az.       Transit Alt.       Set  Az.
+    // 2022 Nov 21 (Mon)        02:37 108        08:06 47S        13:34 252
+
+    const observer = new Astronomy.Observer(+25.77, -80.19, 0.0);
+    return (
+        StarRiseSetCulmCase('Sirius', 6 + 45/60 + 9.0/3600, -(16 + 43/60 + 6/3600), 8.6, observer, '2022-11-21', '02:37', '08:06', '13:34') ||
+        StarRiseSetCulmCase('Sirius', 6 + 45/60 + 9.0/3600, -(16 + 43/60 + 6/3600), 8.6, observer, '2022-11-25', '02:22', '07:50', '13:18') ||
+        StarRiseSetCulmCase('Canopus', 6 + 23/60 + 57.10988/3600, -(52 + 41/60 + 44.3810/3600), 310, observer, '2022-11-21', '04:17', '07:44', '11:11') ||
+        StarRiseSetCulmCase('Canopus', 6 + 23/60 + 57.10988/3600, -(52 + 41/60 + 44.3810/3600), 310, observer, '2022-11-25', '04:01', '07:28', '10:56') ||
+        Pass('StarRiseSetCulm')
+    );
 }
 
 //-------------------------------------------------------------------------------------------------

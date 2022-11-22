@@ -36,6 +36,10 @@ export declare const C_AUDAY = 173.1446326846693;
  */
 export declare const KM_PER_AU = 149597870.69098932;
 /**
+ * @brief The number of astronomical units per light-year.
+ */
+export declare const AU_PER_LY = 63241.07708807546;
+/**
  * @brief The factor to convert degrees to radians = pi/180.
  */
 export declare const DEG2RAD = 0.017453292519943295;
@@ -166,8 +170,8 @@ export declare enum Body {
  * to one of the eight user-defined stars `Star1`..`Star8`.
  *
  * A star that has not been defined through a call to `DefineStar`
- * defaults to the coordinates RA=0, DEC=0.
- * Once defined, the star keeps the updated coordinates until
+ * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+ * Once defined, the star keeps the given coordinates until
  * a subsequent call to `DefineStar` replaces the coordinates with new values.
  *
  * @param {Body} body
@@ -182,8 +186,14 @@ export declare enum Body {
  *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
  *      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
  *      and must be within the closed range [-90, +90].
+ *
+ * @param {number} distanceLightYears
+ *      The distance between the star and the Sun, expressed in light-years.
+ *      This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
+ *      If you don't know the distance to the star, using a large value like 1000 will generally work well.
+ *      The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
  */
-export declare function DefineStar(body: Body, ra: number, dec: number): void;
+export declare function DefineStar(body: Body, ra: number, dec: number, distanceLightYears: number): void;
 /**
  * @brief Returns the mean orbital period of a planet in days.
  *
@@ -972,6 +982,7 @@ export declare function JupiterMoons(date: FlexibleDateTime): JupiterMoonsInfo;
  *      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,
  *      `Body.Uranus`, `Body.Neptune`, `Body.Pluto`,
  *      `Body.SSB`, or `Body.EMB`.
+ *      Also allowed to be a user-defined star created by {@link DefineStar}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.
@@ -1107,6 +1118,7 @@ export declare function BackdatePosition(date: FlexibleDateTime, observerBody: B
  *      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,
  *      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,
  *      `Body.Uranus`, `Body.Neptune`, or `Body.Pluto`.
+ *      Also allowed to be a user-defined star created with {@link DefineStar}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which the body's position is to be calculated.

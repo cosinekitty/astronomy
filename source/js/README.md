@@ -1004,6 +1004,14 @@ of the `originBody` parameter that was passed to this object's constructor.
 
 * * *
 
+<a name="AU_PER_LY"></a>
+
+## AU\_PER\_LY
+**Kind**: global variable  
+**Brief**: The number of astronomical units per light-year.  
+
+* * *
+
 <a name="DEG2RAD"></a>
 
 ## DEG2RAD
@@ -1323,7 +1331,7 @@ the returned vector's `t` field rather than the backdated time.
 
 <a name="DefineStar"></a>
 
-## DefineStar(body, ra, dec)
+## DefineStar(body, ra, dec, distanceLightYears)
 **Kind**: global function  
 **Brief**: Assign equatorial coordinates to a user-defined star.
 
@@ -1333,8 +1341,8 @@ This function assigns a right ascension and declination
 to one of the eight user-defined stars `Star1`..`Star8`.
 
 A star that has not been defined through a call to `DefineStar`
-defaults to the coordinates RA=0, DEC=0.
-Once defined, the star keeps the updated coordinates until
+defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+Once defined, the star keeps the given coordinates until
 a subsequent call to `DefineStar` replaces the coordinates with new values.  
 
 | Param | Type | Description |
@@ -1342,6 +1350,7 @@ a subsequent call to `DefineStar` replaces the coordinates with new values.
 | body | [<code>Body</code>](#Body) | One of the eight user-defined star identifiers:      `Star1`, `Star2`, `Star3`, `Star4`, `Star5`, `Star6`, `Star7`, or `Star8`. |
 | ra | <code>number</code> | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).      The value is in units of sidereal hours, and must be within the half-open range [0, 24). |
 | dec | <code>number</code> | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,      and must be within the closed range [-90, +90]. |
+| distanceLightYears | <code>number</code> | The distance between the star and the Sun, expressed in light-years.      This value is used to calculate the tiny parallax shift as seen by an observer on Earth.      If you don't know the distance to the star, using a large value like 1000 will generally work well.      The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations. |
 
 
 * * *
@@ -1559,7 +1568,7 @@ coming from that body.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,      `Body.Uranus`, `Body.Neptune`, or `Body.Pluto`. |
+| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,      `Body.Uranus`, `Body.Neptune`, or `Body.Pluto`.      Also allowed to be a user-defined star created with [DefineStar](#DefineStar). |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 | aberration | <code>boolean</code> | Pass `true` to correct for      <a href="https://en.wikipedia.org/wiki/Aberration_of_light">aberration</a>,      or `false` to leave uncorrected. |
 
@@ -1624,7 +1633,7 @@ body at a specified time. The position is not corrected for light travel time or
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,      `Body.Uranus`, `Body.Neptune`, `Body.Pluto`,      `Body.SSB`, or `Body.EMB`. |
+| body | [<code>Body</code>](#Body) | One of the following values:      `Body.Sun`, `Body.Moon`, `Body.Mercury`, `Body.Venus`,      `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`,      `Body.Uranus`, `Body.Neptune`, `Body.Pluto`,      `Body.SSB`, or `Body.EMB`.      Also allowed to be a user-defined star created by [DefineStar](#DefineStar). |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which the body's position is to be calculated. |
 
 
