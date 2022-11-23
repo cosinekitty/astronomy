@@ -7115,11 +7115,11 @@ static int StarRiseSetCulmCase(
     cdiff = MINUTES_PER_DAY * ABS(expectedCulmTime.ut - culm.time.ut);
     sdiff = MINUTES_PER_DAY * ABS(expectedSetTime.ut  - set.time.ut);
 
-    DEBUG("StarRiseSetCulmCase(%s): minutes rdiff = %0.4lf, cdiff = %0.4lf, sdiff = %0.4lf\n", starName, rdiff, cdiff, sdiff);
+    DEBUG("C StarRiseSetCulmCase(%s): minutes rdiff = %0.4lf, cdiff = %0.4lf, sdiff = %0.4lf\n", starName, rdiff, cdiff, sdiff);
 
-    if (rdiff > 0.5) FAIL("StarRiseSetCulmCase(%s): exccessive rise time error = %0.4lf minutes.\n", starName, rdiff);
-    if (cdiff > 0.5) FAIL("StarRiseSetCulmCase(%s): exccessive culm time error = %0.4lf minutes.\n", starName, cdiff);
-    if (sdiff > 0.5) FAIL("StarRiseSetCulmCase(%s): exccessive set time error = %0.4lf minutes.\n", starName, sdiff);
+    if (rdiff > 0.5) FAIL("C StarRiseSetCulmCase(%s): exccessive rise time error = %0.4lf minutes.\n", starName, rdiff);
+    if (cdiff > 0.5) FAIL("C StarRiseSetCulmCase(%s): exccessive culm time error = %0.4lf minutes.\n", starName, cdiff);
+    if (sdiff > 0.5) FAIL("C StarRiseSetCulmCase(%s): exccessive set time error = %0.4lf minutes.\n", starName, sdiff);
 
     error = 0;
 fail:
@@ -7136,7 +7136,7 @@ static int StarRiseSetCulm(void)
     CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 21,  4, 17,  7, 44, 11, 11));
     CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56));
 
-    printf("StarRiseSetCulm: PASS\n");
+    printf("C StarRiseSetCulm: PASS\n");
 fail:
     return error;
 }

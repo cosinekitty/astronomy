@@ -44,6 +44,7 @@ def _cbrt(x):
 
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
+AU_PER_LY = 63241.07708807546       #<const> The number of astronomical units in one light-year.
 
 # Jupiter radius data are nominal values obtained from:
 # https://www.iau.org/static/resolutions/IAU2015_English.pdf
@@ -223,6 +224,9 @@ class Vector:
     def __neg__(self):
         return Vector(-self.x, -self.y, -self.z, self.t)
 
+    def __truediv__(self, scalar):
+        return Vector(self.x/scalar, self.y/scalar, self.z/scalar, self.t)
+
     def format(self, coord_format):
         """Returns a custom format string representation of the vector."""
         layout = '({:' + coord_format + '}, {:' + coord_format + '}, {:' + coord_format + '}, {})'
@@ -290,6 +294,14 @@ class StateVector:
             self.t
         )
 
+    def Position(self):
+        """Extracts a position vector from this state vector."""
+        return Vector(self.x, self.y, self.z, self.t)
+
+    def Velocity(self):
+        """Extracts a velocity vector from this state vector."""
+        return Vector(self.vx, self.vy, self.vz, self.t)
+
 @enum.unique
 class Body(enum.Enum):
     """The celestial bodies supported by Astronomy Engine calculations.
@@ -310,6 +322,14 @@ class Body(enum.Enum):
     Moon: The Earth's moon.
     EMB: The Earth/Moon Barycenter.
     SSB: The Solar System Barycenter.
+    Star1: User-defined star 1.
+    Star2: User-defined star 2.
+    Star3: User-defined star 3.
+    Star4: User-defined star 4.
+    Star5: User-defined star 5.
+    Star6: User-defined star 6.
+    Star7: User-defined star 7.
+    Star8: User-defined star 8.
     """
     Invalid = -1
     Mercury = 0
@@ -325,6 +345,78 @@ class Body(enum.Enum):
     Moon = 10
     EMB = 11
     SSB = 12
+    Star1 = 101
+    Star2 = 102
+    Star3 = 103
+    Star4 = 104
+    Star5 = 105
+    Star6 = 106
+    Star7 = 107
+    Star8 = 108
+
+class _StarDef:
+    def __init__(self, ra, dec, dist):
+        self.ra = ra
+        self.dec = dec
+        self.dist = dist
+
+_StarTable = [
+    _StarDef(0.0, 0.0, AU_PER_LY),  # Star1
+    _StarDef(0.0, 0.0, AU_PER_LY),  # Star2
+    _StarDef(0.0, 0.0, AU_PER_LY),  # Star3
+    _StarDef(0.0, 0.0, AU_PER_LY),  # Star4
+    _StarDef(0.0, 0.0, AU_PER_LY),  # Star5
+    _StarDef(0.0, 0.0, AU_PER_LY),  # Star6
+    _StarDef(0.0, 0.0, AU_PER_LY),  # Star7
+    _StarDef(0.0, 0.0, AU_PER_LY),  # Star8
+]
+
+def _IsUserDefinedStar(body):
+    return Body.Star1.value <= body.value <= Body.Star8.value
+
+def _GetUserDefinedStar(body):
+    return _StarTable[body.value - Body.Star1.value] if _IsUserDefinedStar(body) else None
+
+def DefineStar(body, ra, dec, distanceLightYears):
+    """Assign equatorial coordinates to a user-defined star.
+
+    Some Astronomy Engine functions allow their `body` parameter to
+    be a user-defined fixed point in the sky, loosely called a "star".
+    This function assigns a right ascension, declination, and distance
+    to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
+
+    A star that has not been defined through a call to `DefineStar`
+    defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+    Once defined, the star keeps the given coordinates until
+    a subsequent call to `DefineStar` replaces the coordinates with new values.
+
+    Parameters
+    ----------
+    body: Body
+        One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`.
+    ra: float
+        The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+        The value is in units of sidereal hours, and must be within the half-open range [0, 24).
+    dec: float
+        The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+        The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
+        and must be within the closed range [-90, +90].
+    distanceLightYears: float
+        The distance between the star and the Sun, expressed in light-years.
+        This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
+        If you don't know the distance to the star, using a large value like 1000 will generally work well.
+        The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
+    """
+    star = _GetUserDefinedStar(body)
+    if star is None:
+        raise Error('Body must be a user-defined star, not {}.'.format(body))
+    if not (0.0 <= ra < 24.0):
+        raise Error('Invalid right ascension: {}'.format(ra))
+    if not (-90.0 <= dec <= +90.0):
+        raise Error('Invalid declination: {}'.format(dec))
+    star.ra = ra
+    star.dec = dec
+    star.dist = distanceLightYears * AU_PER_LY
 
 def BodyCode(name):
     """Finds the Body enumeration value, given the name of a body.
@@ -2402,6 +2494,10 @@ def HelioVector(body, time):
     if body == Body.SSB:
         return _CalcSolarSystemBarycenter(time)
 
+    star = _GetUserDefinedStar(body)
+    if star is not None:
+        return VectorFromSphere(Spherical(star.dec, 15.0*star.ra, star.dist), time)
+
     raise InvalidBodyError(body)
 
 
@@ -2588,6 +2684,24 @@ def BackdatePosition(time, observerBody, targetBody, aberration):
         Its `t` field holds the time that light left the observed
         body to arrive at the observer at the observation time.
     """
+    if _IsUserDefinedStar(targetBody):
+        # This is a user-defined star, which must be treated as a special case.
+        # First, we assume its heliocentric position does not change with time.
+        # Second, we assume its heliocentric position has already been corrected
+        # for light-travel time, its coordinates given as it appears on Earth at the present.
+        # Therefore, no backdating is applied.
+        tvec = HelioVector(targetBody, time)
+        if aberration:
+            # (Observer velocity) - (light vector) = (Aberration-corrected direction to target body).
+            # Note that this is an approximation, because technically the light vector should
+            # be measured in barycentric coordinates, not heliocentric. The error is very small.
+            ostate = HelioState(observerBody, time)
+            rvec = tvec - ostate.Position()
+            s = C_AUDAY / rvec.Length()    # conversion factor from relative distance to speed of light
+            return rvec + ostate.Velocity()/s
+        # No correction is needed. Simply return the star's current position as seen from the observer.
+        return tvec - HelioVector(observerBody, time)
+
     if aberration:
         # With aberration, `BackdatePosition` will calculate `observerPos` at different times.
         # Therefore, do not waste time calculating it now.
@@ -4506,6 +4620,13 @@ def _MaxAltitudeSlope(body, latitude):
     elif body in [Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]:
         deriv_ra  = -0.2
         deriv_dec = +0.2
+    elif _IsUserDefinedStar(body):
+        # The minimum allowed heliocentric distance of a user-defined star
+        # is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
+        # Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
+        # generous safety buffer of 0.008 degrees.
+        deriv_ra  = -0.008
+        deriv_dec = +0.008
     elif body == Body.Earth:
         raise EarthNotAllowedError()
     else:

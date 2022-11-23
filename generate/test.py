@@ -10,6 +10,7 @@ import astronomy
 
 Verbose = False
 SECONDS_PER_DAY = 86400.0
+MINUTES_PER_DAY = 1440.0
 
 def Debug(text):
     if Verbose:
@@ -3030,6 +3031,57 @@ def LunarFraction():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def StarRiseSetCulmCase(starName, ra, dec, distLy, observer, year, month, day, riseHour, riseMinute, culmHour, culmMinute, setHour, setMinute):
+    func = 'StarRiseSetCulmCase({})'.format(starName)
+
+    # Calculate expected event times.
+    expectedRiseTime = astronomy.Time.Make(year, month, day, riseHour, riseMinute, 0.0)
+    expectedCulmTime = astronomy.Time.Make(year, month, day, culmHour, culmMinute, 0.0)
+    expectedSetTime  = astronomy.Time.Make(year, month, day, setHour,  setMinute,  0.0)
+
+    # Define a custom star object.
+    astronomy.DefineStar(astronomy.Body.Star1, ra, dec, distLy)
+
+    # Use Astronomy Engine to search for event times.
+    searchTime = astronomy.Time.Make(year, month, day, 0, 0, 0.0)
+
+    rise = astronomy.SearchRiseSet(astronomy.Body.Star1, observer, astronomy.Direction.Rise, searchTime, 1.0)
+    if rise is None:
+        return Fail(func, 'Star rise search failed.')
+
+    culm = astronomy.SearchHourAngle(astronomy.Body.Star1, observer, 0.0, searchTime, +1)
+    if culm is None:
+        return Fail(func, 'Star culmination search failed.')
+
+    set = astronomy.SearchRiseSet(astronomy.Body.Star1, observer, astronomy.Direction.Set, searchTime, 1.0)
+    if set is None:
+        return Fail(func, 'Star set search failed.')
+
+    # Compare expected times with calculated times.
+    rdiff = MINUTES_PER_DAY * vabs(expectedRiseTime.ut - rise.ut)
+    cdiff = MINUTES_PER_DAY * vabs(expectedCulmTime.ut - culm.time.ut)
+    sdiff = MINUTES_PER_DAY * vabs(expectedSetTime.ut - set.ut)
+
+    Debug("{}: minutes rdiff = {:0.4f}, cdiff = {:0.4f}, sdiff = {:0.4f}".format(func, rdiff, cdiff, sdiff))
+
+    if rdiff > 0.5: return Fail(func, "excessive rise time error = {:0.4f} minutes.".format(rdiff))
+    if cdiff > 0.5: return Fail(func, "excessive culm time error = {:0.4f} minutes.".format(cdiff))
+    if sdiff > 0.5: return Fail(func, "excessive set time error =  {:0.4f} minutes.".format(sdiff))
+    return 0
+
+
+def StarRiseSetCulm():
+    observer = astronomy.Observer(+25.77, -80.19, 0.0)
+    return (
+        StarRiseSetCulmCase("Sirius",   6.7525, -16.7183,   8.6, observer, 2022, 11, 21,  2, 37,  8,  6, 13, 34) or
+        StarRiseSetCulmCase("Sirius",   6.7525, -16.7183,   8.6, observer, 2022, 11, 25,  2, 22,  7, 50, 13, 18) or
+        StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 21,  4, 17,  7, 44, 11, 11) or
+        StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56) or
+        Pass("StarRiseSetCulm")
+    )
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'axis':                     Axis,
@@ -3066,6 +3118,7 @@ UnitTests = {
     'seasons187':               SeasonsIssue187,
     'sidereal':                 SiderealTime,
     'solar_fraction':           SolarFraction,
+    'star_risesetculm':         StarRiseSetCulm,
     'time':                     AstroTime,
     'topostate':                TopoState,
     'transit':                  Transit,

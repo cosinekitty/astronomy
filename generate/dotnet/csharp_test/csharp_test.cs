@@ -24,20 +24,19 @@ namespace csharp_test
 
         static int Pass(string name)
         {
-            Console.WriteLine(name + ": PASS");
+            Console.WriteLine("C# " + name + ": PASS");
             return 0;
         }
 
         static int Fail(string message)
         {
-            Console.WriteLine(message);
+            Console.WriteLine("C# " + message);
             return 1;
         }
 
         static bool BoolFail(string message)
         {
-            Console.WriteLine(message);
-            return false;
+            return 0 == Fail(message);
         }
 
         struct Test

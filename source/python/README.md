@@ -198,6 +198,13 @@ However, because Python defines the [angular conversion functions](https://docs.
 
 ---
 
+<a name="AU_PER_LY"></a>
+### `AU_PER_LY = 63241.07708807546`
+
+**The number of astronomical units in one light-year.**
+
+---
+
 <a name="CALLISTO_RADIUS_KM"></a>
 ### `CALLISTO_RADIUS_KM = 2410.3`
 
@@ -881,6 +888,18 @@ The state vector also includes a time stamp.
 | `float` | `vz` | The z-component of the velocity, measured in AU/day. |
 | [`Time`](#Time) | `t` | The date and time at which the position and velocity vectors are valid. |
 
+#### member functions
+
+<a name="StateVector.Position"></a>
+### StateVector.Position(self)
+
+Extracts a position vector from this state vector.
+
+<a name="StateVector.Velocity"></a>
+### StateVector.Velocity(self)
+
+Extracts a velocity vector from this state vector.
+
 ---
 
 <a name="Time"></a>
@@ -1086,6 +1105,14 @@ two cases applies to a particular apsis event.
 | `Moon` | The Earth's moon. |
 | `EMB` | The Earth/Moon Barycenter. |
 | `SSB` | The Solar System Barycenter. |
+| `Star1` | User-defined star 1. |
+| `Star2` | User-defined star 2. |
+| `Star3` | User-defined star 3. |
+| `Star4` | User-defined star 4. |
+| `Star5` | User-defined star 5. |
+| `Star6` | User-defined star 6. |
+| `Star7` | User-defined star 7. |
+| `Star8` | User-defined star 8. |
 
 ---
 
@@ -1418,6 +1445,29 @@ time : Time
 The position vector at the solved backdated time.
 The `t` field holds the time that light left the observed
 body to arrive at the observer at the observation time.
+
+---
+
+<a name="DefineStar"></a>
+### DefineStar(body, ra, dec, distanceLightYears)
+
+**Assign equatorial coordinates to a user-defined star.**
+
+Some Astronomy Engine functions allow their `body` parameter to
+be a user-defined fixed point in the sky, loosely called a "star".
+This function assigns a right ascension, declination, and distance
+to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
+A star that has not been defined through a call to `DefineStar`
+defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+Once defined, the star keeps the given coordinates until
+a subsequent call to `DefineStar` replaces the coordinates with new values.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Body`](#Body) | `body` | One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`. |
+| `float` | `ra` | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of sidereal hours, and must be within the half-open range [0, 24). |
+| `float` | `dec` | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of degrees north (positive) or south (negative) of the J2000 equator, and must be within the closed range [-90, +90]. |
+| `float` | `distanceLightYears` | The distance between the star and the Sun, expressed in light-years. This value is used to calculate the tiny parallax shift as seen by an observer on Earth. If you don't know the distance to the star, using a large value like 1000 will generally work well. The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations. |
 
 ---
 
