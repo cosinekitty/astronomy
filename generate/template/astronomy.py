@@ -355,27 +355,23 @@ class Body(enum.Enum):
     Star8 = 108
 
 class _StarDef:
-    def __init__(self, ra, dec, dist):
-        self.ra = ra
-        self.dec = dec
-        self.dist = dist
+    def __init__(self):
+        self.ra = 0.0
+        self.dec = 0.0
+        self.dist = 0.0     # signals that the star has not yet been defined
 
-_StarTable = [
-    _StarDef(0.0, 0.0, AU_PER_LY),  # Star1
-    _StarDef(0.0, 0.0, AU_PER_LY),  # Star2
-    _StarDef(0.0, 0.0, AU_PER_LY),  # Star3
-    _StarDef(0.0, 0.0, AU_PER_LY),  # Star4
-    _StarDef(0.0, 0.0, AU_PER_LY),  # Star5
-    _StarDef(0.0, 0.0, AU_PER_LY),  # Star6
-    _StarDef(0.0, 0.0, AU_PER_LY),  # Star7
-    _StarDef(0.0, 0.0, AU_PER_LY),  # Star8
-]
+_StarTable = [_StarDef() for _ in range(8)]
 
-def _IsUserDefinedStar(body):
-    return Body.Star1.value <= body.value <= Body.Star8.value
+def _GetStar(body):
+    if Body.Star1.value <= body.value <= Body.Star8.value:
+        return _StarTable[body.value - Body.Star1.value]
+    return None
 
-def _GetUserDefinedStar(body):
-    return _StarTable[body.value - Body.Star1.value] if _IsUserDefinedStar(body) else None
+def _UserDefinedStar(body):
+    star = _GetStar(body)
+    if star and (star.dist > 0.0):
+        return star
+    return None
 
 def DefineStar(body, ra, dec, distanceLightYears):
     """Assign equatorial coordinates to a user-defined star.
@@ -385,10 +381,8 @@ def DefineStar(body, ra, dec, distanceLightYears):
     This function assigns a right ascension, declination, and distance
     to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
 
-    A star that has not been defined through a call to `DefineStar`
-    defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
-    Once defined, the star keeps the given coordinates until
-    a subsequent call to `DefineStar` replaces the coordinates with new values.
+    Stars are not valid until defined. Once defined, they retain their
+    definition until re-defined by another call to `DefineStar`.
 
     Parameters
     ----------
@@ -407,9 +401,9 @@ def DefineStar(body, ra, dec, distanceLightYears):
         If you don't know the distance to the star, using a large value like 1000 will generally work well.
         The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
     """
-    star = _GetUserDefinedStar(body)
+    star = _GetStar(body)
     if star is None:
-        raise Error('Body must be a user-defined star, not {}.'.format(body))
+        raise InvalidBodyError(body)
     if not (0.0 <= ra < 24.0):
         raise Error('Invalid right ascension: {}'.format(ra))
     if not (-90.0 <= dec <= +90.0):
@@ -2495,8 +2489,8 @@ def HelioVector(body, time):
     if body == Body.SSB:
         return _CalcSolarSystemBarycenter(time)
 
-    star = _GetUserDefinedStar(body)
-    if star is not None:
+    star = _UserDefinedStar(body)
+    if star:
         return VectorFromSphere(Spherical(star.dec, 15.0*star.ra, star.dist), time)
 
     raise InvalidBodyError(body)
@@ -2515,7 +2509,7 @@ def HelioDistance(body, time):
     ----------
     body : Body
         A body for which to calculate a heliocentric distance:
-        the Sun, Moon, or any of the planets.
+        the Sun, Moon, any of the planets, or a user-defined star.
     time : Time
         The date and time for which to calculate the heliocentric distance.
 
@@ -2529,6 +2523,10 @@ def HelioDistance(body, time):
 
     if 0 <= body.value < len(_vsop):
         return _VsopHelioDistance(_vsop[body.value], time)
+
+    star = _UserDefinedStar(body)
+    if star:
+        return star.dist
 
     return HelioVector(body, time).Length()
 
@@ -2685,7 +2683,7 @@ def BackdatePosition(time, observerBody, targetBody, aberration):
         Its `t` field holds the time that light left the observed
         body to arrive at the observer at the observation time.
     """
-    if _IsUserDefinedStar(targetBody):
+    if _UserDefinedStar(targetBody):
         # This is a user-defined star, which must be treated as a special case.
         # First, we assume its heliocentric position does not change with time.
         # Second, we assume its heliocentric position has already been corrected
@@ -2916,7 +2914,7 @@ def HelioState(body, time):
             time
         )
 
-    if _IsUserDefinedStar(body):
+    if _UserDefinedStar(body):
         vec = HelioVector(body, time)
         return StateVector(vec.x, vec.y, vec.z, 0.0, 0.0, 0.0, time)
 
@@ -4626,7 +4624,7 @@ def _MaxAltitudeSlope(body, latitude):
     elif body in [Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]:
         deriv_ra  = -0.2
         deriv_dec = +0.2
-    elif _IsUserDefinedStar(body):
+    elif _UserDefinedStar(body):
         # The minimum allowed heliocentric distance of a user-defined star
         # is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
         # Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a

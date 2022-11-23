@@ -381,9 +381,9 @@ enum class Body(
 
 
 private class StarDef {
-    public var ra: Double = 0.0             // heliocentric right ascension in EQJ
-    public var dec: Double = 0.0            // heliocentric declination in EQJ
-    public var dist: Double = AU_PER_LY     // heliocentric distance in AU
+    public var ra: Double = 0.0       // heliocentric right ascension in EQJ
+    public var dec: Double = 0.0      // heliocentric declination in EQJ
+    public var dist: Double = 0.0     // heliocentric distance in AU
 }
 
 private val starTable = arrayOf(
@@ -397,7 +397,7 @@ private val starTable = arrayOf(
     StarDef()       // Star8
 )
 
-private fun getUserDefinedStar(body: Body): StarDef? =
+private fun getStar(body: Body): StarDef? =
     when (body) {
         Body.Star1 -> starTable[0]
         Body.Star2 -> starTable[1]
@@ -410,8 +410,13 @@ private fun getUserDefinedStar(body: Body): StarDef? =
         else -> null
     }
 
-private fun isUserDefinedStar(body: Body): Boolean =
-    (getUserDefinedStar(body) != null)
+private fun userDefinedStar(body: Body): StarDef? {
+    val star = getStar(body)
+    return if (star != null && star.dist > 0.0)     // has the star been defined?
+        star
+    else
+        null
+}
 
 
 /**
@@ -422,10 +427,8 @@ private fun isUserDefinedStar(body: Body): Boolean =
  * This function assigns a right ascension, declination, and distance
  * to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
  *
- * A star that has not been defined through a call to `defineStar`
- * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
- * Once defined, the star keeps the given coordinates until
- * a subsequent call to `defineStar` replaces the coordinates with new values.
+ * Stars are not valid until defined. Once defined, they retain their
+ * definition until re-defined by another call to `defineStar`.
  *
  * @param body
  * One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`.
@@ -446,7 +449,7 @@ private fun isUserDefinedStar(body: Body): Boolean =
  * The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
  */
 public fun defineStar(body: Body, ra: Double, dec: Double, distanceLightYears: Double) {
-    val star = getUserDefinedStar(body) ?: throw InvalidBodyException(body)
+    val star = getStar(body) ?: throw InvalidBodyException(body)
     if (!ra.isFinite() || ra < 0.0 || ra >= 24.0) throw IllegalArgumentException("Invalid right ascension: $ra")
     if (!dec.isFinite() || dec < -90.0 || dec > +90.0) throw IllegalArgumentException("Invalid declination: $dec")
     if (!distanceLightYears.isFinite() || distanceLightYears < 1.0) throw IllegalArgumentException("Invalid distance: $distanceLightYears")
@@ -4835,7 +4838,7 @@ private fun solarSystemBarycenterState(time: Time): StateVector {
  * @return The heliocentric position vector of the center of the given body.
  */
 fun helioVector(body: Body, time: Time): Vector {
-    val star = getUserDefinedStar(body)
+    val star = userDefinedStar(body)
     if (star != null)
         return Spherical(star.dec, 15.0*star.ra, star.dist).toVector(time)
 
@@ -4860,7 +4863,7 @@ fun helioVector(body: Body, time: Time): Vector {
  *
  * @param body
  * A body for which to calculate a heliocentric distance:
- * the Sun, Moon, EMB, SSB, or any of the planets.
+ * the Sun, Moon, EMB, SSB, any of the planets, or a user-defined star.
  *
  * @param time
  * The date and time for which to calculate the distance.
@@ -4870,6 +4873,9 @@ fun helioVector(body: Body, time: Time): Vector {
 fun helioDistance(body: Body, time: Time): Double {
     if (body == Body.Sun)
         return 0.0
+    val star = userDefinedStar(body)
+    if (star != null)
+        return star.dist
     val vm = optionalVsopModel(body)
     return if (vm != null)
         vsopDistance(vm, time)
@@ -4906,7 +4912,7 @@ fun helioDistance(body: Body, time: Time): Double {
  * The velocities are expressed in AU/day.
  */
 fun helioState(body: Body, time: Time): StateVector {
-    if (isUserDefinedStar(body)) {
+    if (null != userDefinedStar(body)) {
         val vec = helioVector(body, time)
         return StateVector(vec.x, vec.y, vec.z, 0.0, 0.0, 0.0, time)
     }

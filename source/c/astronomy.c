@@ -127,24 +127,18 @@ stardef_t;
 /** @endcond */
 
 #define NSTARS 8
-static stardef_t StarTable[NSTARS] =
-{
-    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR1
-    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR2
-    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR3
-    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR4
-    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR5
-    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR6
-    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR7
-    { 0.0, 0.0, AU_PER_LY },    // BODY_STAR8
-};
+static stardef_t StarTable[NSTARS];
 
-#define IsUserDefinedStar(body)     (((body) >= BODY_STAR1) && ((body) <= BODY_STAR8))
+#define GetStarPointer(body)    (((body) >= BODY_STAR1) && ((body) <= BODY_STAR8) ? &StarTable[(body) - BODY_STAR1] : NULL)
 
-static stardef_t *StarDef(astro_body_t body)
+static stardef_t *UserDefinedStar(astro_body_t body)
 {
-    return IsUserDefinedStar(body) ? &StarTable[body - BODY_STAR1] : NULL;
+    stardef_t *star = GetStarPointer(body);
+    if (star != NULL && star->dist > 0.0)
+        return star;
+    return NULL;
 }
+
 
 /**
  * @brief Assign equatorial coordinates to a user-defined star.
@@ -154,10 +148,8 @@ static stardef_t *StarDef(astro_body_t body)
  * This function assigns a right ascension, declination, and distance
  * to one of the eight user-defined stars `BODY_STAR1` .. `BODY_STAR8`.
  *
- * A star that has not been defined through a call to `Astronomy_DefineStar`
- * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
- * Once defined, the star keeps the given coordinates until
- * a subsequent call to `Astronomy_DefineStar` replaces the coordinates with new values.
+ * Stars are not valid until defined. Once defined, they retain their
+ * definition until re-defined by another call to `Astronomy_DefineStar`.
  *
  * @param body
  *      One of the eight user-defined star identifiers: `BODY_STAR1` .. `BODY_STAR8`.
@@ -183,7 +175,7 @@ static stardef_t *StarDef(astro_body_t body)
  */
 astro_status_t Astronomy_DefineStar(astro_body_t body, double ra, double dec, double distanceLightYears)
 {
-    stardef_t *star = StarDef(body);
+    stardef_t *star = GetStarPointer(body);
 
     if (star == NULL)
         return ASTRO_INVALID_BODY;
@@ -4986,7 +4978,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
     body_state_t bstate;
     stardef_t *star;
 
-    star = StarDef(body);
+    star = UserDefinedStar(body);
     if (star != NULL)
     {
         astro_spherical_t sphere;
@@ -5065,7 +5057,8 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
  * more efficient than calling #Astronomy_HelioVector followed by #Astronomy_VectorLength.
  *
  * @param body
- *      A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets.
+ *      A body for which to calculate a heliocentric distance:
+ *      the Sun, Moon, any of the planets, or a user-defined star.
  *
  * @param time
  *      The date and time for which to calculate the heliocentric distance.
@@ -5079,6 +5072,15 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
 {
     astro_vector_t vector;
     astro_func_result_t result;
+    stardef_t *star;
+
+    star = UserDefinedStar(body);
+    if (star != NULL)
+    {
+        result.status = ASTRO_SUCCESS;
+        result.value = star->dist;
+        return result;
+    }
 
     switch (body)
     {
@@ -5279,7 +5281,7 @@ astro_vector_t Astronomy_BackdatePosition(
     astro_body_t targetBody,
     astro_aberration_t aberration)
 {
-    if (IsUserDefinedStar(targetBody))
+    if (UserDefinedStar(targetBody))
     {
         /*
             This is a user-defined star, which must be treated as a special case.
@@ -5546,7 +5548,7 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
     major_bodies_t bary;
     body_state_t planet, earth;
 
-    if (IsUserDefinedStar(body))
+    if (UserDefinedStar(body))
     {
         astro_vector_t vec = Astronomy_HelioVector(body, time);
         state.x = vec.x;
@@ -7991,6 +7993,7 @@ static astro_func_result_t MaxAltitudeSlope(astro_body_t body, double latitude)
         Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
         Then calculate the resulting maximum possible altitude change rate.
     */
+
     switch (body)
     {
     case BODY_MOON:
@@ -8032,25 +8035,19 @@ static astro_func_result_t MaxAltitudeSlope(astro_body_t body, double latitude)
         result.status = ASTRO_EARTH_NOT_ALLOWED;
         return result;
 
-    case BODY_STAR1:
-    case BODY_STAR2:
-    case BODY_STAR3:
-    case BODY_STAR4:
-    case BODY_STAR5:
-    case BODY_STAR6:
-    case BODY_STAR7:
-    case BODY_STAR8:
-        /*
-            The minimum allowed heliocentric distance of a user-defined star
-            is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
-            Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
-            generous safety buffer of 0.008 degrees.
-        */
-        deriv_ra  = -0.008;
-        deriv_dec = +0.008;
-        break;
-
     default:
+        if (UserDefinedStar(body))
+        {
+            /*
+                The minimum allowed heliocentric distance of a user-defined star
+                is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
+                Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
+                generous safety buffer of 0.008 degrees.
+            */
+            deriv_ra  = -0.008;
+            deriv_dec = +0.008;
+            break;
+        }
         result.value = NAN;
         result.status = ASTRO_INVALID_BODY;
         return result;

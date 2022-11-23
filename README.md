@@ -187,7 +187,7 @@ of complexity. So I decided to create Astronomy Engine with the following engine
 - Support JavaScript, C, C#, and Python with the same algorithms, and verify them to produce identical results.
   (Kotlin support was added in 2022.)
 - No external dependencies! The code must not require anything outside the standard library for each language.
-- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->119423 bytes.)
+- Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->119438 bytes.)
 - Accuracy always within 1 arcminute of results from NOVAS.
 - It would be well documented, relatively easy to use, and support a wide variety of common use cases.
 

@@ -2883,13 +2883,6 @@ namespace CosineKitty
             public double ra;       // heliocentric right ascension in EQJ
             public double dec;      // heliocentric declination in EQJ
             public double dist;     // heliocentric distance in AU
-
-            public StarDef()
-            {
-                ra = 0.0;
-                dec = 0.0;
-                dist = AU_PER_LY;
-            }
         };
 
         private static readonly StarDef[] StarTable = InitStarTable();
@@ -2902,11 +2895,17 @@ namespace CosineKitty
             return table;
         }
 
-        private static bool IsUserDefinedStar(Body body) =>
-            (body >= Body.Star1) && (body <= Body.Star8);
+        private static StarDef GetStar(Body body) =>
+            ((body >= Body.Star1) && (body <= Body.Star8)) ? StarTable[(int)body - (int)Body.Star1] : null;
 
-        private static StarDef GetUserDefinedStar(Body body) =>
-            IsUserDefinedStar(body) ? StarTable[(int)body - (int)Body.Star1] : null;
+        private static StarDef UserDefinedStar(Body body)
+        {
+            if (GetStar(body) is StarDef star)
+                if (star.dist > 0.0)        // has the star been defined yet?
+                    return star;
+
+            return null;
+        }
 
         /// <summary>
         /// Assign equatorial coordinates to a user-defined star.
@@ -2917,10 +2916,8 @@ namespace CosineKitty
         /// This function assigns a right ascension, declination, and distance
         /// to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
         ///
-        /// A star that has not been defined through a call to `DefineStar`
-        /// defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
-        /// Once defined, the star keeps the given coordinates until
-        /// a subsequent call to `DefineStar` replaces the coordinates with new values.
+        /// Stars are not valid until defined. Once defined, they retain their
+        /// definition until re-defined by another call to `DefineStar`.
         /// </remarks>
         /// <param name="body">
         /// One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`.
@@ -2942,9 +2939,7 @@ namespace CosineKitty
         /// </param>
         public static void DefineStar(Body body, double ra, double dec, double distanceLightYears)
         {
-            StarDef star = GetUserDefinedStar(body);
-            if (star == null)
-                throw new ArgumentException($"Body must be a user-defined star, not {body}.");
+            StarDef star = GetStar(body) ?? throw new InvalidBodyException(body);
 
             if (!isfinite(ra) || ra < 0.0 || ra >= 24.0)
                 throw new ArgumentException($"Invalid right ascension for star: {ra}");
@@ -5632,9 +5627,6 @@ namespace CosineKitty
         /// <returns>A heliocentric position vector of the center of the given body.</returns>
         public static AstroVector HelioVector(Body body, AstroTime time)
         {
-            if (GetUserDefinedStar(body) is StarDef star)
-                return VectorFromSphere(new Spherical(star.dec, 15*star.ra, star.dist), time);
-
             AstroVector earth, geomoon;
 
             switch (body)
@@ -5670,6 +5662,8 @@ namespace CosineKitty
                     return CalcSolarSystemBarycenter(time);
 
                 default:
+                    if (UserDefinedStar(body) is StarDef star)
+                        return VectorFromSphere(new Spherical(star.dec, 15*star.ra, star.dist), time);
                     throw new InvalidBodyException(body);
             }
         }
@@ -5686,7 +5680,7 @@ namespace CosineKitty
         /// </remarks>
         /// <param name="body">
         /// A body for which to calculate a heliocentric distance:
-        /// the Sun, Moon, EMB, SSB, or any of the planets.
+        /// the Sun, Moon, EMB, SSB, any of the planets, or a user-defined star.
         /// </param>
         /// <param name="time">
         /// The date and time for which to calculate the heliocentric distance.
@@ -5712,7 +5706,10 @@ namespace CosineKitty
                     return VsopFormulaCalc(vsop[(int)body].rad, time.tt / DAYS_PER_MILLENNIUM, false);
 
                 default:
-                    // For non-VSOP objects, fall back to taking the length of the heliocentric vector.
+                    if (UserDefinedStar(body) is StarDef star)
+                        return star.dist;
+
+                    // Fall back to taking the length of the heliocentric vector.
                     return HelioVector(body, time).Length();
             }
         }
@@ -5861,7 +5858,7 @@ namespace CosineKitty
             Body targetBody,
             Aberration aberration)
         {
-            if (IsUserDefinedStar(targetBody))
+            if (null != UserDefinedStar(targetBody))
             {
                 // This is a user-defined star, which must be treated as a special case.
                 // First, we assume its heliocentric position does not change with time.
@@ -6127,7 +6124,7 @@ namespace CosineKitty
                     );
 
                 default:
-                    if (IsUserDefinedStar(body))
+                    if (null != UserDefinedStar(body))
                     {
                         AstroVector vec = HelioVector(body, time);
                         return new StateVector(vec.x, vec.y, vec.z, 0.0, 0.0, 0.0, time);

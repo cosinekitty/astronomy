@@ -8,7 +8,7 @@ Assign equatorial coordinates to a user-defined star.
 
 Some Astronomy Engine functions allow their body parameter to be a user-defined fixed point in the sky, loosely called a "star". This function assigns a right ascension, declination, and distance to one of the eight user-defined stars Body.Star1..Body.Star8.
 
-A star that has not been defined through a call to defineStar defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year. Once defined, the star keeps the given coordinates until a subsequent call to defineStar replaces the coordinates with new values.
+Stars are not valid until defined. Once defined, they retain their definition until re-defined by another call to defineStar.
 
 ## Parameters
 

@@ -490,7 +490,7 @@ Uses the computer's system clock to find the current UTC date and time with 1-se
 
 Some Astronomy Engine functions allow their `body` parameter to be a user-defined fixed point in the sky, loosely called a "star". This function assigns a right ascension, declination, and distance to one of the eight user-defined stars `BODY_STAR1` .. `BODY_STAR8`.
 
-A star that has not been defined through a call to `Astronomy_DefineStar` defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year. Once defined, the star keeps the given coordinates until a subsequent call to `Astronomy_DefineStar` replaces the coordinates with new values.
+Stars are not valid until defined. Once defined, they retain their definition until re-defined by another call to `Astronomy_DefineStar`.
 
 
 
@@ -1065,7 +1065,7 @@ Given a date and time, this function calculates the distance between the center 
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric distance: the Sun, Moon, or any of the planets. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  A body for which to calculate a heliocentric distance: the Sun, Moon, any of the planets, or a user-defined star. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The date and time for which to calculate the heliocentric distance. | 
 
 

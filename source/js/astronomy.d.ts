@@ -169,10 +169,8 @@ export declare enum Body {
  * This function assigns a right ascension, declination, and distance
  * to one of the eight user-defined stars `Star1`..`Star8`.
  *
- * A star that has not been defined through a call to `DefineStar`
- * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
- * Once defined, the star keeps the given coordinates until
- * a subsequent call to `DefineStar` replaces the coordinates with new values.
+ * Stars are not valid until defined. Once defined, they retain their
+ * definition until re-defined by another call to `DefineStar`.
  *
  * @param {Body} body
  *      One of the eight user-defined star identifiers:
@@ -1001,7 +999,7 @@ export declare function HelioVector(body: Body, date: FlexibleDateTime): Vector;
  *
  * @param {Body} body
  *      A body for which to calculate a heliocentric distance:
- *      the Sun, Moon, or any of the planets.
+ *      the Sun, Moon, any of the planets, or a user-defined star.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the heliocentric distance.

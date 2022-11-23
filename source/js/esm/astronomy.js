@@ -283,15 +283,23 @@ const StarList = [
 ];
 ;
 const StarTable = [
-    { ra: 0, dec: 0, dist: AU_PER_LY },
-    { ra: 0, dec: 0, dist: AU_PER_LY },
-    { ra: 0, dec: 0, dist: AU_PER_LY },
-    { ra: 0, dec: 0, dist: AU_PER_LY },
-    { ra: 0, dec: 0, dist: AU_PER_LY },
-    { ra: 0, dec: 0, dist: AU_PER_LY },
-    { ra: 0, dec: 0, dist: AU_PER_LY },
-    { ra: 0, dec: 0, dist: AU_PER_LY },
+    { ra: 0, dec: 0, dist: 0 },
+    { ra: 0, dec: 0, dist: 0 },
+    { ra: 0, dec: 0, dist: 0 },
+    { ra: 0, dec: 0, dist: 0 },
+    { ra: 0, dec: 0, dist: 0 },
+    { ra: 0, dec: 0, dist: 0 },
+    { ra: 0, dec: 0, dist: 0 },
+    { ra: 0, dec: 0, dist: 0 },
 ];
+function GetStar(body) {
+    const index = StarList.indexOf(body);
+    return (index >= 0) ? StarTable[index] : null;
+}
+function UserDefinedStar(body) {
+    const star = GetStar(body);
+    return (star && star.dist > 0) ? star : null;
+}
 /**
  * @brief Assign equatorial coordinates to a user-defined star.
  *
@@ -300,10 +308,8 @@ const StarTable = [
  * This function assigns a right ascension, declination, and distance
  * to one of the eight user-defined stars `Star1`..`Star8`.
  *
- * A star that has not been defined through a call to `DefineStar`
- * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
- * Once defined, the star keeps the given coordinates until
- * a subsequent call to `DefineStar` replaces the coordinates with new values.
+ * Stars are not valid until defined. Once defined, they retain their
+ * definition until re-defined by another call to `DefineStar`.
  *
  * @param {Body} body
  *      One of the eight user-defined star identifiers:
@@ -325,8 +331,8 @@ const StarTable = [
  *      The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
  */
 export function DefineStar(body, ra, dec, distanceLightYears) {
-    const index = StarList.indexOf(body);
-    if (index < 0)
+    const star = GetStar(body);
+    if (!star)
         throw `Invalid star body: ${body}`;
     VerifyNumber(ra);
     VerifyNumber(dec);
@@ -337,7 +343,9 @@ export function DefineStar(body, ra, dec, distanceLightYears) {
         throw `Invalid declination for star: ${dec}`;
     if (distanceLightYears < 1)
         throw `Invalid star distance: ${distanceLightYears}`;
-    StarTable[index] = { ra: ra, dec: dec, dist: distanceLightYears * AU_PER_LY };
+    star.ra = ra;
+    star.dec = dec;
+    star.dist = distanceLightYears * AU_PER_LY;
 }
 var PrecessDirection;
 (function (PrecessDirection) {
@@ -2458,7 +2466,7 @@ export function Horizon(date, observer, ra, dec, refraction) {
             const coszd = Math.cos(zd * DEG2RAD);
             const sinzd0 = Math.sin(zd0 * DEG2RAD);
             const coszd0 = Math.cos(zd0 * DEG2RAD);
-            var pr = [];
+            const pr = [];
             for (let j = 0; j < 3; ++j) {
                 pr.push(((p[j] - coszd0 * uz[j]) / sinzd0) * sinzd + uz[j] * coszd);
             }
@@ -3622,12 +3630,6 @@ export function JupiterMoons(date) {
  */
 export function HelioVector(body, date) {
     var time = MakeTime(date);
-    const starIndex = StarList.indexOf(body);
-    if (starIndex >= 0) {
-        const star = StarTable[starIndex];
-        const sphere = new Spherical(star.dec, 15 * star.ra, star.dist);
-        return VectorFromSphere(sphere, time);
-    }
     if (body in vsop)
         return CalcVsop(vsop[body], time);
     if (body === Body.Pluto) {
@@ -3649,6 +3651,11 @@ export function HelioVector(body, date) {
     }
     if (body === Body.SSB)
         return CalcSolarSystemBarycenter(time);
+    const star = UserDefinedStar(body);
+    if (star) {
+        const sphere = new Spherical(star.dec, 15 * star.ra, star.dist);
+        return VectorFromSphere(sphere, time);
+    }
     throw `HelioVector: Unknown body "${body}"`;
 }
 ;
@@ -3663,7 +3670,7 @@ export function HelioVector(body, date) {
  *
  * @param {Body} body
  *      A body for which to calculate a heliocentric distance:
- *      the Sun, Moon, or any of the planets.
+ *      the Sun, Moon, any of the planets, or a user-defined star.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the heliocentric distance.
@@ -3672,6 +3679,9 @@ export function HelioVector(body, date) {
  *      The heliocentric distance in AU.
  */
 export function HelioDistance(body, date) {
+    const star = UserDefinedStar(body);
+    if (star)
+        return star.dist;
     const time = MakeTime(date);
     if (body in vsop)
         return VsopFormula(vsop[body][RAD_INDEX], time.tt / DAYS_PER_MILLENNIUM, false);
@@ -3816,7 +3826,7 @@ class BodyPosition extends PositionFunction {
 export function BackdatePosition(date, observerBody, targetBody, aberration) {
     VerifyBoolean(aberration);
     const time = MakeTime(date);
-    if (StarList.indexOf(targetBody) >= 0) {
+    if (UserDefinedStar(targetBody)) {
         // This is a user-defined star, which must be treated as a special case.
         // First, we assume its heliocentric position does not change with time.
         // Second, we assume its heliocentric position has already been corrected
