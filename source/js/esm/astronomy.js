@@ -320,7 +320,7 @@ function UserDefinedStar(body) {
  *      The value is in units of sidereal hours, and must be within the half-open range [0, 24).
  *
  * @param {number} dec
- *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+ *      The declination to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
  *      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
  *      and must be within the closed range [-90, +90].
  *
@@ -3974,6 +3974,7 @@ export function BaryState(body, date) {
  *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
  *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
  *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *      Also allowed to be a user-defined star created by {@link DefineStar}.
  *
  *  @param {FlexibleDateTime} date
  *      The date and time for which to calculate position and velocity.
@@ -4010,6 +4011,10 @@ export function HelioState(body, date) {
             const state = (body == Body.Moon) ? GeoMoonState(time) : GeoEmbState(time);
             return new StateVector(state.x + earth.r.x, state.y + earth.r.y, state.z + earth.r.z, state.vx + earth.v.x, state.vy + earth.v.y, state.vz + earth.v.z, time);
         default:
+            if (UserDefinedStar(body)) {
+                const vec = HelioVector(body, time);
+                return new StateVector(vec.x, vec.y, vec.z, 0, 0, 0, time);
+            }
             throw `HelioState: Unsupported body "${body}"`;
     }
 }

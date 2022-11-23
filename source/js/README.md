@@ -1347,7 +1347,7 @@ definition until re-defined by another call to `DefineStar`.
 | --- | --- | --- |
 | body | [<code>Body</code>](#Body) | One of the eight user-defined star identifiers:      `Star1`, `Star2`, `Star3`, `Star4`, `Star5`, `Star6`, `Star7`, or `Star8`. |
 | ra | <code>number</code> | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).      The value is in units of sidereal hours, and must be within the half-open range [0, 24). |
-| dec | <code>number</code> | The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,      and must be within the closed range [-90, +90]. |
+| dec | <code>number</code> | The declination to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,      and must be within the closed range [-90, +90]. |
 | distanceLightYears | <code>number</code> | The distance between the star and the Sun, expressed in light-years.      This value is used to calculate the tiny parallax shift as seen by an observer on Earth.      If you don't know the distance to the star, using a large value like 1000 will generally work well.      The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations. |
 
 
@@ -1613,7 +1613,7 @@ of reference, consider using [BaryState](#BaryState) instead.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The celestial body whose heliocentric state vector is to be calculated.      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| body | [<code>Body</code>](#Body) | The celestial body whose heliocentric state vector is to be calculated.      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.      Also allowed to be a user-defined star created by [DefineStar](#DefineStar). |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate position and velocity. |
 
 

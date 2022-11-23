@@ -392,7 +392,7 @@ def DefineStar(body, ra, dec, distanceLightYears):
         The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
         The value is in units of sidereal hours, and must be within the half-open range [0, 24).
     dec: float
-        The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+        The declination to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
         The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
         and must be within the closed range [-90, +90].
     distanceLightYears: float

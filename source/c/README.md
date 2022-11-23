@@ -502,7 +502,7 @@ Stars are not valid until defined. Once defined, they retain their definition un
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  One of the eight user-defined star identifiers: `BODY_STAR1` .. `BODY_STAR8`. | 
 | `double` | `ra` |  The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of sidereal hours, and must be within the half-open range [0, 24). | 
-| `double` | `dec` |  The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of degrees north (positive) or south (negative) of the J2000 equator, and must be within the closed range [-90, +90]. | 
+| `double` | `dec` |  The declination to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ). The value is in units of degrees north (positive) or south (negative) of the J2000 equator, and must be within the closed range [-90, +90]. | 
 | `double` | `distanceLightYears` |  The distance between the star and the Sun, expressed in light-years. This value is used to calculate the tiny parallax shift as seen by an observer on Earth. If you don't know the distance to the star, using a large value like 1000 will generally work well. The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations. | 
 
 

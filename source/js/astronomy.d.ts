@@ -181,7 +181,7 @@ export declare enum Body {
  *      The value is in units of sidereal hours, and must be within the half-open range [0, 24).
  *
  * @param {number} dec
- *      The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+ *      The declination to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
  *      The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
  *      and must be within the closed range [-90, +90].
  *
@@ -1167,6 +1167,7 @@ export declare function BaryState(body: Body, date: FlexibleDateTime): StateVect
  *      Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
  *      `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
  *      `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+ *      Also allowed to be a user-defined star created by {@link DefineStar}.
  *
  *  @param {FlexibleDateTime} date
  *      The date and time for which to calculate position and velocity.
