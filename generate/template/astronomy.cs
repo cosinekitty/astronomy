@@ -4414,6 +4414,7 @@ $ASTRO_IAU_DATA()
         /// <param name="body">
         /// A body for which to calculate a heliocentric position:
         /// the Sun, Moon, EMB, SSB, or any of the planets.
+        /// Also allowed to be a user-defined star created by #Astronomy.DefineStar.
         /// </param>
         /// <param name="time">The date and time for which to calculate the position.</param>
         /// <returns>A heliocentric position vector of the center of the given body.</returns>
@@ -4855,6 +4856,7 @@ $ASTRO_IAU_DATA()
         /// Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets:
         /// `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
         /// `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+        /// Also allowed to be a user-defined star created by #Astronomy.DefineStar.
         /// </param>
         /// <param name="time">
         /// The date and time for which to calculate position and velocity.
@@ -4913,6 +4915,11 @@ $ASTRO_IAU_DATA()
                     );
 
                 default:
+                    if (IsUserDefinedStar(body))
+                    {
+                        AstroVector vec = HelioVector(body, time);
+                        return new StateVector(vec.x, vec.y, vec.z, 0.0, 0.0, 0.0, time);
+                    }
                     throw new InvalidBodyException(body);
             }
         }

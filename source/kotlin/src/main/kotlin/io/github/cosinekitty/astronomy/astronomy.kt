@@ -4827,6 +4827,7 @@ private fun solarSystemBarycenterState(time: Time): StateVector {
  * @param body
  * A body for which to calculate a heliocentric position:
  * the Sun, Moon, EMB, SSB, or any of the planets.
+ * Also allowed to be a user-defined star created by [defineStar].
  *
  * @param time
  * The date and time for which to calculate the position.
@@ -4894,6 +4895,7 @@ fun helioDistance(body: Body, time: Time): Double {
  * Supported values are [Body.Sun], [Body.Moon], [Body.EMB], [Body.SSB], and all planets:
  * [Body.Mercury], [Body.Venus], [Body.Earth], [Body.Mars], [Body.Jupiter],
  * [Body.Saturn], [Body.Uranus], [Body.Neptune], [Body.Pluto].
+ * Also allowed to be a user-defined star created by [defineStar].
  *
  * @param time
  * The date and time for which to calculate position and velocity.
@@ -4903,8 +4905,13 @@ fun helioDistance(body: Body, time: Time): Double {
  * The positions are expressed in AU.
  * The velocities are expressed in AU/day.
  */
-fun helioState(body: Body, time: Time): StateVector =
-    when (body) {
+fun helioState(body: Body, time: Time): StateVector {
+    if (isUserDefinedStar(body)) {
+        val vec = helioVector(body, time)
+        return StateVector(vec.x, vec.y, vec.z, 0.0, 0.0, 0.0, time)
+    }
+
+    return when (body) {
         Body.Sun   -> StateVector(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, time)
         Body.Pluto -> calcPluto(time, true)
         Body.Moon  -> helioEarthState(time) + geoMoonState(time)
@@ -4912,6 +4919,7 @@ fun helioState(body: Body, time: Time): StateVector =
         Body.SSB   -> solarSystemBarycenterState(time)
         else       -> StateVector(calcVsopPosVel(vsopModel(body), time.tt), time)
     }
+}
 
 
 /**

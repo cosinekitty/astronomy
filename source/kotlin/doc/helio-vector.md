@@ -20,5 +20,5 @@ The heliocentric position vector of the center of the given body.
 
 | | |
 |---|---|
-| body | A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets. |
+| body | A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets. Also allowed to be a user-defined star created by [defineStar](define-star.md). |
 | time | The date and time for which to calculate the position. |

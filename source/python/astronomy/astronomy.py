@@ -4503,6 +4503,7 @@ def HelioVector(body, time):
     body : Body
         The celestial body whose heliocentric position is to be calculated:
         The Sun, Moon, EMB, SSB, or any of the planets.
+        Also allowed to be a user-defined star created by #DefineStar.
     time : Time
         The time at which to calculate the heliocentric position.
 
@@ -4910,6 +4911,7 @@ def HelioState(body, time):
         Supported values are `Body.Sun`, `Body.SSB`, `Body.Moon`, `Body.EMB`, and all planets:
         `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`,
         `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`.
+        Also allowed to be a user-defined star created by #DefineStar.
     time : Time
         The date and time for which to calculate position and velocity.
 
@@ -4955,6 +4957,10 @@ def HelioState(body, time):
             state.vz + earth.v.z,
             time
         )
+
+    if _IsUserDefinedStar(body):
+        vec = HelioVector(body, time)
+        return StateVector(vec.x, vec.y, vec.z, 0.0, 0.0, 0.0, time)
 
     raise InvalidBodyError(body)
 

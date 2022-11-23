@@ -724,7 +724,7 @@ of reference, consider using [`Astronomy.BaryState`](#Astronomy.BaryState) inste
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | The celestial body whose heliocentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. |
+| [`Body`](#Body) | `body` | The celestial body whose heliocentric state vector is to be calculated. Supported values are `Body.Sun`, `Body.Moon`, `Body.EMB`, `Body.SSB`, and all planets: `Body.Mercury`, `Body.Venus`, `Body.Earth`, `Body.Mars`, `Body.Jupiter`, `Body.Saturn`, `Body.Uranus`, `Body.Neptune`, `Body.Pluto`. Also allowed to be a user-defined star created by [`Astronomy.DefineStar`](#Astronomy.DefineStar). |
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate position and velocity. |
 
 **Returns:** A structure that contains heliocentric position and velocity vectors.
@@ -746,7 +746,7 @@ If given an invalid value for `body`, this function will throw an [`InvalidBodyE
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets. |
+| [`Body`](#Body) | `body` | A body for which to calculate a heliocentric position: the Sun, Moon, EMB, SSB, or any of the planets. Also allowed to be a user-defined star created by [`Astronomy.DefineStar`](#Astronomy.DefineStar). |
 | [`AstroTime`](#AstroTime) | `time` | The date and time for which to calculate the position. |
 
 **Returns:** A heliocentric position vector of the center of the given body.

@@ -4294,6 +4294,7 @@ astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time)
  *      Supported values are `BODY_SUN`, `BODY_MOON`, `BODY_EMB`, `BODY_SSB`, and all planets:
  *      `BODY_MERCURY`, `BODY_VENUS`, `BODY_EARTH`, `BODY_MARS`, `BODY_JUPITER`,
  *      `BODY_SATURN`, `BODY_URANUS`, `BODY_NEPTUNE`, `BODY_PLUTO`.
+ *      Also allowed to be a user-defined star created by #Astronomy_DefineStar.
  * @param time
  *      The date and time for which to calculate position and velocity.
  * @return
@@ -4305,6 +4306,17 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
     astro_state_vector_t state;
     major_bodies_t bary;
     body_state_t planet, earth;
+
+    if (IsUserDefinedStar(body))
+    {
+        astro_vector_t vec = Astronomy_HelioVector(body, time);
+        state.x = vec.x;
+        state.y = vec.y;
+        state.z = vec.z;
+        state.vx = state.vy = state.vz = 0.0;
+        state.status = vec.status;
+        return state;
+    }
 
     switch (body)
     {
