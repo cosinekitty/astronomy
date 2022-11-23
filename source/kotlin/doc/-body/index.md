@@ -23,4 +23,12 @@ The enumeration of celestial bodies supported by Astronomy Engine.
 | [Moon](-moon/index.md)<br>The Earth's natural satellite, the Moon. |
 | [EMB](-e-m-b/index.md)<br>The Earth/Moon Barycenter. |
 | [SSB](-s-s-b/index.md)<br>The Solar System Barycenter. |
+| [Star1](-star1/index.md)<br>[Star1](-star1/index.md)(null, null)<br>User-defined star 1. |
+| [Star2](-star2/index.md)<br>[Star2](-star2/index.md)(null, null)<br>User-defined star 2. |
+| [Star3](-star3/index.md)<br>[Star3](-star3/index.md)(null, null)<br>User-defined star 3. |
+| [Star4](-star4/index.md)<br>[Star4](-star4/index.md)(null, null)<br>User-defined star 4. |
+| [Star5](-star5/index.md)<br>[Star5](-star5/index.md)(null, null)<br>User-defined star 5. |
+| [Star6](-star6/index.md)<br>[Star6](-star6/index.md)(null, null)<br>User-defined star 6. |
+| [Star7](-star7/index.md)<br>[Star7](-star7/index.md)(null, null)<br>User-defined star 7. |
+| [Star8](-star8/index.md)<br>[Star8](-star8/index.md)(null, null)<br>User-defined star 8. |
 

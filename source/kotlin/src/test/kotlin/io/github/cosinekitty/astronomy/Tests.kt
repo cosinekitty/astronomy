@@ -2650,4 +2650,55 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    private fun starRiseSetCulmCase(
+        name: String,
+        ra: Double,
+        dec: Double,
+        distLy: Double,
+        observer: Observer,
+        year: Int,
+        month: Int,
+        day: Int,
+        riseHour: Int,
+        riseMinute: Int,
+        culmHour: Int,
+        culmMinute: Int,
+        setHour: Int,
+        setMinute: Int
+    ) {
+        // Calculate expected event times.
+        val expectedRiseTime = Time(year, month, day, riseHour, riseMinute, 0.0)
+        val expectedCulmTime = Time(year, month, day, culmHour, culmMinute, 0.0)
+        val expectedSetTime  = Time(year, month, day, setHour,  setMinute,  0.0)
+
+        // Define a custom star object.
+        defineStar(Body.Star1, ra, dec, distLy)
+
+        // Use Astronomy Engine to search for event times.
+        val searchTime = Time(year, month, day, 0, 0, 0.0)
+        val rise = searchRiseSet(Body.Star1, observer, Direction.Rise, searchTime, 1.0) ?: fail("Star rise search failed for $name")
+        val culm = searchHourAngle(Body.Star1, observer, 0.0, searchTime, +1)
+        val set  = searchRiseSet(Body.Star1, observer, Direction.Set, searchTime, 1.0) ?: fail("Star set search failed for $name")
+
+        // Compare expected times with calculated times.
+        val rdiff = MINUTES_PER_DAY * abs(expectedRiseTime.ut - rise.ut)
+        val cdiff = MINUTES_PER_DAY * abs(expectedCulmTime.ut - culm.time.ut)
+        val sdiff = MINUTES_PER_DAY * abs(expectedSetTime.ut - set.ut)
+
+        assertTrue(rdiff < 0.5, "excessive rise time error = $rdiff minutes for $name.")
+        assertTrue(cdiff < 0.5, "excessive culmination time error = $cdiff minutes for $name.")
+        assertTrue(sdiff < 0.5, "excessive set time error = $sdiff minutes for $name.")
+    }
+
+    @Test
+    fun `Rise set culmination of user defined stars`() {
+        val observer = Observer(+25.77, -80.19, 0.0)
+        starRiseSetCulmCase("Sirius",   6.7525, -16.7183,   8.6, observer, 2022, 11, 21,  2, 37,  8,  6, 13, 34)
+        starRiseSetCulmCase("Sirius",   6.7525, -16.7183,   8.6, observer, 2022, 11, 25,  2, 22,  7, 50, 13, 18)
+        starRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 21,  4, 17,  7, 44, 11, 11)
+        starRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56)
+    }
+
+    //----------------------------------------------------------------------------------------
 }

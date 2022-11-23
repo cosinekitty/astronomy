@@ -135,6 +135,10 @@ const val CALLISTO_RADIUS_KM = 2410.3
  */
 const val C_AUDAY = 173.1446326846693
 
+/**
+ * The number of astronomical units per light-year.
+ */
+const val AU_PER_LY = 63241.07708807546
 
 /**
  * Convert an angle expressed in radians to an angle expressed in degrees.
@@ -333,6 +337,122 @@ enum class Body(
      * simulating the movement of objects in the Solar System.
      */
     SSB(null, null),
+
+    /**
+     * User-defined star 1.
+     */
+    Star1(null, null),
+
+    /**
+     * User-defined star 2.
+     */
+    Star2(null, null),
+
+    /**
+     * User-defined star 3.
+     */
+    Star3(null, null),
+
+    /**
+     * User-defined star 4.
+     */
+    Star4(null, null),
+
+    /**
+     * User-defined star 5.
+     */
+    Star5(null, null),
+
+    /**
+     * User-defined star 6.
+     */
+    Star6(null, null),
+
+    /**
+     * User-defined star 7.
+     */
+    Star7(null, null),
+
+    /**
+     * User-defined star 8.
+     */
+    Star8(null, null),
+}
+
+
+private class StarDef {
+    public var ra: Double = 0.0             // heliocentric right ascension in EQJ
+    public var dec: Double = 0.0            // heliocentric declination in EQJ
+    public var dist: Double = AU_PER_LY     // heliocentric distance in AU
+}
+
+private val starTable = arrayOf(
+    StarDef(),      // Star1
+    StarDef(),      // Star2
+    StarDef(),      // Star3
+    StarDef(),      // Star4
+    StarDef(),      // Star5
+    StarDef(),      // Star6
+    StarDef(),      // Star7
+    StarDef()       // Star8
+)
+
+private fun getUserDefinedStar(body: Body): StarDef? =
+    when (body) {
+        Body.Star1 -> starTable[0]
+        Body.Star2 -> starTable[1]
+        Body.Star3 -> starTable[2]
+        Body.Star4 -> starTable[3]
+        Body.Star5 -> starTable[4]
+        Body.Star6 -> starTable[5]
+        Body.Star7 -> starTable[6]
+        Body.Star8 -> starTable[7]
+        else -> null
+    }
+
+private fun isUserDefinedStar(body: Body): Boolean =
+    (getUserDefinedStar(body) != null)
+
+
+/**
+ * Assign equatorial coordinates to a user-defined star.
+ *
+ * Some Astronomy Engine functions allow their `body` parameter to
+ * be a user-defined fixed point in the sky, loosely called a "star".
+ * This function assigns a right ascension, declination, and distance
+ * to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
+ *
+ * A star that has not been defined through a call to `defineStar`
+ * defaults to the coordinates RA=0, DEC=0 and a heliocentric distance of 1 light-year.
+ * Once defined, the star keeps the given coordinates until
+ * a subsequent call to `defineStar` replaces the coordinates with new values.
+ *
+ * @param body
+ * One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`.
+ *
+ * @param ra
+ * The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+ * The value is in units of sidereal hours, and must be within the half-open range [0, 24).
+ *
+ * @param dec
+ * The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+ * The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
+ * and must be within the closed range [-90, +90].
+ *
+ * @param distanceLightYears
+ * The distance between the star and the Sun, expressed in light-years.
+ * This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
+ * If you don't know the distance to the star, using a large value like 1000 will generally work well.
+ * The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
+ */
+public fun defineStar(body: Body, ra: Double, dec: Double, distanceLightYears: Double) {
+    val star = getUserDefinedStar(body) ?: throw InvalidBodyException(body)
+    if (!ra.isFinite() || ra < 0.0 || ra >= 24.0) throw IllegalArgumentException("Invalid right ascension: $ra")
+    if (!dec.isFinite() || dec < -90.0 || dec > +90.0) throw IllegalArgumentException("Invalid declination: $dec")
+    if (!distanceLightYears.isFinite() || distanceLightYears < 1.0) throw IllegalArgumentException("Invalid distance: $distanceLightYears")
+    star.ra = ra
+    star.dec = dec
+    star.dist = distanceLightYears * AU_PER_LY;
 }
 
 
@@ -4713,8 +4833,12 @@ private fun solarSystemBarycenterState(time: Time): StateVector {
  *
  * @return The heliocentric position vector of the center of the given body.
  */
-fun helioVector(body: Body, time: Time): Vector =
-    when (body) {
+fun helioVector(body: Body, time: Time): Vector {
+    val star = getUserDefinedStar(body)
+    if (star != null)
+        return Spherical(star.dec, 15.0*star.ra, star.dist).toVector(time)
+
+    return when (body) {
         Body.Sun   -> Vector(0.0, 0.0, 0.0, time)
         Body.Pluto -> calcPluto(time, true).position()
         Body.Moon  -> helioEarthPos(time) + geoMoon(time)
@@ -4722,6 +4846,7 @@ fun helioVector(body: Body, time: Time): Vector =
         Body.SSB   -> solarSystemBarycenterPos(time)
         else       -> calcVsop(vsopModel(body), time)
     }
+}
 
 /**
  * Calculates the distance between a body and the Sun at a given time.
@@ -6289,6 +6414,15 @@ private fun maxAltitudeSlope(body: Body, latitude: Double): Double {
         Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto -> {
             derivRa  = -0.2
             derivDec = +0.2
+        }
+
+        Body.Star1, Body.Star2, Body.Star3, Body.Star4, Body.Star5, Body.Star6, Body.Star7, Body.Star8 -> {
+            // The minimum allowed heliocentric distance of a user-defined star
+            // is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
+            // Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
+            // generous safety buffer of 0.008 degrees.
+            derivRa  = -0.008
+            derivDec = +0.008
         }
 
         Body.Earth -> throw EarthNotAllowedException()

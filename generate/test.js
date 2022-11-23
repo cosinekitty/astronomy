@@ -3382,9 +3382,9 @@ function LunarFraction() {
 function StarRiseSetCulmCase(starName, ra, dec, distLy, observer, searchDateText, riseText, culmText, setText) {
     Astronomy.DefineStar(Astronomy.Body.Star1, ra, dec, distLy);
     const searchTime = new Astronomy.AstroTime(new Date(searchDateText));
-    const riseTime = Astronomy.SearchRiseSet(Astronomy.Body.Star1, observer, +1, searchTime, 1.0);
-    const setTime  = Astronomy.SearchRiseSet(Astronomy.Body.Star1, observer, -1, searchTime, 1.0);
-    const culm = Astronomy.SearchHourAngle(Astronomy.Body.Star1, observer, 0.0, searchTime);
+    const riseTime = Astronomy.SearchRiseSet(Astronomy.Body.Star1, observer, +1, searchTime, 1.0) || Fail('Star rise search failed.');
+    const setTime  = Astronomy.SearchRiseSet(Astronomy.Body.Star1, observer, -1, searchTime, 1.0) || Fail('Star set search failed.');
+    const culm = Astronomy.SearchHourAngle(Astronomy.Body.Star1, observer, 0.0, searchTime) || Fail('Star culmination search failed.');
     const expectedRiseTime = new Astronomy.AstroTime(new Date(searchDateText + 'T' + riseText + 'Z'));
     const expectedCulmTime = new Astronomy.AstroTime(new Date(searchDateText + 'T' + culmText + 'Z'));
     const expectedSetTime = new Astronomy.AstroTime(new Date(searchDateText + 'T' + setText + 'Z'));

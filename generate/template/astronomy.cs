@@ -2800,7 +2800,7 @@ $ASTRO_ADDSOL()
         private static bool IsUserDefinedStar(Body body) =>
             (body >= Body.Star1) && (body <= Body.Star8);
 
-        private static StarDef GetStar(Body body) =>
+        private static StarDef GetUserDefinedStar(Body body) =>
             IsUserDefinedStar(body) ? StarTable[(int)body - (int)Body.Star1] : null;
 
         /// <summary>
@@ -2837,7 +2837,7 @@ $ASTRO_ADDSOL()
         /// </param>
         public static void DefineStar(Body body, double ra, double dec, double distanceLightYears)
         {
-            StarDef star = GetStar(body);
+            StarDef star = GetUserDefinedStar(body);
             if (star == null)
                 throw new ArgumentException($"Body must be a user-defined star, not {body}.");
 
@@ -4419,7 +4419,7 @@ $ASTRO_IAU_DATA()
         /// <returns>A heliocentric position vector of the center of the given body.</returns>
         public static AstroVector HelioVector(Body body, AstroTime time)
         {
-            if (GetStar(body) is StarDef star)
+            if (GetUserDefinedStar(body) is StarDef star)
                 return VectorFromSphere(new Spherical(star.dec, 15*star.ra, star.dist), time);
 
             AstroVector earth, geomoon;

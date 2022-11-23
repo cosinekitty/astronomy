@@ -4289,9 +4289,9 @@ namespace csharp_test
 
             // Use Astronomy Engine to search for event times.
             var searchTime = new AstroTime(year, month, day, 0, 0, 0.0);
-            var rise = Astronomy.SearchRiseSet(Body.Star1, observer, Direction.Rise, searchTime, 1.0);
+            var rise = Astronomy.SearchRiseSet(Body.Star1, observer, Direction.Rise, searchTime, 1.0) ?? throw new Exception("Star rise search failed.");
             var culm = Astronomy.SearchHourAngle(Body.Star1, observer, 0.0, searchTime, +1);
-            var set = Astronomy.SearchRiseSet(Body.Star1, observer, Direction.Set, searchTime, 1.0);
+            var set = Astronomy.SearchRiseSet(Body.Star1, observer, Direction.Set, searchTime, 1.0) ?? throw new Exception("Star set search failed.");
 
             // Compare expected times with calculated times.
             double rdiff = MINUTES_PER_DAY * abs(expectedRiseTime.ut - rise.ut);
