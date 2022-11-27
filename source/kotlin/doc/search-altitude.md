@@ -16,6 +16,12 @@ Nautical twilight is similar to civil twilight, only the altitude value should b
 
 Astronomical twilight uses -18 degrees as the altitude value.
 
+By convention for twilight time calculations, the altitude is not corrected for atmospheric refraction. This is because the target altitudes are below the horizon, and refraction is not directly observable.
+
+searchAltitude is not intended to find rise/set times of a body for two reasons: (1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers. (2) Rise/set times are affected significantly by atmospheric refraction. Therefore, it is better to use [searchRiseSet](search-rise-set.md) to find rise/set times, which corrects for both of these considerations.
+
+searchAltitude will not work reliably for altitudes at or near the body's maximum or minimum altitudes. To find the time a body reaches minimum or maximum altitude angles, use [searchHourAngle](search-hour-angle.md).
+
 #### Return
 
 The date and time of the altitude event, or null if no such event occurs within the specified time window.
@@ -24,7 +30,7 @@ The date and time of the altitude event, or null if no such event occurs within 
 
 | | |
 |---|---|
-| body | The Sun, Moon, or any planet other than the Earth. |
+| body | The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [defineStar](define-star.md). |
 | observer | The location where observation takes place. |
 | direction | Either [Direction.Rise](-direction/-rise/index.md) to find an ascending altitude event or [Direction.Set](-direction/-set/index.md) to find a descending altitude event. |
 | startTime | The date and time at which to start the search. |

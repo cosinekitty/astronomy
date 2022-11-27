@@ -2707,7 +2707,7 @@ fun globalSolarEclipsesAfter(startTime: Time): Sequence<GlobalSolarEclipseInfo> 
  * See [LocalSolarEclipseInfo] for more information.
  *
  * To find a series of solar eclipses, call this function once,
- * then keep calling #Astronomy.NextLocalSolarEclipse as many times as desired,
+ * then keep calling [nextLocalSolarEclipse] as many times as desired,
  * passing in the `peak` value returned from the previous call.
  *
  * IMPORTANT: An eclipse reported by this function might be partly or
@@ -6223,7 +6223,8 @@ fun moonQuartersAfter(startTime: Time): Sequence<MoonQuarterInfo> =
  * of the body at that time, as seen by the given observer.
  *
  * @param body
- * The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+ * The Sun, Moon, any planet other than the Earth,
+ * or a user-defined star that was created by a call to [defineStar].
  *
  * @param observer
  * A location on or near the surface of the Earth where the observer is located.
@@ -6543,10 +6544,14 @@ private fun internalSearchAltitude(
  * Rise time is when the body first starts to be visible above the horizon.
  * For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
  * Set time is the moment when the body appears to vanish below the horizon.
+ * Therefore, this function adjusts for the apparent angular radius of the observed body
+ * (significant only for the Sun and Moon).
  *
- * This function corrects for typical atmospheric refraction, which causes celestial
+ * This function corrects for a typical value of atmospheric refraction, which causes celestial
  * bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
- * It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+ * Astronomy Engine uses a correction of 34 arcminutes. Real-world refraction varies based
+ * on air temperature, pressure, and humidity; such weather-based conditions are outside
+ * the scope of Astronomy Engine.
  *
  * Note that rise or set may not occur in every 24 hour period.
  * For example, near the Earth's poles, there are long periods of time where
@@ -6557,7 +6562,8 @@ private fun internalSearchAltitude(
  * Therefore callers must not assume that the function will always succeed.
  *
  * @param body
- * The Sun, Moon, or any planet other than the Earth.
+ * The Sun, Moon, any planet other than the Earth,
+ * or a user-defined star that was created by a call to [defineStar].
  *
  * @param observer
  * The location where observation takes place.
@@ -6618,8 +6624,23 @@ fun searchRiseSet(
  *
  * Astronomical twilight uses -18 degrees as the `altitude` value.
  *
+ * By convention for twilight time calculations, the altitude is not corrected for
+ * atmospheric refraction. This is because the target altitudes are below the horizon,
+ * and refraction is not directly observable.
+ *
+ * `searchAltitude` is not intended to find rise/set times of a body for two reasons:
+ * (1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers.
+ * (2) Rise/set times are affected significantly by atmospheric refraction.
+ * Therefore, it is better to use [searchRiseSet] to find rise/set times, which
+ * corrects for both of these considerations.
+ *
+ * `searchAltitude` will not work reliably for altitudes at or near the body's
+ * maximum or minimum altitudes. To find the time a body reaches minimum or maximum altitude
+ * angles, use [searchHourAngle].
+ *
  * @param body
- * The Sun, Moon, or any planet other than the Earth.
+ * The Sun, Moon, any planet other than the Earth,
+ * or a user-defined star that was created by a call to [defineStar].
  *
  * @param observer
  * The location where observation takes place.
@@ -7165,7 +7186,7 @@ internal fun magnitudeSlope(body: Body, time: Time): Double {
  * Mercury's peak magnitude occurs at superior conjunction, when it is virtually impossible to see from the Earth,
  * so peak magnitude events have little practical value for that planet.
  * Planets other than Venus and Mercury reach peak magnitude at opposition, which can
- * be found using #Astronomy.SearchRelativeLongitude.
+ * be found using [searchRelativeLongitude].
  * The Moon reaches peak magnitude at full moon, which can be found using
  * [searchMoonQuarter] or [searchMoonPhase].
  * The Sun reaches peak magnitude at perihelion, which occurs each year in January.

@@ -2823,9 +2823,9 @@ the function returns `None`.
 <a name="SearchAltitude"></a>
 ### SearchAltitude(body, observer, direction, startTime, limitDays, altitude)
 
-**Finds the next time a body reaches a given altitude.**
+**Finds the next time the center of a body passes through a given altitude.**
 
-Finds when the given body ascends or descends through a given
+Finds when the center of the given body ascends or descends through a given
 altitude angle, as seen by an observer at the specified location on the Earth.
 By using the appropriate combination of `direction` and `altitude` parameters,
 this function can be used to find when civil, nautical, or astronomical twilight
@@ -2836,10 +2836,21 @@ Civil dusk ends after sunset when the Sun descends through 6 degrees below the h
 To find civil dusk, pass `Direction.Set` for `direction` and -6 for `altitude`.
 Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
 Astronomical twilight uses -18 degrees as the `altitude` value.
+By convention for twilight time calculations, the altitude is not corrected for
+atmospheric refraction. This is because the target altitudes are below the horizon,
+and refraction is not directly observable.
+`SearchAltitude` is not intended to find rise/set times of a body for two reasons:
+(1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers.
+(2) Rise/set times are affected significantly by atmospheric refraction.
+Therefore, it is better to use [`SearchRiseSet`](#SearchRiseSet) to find rise/set times, which
+corrects for both of these considerations.
+`SearchAltitude` will not work reliably for altitudes at or near the body's
+maximum or minimum altitudes. To find the time a body reaches minimum or maximum altitude
+angles, use [`SearchHourAngle`](#SearchHourAngle).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | The Sun, Moon, or any planet other than the Earth. |
+| [`Body`](#Body) | `body` | The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [`DefineStar`](#DefineStar). |
 | [`Observer`](#Observer) | `observer` | The location where observation takes place. |
 | [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find an ascending altitude event or `Direction.Set` to find a descending altitude event. |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
@@ -2897,7 +2908,7 @@ of the body at that time, as seen by the given observer.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | The celestial body, which can the Sun, the Moon, or any planet other than the Earth. |
+| [`Body`](#Body) | `body` | The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [`DefineStar`](#DefineStar). |
 | [`Observer`](#Observer) | `observer` | Indicates a location on or near the surface of the Earth where the observer is located. |
 | `float` | `hourAngle` | An hour angle value in the range [0.0, 24.0) indicating the number of sidereal hours after the body's most recent culmination. |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
@@ -3167,9 +3178,14 @@ This function finds the next rise or set time of the Sun, Moon, or planet other 
 Rise time is when the body first starts to be visible above the horizon.
 For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
 Set time is the moment when the body appears to vanish below the horizon.
+Therefore, this function adjusts for the apparent angular radius of the observed body
+(significant only for the Sun and Moon).
 This function corrects for typical atmospheric refraction, which causes celestial
 bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
 It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+Astronomy Engine uses a correction of 34 arcminutes. Real-world refraction varies based
+on air temperature, pressure, and humidity; such weather-based conditions are outside
+the scope of Astronomy Engine.
 Note that rise or set may not occur in every 24 hour period.
 For example, near the Earth's poles, there are long periods of time where
 the Sun stays below the horizon, never rising.
@@ -3180,7 +3196,7 @@ Therefore callers must not assume that the function will always succeed.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Body`](#Body) | `body` | The Sun, Moon, or any planet other than the Earth. |
+| [`Body`](#Body) | `body` | The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [`DefineStar`](#DefineStar). |
 | [`Observer`](#Observer) | `observer` | The location where observation takes place. |
 | [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find a rise time or `Direction.Set` to find a set time. |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |

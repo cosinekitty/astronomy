@@ -6180,15 +6180,20 @@ $ASTRO_IAU_DATA()
         /// <summary>
         /// Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
         /// </summary>
+        ///
         /// <remarks>
         /// This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
         /// Rise time is when the body first starts to be visible above the horizon.
         /// For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
         /// Set time is the moment when the body appears to vanish below the horizon.
+        /// Therefore, this function adjusts for the apparent angular radius of the observed body
+        /// (significant only for the Sun and Moon).
         ///
-        /// This function corrects for typical atmospheric refraction, which causes celestial
+        /// This function corrects for a typical value of atmospheric refraction, which causes celestial
         /// bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
-        /// It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+        /// Astronomy Engine uses a correction of 34 arcminutes. Real-world refraction varies based
+        /// on air temperature, pressure, and humidity; such weather-based conditions are outside
+        /// the scope of Astronomy Engine.
         ///
         /// Note that rise or set may not occur in every 24 hour period.
         /// For example, near the Earth's poles, there are long periods of time where
@@ -6199,7 +6204,10 @@ $ASTRO_IAU_DATA()
         /// Therefore callers must not assume that the function will always succeed.
         /// </remarks>
         ///
-        /// <param name="body">The Sun, Moon, or any planet other than the Earth.</param>
+        /// <param name="body">
+        /// The Sun, Moon, any planet other than the Earth,
+        /// or a user-defined star that was created by a call to #Astronomy.DefineStar.
+        /// </param>
         ///
         /// <param name="observer">The location where observation takes place.</param>
         ///
@@ -6253,10 +6261,10 @@ $ASTRO_IAU_DATA()
         }
 
         /// <summary>
-        /// Finds the next time a body reaches a given altitude.
+        /// Finds the next time the center of a body passes through a given altitude.
         /// </summary>
         /// <remarks>
-        /// Finds when the given body ascends or descends through a given
+        /// Finds when the center of the given body ascends or descends through a given
         /// altitude angle, as seen by an observer at the specified location on the Earth.
         /// By using the appropriate combination of `direction` and `altitude` parameters,
         /// this function can be used to find when civil, nautical, or astronomical twilight
@@ -6271,9 +6279,26 @@ $ASTRO_IAU_DATA()
         /// Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
         ///
         /// Astronomical twilight uses -18 degrees as the `altitude` value.
+        ///
+        /// By convention for twilight time calculations, the altitude is not corrected for
+        /// atmospheric refraction. This is because the target altitudes are below the horizon,
+        /// and refraction is not directly observable.
+        ///
+        /// `SearchAltitude` is not intended to find rise/set times of a body for two reasons:
+        /// (1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers.
+        /// (2) Rise/set times are affected significantly by atmospheric refraction.
+        /// Therefore, it is better to use #Astronomy.SearchRiseSet to find rise/set times, which
+        /// corrects for both of these considerations.
+        ///
+        /// `SearchAltitude` will not work reliably for altitudes at or near the body's
+        /// maximum or minimum altitudes. To find the time a body reaches minimum or maximum altitude
+        /// angles, use #Astronomy.SearchHourAngle.
         /// </remarks>
         ///
-        /// <param name="body">The Sun, Moon, or any planet other than the Earth.</param>
+        /// <param name="body">
+        /// The Sun, Moon, any planet other than the Earth,
+        /// or a user-defined star that was created by a call to #Astronomy.DefineStar.
+        /// </param>
         ///
         /// <param name="observer">The location where observation takes place.</param>
         ///
@@ -6346,7 +6371,8 @@ $ASTRO_IAU_DATA()
         /// </remarks>
         ///
         /// <param name="body">
-        /// The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+        /// The Sun, Moon, any planet other than the Earth,
+        /// or a user-defined star that was created by a call to #Astronomy.DefineStar.
         /// </param>
         ///
         /// <param name="observer">

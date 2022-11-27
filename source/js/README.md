@@ -2681,7 +2681,7 @@ or even that the function will return `null`, indicating that no event was found
 **Kind**: global function  
 **Returns**: [<code>AstroTime</code>](#AstroTime) \| <code>null</code> - The date and time of the altitude event, or null if no such event
      occurs within the specified time window.  
-**Brief**: Finds the next time a body reaches a given altitude.
+**Brief**: Finds the next time the center of a body passes through a given altitude.
 
 Finds when the given body ascends or descends through a given
 altitude angle, as seen by an observer at the specified location on the Earth.
@@ -2697,11 +2697,25 @@ To find civil dusk, pass -1 for `direction` and -6 for `altitude`.
 
 Nautical twilight is similar to civil twilight, only the `altitude` value should be -12 degrees.
 
-Astronomical twilight uses -18 degrees as the `altitude` value.  
+Astronomical twilight uses -18 degrees as the `altitude` value.
+
+By convention for twilight time calculations, the altitude is not corrected for
+atmospheric refraction. This is because the target altitudes are below the horizon,
+and refraction is not directly observable.
+
+`SearchAltitude` is not intended to find rise/set times of a body for two reasons:
+(1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers.
+(2) Rise/set times are affected significantly by atmospheric refraction.
+Therefore, it is better to use [SearchRiseSet](#SearchRiseSet) to find rise/set times, which
+corrects for both of these considerations.
+
+`SearchAltitude` will not work reliably for altitudes at or near the body's
+maximum or minimum altitudes. To find the time a body reaches minimum or maximum altitude
+angles, use [SearchHourAngle](#SearchHourAngle).  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The body for which to find the altitude event.      Can be the Sun, Moon, or any planet other than the Earth. |
+| body | [<code>Body</code>](#Body) | The Sun, Moon, any planet other than the Earth,      or a user-defined star that was created by a call to [DefineStar](#DefineStar). |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | direction | <code>number</code> | Either +1 to find when the body ascends through the altitude,      or -1 for when the body descends through the altitude.      Any other value will cause an exception to be thrown. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified altitude event is to be found. |
@@ -2735,21 +2749,32 @@ passing in the `peak` value returned from the previous call.
 
 ## SearchHourAngle(body, observer, hourAngle, dateStart, direction) ⇒ [<code>HourAngleEvent</code>](#HourAngleEvent)
 **Kind**: global function  
-**Brief**: Finds when a body will reach a given hour angle.
+**Brief**: Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
 
-Finds the next time the given body is seen to reach the specified
-<a href="https://en.wikipedia.org/wiki/Hour_angle">hour angle</a>
-by the given observer.
-Providing `hourAngle` = 0 finds the next maximum altitude event (culmination).
-Providing `hourAngle` = 12 finds the next minimum altitude event.
+The *hour angle* of a celestial body indicates its position in the sky with respect
+to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
+The hour angle is 0 when the body reaches its highest angle above the horizon in a given day.
+The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
+to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
+the number of hours that have passed since the most recent time that the body has culminated,
+or reached its highest point.
+
+This function searches for the next or previous time a celestial body reaches the given hour angle
+relative to the date and time specified by `dateStart`.
+To find when a body culminates, pass 0 for `hourAngle`.
+To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
+
 Note that, especially close to the Earth's poles, a body as seen on a given day
 may always be above the horizon or always below the horizon, so the caller cannot
 assume that a culminating object is visible nor that an object is below the horizon
-at its minimum altitude.  
+at its minimum altitude.
+
+The function returns the date and time, along with the horizontal coordinates
+of the body at that time, as seen by the given observer.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | A celestial body other than the Earth. |
+| body | [<code>Body</code>](#Body) | The Sun, Moon, any planet other than the Earth,      or a user-defined star that was created by a call to [DefineStar](#DefineStar). |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | hourAngle | <code>number</code> | The hour angle expressed in      <a href="https://en.wikipedia.org/wiki/Sidereal_time">sidereal</a>      hours for which the caller seeks to find the body attain.      The value must be in the range [0, 24).      The hour angle represents the number of sidereal hours that have      elapsed since the most recent time the body crossed the observer's local      <a href="https://en.wikipedia.org/wiki/Meridian_(astronomy)">meridian</a>.      This specifying `hourAngle` = 0 finds the moment in time      the body reaches the highest angular altitude in a given sidereal day. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the desired hour angle crossing event      is to be found. |
@@ -2990,19 +3015,32 @@ This means the Earth and the other planet are on opposite sides of the Sun.
 **Kind**: global function  
 **Returns**: [<code>AstroTime</code>](#AstroTime) \| <code>null</code> - The date and time of the rise or set event, or null if no such event
      occurs within the specified time window.  
-**Brief**: Finds the next rise or set time for a body.
+**Brief**: Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
 
-Finds a rise or set time for the given body as
-seen by an observer at the specified location on the Earth.
-Rise time is defined as the moment when the top of the body
-is observed to first appear above the horizon in the east.
-Set time is defined as the moment the top of the body
-is observed to sink below the horizon in the west.
-The times are adjusted for typical atmospheric refraction conditions.  
+This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
+Rise time is when the body first starts to be visible above the horizon.
+For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
+Set time is the moment when the body appears to vanish below the horizon.
+Therefore, this function adjusts for the apparent angular radius of the observed body
+(significant only for the Sun and Moon).
+
+This function corrects for a typical value of atmospheric refraction, which causes celestial
+bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
+Astronomy Engine uses a correction of 34 arcminutes. Real-world refraction varies based
+on air temperature, pressure, and humidity; such weather-based conditions are outside
+the scope of Astronomy Engine.
+
+Note that rise or set may not occur in every 24 hour period.
+For example, near the Earth's poles, there are long periods of time where
+the Sun stays below the horizon, never rising.
+Also, it is possible for the Moon to rise just before midnight but not set during the subsequent 24-hour day.
+This is because the Moon sets nearly an hour later each day due to orbiting the Earth a
+significant amount during each rotation of the Earth.
+Therefore callers must not assume that the function will always succeed.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The body to find the rise or set time for. |
+| body | [<code>Body</code>](#Body) | The Sun, Moon, any planet other than the Earth,      or a user-defined star that was created by a call to [DefineStar](#DefineStar). |
 | observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
 | direction | <code>number</code> | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
 | dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified rise or set time is to be found. |

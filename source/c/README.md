@@ -2379,11 +2379,11 @@ If the search does not converge within 20 iterations, it will fail with status c
 <a name="Astronomy_SearchAltitude"></a>
 ### Astronomy_SearchAltitude(body, observer, direction, startTime, limitDays, altitude) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
-**Finds the next time a body reaches a given altitude.** 
+**Finds the next time the center of a body passes through a given altitude.** 
 
 
 
-Finds when the given body ascends or descends through a given altitude angle, as seen by an observer at the specified location on the Earth. By using the appropriate combination of `direction` and `altitude` parameters, this function can be used to find when civil, nautical, or astronomical twilight begins (dawn) or ends (dusk).
+Finds when the center of the given body ascends or descends through a given altitude angle, as seen by an observer at the specified location on the Earth. By using the appropriate combination of `direction` and `altitude` parameters, this function can be used to find when civil, nautical, or astronomical twilight begins (dawn) or ends (dusk).
 
 Civil dawn begins before sunrise when the Sun ascends through 6 degrees below the horizon. To find civil dawn, pass `DIRECTION_RISE` for `direction` and -6 for `altitude`.
 
@@ -2393,6 +2393,12 @@ Nautical twilight is similar to civil twilight, only the `altitude` value should
 
 Astronomical twilight uses -18 degrees as the `altitude` value.
 
+By convention for twilight time calculations, the altitude is not corrected for atmospheric refraction. This is because the target altitudes are below the horizon, and refraction is not directly observable.
+
+`Astronomy_SearchAltitude` is not intended to find rise/set times of a body for two reasons: (1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers. (2) Rise/set times are affected significantly by atmospheric refraction. Therefore, it is better to use [`Astronomy_SearchRiseSet`](#Astronomy_SearchRiseSet) to find rise/set times, which corrects for both of these considerations.
+
+`Astronomy_SearchAltitude` will not work reliably for altitudes at or near the body's maximum or minimum altitudes. To find the time a body reaches minimum or maximum altitude angles, use [`Astronomy_SearchHourAngleEx`](#Astronomy_SearchHourAngleEx).
+
 
 
 **Returns:**  On success, the `status` field in the returned structure contains `ASTRO_SUCCESS` and the `time` field contains the date and time of the requested altitude event. If the `status` field contains `ASTRO_SEARCH_FAILURE`, it means the altitude event does not occur within `limitDays` days of `startTime`. This is a normal condition, not an error. Any other value of `status` indicates an error of some kind. 
@@ -2401,7 +2407,7 @@ Astronomical twilight uses -18 degrees as the `altitude` value.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, or any planet other than the Earth. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [`Astronomy_DefineStar`](#Astronomy_DefineStar). | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The location where observation takes place. You can create an observer structure by calling [`Astronomy_MakeObserver`](#Astronomy_MakeObserver). | 
 | [`astro_direction_t`](#astro_direction_t) | `direction` |  Either `DIRECTION_RISE` to find when the body ascends through the altitude, or `DIRECTION_SET` for when the body descends through the altitude. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
@@ -2460,7 +2466,7 @@ On success, the function reports the date and time, along with the horizontal co
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The celestial body, which can the Sun, the Moon, or any planet other than the Earth. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [`Astronomy_DefineStar`](#Astronomy_DefineStar). | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  Indicates a location on or near the surface of the Earth where the observer is located. Call [`Astronomy_MakeObserver`](#Astronomy_MakeObserver) to create an observer structure. | 
 | `double` | `hourAngle` |  An hour angle value in the range [0, 24) indicating the number of sidereal hours after the body's most recent culmination. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
@@ -2757,9 +2763,9 @@ Certain astronomical events are defined in terms of relative longitude between t
 
 
 
-This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth. Rise time is when the body first starts to be visible above the horizon. For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon. Set time is the moment when the body appears to vanish below the horizon.
+This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth. Rise time is when the body first starts to be visible above the horizon. For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon. Set time is the moment when the body appears to vanish below the horizon. Therefore, this function adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
 
-This function corrects for typical atmospheric refraction, which causes celestial bodies to appear higher above the horizon than they would if the Earth had no atmosphere. It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+This function corrects for a typical value of atmospheric refraction, which causes celestial bodies to appear higher above the horizon than they would if the Earth had no atmosphere. Astronomy Engine uses a correction of 34 arcminutes. Real-world refraction varies based on air temperature, pressure, and humidity; such weather-based conditions are outside the scope of Astronomy Engine.
 
 Note that rise or set may not occur in every 24 hour period. For example, near the Earth's poles, there are long periods of time where the Sun stays below the horizon, never rising. Also, it is possible for the Moon to rise just before midnight but not set during the subsequent 24-hour day. This is because the Moon sets nearly an hour later each day due to orbiting the Earth a significant amount during each rotation of the Earth. Therefore callers must not assume that the function will always succeed.
 
@@ -2771,7 +2777,7 @@ Note that rise or set may not occur in every 24 hour period. For example, near t
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, or any planet other than the Earth. | 
+| [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [`Astronomy_DefineStar`](#Astronomy_DefineStar). | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The location where observation takes place. You can create an observer structure by calling [`Astronomy_MakeObserver`](#Astronomy_MakeObserver). | 
 | [`astro_direction_t`](#astro_direction_t) | `direction` |  Either `DIRECTION_RISE` to find a rise time or `DIRECTION_SET` to find a set time. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 

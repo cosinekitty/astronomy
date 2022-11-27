@@ -6440,8 +6440,7 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
 }
 
 /**
- * @brief
- *      Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
+ * @brief Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
  *
  * The *hour angle* of a celestial body indicates its position in the sky with respect
  * to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
@@ -6465,7 +6464,8 @@ astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, doubl
  * of the body at that time, as seen by the given observer.
  *
  * @param body
- *      The celestial body, which can the Sun, the Moon, or any planet other than the Earth.
+ *      The Sun, Moon, any planet other than the Earth,
+ *      or a user-defined star that was created by a call to #Astronomy_DefineStar.
  *
  * @param observer
  *      Indicates a location on or near the surface of the Earth where the observer is located.
@@ -6933,17 +6933,20 @@ static astro_search_result_t InternalSearchAltitude(
 
 
 /**
- * @brief
- *      Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
+ * @brief Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
  *
  * This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
  * Rise time is when the body first starts to be visible above the horizon.
  * For example, sunrise is the moment that the top of the Sun first appears to peek above the horizon.
  * Set time is the moment when the body appears to vanish below the horizon.
+ * Therefore, this function adjusts for the apparent angular radius of the observed body
+ * (significant only for the Sun and Moon).
  *
- * This function corrects for typical atmospheric refraction, which causes celestial
+ * This function corrects for a typical value of atmospheric refraction, which causes celestial
  * bodies to appear higher above the horizon than they would if the Earth had no atmosphere.
- * It also adjusts for the apparent angular radius of the observed body (significant only for the Sun and Moon).
+ * Astronomy Engine uses a correction of 34 arcminutes. Real-world refraction varies based
+ * on air temperature, pressure, and humidity; such weather-based conditions are outside
+ * the scope of Astronomy Engine.
  *
  * Note that rise or set may not occur in every 24 hour period.
  * For example, near the Earth's poles, there are long periods of time where
@@ -6954,7 +6957,8 @@ static astro_search_result_t InternalSearchAltitude(
  * Therefore callers must not assume that the function will always succeed.
  *
  * @param body
- *      The Sun, Moon, or any planet other than the Earth.
+ *      The Sun, Moon, any planet other than the Earth,
+ *      or a user-defined star that was created by a call to #Astronomy_DefineStar.
  *
  * @param observer
  *      The location where observation takes place.
@@ -7003,9 +7007,9 @@ astro_search_result_t Astronomy_SearchRiseSet(
 
 
 /**
- * @brief Finds the next time a body reaches a given altitude.
+ * @brief Finds the next time the center of a body passes through a given altitude.
  *
- * Finds when the given body ascends or descends through a given
+ * Finds when the center of the given body ascends or descends through a given
  * altitude angle, as seen by an observer at the specified location on the Earth.
  * By using the appropriate combination of `direction` and `altitude` parameters,
  * this function can be used to find when civil, nautical, or astronomical twilight
@@ -7021,8 +7025,23 @@ astro_search_result_t Astronomy_SearchRiseSet(
  *
  * Astronomical twilight uses -18 degrees as the `altitude` value.
  *
+ * By convention for twilight time calculations, the altitude is not corrected for
+ * atmospheric refraction. This is because the target altitudes are below the horizon,
+ * and refraction is not directly observable.
+ *
+ * `Astronomy_SearchAltitude` is not intended to find rise/set times of a body for two reasons:
+ * (1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers.
+ * (2) Rise/set times are affected significantly by atmospheric refraction.
+ * Therefore, it is better to use #Astronomy_SearchRiseSet to find rise/set times, which
+ * corrects for both of these considerations.
+ *
+ * `Astronomy_SearchAltitude` will not work reliably for altitudes at or near the body's
+ * maximum or minimum altitudes. To find the time a body reaches minimum or maximum altitude
+ * angles, use #Astronomy_SearchHourAngleEx.
+ *
  * @param body
- *      The Sun, Moon, or any planet other than the Earth.
+ *      The Sun, Moon, any planet other than the Earth,
+ *      or a user-defined star that was created by a call to #Astronomy_DefineStar.
  *
  * @param observer
  *      The location where observation takes place.
