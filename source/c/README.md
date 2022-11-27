@@ -2446,11 +2446,11 @@ This function finds the first solar eclipse that occurs after `startTime`. A sol
 <a name="Astronomy_SearchHourAngleEx"></a>
 ### Astronomy_SearchHourAngleEx(body, observer, hourAngle, startTime, direction) &#8658; [`astro_hour_angle_t`](#astro_hour_angle_t)
 
-**Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.** 
+**Searches for the time when the center of a body reaches a specified hour angle as seen by an observer on the Earth.** 
 
 
 
-The *hour angle* of a celestial body indicates its position in the sky with respect to the Earth's rotation. The hour angle depends on the location of the observer on the Earth. The hour angle is 0 when the body reaches its highest angle above the horizon in a given day. The hour angle increases by 1 unit for every sidereal hour that passes after that point, up to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates the number of hours that have passed since the most recent time that the body has culminated, or reached its highest point.
+The *hour angle* of a celestial body indicates its position in the sky with respect to the Earth's rotation. The hour angle depends on the location of the observer on the Earth. The hour angle is 0 when the body's center reaches its highest angle above the horizon in a given day. The hour angle increases by 1 unit for every sidereal hour that passes after that point, up to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates the number of hours that have passed since the most recent time that the body has culminated, or reached its highest point.
 
 This function searches for the next or previous time a celestial body reaches the given hour angle relative to the date and time specified by `startTime`. To find when a body culminates, pass 0 for `hourAngle`. To find when a body reaches its lowest point in the sky, pass 12 for `hourAngle`.
 

@@ -4,9 +4,9 @@
 
 fun [searchAltitude](search-altitude.md)(body: [Body](-body/index.md), observer: [Observer](-observer/index.md), direction: [Direction](-direction/index.md), startTime: [Time](-time/index.md), limitDays: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), altitude: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Time](-time/index.md)?
 
-Finds the next time a body reaches a given altitude.
+Finds the next time the center of a body reaches a given altitude.
 
-Finds when the given body ascends or descends through a given altitude angle, as seen by an observer at the specified location on the Earth. By using the appropriate combination of direction and altitude parameters, this function can be used to find when civil, nautical, or astronomical twilight begins (dawn) or ends (dusk).
+Finds when the center of the given body ascends or descends through a given altitude angle, as seen by an observer at the specified location on the Earth. By using the appropriate combination of direction and altitude parameters, this function can be used to find when civil, nautical, or astronomical twilight begins (dawn) or ends (dusk).
 
 Civil dawn begins before sunrise when the Sun ascends through 6 degrees below the horizon. To find civil dawn, pass Direction.Rise for direction and -6 for altitude.
 

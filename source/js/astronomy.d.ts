@@ -1625,7 +1625,7 @@ export declare function SearchRiseSet(body: Body, observer: Observer, direction:
 /**
  * @brief Finds the next time the center of a body passes through a given altitude.
  *
- * Finds when the given body ascends or descends through a given
+ * Finds when the center of the given body ascends or descends through a given
  * altitude angle, as seen by an observer at the specified location on the Earth.
  * By using the appropriate combination of `direction` and `altitude` parameters,
  * this function can be used to find when civil, nautical, or astronomical twilight
@@ -1710,11 +1710,11 @@ export declare class HourAngleEvent {
     constructor(time: AstroTime, hor: HorizontalCoordinates);
 }
 /**
- * @brief Searches for the time when a celestial body reaches a specified hour angle as seen by an observer on the Earth.
+ * @brief Searches for the time when the center of a body reaches a specified hour angle as seen by an observer on the Earth.
  *
  * The *hour angle* of a celestial body indicates its position in the sky with respect
  * to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
- * The hour angle is 0 when the body reaches its highest angle above the horizon in a given day.
+ * The hour angle is 0 when the body's center reaches its highest angle above the horizon in a given day.
  * The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
  * to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
  * the number of hours that have passed since the most recent time that the body has culminated,
