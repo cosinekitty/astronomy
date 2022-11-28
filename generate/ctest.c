@@ -179,6 +179,7 @@ static int SeasonsIssue187(void);
 static int MoonPhase(void);
 static int MoonReverse(void);
 static int MoonNodes(void);
+static int MoonVector(void);
 static int RiseSet(void);
 static int RiseSetReverse(void);
 static int LunarApsis(void);
@@ -270,6 +271,7 @@ static unit_test_t UnitTests[] =
     {"moon_nodes",              MoonNodes},
     {"moon_phase",              MoonPhase},
     {"moon_reverse",            MoonReverse},
+    {"moon_vector",             MoonVector},
     {"planet_apsis",            PlanetApsis},
     {"pluto",                   PlutoCheck},
     {"refraction",              RefractionTest},
@@ -1997,6 +1999,114 @@ static int MoonTest(void)
 
     return 0;
 }
+
+
+static int MoonVector(void)
+{
+    int error = 1;
+    const char *filename = "moonphase/moonvector.txt";
+    FILE *infile = NULL;
+    int lnum = 0;
+    int count = 0;      /* number of test cases processed */
+    int toggle = 0;
+    int found_start = 0;
+    char line[200];
+    double jd = 0.0;
+    astro_vector_t expected;
+    astro_vector_t calculated;
+    astro_angle_result_t result;
+    double angle_square_sum = 0.0;
+    double expected_length;
+    double calculated_length;
+    double length_error;
+    double length_error_square_sum = 0.0;
+    double rms_length, rms_angle;
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C MoonVector: cannot open file: %s\n", filename);
+
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_start)
+        {
+            if (strlen(line) > 5 && !memcmp(line, "$$SOE", 5))
+            {
+                found_start = 1;
+                DEBUG("Found start\n");
+            }
+        }
+        else
+        {
+            if (strlen(line) > 5 && !memcmp(line, "$$EOE", 5))
+                break;
+
+            if (strlen(line) < 62)
+                FAIL("C MoonVector(%s line %d): line is too short.\n", filename, lnum);
+
+            /*
+                2444239.500000000 = A.D. 1980-Jan-01 00:00:00.0000 TDB [del_T=     50.183943 s]
+                X = 2.933885115037269E-04 Y = 2.421938721618651E-03 Z = 8.195641195651288E-04
+            */
+            if (toggle == 0)
+            {
+                if (1 != sscanf(line, "%lf", &jd))
+                    FAIL("C MoonVector(%s line %d): cannot parse julian date.\n", filename, lnum);
+                V(jd);
+            }
+            else
+            {
+                /* Complete the expected Moon position vector for this time. */
+                if (3 != sscanf(line, " X =%lf Y =%lf Z =%lf", &expected.x, &expected.y, &expected.z))
+                    FAIL("C MoonVector(%s line %d): cannot parse position vector.\n", filename, lnum);
+                expected.t = Astronomy_TerrestrialTime(jd - 2451545.0);
+                expected.status = ASTRO_SUCCESS;
+
+                //DEBUG("C MoonVector(%s line %d): calc_dt = %0.6lf seconds, expected_dt = %0.6lf seconds.\n", filename, lnum, calc_dt, expected_dt);
+
+                calculated = Astronomy_GeoMoon(expected.t);
+                CHECK_STATUS(calculated);
+
+                /* Compare distances and angles between vectors. */
+                result = Astronomy_AngleBetween(expected, calculated);
+                CHECK_STATUS(result);
+                angle_square_sum += (result.angle * result.angle);
+
+                expected_length = Astronomy_VectorLength(expected);
+                V(expected_length);
+                calculated_length = Astronomy_VectorLength(calculated);
+                V(calculated_length);
+
+                length_error = calculated_length/expected_length - 1.0;
+                length_error_square_sum += (length_error * length_error);
+
+                ++count;
+            }
+
+            toggle ^= 1;
+        }
+    }
+
+    if (count != 1462)
+        FAIL("C MoonVector(%s): unexpected count = %d!\n", filename, count);
+
+    rms_angle = 60.0 * sqrt(angle_square_sum / count);
+    rms_length = sqrt(length_error_square_sum / count);
+
+    if (rms_angle > 0.018)
+        FAIL("C MoonVector: EXCESSIVE rms angular error = %0.6lf\n", rms_angle);
+
+    if (rms_length > 0.000029)
+        FAIL("C MoonVector: EXCESSIVE rms relative distance error = %0.6lf\n", rms_length);
+
+    printf("C MoonVector: PASS (%d lines, %d cases, rms angular error = %0.6lf arcmin, rms distance error = %0.6lf)\n", lnum, count, rms_angle, rms_length);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
 
 static int CheckIlluminationInvalidBody(astro_body_t body)
 {
