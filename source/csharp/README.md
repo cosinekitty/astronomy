@@ -1008,7 +1008,7 @@ of the Moon's fixed rotation rate, compared to its variable angular speed
 of orbit around the Earth.
 
 This function calculates a pair of perpendicular libration angles,
-one representing rotation of the Moon in eclitpic longitude `elon`, the other
+one representing rotation of the Moon in ecliptic longitude `elon`, the other
 in ecliptic latitude `elat`, both relative to the Moon's mean Earth-facing position.
 
 This function also returns the geocentric position of the Moon
