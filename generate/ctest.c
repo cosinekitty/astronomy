@@ -225,6 +225,7 @@ static int AxisTest(void);
 static int SiderealTimeTest(void);
 static int DatesIssue250(void);
 static int StarRiseSetCulm(void);
+static int Ecliptic(void);
 
 #if PERFORMANCE_TESTS
 static int MapPerformanceTest(void);
@@ -249,6 +250,7 @@ static unit_test_t UnitTests[] =
     {"dates250",                DatesIssue250},
     {"de405",                   DE405_Check},
     {"earth_apsis",             EarthApsis},
+    {"ecliptic",                Ecliptic},
     {"elongation",              ElongationTest},
     {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
@@ -2151,7 +2153,6 @@ fail:
     return error;
 }
 
-
 static int MoonLatitudes(void)
 {
     int error = 1;
@@ -2212,6 +2213,58 @@ static int MoonLatitudes(void)
     error = 0;
 fail:
     if (outfile != NULL) fclose(outfile);
+    return error;
+}
+
+
+static int Ecliptic(void)
+{
+    int error = 1;
+    astro_time_t time;
+    astro_vector_t eqj, ecl;
+    astro_ecliptic_t eclip;
+    astro_rotation_t rot;
+    astro_spherical_t sphere;
+    double dx, dy, dz, diff;
+
+    /* Compare Astronomy_Ecliptic and Astronomy_Rotation_EQJ_ECL. */
+    /* Start with a known discrepancy in the Moon's ecliptic latitude: */
+    /* "1900-01-01T00:00:00Z",-36524.5000319324535667,24465,-46.4913582517199018*/
+    time = Astronomy_MakeTime(1900, 1, 1, 0, 0, 0.0);
+
+    eqj = Astronomy_GeoMoon(time);
+    CHECK_STATUS(eqj);
+
+    eclip = Astronomy_Ecliptic(eqj);
+    CHECK_STATUS(eclip);
+
+    /* Use an alternative way of calculating ecliptic coordinates: rotation matrix. */
+    rot = Astronomy_Rotation_EQJ_ECL();
+    CHECK_STATUS(rot);
+
+    ecl = Astronomy_RotateVector(rot, eqj);
+    CHECK_STATUS(ecl);
+
+    /* The two vectors should be identical. */
+    dx = KM_PER_AU * V(eclip.vec.x - ecl.x);
+    dy = KM_PER_AU * V(eclip.vec.y - ecl.y);
+    dz = KM_PER_AU * V(eclip.vec.z - ecl.z);
+    diff = V(sqrt(dx*dx + dy*dy + dz*dz));
+    if (diff > 1.0e-6)
+        FAIL("C Ecliptic: excessive Moon ecliptic position discrepancy = %0.6le km.\n", diff);
+    DEBUG("C Ecliptic: vector diff = %0.6le km.\n", diff);
+
+    /* Determine the ecliptic position of the moon using the mean equinox of date. */
+    sphere = Astronomy_EclipticGeoMoon(time);
+    CHECK_STATUS(sphere);
+
+    /* The ecliptic latitudes should be the same, regardless of the equinox used. */
+    diff = 3600.0 * ABS(sphere.lat - eclip.elat);
+    DEBUG("C Ecliptic: latitude discrepancy = %0.3lf arcsec.\n", diff);
+
+    printf("C Ecliptic: PASS\n");
+
+fail:
     return error;
 }
 
