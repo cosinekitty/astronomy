@@ -2001,10 +2001,17 @@ static int MoonTest(void)
 }
 
 
-static int MoonVector(void)
+typedef enum
+{
+    COORD_EQJ,
+    COORD_ECL
+}
+coord_sys_t;
+
+
+static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_angle_limit, double rms_length_limit)
 {
     int error = 1;
-    const char *filename = "moonphase/moonvector.txt";
     FILE *infile = NULL;
     int lnum = 0;
     int count = 0;      /* number of test cases processed */
@@ -2021,6 +2028,10 @@ static int MoonVector(void)
     double length_error;
     double length_error_square_sum = 0.0;
     double rms_length, rms_angle;
+    astro_rotation_t rot;
+
+    rot = Astronomy_Rotation_EQJ_ECL();
+    CHECK_STATUS(rot);
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -2032,10 +2043,7 @@ static int MoonVector(void)
         if (!found_start)
         {
             if (strlen(line) > 5 && !memcmp(line, "$$SOE", 5))
-            {
                 found_start = 1;
-                DEBUG("Found start\n");
-            }
         }
         else
         {
@@ -2063,10 +2071,23 @@ static int MoonVector(void)
                 expected.t = Astronomy_TerrestrialTime(jd - 2451545.0);
                 expected.status = ASTRO_SUCCESS;
 
-                //DEBUG("C MoonVector(%s line %d): calc_dt = %0.6lf seconds, expected_dt = %0.6lf seconds.\n", filename, lnum, calc_dt, expected_dt);
+                switch (coords)
+                {
+                case COORD_EQJ:
+                    calculated = Astronomy_GeoMoon(expected.t);
+                    CHECK_STATUS(calculated);
+                    break;
 
-                calculated = Astronomy_GeoMoon(expected.t);
-                CHECK_STATUS(calculated);
+                case COORD_ECL:
+                    calculated = Astronomy_GeoMoon(expected.t);
+                    CHECK_STATUS(calculated);
+                    calculated = Astronomy_RotateVector(rot, calculated);
+                    CHECK_STATUS(calculated);
+                    break;
+
+                default:
+                    FAIL("C MoonVector(%s): unknown coord system %d\n", filename, coords);
+                }
 
                 /* Compare distances and angles between vectors. */
                 result = Astronomy_AngleBetween(expected, calculated);
@@ -2094,16 +2115,28 @@ static int MoonVector(void)
     rms_angle = 60.0 * sqrt(angle_square_sum / count);
     rms_length = sqrt(length_error_square_sum / count);
 
-    if (rms_angle > 0.018)
-        FAIL("C MoonVector: EXCESSIVE rms angular error = %0.6lf\n", rms_angle);
+    if (rms_angle > rms_angle_limit)
+        FAIL("C MoonVector(%s): EXCESSIVE rms angular error = %0.6lf\n", filename, rms_angle);
 
-    if (rms_length > 0.000029)
-        FAIL("C MoonVector: EXCESSIVE rms relative distance error = %0.6lf\n", rms_length);
+    if (rms_length > rms_length_limit)
+        FAIL("C MoonVector(%s): EXCESSIVE rms relative distance error = %0.6lf\n", filename, rms_length);
 
-    printf("C MoonVector: PASS (%d lines, %d cases, rms angular error = %0.6lf arcmin, rms distance error = %0.6lf)\n", lnum, count, rms_angle, rms_length);
+    printf("C MoonVector(%s): PASS (%d lines, %d cases, rms angular error = %0.6lf arcmin, rms distance error = %0.6lf)\n",
+        filename, lnum, count, rms_angle, rms_length);
+
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
+    return error;
+}
+
+
+static int MoonVector()
+{
+    int error;
+    CHECK(MoonVectorFile("moonphase/moon_eqj.txt", COORD_EQJ, 0.018, 0.000029));
+    CHECK(MoonVectorFile("moonphase/moon_ecl.txt", COORD_ECL, 0.018, 0.000029));
+fail:
     return error;
 }
 
