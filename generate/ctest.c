@@ -6746,6 +6746,7 @@ static int MoonNodes(void)
     astro_spherical_t ecl;
     astro_vector_t vec_eqj, vec_eqd, vec_test;
     double diff_lat, max_lat = 0.0;
+    double max_node_lat = 0.0;
     double diff_angle, max_angle = 0.0;
     double diff_minutes, max_minutes = 0.0;
     double dt, min_dt = 1.0e+99, max_dt = 0.0;
@@ -6859,8 +6860,10 @@ static int MoonNodes(void)
         ecl = Astronomy_EclipticGeoMoon(node.time);
         CHECK_STATUS(ecl);
         diff_lat = 60.0 * ABS(ecl.lat);
-        if (diff_lat > 8.1e-4)
+        if (diff_lat > 8.06e-4)
             FAIL("C MoonNodes(%s line %d): found node has excessive latitude = %0.4le arcmin\n", filename, lnum, diff_lat);
+        if (diff_lat > max_node_lat)
+            max_node_lat = diff_lat;
 
         /* Verify the time agrees with Espenak's time to within a few minutes. */
         diff_minutes = (24.0 * 60.0) * ABS(node.time.tt - time.tt);
@@ -6885,7 +6888,7 @@ static int MoonNodes(void)
         FAIL("C MoonNodes: EXCESSIVE time prediction error = %0.3lf minutes\n", max_minutes);
 
     DEBUG("C MoonNodes: min_dt = %0.3lf days, max_dt = %0.3lf days.\n", min_dt, max_dt);
-    printf("C MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin, max time error = %0.3lf minutes)\n", lnum, max_lat, max_angle, max_minutes);
+    printf("C MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin, max time error = %0.3lf minutes, max node lat = %0.3le arcmin)\n", lnum, max_lat, max_angle, max_minutes, max_node_lat);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
