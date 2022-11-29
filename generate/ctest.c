@@ -2120,7 +2120,7 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
         }
     }
 
-    if (count != 1462)
+    if (count != 73050)
         FAIL("C MoonVector(%s): unexpected count = %d!\n", filename, count);
 
     rms_angle = 3600.0 * sqrt(angle_square_sum / count);
@@ -2145,8 +2145,8 @@ fail:
 static int MoonVector()
 {
     int error;
-    CHECK(MoonVectorFile("moonphase/moon_eqj.txt", COORD_EQJ, 1.08, 2.7589e-05));
-    CHECK(MoonVectorFile("moonphase/moon_ecl.txt", COORD_ECL, 1.08, 2.7589e-05));
+    CHECK(MoonVectorFile("moonphase/moon_eqj.txt", COORD_EQJ, 1.16, 2.761e-05));
+    CHECK(MoonVectorFile("moonphase/moon_ecl.txt", COORD_ECL, 1.16, 2.761e-05));
 fail:
     return error;
 }
@@ -2155,13 +2155,23 @@ fail:
 static int MoonLatitudes(void)
 {
     int error = 1;
+    FILE *outfile = NULL;
+    const char *filename = "temp/c_moonlat.csv";
     astro_time_t time;
     astro_time_t stopTime;
     astro_spherical_t sphere;
     astro_vector_t eqj;
     astro_ecliptic_t ecl;
+    astro_status_t status;
     double diff_lat;
     double max_diff_lat = 0.0;
+    char text[TIME_TEXT_BYTES];
+
+    outfile = fopen(filename, "wt");
+    if (outfile == NULL)
+        FAIL("C MoonLatitudes: cannot open output file: %s\n", filename);
+
+    fprintf(outfile, "\"UTC\",\"TT\",\"EQJ.x\",\"Error(arcsec)\"\n");
 
     /*
         The ecliptic latitude of the Moon should be the same regardless
@@ -2183,16 +2193,25 @@ static int MoonLatitudes(void)
         ecl = Astronomy_Ecliptic(eqj);
         CHECK_STATUS(ecl);
 
-        diff_lat = 3600.0 * ABS(ecl.elat - sphere.lat);     /* arcseconds */
+        diff_lat = 3600.0 * (ecl.elat - sphere.lat);     /* arcseconds */
+
+        status = Astronomy_FormatTime(time, TIME_FORMAT_SECOND, text, sizeof(text));
+        if (status != ASTRO_SUCCESS)
+            FAIL("C MoonLatitudes: Astronomy_FormatTime returned %d\n", status);
+
+        fprintf(outfile, "\"%s\",%0.16lf,%0.0lf,%0.16lf\n", text, time.tt, eqj.x * KM_PER_AU, diff_lat);
+
+        diff_lat = ABS(diff_lat);
         if (diff_lat > max_diff_lat)
             max_diff_lat = diff_lat;
 
         time = Astronomy_AddDays(time, 0.1);        /* 2 hours + 24 minutes */
     }
 
-    printf("MoonLatitudes: PASS - max latitude discrepancy = %0.6lf arcsec.\n", max_diff_lat);
+    printf("C MoonLatitudes: PASS - max latitude discrepancy = %0.6lf arcsec.\n", max_diff_lat);
     error = 0;
 fail:
+    if (outfile != NULL) fclose(outfile);
     return error;
 }
 
