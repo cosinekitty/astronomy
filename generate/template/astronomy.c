@@ -118,6 +118,11 @@ typedef struct
 }
 stardef_t;
 
+/* Mean obliquity of the J2000 ecliptic in radians. */
+#define OBLIQ_2000       0.40909260059599012
+#define COS_OBLIQ_2000   0.9174821430670688
+#define SIN_OBLIQ_2000   0.3977769691083922
+
 /** @endcond */
 
 #define NSTARS 8
@@ -2090,7 +2095,7 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
     /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
     ecl2equ_vec(time, gepos, mpos1);
 
-    /* Convert from mean equinox of date to J2000. */
+    /* Convert equatorial coordinates from mean equinox of date to J2000 mean equinox. */
     precession(mpos1, time, INTO_2000, mpos2);
 
     vector.status = ASTRO_SUCCESS;
@@ -5287,7 +5292,6 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
 astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
 {
     /* Based on NOVAS functions equ2ecl() and equ2ecl_vec(). */
-    static const double ob2000 = 0.40909260059599012;   /* mean obliquity of the J2000 ecliptic in radians */
     double pos[3];
 
     if (equ.status != ASTRO_SUCCESS)
@@ -5297,7 +5301,7 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ)
     pos[1] = equ.y;
     pos[2] = equ.z;
 
-    return RotateEquatorialToEcliptic(pos, ob2000, equ.t);
+    return RotateEquatorialToEcliptic(pos, OBLIQ_2000, equ.t);
 }
 
 /**
@@ -8591,9 +8595,8 @@ astro_state_vector_t Astronomy_RotateState(astro_rotation_t rotation, astro_stat
  */
 astro_rotation_t Astronomy_Rotation_EQJ_ECL(void)
 {
-    /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
-    static const double c = 0.9174821430670688;    /* cos(ob) */
-    static const double s = 0.3977769691083922;    /* sin(ob) */
+    static const double c = COS_OBLIQ_2000;
+    static const double s = SIN_OBLIQ_2000;
     astro_rotation_t r;
 
     r.status = ASTRO_SUCCESS;
@@ -8617,9 +8620,8 @@ astro_rotation_t Astronomy_Rotation_EQJ_ECL(void)
  */
 astro_rotation_t Astronomy_Rotation_ECL_EQJ(void)
 {
-    /* ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians. */
-    static const double c = 0.9174821430670688;    /* cos(ob) */
-    static const double s = 0.3977769691083922;    /* sin(ob) */
+    static const double c = COS_OBLIQ_2000;
+    static const double s = SIN_OBLIQ_2000;
     astro_rotation_t r;
 
     r.status = ASTRO_SUCCESS;
