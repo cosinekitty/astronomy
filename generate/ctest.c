@@ -2112,16 +2112,16 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
     if (count != 1462)
         FAIL("C MoonVector(%s): unexpected count = %d!\n", filename, count);
 
-    rms_angle = 60.0 * sqrt(angle_square_sum / count);
+    rms_angle = 3600.0 * sqrt(angle_square_sum / count);
     rms_length = sqrt(length_error_square_sum / count);
 
     if (rms_angle > rms_angle_limit)
-        FAIL("C MoonVector(%s): EXCESSIVE rms angular error = %0.6lf\n", filename, rms_angle);
+        FAIL("C MoonVector(%s): EXCESSIVE rms angular error = %0.6lf arcsec\n", filename, rms_angle);
 
     if (rms_length > rms_length_limit)
-        FAIL("C MoonVector(%s): EXCESSIVE rms relative distance error = %0.6lf\n", filename, rms_length);
+        FAIL("C MoonVector(%s): EXCESSIVE rms relative distance error = %0.6le\n", filename, rms_length);
 
-    printf("C MoonVector(%s): PASS (%d lines, %d cases, rms angular error = %0.6lf arcmin, rms distance error = %0.6lf)\n",
+    printf("C MoonVector(%s): PASS (%d lines, %d cases, rms angular error = %0.6lf arcsec, rms distance error = %0.6le)\n",
         filename, lnum, count, rms_angle, rms_length);
 
     error = 0;
@@ -2134,8 +2134,8 @@ fail:
 static int MoonVector()
 {
     int error;
-    CHECK(MoonVectorFile("moonphase/moon_eqj.txt", COORD_EQJ, 0.018, 0.000029));
-    CHECK(MoonVectorFile("moonphase/moon_ecl.txt", COORD_ECL, 0.018, 0.000029));
+    CHECK(MoonVectorFile("moonphase/moon_eqj.txt", COORD_EQJ, 1.08, 2.7589e-05));
+    CHECK(MoonVectorFile("moonphase/moon_ecl.txt", COORD_ECL, 1.08, 2.7589e-05));
 fail:
     return error;
 }
