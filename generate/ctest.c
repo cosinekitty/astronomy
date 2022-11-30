@@ -35,7 +35,8 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
     return ret;
 }
 
-#define PI      3.14159265358979323846
+#define PI          3.14159265358979323846
+#define JD_2000     2451545.0
 
 #define SECONDS_PER_DAY     (24 * 3600)
 #define MINUTES_PER_DAY     (24 * 60)
@@ -181,6 +182,7 @@ static int MoonReverse(void);
 static int MoonNodes(void);
 static int MoonVector(void);
 static int MoonLatitudes(void);
+static int MoonEcliptic(void);
 static int RiseSet(void);
 static int RiseSetReverse(void);
 static int LunarApsis(void);
@@ -271,6 +273,7 @@ static unit_test_t UnitTests[] =
 #endif
     {"moon",                    MoonTest},
     {"moon_apsis",              LunarApsis},
+    {"moon_ecm",                MoonEcliptic},
     {"moon_lat",                MoonLatitudes},
     {"moon_nodes",              MoonNodes},
     {"moon_phase",              MoonPhase},
@@ -2041,6 +2044,7 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
     double length_error;
     double length_error_square_sum = 0.0;
     double rms_length, rms_angle;
+    double max_length = 0.0, max_angle = 0.0;
     astro_rotation_t rot;
 
     rot = Astronomy_Rotation_EQJ_ECL();
@@ -2081,7 +2085,7 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
                 /* Complete the expected Moon position vector for this time. */
                 if (3 != sscanf(line, " X =%lf Y =%lf Z =%lf", &expected.x, &expected.y, &expected.z))
                     FAIL("C MoonVector(%s line %d): cannot parse position vector.\n", filename, lnum);
-                expected.t = Astronomy_TerrestrialTime(jd - 2451545.0);
+                expected.t = Astronomy_TerrestrialTime(jd - JD_2000);
                 expected.status = ASTRO_SUCCESS;
 
                 switch (coords)
@@ -2105,6 +2109,9 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
                 /* Compare distances and angles between vectors. */
                 result = Astronomy_AngleBetween(expected, calculated);
                 CHECK_STATUS(result);
+                result.angle = ABS(result.angle);
+                if (result.angle > max_angle)
+                    max_angle = result.angle;
                 angle_square_sum += (result.angle * result.angle);
 
                 expected_length = Astronomy_VectorLength(expected);
@@ -2112,7 +2119,9 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
                 calculated_length = Astronomy_VectorLength(calculated);
                 V(calculated_length);
 
-                length_error = calculated_length/expected_length - 1.0;
+                length_error = ABS(calculated_length - expected_length);
+                if (length_error > max_length)
+                    max_length = length_error;
                 length_error_square_sum += (length_error * length_error);
 
                 ++count;
@@ -2125,17 +2134,19 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
     if (count != 73050)
         FAIL("C MoonVector(%s): unexpected count = %d!\n", filename, count);
 
-    rms_angle = 3600.0 * sqrt(angle_square_sum / count);
-    rms_length = sqrt(length_error_square_sum / count);
+    rms_angle = V(3600.0 * sqrt(angle_square_sum / count));
+    rms_length = V(KM_PER_AU * sqrt(length_error_square_sum / count));
+    max_angle = V(3600.0 * max_angle);
+    max_length = V(KM_PER_AU * max_length);
 
     if (rms_angle > rms_angle_limit)
         FAIL("C MoonVector(%s): EXCESSIVE rms angular error = %0.6lf arcsec\n", filename, rms_angle);
 
     if (rms_length > rms_length_limit)
-        FAIL("C MoonVector(%s): EXCESSIVE rms relative distance error = %0.6le\n", filename, rms_length);
+        FAIL("C MoonVector(%s): EXCESSIVE rms distance error = %0.3lf km\n", filename, rms_length);
 
-    printf("C MoonVector(%s): PASS (%d lines, %d cases, rms angular error = %0.6lf arcsec, rms distance error = %0.6le)\n",
-        filename, lnum, count, rms_angle, rms_length);
+    printf("C MoonVector(%s): PASS (%d lines, %d cases, angular error rms=%0.6lf arcsec, max=%0.6lf arcsec; distance error rms=%0.3lf km, max=%0.3lf km)\n",
+        filename, lnum, count, rms_angle, max_angle, rms_length, max_length);
 
     error = 0;
 fail:
@@ -2147,8 +2158,8 @@ fail:
 static int MoonVector()
 {
     int error;
-    CHECK(MoonVectorFile("moonphase/moon_eqj.txt", COORD_EQJ, 1.16, 2.761e-05));
-    CHECK(MoonVectorFile("moonphase/moon_ecl.txt", COORD_ECL, 1.16, 2.761e-05));
+    CHECK(MoonVectorFile("moonphase/moon_eqj.txt", COORD_EQJ, 1.16, 10.633));
+    CHECK(MoonVectorFile("moonphase/moon_ecl.txt", COORD_ECL, 1.16, 10.633));
 fail:
     return error;
 }
@@ -2217,6 +2228,78 @@ fail:
 }
 
 
+static int MoonEcliptic(void)
+{
+    int error = 1;
+    FILE *infile = NULL;
+    int lnum = 0;
+    int count = 0;
+    int found_start = 0;
+    const char *filename = "moonphase/moon_ecm.txt";
+    char line[100];
+    double jdut, tt, deltat, lon, lat;
+    double diff_lat, diff_lon, max_lat = 0.0, max_lon = 0.0;
+    astro_time_t time;
+    astro_spherical_t sphere;
+
+    /* Verify Moon's ecliptic coordinates relative to mean equator of date. */
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FAIL("C MoonEcliptic: Cannot open input file: %s\n", filename);
+
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        ++lnum;
+        if (!found_start)
+        {
+            if (strlen(line) > 5 && !memcmp(line, "$$SOE", 5))
+                found_start = 1;
+        }
+        else
+        {
+            if (strlen(line) > 5 && !memcmp(line, "$$EOE", 5))
+                break;
+
+            if (strlen(line) < 79)
+                FAIL("C MoonEcliptic(%s line %d): line is too short.\n", filename, lnum);
+
+            /* Parse reference data from JPL Horizons. */
+
+            /* " Date__(UT)__HR:MN Date_________JDUT           TDB-UT     ObsEcLon    ObsEcLat" */
+            /* " 1900-Jan-01 00:00 2415020.500000000        -1.944461  272.4162663   1.1082671" */
+            if (4 != sscanf(&line[19], "%lf %lf %lf %lf", &jdut, &deltat, &lon, &lat))
+                FAIL("C MoonEcliptic(%s line %d): cannot parse data.\n", filename, lnum);
+
+            /* Use JPL Horizons delta-t value to match their TT value as close as possible. */
+            /* We do this because their Delta-T formula differs from Espenak-Meeus, especially in the future. */
+            /* TT-UT = deltat ==> TT = UT + deltat */
+
+            tt = (jdut - JD_2000) + (deltat / SECONDS_PER_DAY);
+            time = Astronomy_TerrestrialTime(tt);
+
+            /* Calculate Moon's ecliptic coordinates relative to mean equator of date. */
+            sphere = Astronomy_EclipticGeoMoon(time);
+            CHECK_STATUS(sphere);
+
+            /* Find maximum arcsecond discrepancy between latitudes and longitudes. */
+            diff_lat = 3600.0 * ABS(sphere.lat - lat);
+            diff_lon = 3600.0 * ABS(sphere.lon - lon);
+            if (diff_lat > max_lat) max_lat = diff_lat;
+            if (diff_lon > max_lon) max_lon = diff_lon;
+            ++count;
+        }
+    }
+
+    printf("C MoonEcliptic: PASS: count=%d, max lat=%0.3lf arcsec, max lon=%0.3lf arcsec.\n", count, max_lat, max_lon);
+    error = 0;
+fail:
+    if (infile != NULL) fclose(infile);
+    return error;
+}
+
+
+
 static int Ecliptic(void)
 {
     int error = 1;
@@ -2260,7 +2343,7 @@ static int Ecliptic(void)
 
     /* The ecliptic latitudes should be the same, regardless of the equinox used. */
     diff = 3600.0 * ABS(sphere.lat - eclip.elat);
-    DEBUG("C Ecliptic: latitude discrepancy = %0.3lf arcsec.\n", diff);
+    DEBUG("C Ecliptic: latitude discrepancy 1900/2000 = %0.3lf arcsec.\n", diff);
 
     printf("C Ecliptic: PASS\n");
 
@@ -5162,7 +5245,7 @@ static int JupiterMoonsTest(void)
                         /* 2446545.000000000 = A.D. 1986-Apr-24 12:00:00.0000 TDB */
                         if (1 != sscanf(line, "%lf", &tt))
                             FAIL("C JupiterMoonsTest(%s line %d): failed to read time stamp.\n", filename, lnum);
-                        tt -= 2451545.0;    /* convert JD to J2000 TT */
+                        tt -= JD_2000;    /* convert JD to J2000 TT */
                         break;
 
                     case 1:
@@ -5273,7 +5356,7 @@ static int AberrationTest(void)
                 FAIL("C AberrationTest(%s line %d): invalid julian date\n", filename, lnum);
 
             /* Convert julian day value to astro_time_t. */
-            time = Astronomy_TimeFromDays(jd - 2451545.0);
+            time = Astronomy_TimeFromDays(jd - JD_2000);
 
             /* Convert EQJ angular coordinates (jra, jdec) to an EQJ vector. */
             eqj_sphere.status = ASTRO_SUCCESS;
@@ -5482,7 +5565,7 @@ static int VerifyStateBody(
                     V(jd);
 
                     /* Convert julian TT day value to astro_time_t. */
-                    time = Astronomy_TerrestrialTime(jd - 2451545.0);
+                    time = Astronomy_TerrestrialTime(jd - JD_2000);
                 }
                 break;
 
@@ -5988,7 +6071,7 @@ static int LoadStateVectors(
                     V(jd);
 
                     /* Convert julian TT day value to astro_time_t. */
-                    state.t = Astronomy_TerrestrialTime(jd - 2451545.0);
+                    state.t = Astronomy_TerrestrialTime(jd - JD_2000);
                 }
                 break;
 
@@ -6644,7 +6727,7 @@ static int DE405_Check(void)
         {
             if (1 != sscanf(line, "%lf", &jd))
                 FAIL("DE405_Check(%s line %d): cannot scan Julian Date\n", filename, lnum);
-            time = Astronomy_TerrestrialTime(jd - 2451545.0);
+            time = Astronomy_TerrestrialTime(jd - JD_2000);
             Astronomy_FormatTime(time, TIME_FORMAT_MILLI, line, sizeof(line));
             DEBUG("C DE405_Check: time = %s\n", line);
         }
@@ -6750,7 +6833,7 @@ static int AxisTestBody(astro_body_t body, const char *filename, double arcmin_t
             if (nscanned != 3)
                 FAIL("C AxisTestBody(%s line %d): could not scan data.\n", filename, lnum);
 
-            time = Astronomy_TimeFromDays(jd - 2451545.0);
+            time = Astronomy_TimeFromDays(jd - JD_2000);
             axis = Astronomy_RotationAxis(body, &time);
             if (axis.status != ASTRO_SUCCESS)
                 FAIL("C AxisTestBody(%s line %d): Astronomy_Axis returned error %d\n", filename, lnum, axis.status);
