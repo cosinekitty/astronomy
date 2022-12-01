@@ -181,7 +181,6 @@ static int MoonPhase(void);
 static int MoonReverse(void);
 static int MoonNodes(void);
 static int MoonVector(void);
-static int MoonLatitudes(void);
 static int MoonEcliptic(void);
 static int RiseSet(void);
 static int RiseSetReverse(void);
@@ -274,7 +273,6 @@ static unit_test_t UnitTests[] =
     {"moon",                    MoonTest},
     {"moon_apsis",              LunarApsis},
     {"moon_ecm",                MoonEcliptic},
-    {"moon_lat",                MoonLatitudes},
     {"moon_nodes",              MoonNodes},
     {"moon_phase",              MoonPhase},
     {"moon_reverse",            MoonReverse},
@@ -2163,70 +2161,6 @@ static int MoonVector()
 fail:
     return error;
 }
-
-static int MoonLatitudes(void)
-{
-    int error = 1;
-    FILE *outfile = NULL;
-    const char *filename = "temp/c_moonlat.csv";
-    astro_time_t time;
-    astro_time_t stopTime;
-    astro_spherical_t sphere;
-    astro_vector_t eqj;
-    astro_ecliptic_t ecl;
-    astro_status_t status;
-    double diff_lat;
-    double max_diff_lat = 0.0;
-    char text[TIME_TEXT_BYTES];
-
-    outfile = fopen(filename, "wt");
-    if (outfile == NULL)
-        FAIL("C MoonLatitudes: cannot open output file: %s\n", filename);
-
-    fprintf(outfile, "\"UTC\",\"TT\",\"EQJ.x\",\"Error(arcsec)\"\n");
-
-    /*
-        The ecliptic latitude of the Moon should be the same regardless
-        of the Earth's equator, because the ecliptic plane does not change
-        in our model. Verify that EclipticGeoMoon, which uses the mean
-        equator of date, is consistent with Ecliptic(GeoMoon), which
-        uses the J2000 equator as the reference.
-    */
-    time = Astronomy_MakeTime(1900, 1, 1, 0, 0, 0.0);
-    stopTime = Astronomy_MakeTime(2100, 1, 1, 0, 0, 0.0);
-    while (time.tt < stopTime.tt)
-    {
-        sphere = Astronomy_EclipticGeoMoon(time);
-        CHECK_STATUS(sphere);
-
-        eqj = Astronomy_GeoMoon(time);
-        CHECK_STATUS(eqj);
-
-        ecl = Astronomy_Ecliptic(eqj);
-        CHECK_STATUS(ecl);
-
-        diff_lat = 3600.0 * (ecl.elat - sphere.lat);     /* arcseconds */
-
-        status = Astronomy_FormatTime(time, TIME_FORMAT_SECOND, text, sizeof(text));
-        if (status != ASTRO_SUCCESS)
-            FAIL("C MoonLatitudes: Astronomy_FormatTime returned %d\n", status);
-
-        fprintf(outfile, "\"%s\",%0.16lf,%0.0lf,%0.16lf\n", text, time.tt, eqj.x * KM_PER_AU, diff_lat);
-
-        diff_lat = ABS(diff_lat);
-        if (diff_lat > max_diff_lat)
-            max_diff_lat = diff_lat;
-
-        time = Astronomy_AddDays(time, 0.1);        /* 2 hours + 24 minutes */
-    }
-
-    printf("C MoonLatitudes: PASS - max latitude discrepancy = %0.6lf arcsec.\n", max_diff_lat);
-    error = 0;
-fail:
-    if (outfile != NULL) fclose(outfile);
-    return error;
-}
-
 
 static int MoonEcliptic(void)
 {
