@@ -2225,6 +2225,15 @@ static int MoonEcliptic(void)
         }
     }
 
+    if (count != 73050)
+        FAIL("C MoonEcliptic: Unexpected count = %d\n", count);
+
+    if (max_lat > 1.826)
+        FAIL("C MoonEcliptic: EXCESSIVE ecliptic latitude discrepancy = %0.6lf arcsec.\n", max_lat);
+
+    if (max_lon > 23.47)
+        FAIL("C MoonEcliptic: EXCESSIVE ecliptic longitude discrepancy = %0.6lf arcsec.\n", max_lon);
+
     printf("C MoonEcliptic: PASS: count=%d, max lat=%0.3lf arcsec, max lon=%0.3lf arcsec.\n", count, max_lat, max_lon);
     error = 0;
 fail:
