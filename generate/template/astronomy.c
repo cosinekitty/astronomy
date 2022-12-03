@@ -1387,6 +1387,11 @@ static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
 
 static astro_rotation_t precession_rot(astro_time_t time, precess_dir_t dir)
 {
+    /*
+        dir==INTO_2000: converts mean equator of date (EQM) to J2000 mean equator (EQJ).
+        dir==FROM_2000: converts J2000 mean equator (EQJ) to mean equator of date (EQM).
+    */
+
     astro_rotation_t rotation;
     double xx, yx, zx, xy, yy, zy, xz, yz, zz;
     double t, psia, omegaa, chia, sa, ca, sb, cb, sc, cc, sd, cd;
@@ -1548,6 +1553,22 @@ static astro_equatorial_t vector2radec(const double pos[3], astro_time_t time)
 
 static astro_rotation_t nutation_rot(astro_time_t *time, precess_dir_t dir)
 {
+    /*
+        Creates a rotation matrix that adds/removes nutation from
+        an equatorial vector of date:
+
+        The `dir` parameter is a little misleading, but reflects the
+        common task of working together with precession_rot() to
+        convert mean equator of 2000 to/from true equator of date.
+        Here is the actual result of `dir`:
+
+        dir==INTO_2000: Subtract nutation from true equator of date (EQD)
+        to produce mean equator of date (EQM).
+
+        dir==FROM_2000: Add nutation from mean equator of date (EQM) to
+        produce true equator of date (EQD).
+    */
+
     astro_rotation_t rotation;
     earth_tilt_t tilt = e_tilt(time);
     double oblm = tilt.mobl * DEG2RAD;
@@ -2130,12 +2151,12 @@ astro_spherical_t Astronomy_EclipticGeoMoon(astro_time_t time)
 {
     astro_spherical_t sphere;
 
+    /* CalcMoon produces ecliptic coordinates in mean equinox of date (ECM). */
     CalcMoon(time.tt / 36525.0, &sphere.lon, &sphere.lat, &sphere.dist);
 
     /* Convert angles from radians to degrees. */
     sphere.lon *= RAD2DEG;
     sphere.lat *= RAD2DEG;
-
     sphere.status = ASTRO_SUCCESS;
     return sphere;
 }
@@ -8246,6 +8267,9 @@ astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector)
 {
     double xyproj;
     astro_spherical_t sphere;
+
+    if (vector.status != ASTRO_SUCCESS)
+        return SphereError(vector.status);
 
     xyproj = vector.x*vector.x + vector.y*vector.y;
     sphere.dist = sqrt(xyproj + vector.z*vector.z);
