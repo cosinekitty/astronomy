@@ -12,8 +12,6 @@
 #include <ctype.h>
 #include "astronomy.h"
 
-#define PERFORMANCE_TESTS 0
-
 char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 {
     char *ret = fgets(s, n, f);
@@ -226,10 +224,8 @@ static int AxisTest(void);
 static int SiderealTimeTest(void);
 static int DatesIssue250(void);
 static int StarRiseSetCulm(void);
-
-#if PERFORMANCE_TESTS
 static int MapPerformanceTest(void);
-#endif
+static int GeoMoonPerformance(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -237,6 +233,7 @@ typedef struct
 {
     const char *name;
     unit_test_func_t func;
+    int exclude;       /* nonzero to exclude the test from the "all" command. Used for "performance" tests. */
 }
 unit_test_t;
 
@@ -265,13 +262,12 @@ static unit_test_t UnitTests[] =
     {"lunar_eclipse_78",        LunarEclipseIssue78},
     {"lunar_fraction",          LunarFractionTest},
     {"magnitude",               MagnitudeTest},
-#if PERFORMANCE_TESTS
-    {"map",                     MapPerformanceTest},
-#endif
+    {"map",                     MapPerformanceTest,     1},
     {"moon",                    MoonTest},
     {"moon_apsis",              LunarApsis},
     {"moon_ecm",                MoonEcliptic},
     {"moon_nodes",              MoonNodes},
+    {"moon_performance",        GeoMoonPerformance,     1},
     {"moon_phase",              MoonPhase},
     {"moon_reverse",            MoonReverse},
     {"moon_vector",             MoonVector},
@@ -324,7 +320,7 @@ int main(int argc, const char *argv[])
             if (!strcmp(verb, "all"))
             {
                 for (i=0; i < NUM_UNIT_TESTS; ++i)
-                    if (UnitTests[i].func())
+                    if (!UnitTests[i].exclude && UnitTests[i].func())
                         FAIL("ctest: Unit test failed: %s\n", UnitTests[i].name);
                 goto success;
             }
@@ -6778,8 +6774,6 @@ fail:
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
-#if PERFORMANCE_TESTS
-
 static int MapPerformanceTest(void)
 {
     int error;
@@ -6827,9 +6821,33 @@ fail:
     return error;
 }
 
-#endif
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int GeoMoonPerformance(void)
+{
+    /* Call EclipticGeoMoon for many different times to measure its speed. */
+
+    int error = 1;
+    int count = 0;
+    astro_time_t time = Astronomy_MakeTime(1800, 1, 1, 0, 0, 0.0);
+    astro_time_t stopTime = Astronomy_MakeTime(2200, 1, 1, 0, 0, 0.0);
+    while (time.ut <= stopTime.ut)
+    {
+        astro_spherical_t sphere = Astronomy_EclipticGeoMoon(time);
+        if (sphere.status != ASTRO_SUCCESS)
+            FAIL("GeoMoonPerformance: EclipticGeoMoon returned error %d.\n", sphere.status);
+        time = Astronomy_AddDays(time, 0.01);
+        ++count;
+    }
+    printf("GeoMoonPerformance: PASS (called %d times)\n", count);
+    error = 0;
+fail:
+    return error;
+}
+
 
 /*-----------------------------------------------------------------------------------------------------------*/
+
 
 static int MoonNodes(void)
 {
