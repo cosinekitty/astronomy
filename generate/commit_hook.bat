@@ -8,6 +8,8 @@ REM ----------------------------------------------------------------------------
 REM Change to project/repo root directory.
 cd %~dp0\..
 echo.commit_hook: Repo root = %cd%
+echo.commit_hook: PATH = %PATH%
+dir c:\msys64\usr\bin\
 
 set DOXYGENZIP=doxygen-1.9.5.windows.x64.bin.zip
 set DOXYGENURL=https://github.com/cosinekitty/ephemeris/raw/master/!DOXYGENZIP!
@@ -15,7 +17,7 @@ md bin
 cd bin
 echo.commit_hook: Downloading: !DOXYGENURL!
 if exist !DOXYGENZIP! ( del !DOXYGENZIP! )
-wget !DOXYGENURL! || exit /b 1
+c:\msys64\usr\bin\wget.exe !DOXYGENURL! || exit /b 1
 echo.commit_hook: Installing Doxygen.
 7z x !DOXYGENZIP! || exit /b 1
 del !DOXYGENZIP!
