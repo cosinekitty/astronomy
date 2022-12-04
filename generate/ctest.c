@@ -226,6 +226,7 @@ static int DatesIssue250(void);
 static int StarRiseSetCulm(void);
 static int MapPerformanceTest(void);
 static int GeoMoonPerformance(void);
+static int NutationPerformance(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -271,6 +272,7 @@ static unit_test_t UnitTests[] =
     {"moon_phase",              MoonPhase},
     {"moon_reverse",            MoonReverse},
     {"moon_vector",             MoonVector},
+    {"nutation",                NutationPerformance,    1},
     {"planet_apsis",            PlanetApsis},
     {"pluto",                   PlutoCheck},
     {"refraction",              RefractionTest},
@@ -6845,6 +6847,25 @@ fail:
     return error;
 }
 
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int NutationPerformance(void)
+{
+    /* Call SiderealTime for many different times to gauge speed of iau2000b nutation model. */
+
+    int count = 0;
+    astro_time_t time = Astronomy_MakeTime(1800, 1, 1, 0, 0, 0.0);
+    astro_time_t stopTime = Astronomy_MakeTime(2200, 1, 1, 0, 0, 0.0);
+    while (time.ut <= stopTime.ut)
+    {
+        Astronomy_SiderealTime(&time);
+        time = Astronomy_AddDays(time, 0.01);
+        ++count;
+    }
+    printf("NutationPerformance: PASS (called %d times)\n", count);
+    return 0;
+}
 
 /*-----------------------------------------------------------------------------------------------------------*/
 
