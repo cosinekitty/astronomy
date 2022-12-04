@@ -601,6 +601,9 @@ class Tests {
                 outfile.println("j ${mindex} ${time.tt} ${time.ut} ${moon.x} ${moon.y} ${moon.z} ${moon.vx} ${moon.vy} ${moon.vz}")
             }
 
+            // Nutation
+            outfile.println("n ${time.nutationPsi()} ${time.nutationEps()}")
+
             time = time.addDays(10.0 + PI/100.0)
         }
     }

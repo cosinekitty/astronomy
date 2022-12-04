@@ -100,7 +100,8 @@ maxdiff_column_t;
 #define NUM_V_COLUMNS       4
 #define NUM_S_COLUMNS       7
 #define NUM_J_COLUMNS       8
-#define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS)
+#define NUM_N_COLUMNS       2
+#define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS + NUM_N_COLUMNS)
 
 /*-------------------------------------------------------------------------------------------------*/
 
@@ -559,6 +560,9 @@ static int AstroCheck(void)
         WriteJupiterMoon(outfile, 2, jm.ganymede);
         WriteJupiterMoon(outfile, 3, jm.callisto);
 
+        /* Nutation calculations. */
+        fprintf(outfile, "n %0.18le %0.18le\n", time.psi, time.eps);
+
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
     }
 
@@ -677,7 +681,11 @@ static const maxdiff_settings_t DiffSettings[NUM_DIFF_COLUMNS] =
     { "jm_z",           -1,     0,      0.0 },      /* 15 */
     { "jm_vx",          -1,     0,     -2.0 },      /* 16 */
     { "jm_vy",          -1,     0,     -2.0 },      /* 17 */
-    { "jm_vz",          -1,     0,     -2.0 }       /* 18 */
+    { "jm_vz",          -1,     0,     -2.0 },      /* 18 */
+
+    /* 'n' lines: nutation angles */
+    { "psi",            -1,     0,     10.0 },      /* 19 */
+    { "eps",            -1,     0,     10.0 }       /* 20 */
 };
 
 static int Diff(double tolerance, const char *a_filename, const char *b_filename)
@@ -782,6 +790,8 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
     if (aline[0] != bline[0])
         FAIL("ctest(DiffLine): Line %d mismatch record type: '%c' vs '%c'.\n", lnum, aline[0], bline[0]);
 
+    abody[0] = bbody[0] = '\0';     /* default to no body name */
+
     switch (aline[0])
     {
     case 'o':       /* observer */
@@ -819,6 +829,13 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
             FAIL("Bad Jupiter moon index in line %d: mindex_a=%d, mindex_b=%d\n", lnum, mindex_a, mindex_b);
         snprintf(abody, sizeof(abody), "jm%d", mindex_a);
         snprintf(bbody, sizeof(bbody), "jm%d", mindex_b);
+        break;
+
+    case 'n':   /* nutation angles */
+        colbase = NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS;
+        na = sscanf(aline, "n %lf %lf", &adata[0], &adata[1]);
+        nb = sscanf(bline, "n %lf %lf", &bdata[0], &bdata[1]);
+        nrequired = 2;
         break;
 
     default:

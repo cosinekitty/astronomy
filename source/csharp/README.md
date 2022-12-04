@@ -2449,6 +2449,13 @@ to iterate through consecutive alternating perigees and apogees.
 | `double` | `ut` | UT1/UTC number of days since noon on January 1, 2000. |
 | `double` | `tt` | Terrestrial Time days since noon on January 1, 2000. |
 
+### properties
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `double` | `Psi` | Nutation angle `psi`. Intended for unit testing only. |
+| `double` | `Eps` | Nutation angle `eps`. Intended for unit testing only. |
+
 ### member functions
 
 <a name="AstroTime.AddDays"></a>

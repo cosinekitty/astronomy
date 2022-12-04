@@ -359,6 +359,16 @@ namespace CosineKitty
             return new AstroTime(this.ut + days);
         }
 
+        /// <summary>
+        /// Nutation angle `psi`. Intended for unit testing only.
+        /// </summary>
+        public double Psi => psi;
+
+        /// <summary>
+        /// Nutation angle `eps`. Intended for unit testing only.
+        /// </summary>
+        public double Eps => eps;
+
         private static double UniversalTimeFromCalendar(int year, int month, int day, int hour, int minute, double second)
         {
             // This formula is adapted from NOVAS C 3.1 function julian_date().

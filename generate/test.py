@@ -165,6 +165,9 @@ def AstroCheck(printflag):
             for mindex in range(4):
                 moon = SelectJupiterMoon(jm, mindex)
                 print('j {:d} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e} {:0.18e}'.format(mindex, time.tt, time.ut, moon.x, moon.y, moon.z, moon.vx, moon.vy, moon.vz))
+        if printflag:
+            # Nutation calculations
+            print('n {:0.18e} {:0.18e}'.format(time._et.dpsi, time._et.deps))
         time = time.AddDays(dt)
     return 0
 

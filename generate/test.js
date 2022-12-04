@@ -120,6 +120,10 @@ function AstroCheck() {
             console.log(`j ${mindex} ${time.tt.toExponential(18)} ${time.ut.toExponential(18)} ${moon.x.toExponential(18)} ${moon.y.toExponential(18)} ${moon.z.toExponential(18)} ${moon.vx.toExponential(18)} ${moon.vy.toExponential(18)} ${moon.vz.toExponential(18)}`);
         }
 
+        // Nutation calculations.
+        const et = Astronomy.e_tilt(time);
+        console.log(`n ${et.dpsi.toExponential(18)} ${et.deps.toExponential(18)}`);
+
         date = date.AddDays(dt);
     }
 

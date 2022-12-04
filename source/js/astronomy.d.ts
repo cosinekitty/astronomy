@@ -315,6 +315,15 @@ export declare class AstroTime {
  * @returns {AstroTime}
  */
 export declare function MakeTime(date: FlexibleDateTime): AstroTime;
+export interface EarthTiltInfo {
+    tt: number;
+    dpsi: number;
+    deps: number;
+    ee: number;
+    mobl: number;
+    tobl: number;
+}
+export declare function e_tilt(time: AstroTime): EarthTiltInfo;
 export declare let CalcMoonCount: number;
 /**
  * @brief Lunar libration angles, returned by {@link Libration}.

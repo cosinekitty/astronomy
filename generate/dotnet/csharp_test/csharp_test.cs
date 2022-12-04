@@ -295,6 +295,9 @@ namespace csharp_test
                         outfile.WriteLine($"j {mindex} {time.tt:G18} {time.ut:G18} {moon.x:G18} {moon.y:G18} {moon.z:G18} {moon.vx:G18} {moon.vy:G18} {moon.vz:G18}");
                     }
 
+                    // Nutation
+                    outfile.WriteLine($"n {time.Psi:G18} {time.Eps:G18}");
+
                     time = time.AddDays(10.0 + Math.PI/100.0);
                 }
             }

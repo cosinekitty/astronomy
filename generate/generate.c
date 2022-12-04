@@ -1435,6 +1435,7 @@ static int CheckTestOutput(const char *filename)
         {
         case '#':   /* ignore debug output */
         case 'j':   /* ignore Jupiter moons calculations: for diff testing only */
+        case 'n':   /* ignore nutation calculations: for diff testing only */
             break;
 
         case 'o':

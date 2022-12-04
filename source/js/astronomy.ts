@@ -1445,7 +1445,7 @@ function mean_obliq(time: AstroTime): number {
     return asec / 3600.0;
 }
 
-interface EarthTiltInfo {
+export interface EarthTiltInfo {
     tt: number;
     dpsi: number;
     deps: number;
@@ -1456,7 +1456,7 @@ interface EarthTiltInfo {
 
 var cache_e_tilt: EarthTiltInfo;
 
-function e_tilt(time: AstroTime): EarthTiltInfo {
+export function e_tilt(time: AstroTime): EarthTiltInfo {
     if (!cache_e_tilt || Math.abs(cache_e_tilt.tt - time.tt) > 1.0e-6) {
         const nut = iau2000b(time);
         const mean_ob = mean_obliq(time);

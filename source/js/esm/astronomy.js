@@ -1347,7 +1347,7 @@ function mean_obliq(time) {
     return asec / 3600.0;
 }
 var cache_e_tilt;
-function e_tilt(time) {
+export function e_tilt(time) {
     if (!cache_e_tilt || Math.abs(cache_e_tilt.tt - time.tt) > 1.0e-6) {
         const nut = iau2000b(time);
         const mean_ob = mean_obliq(time);

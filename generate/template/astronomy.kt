@@ -696,6 +696,9 @@ class Time private constructor(
      */
     override operator fun compareTo(other: Time): Int = this.tt.compareTo(other.tt)
 
+    fun nutationPsi() = psi
+    fun nutationEps() = eps
+
     companion object {
         /**
          * Creates a `Time` object from a Terrestrial Time day value.
