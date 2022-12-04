@@ -1913,7 +1913,7 @@ namespace csharp_test
             Debug("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-            if (diff_alt > 3.6e-14 || diff_az > 1.2e-13)
+            if (diff_alt > 1.0e-13 || diff_az > 1.2e-13)
             {
                 Console.WriteLine($"C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR: diff_alt={diff_alt}, diff_az={diff_az}");
                 return 1;
