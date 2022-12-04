@@ -3794,7 +3794,7 @@ $ASTRO_IAU_DATA()
                 om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD;
                 dp = 0;
                 de = 0;
-                for (i=76; i >= 0; --i)
+                for (i=iau_row.Length-1; i >= 0; --i)
                 {
                     arg = (iau_row[i].nals0*el + iau_row[i].nals1*elp + iau_row[i].nals2*f + iau_row[i].nals3*d + iau_row[i].nals4*om) % PI2;
                     sarg = Math.Sin(arg);

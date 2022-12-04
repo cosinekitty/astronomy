@@ -36,6 +36,7 @@
 #define MAX_DATA_PER_LINE    20
 #define IAU_DATA_PER_ROW     11
 #define IAU_DATA_NUM_ROWS    77
+#define IAU_DATA_KEEP_ROWS   77
 #define ADDSOL_DATA_PER_ROW   8
 
 typedef struct
@@ -809,7 +810,7 @@ static int OptIauC(cg_context_t *context, int lnum, const double *data)
         fprintf(context->outfile, ", %12.0lf", data[i]);
 
     fprintf(context->outfile, " } }");
-    if (lnum != IAU_DATA_NUM_ROWS)
+    if (lnum != IAU_DATA_KEEP_ROWS)
         fprintf(context->outfile, ",");
     fprintf(context->outfile, "\n");
 
@@ -830,7 +831,7 @@ static int OptIauCsharp(cg_context_t *context, int lnum, const double *data)
         fprintf(context->outfile, ", cls%d = %12.0lf", i-5, data[i]);
 
     fprintf(context->outfile, " }");
-    if (lnum != IAU_DATA_NUM_ROWS)
+    if (lnum != IAU_DATA_KEEP_ROWS)
         fprintf(context->outfile, ",");
     fprintf(context->outfile, "\n");
 
@@ -851,7 +852,7 @@ static int OptIauJS(cg_context_t *context, int lnum, const double *data)
         fprintf(context->outfile, ", %12.0lf", data[i]);
 
     fprintf(context->outfile, " ] ]");
-    if (lnum != IAU_DATA_NUM_ROWS)
+    if (lnum != IAU_DATA_KEEP_ROWS)
         fprintf(context->outfile, ",");
     fprintf(context->outfile, "\n");
 
@@ -872,7 +873,7 @@ static int OptIauKotlin(cg_context_t *context, int lnum, const double *data)
         fprintf(context->outfile, ", %12.1lf", data[i]);
 
     fprintf(context->outfile, ")");
-    if (lnum < IAU_DATA_NUM_ROWS)
+    if (lnum < IAU_DATA_KEEP_ROWS)
         fprintf(context->outfile, ",\n");
     else
         fprintf(context->outfile, "\n");
@@ -900,30 +901,34 @@ static int OptIauData(cg_context_t *context)
     {
         ++lnum;
         CHECK(ScanRealArray(context, filename, lnum, line, IAU_DATA_PER_ROW, data));
-        switch (context->language)
+
+        if (lnum <= IAU_DATA_KEEP_ROWS)
         {
-        case CODEGEN_LANGUAGE_PYTHON:
-            CHECK(OptIauPython(context, data));
-            break;
+            switch (context->language)
+            {
+            case CODEGEN_LANGUAGE_PYTHON:
+                CHECK(OptIauPython(context, data));
+                break;
 
-        case CODEGEN_LANGUAGE_C:
-            CHECK(OptIauC(context, lnum, data));
-            break;
+            case CODEGEN_LANGUAGE_C:
+                CHECK(OptIauC(context, lnum, data));
+                break;
 
-        case CODEGEN_LANGUAGE_CSHARP:
-            CHECK(OptIauCsharp(context, lnum, data));
-            break;
+            case CODEGEN_LANGUAGE_CSHARP:
+                CHECK(OptIauCsharp(context, lnum, data));
+                break;
 
-        case CODEGEN_LANGUAGE_JS:
-            CHECK(OptIauJS(context, lnum, data));
-            break;
+            case CODEGEN_LANGUAGE_JS:
+                CHECK(OptIauJS(context, lnum, data));
+                break;
 
-        case CODEGEN_LANGUAGE_KOTLIN:
-            CHECK(OptIauKotlin(context, lnum, data));
-            break;
+            case CODEGEN_LANGUAGE_KOTLIN:
+                CHECK(OptIauKotlin(context, lnum, data));
+                break;
 
-        default:
-            CHECK(LogError(context, "OptIauData: Unsupported language %d", context->language));
+            default:
+                CHECK(LogError(context, "OptIauData: Unsupported language %d", context->language));
+            }
         }
     }
 

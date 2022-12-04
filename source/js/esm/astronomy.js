@@ -1396,7 +1396,7 @@ function iau2000b(time) {
     om = mod(450160.398036 - t * 6962890.5431);
     dp = 0;
     de = 0;
-    for (i = 76; i >= 0; --i) {
+    for (i = iaudata.length - 1; i >= 0; --i) {
         nals = iaudata[i][0];
         cls = iaudata[i][1];
         arg = (nals[0] * el + nals[1] * elp + nals[2] * f + nals[3] * d + nals[4] * om) % PI2;

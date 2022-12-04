@@ -1306,7 +1306,7 @@ static void iau2000b(astro_time_t *time)
         double cls[6];
     };
 
-    static const struct row_t row[77] =
+    static const struct row_t row[] =
     {
 
         { {  0,  0,  0,  0,  1 }, {   -172064161,      -174666,        33386,     92052331,         9086,        15377 } },
@@ -1402,7 +1402,7 @@ static void iau2000b(astro_time_t *time)
         om  = fmod(450160.398036 - t * 6962890.5431,    ASEC360) * ASEC2RAD;
         dp = 0;
         de = 0;
-        for (i=76; i >= 0; --i)
+        for (i=sizeof(row)/sizeof(row[0]) - 1; i >= 0; --i)
         {
             arg = fmod((row[i].nals[0]*el + row[i].nals[1]*elp + row[i].nals[2]*f + row[i].nals[3]*d + row[i].nals[4]*om), PI2);
             sarg = sin(arg);

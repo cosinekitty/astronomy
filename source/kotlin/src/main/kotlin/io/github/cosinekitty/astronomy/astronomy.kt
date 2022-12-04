@@ -4136,7 +4136,7 @@ private fun iau2000b(time: Time) {
         val om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD
         var dp = 0.0
         var de = 0.0
-        for (i in 76 downTo 0) {
+        for (i in iauRow.size-1 downTo 0) {
             val arg = (
                 iauRow[i].nals0*el + iauRow[i].nals1*elp +
                 iauRow[i].nals2*f + iauRow[i].nals3*d +
