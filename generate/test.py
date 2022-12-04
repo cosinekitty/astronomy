@@ -833,7 +833,7 @@ def RiseSet(filename = 'riseset/riseset.txt'):
             error_minutes = (24.0 * 60.0) * vabs(a_evt.tt - correct_time.tt)
             sum_minutes += error_minutes ** 2
             max_minutes = vmax(max_minutes, error_minutes)
-            if error_minutes > 1.16:
+            if error_minutes > 1.18:
                 print('PY RiseSet({} line {}): excessive prediction time error = {} minutes.'.format(filename, lnum, error_minutes))
                 print('    correct = {}, calculated = {}'.format(correct_time, a_evt))
                 return 1
@@ -2301,14 +2301,14 @@ class TopoStateFunc:
 
 def TopoState():
     if VerifyStateBody(TopoStateFunc(astronomy.Body.Earth), 'topostate/Earth_N30_W80_1000m.txt', 2.108e-04, 2.430e-04): return 1
-    if VerifyStateBody(TopoStateFunc(_Body_Geo_EMB),        'topostate/EMB_N30_W80_1000m.txt',   7.195e-04, 2.497e-04): return 1
+    if VerifyStateBody(TopoStateFunc(_Body_Geo_EMB),        'topostate/EMB_N30_W80_1000m.txt',   7.197e-04, 2.497e-04): return 1
     print('PY TopoState: PASS')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
 
 def Aberration():
-    THRESHOLD_SECONDS = 0.4
+    THRESHOLD_SECONDS = 0.453
     filename = 'equatorial/Mars_j2000_ofdate_aberration.txt'
     count = 0
     with open(filename, 'rt') as infile:
@@ -2518,7 +2518,7 @@ def Axis():
     if AxisTestBody(astronomy.Body.Sun,      'axis/Sun.txt',       0.0)      :  return 1
     if AxisTestBody(astronomy.Body.Mercury,  'axis/Mercury.txt',   0.074340) :  return 1
     if AxisTestBody(astronomy.Body.Venus,    'axis/Venus.txt',     0.0)      :  return 1
-    if AxisTestBody(astronomy.Body.Earth,    'axis/Earth.txt',     0.000591) :  return 1
+    if AxisTestBody(astronomy.Body.Earth,    'axis/Earth.txt',     0.002032) :  return 1
     if AxisTestBody(astronomy.Body.Moon,     'axis/Moon.txt',      0.264845) :  return 1
     if AxisTestBody(astronomy.Body.Mars,     'axis/Mars.txt',      0.075323) :  return 1
     if AxisTestBody(astronomy.Body.Jupiter,  'axis/Jupiter.txt',   0.000324) :  return 1
@@ -2763,7 +2763,7 @@ def Lagrange():
 #-----------------------------------------------------------------------------------------------------------
 
 def SiderealTime():
-    correct = 9.398368460418821
+    correct = 9.3983699280076483
     time = astronomy.Time.Make(2022, 3, 15, 21, 50, 0)
     gast = astronomy.SiderealTime(time)
     diff = abs(gast - correct)
@@ -2978,9 +2978,9 @@ def DatesIssue250():
     # Make sure we can handle dates outside the range supported by System.DateTime.
     # https://github.com/cosinekitty/astronomy/issues/250
     return (
-        CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z") or
-        CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.325Z") or
-        CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.041Z") or
+        CheckDecemberSolstice( 2022, "2022-12-21T21:47:54.456Z") or
+        CheckDecemberSolstice(-2300, "-002300-12-19T16:22:27.929Z") or
+        CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.276Z") or
         Pass('DatesIssue250')
     )
 

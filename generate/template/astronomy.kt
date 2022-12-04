@@ -4129,7 +4129,6 @@ private fun iau2000b(time: Time) {
 
     if (time.psi.isNaN()) {
         val t = time.julianCenturies()
-        val el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD
         val elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD
         val f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD
         val d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD
@@ -4138,8 +4137,9 @@ private fun iau2000b(time: Time) {
         var de = 0.0
         for (i in iauRow.size-1 downTo 0) {
             val arg = (
-                iauRow[i].nals0*el + iauRow[i].nals1*elp +
-                iauRow[i].nals2*f + iauRow[i].nals3*d +
+                iauRow[i].nals1*elp +
+                iauRow[i].nals2*f +
+                iauRow[i].nals3*d +
                 iauRow[i].nals4*om
             ) % PI2
             val sarg = sin(arg)
@@ -4305,7 +4305,11 @@ private fun inverseTerra(ovec: Vector): Observer {
         var c: Double
         var s: Double
         var denom: Double
+        var count = 0
         while (true) {
+            ++count
+            if (count > 10)
+                throw InternalError("inverseTerra solver failed to converge.")
             // Calculate the error function W(lat).
             // We try to find the root of W, meaning where the error is 0.
             c = cos(lat)
@@ -4316,7 +4320,7 @@ private fun inverseTerra(ovec: Vector): Observer {
             val radicand = c2 + F*s2
             denom = sqrt(radicand)
             val W = ((factor * s * c) / denom) - (z * c) + (p * s)
-            if (W.absoluteValue < 1.0e-12)
+            if (W.absoluteValue < 1.0e-8)
                 break  // The error is now negligible.
             // Error is still too large. Find the next estimate.
             // Calculate D = the derivative of W with respect to lat.

@@ -4913,79 +4913,7 @@ namespace CosineKitty
         new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  2, nals3 = -2, nals4 =  2 , cls0 =    -13170906, cls1 =        -1675, cls2 =       -13696, cls3 =      5730336, cls4 =        -3015, cls5 =        -4587 },
         new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =     -2276413, cls1 =         -234, cls2 =         2796, cls3 =       978459, cls4 =         -485, cls5 =         1374 },
         new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  2 , cls0 =      2074554, cls1 =          207, cls2 =         -698, cls3 =      -897492, cls4 =          470, cls5 =         -291 },
-        new iau_row_t { nals0 =  0, nals1 =  1, nals2 =  0, nals3 =  0, nals4 =  0 , cls0 =      1475877, cls1 =        -3633, cls2 =        11817, cls3 =        73871, cls4 =         -184, cls5 =        -1924 },
-        new iau_row_t { nals0 =  0, nals1 =  1, nals2 =  2, nals3 = -2, nals4 =  2 , cls0 =      -516821, cls1 =         1226, cls2 =         -524, cls3 =       224386, cls4 =         -677, cls5 =         -174 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  0 , cls0 =       711159, cls1 =           73, cls2 =         -872, cls3 =        -6750, cls4 =            0, cls5 =          358 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  1 , cls0 =      -387298, cls1 =         -367, cls2 =          380, cls3 =       200728, cls4 =           18, cls5 =          318 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =      -301461, cls1 =          -36, cls2 =          816, cls3 =       129025, cls4 =          -63, cls5 =          367 },
-        new iau_row_t { nals0 =  0, nals1 = -1, nals2 =  2, nals3 = -2, nals4 =  2 , cls0 =       215829, cls1 =         -494, cls2 =          111, cls3 =       -95929, cls4 =          299, cls5 =          132 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  2, nals3 = -2, nals4 =  1 , cls0 =       128227, cls1 =          137, cls2 =          181, cls3 =       -68982, cls4 =           -9, cls5 =           39 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =       123457, cls1 =           11, cls2 =           19, cls3 =       -53311, cls4 =           32, cls5 =           -4 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  0, nals3 =  2, nals4 =  0 , cls0 =       156994, cls1 =           10, cls2 =         -168, cls3 =        -1235, cls4 =            0, cls5 =           82 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  1 , cls0 =        63110, cls1 =           63, cls2 =           27, cls3 =       -33228, cls4 =            0, cls5 =           -9 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  1 , cls0 =       -57976, cls1 =          -63, cls2 =         -189, cls3 =        31429, cls4 =            0, cls5 =          -75 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  2, nals3 =  2, nals4 =  2 , cls0 =       -59641, cls1 =          -11, cls2 =          149, cls3 =        25543, cls4 =          -11, cls5 =           66 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  1 , cls0 =       -51613, cls1 =          -42, cls2 =          129, cls3 =        26366, cls4 =            0, cls5 =           78 },
-        new iau_row_t { nals0 = -2, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  1 , cls0 =        45893, cls1 =           50, cls2 =           31, cls3 =       -24236, cls4 =          -10, cls5 =           20 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  0, nals3 =  2, nals4 =  0 , cls0 =        63384, cls1 =           11, cls2 =         -150, cls3 =        -1220, cls4 =            0, cls5 =           29 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  2, nals3 =  2, nals4 =  2 , cls0 =       -38571, cls1 =           -1, cls2 =          158, cls3 =        16452, cls4 =          -11, cls5 =           68 },
-        new iau_row_t { nals0 =  0, nals1 = -2, nals2 =  2, nals3 = -2, nals4 =  2 , cls0 =        32481, cls1 =            0, cls2 =            0, cls3 =       -13870, cls4 =            0, cls5 =            0 },
-        new iau_row_t { nals0 = -2, nals1 =  0, nals2 =  0, nals3 =  2, nals4 =  0 , cls0 =       -47722, cls1 =            0, cls2 =          -18, cls3 =          477, cls4 =            0, cls5 =          -25 },
-        new iau_row_t { nals0 =  2, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =       -31046, cls1 =           -1, cls2 =          131, cls3 =        13238, cls4 =          -11, cls5 =           59 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  2, nals3 = -2, nals4 =  2 , cls0 =        28593, cls1 =            0, cls2 =           -1, cls3 =       -12338, cls4 =           10, cls5 =           -3 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  1 , cls0 =        20441, cls1 =           21, cls2 =           10, cls3 =       -10758, cls4 =            0, cls5 =           -3 },
-        new iau_row_t { nals0 =  2, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  0 , cls0 =        29243, cls1 =            0, cls2 =          -74, cls3 =         -609, cls4 =            0, cls5 =           13 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  0 , cls0 =        25887, cls1 =            0, cls2 =          -66, cls3 =         -550, cls4 =            0, cls5 =           11 },
-        new iau_row_t { nals0 =  0, nals1 =  1, nals2 =  0, nals3 =  0, nals4 =  1 , cls0 =       -14053, cls1 =          -25, cls2 =           79, cls3 =         8551, cls4 =           -2, cls5 =          -45 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  0, nals3 =  2, nals4 =  1 , cls0 =        15164, cls1 =           10, cls2 =           11, cls3 =        -8001, cls4 =            0, cls5 =           -1 },
-        new iau_row_t { nals0 =  0, nals1 =  2, nals2 =  2, nals3 = -2, nals4 =  2 , cls0 =       -15794, cls1 =           72, cls2 =          -16, cls3 =         6850, cls4 =          -42, cls5 =           -5 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 = -2, nals3 =  2, nals4 =  0 , cls0 =        21783, cls1 =            0, cls2 =           13, cls3 =         -167, cls4 =            0, cls5 =           13 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  0, nals3 = -2, nals4 =  1 , cls0 =       -12873, cls1 =          -10, cls2 =          -37, cls3 =         6953, cls4 =            0, cls5 =          -14 },
-        new iau_row_t { nals0 =  0, nals1 = -1, nals2 =  0, nals3 =  0, nals4 =  1 , cls0 =       -12654, cls1 =           11, cls2 =           63, cls3 =         6415, cls4 =            0, cls5 =           26 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  2, nals3 =  2, nals4 =  1 , cls0 =       -10204, cls1 =            0, cls2 =           25, cls3 =         5222, cls4 =            0, cls5 =           15 },
-        new iau_row_t { nals0 =  0, nals1 =  2, nals2 =  0, nals3 =  0, nals4 =  0 , cls0 =        16707, cls1 =          -85, cls2 =          -10, cls3 =          168, cls4 =           -1, cls5 =           10 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  2, nals3 =  2, nals4 =  2 , cls0 =        -7691, cls1 =            0, cls2 =           44, cls3 =         3268, cls4 =            0, cls5 =           19 },
-        new iau_row_t { nals0 = -2, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  0 , cls0 =       -11024, cls1 =            0, cls2 =          -14, cls3 =          104, cls4 =            0, cls5 =            2 },
-        new iau_row_t { nals0 =  0, nals1 =  1, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =         7566, cls1 =          -21, cls2 =          -11, cls3 =        -3250, cls4 =            0, cls5 =           -5 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  2, nals3 =  2, nals4 =  1 , cls0 =        -6637, cls1 =          -11, cls2 =           25, cls3 =         3353, cls4 =            0, cls5 =           14 },
-        new iau_row_t { nals0 =  0, nals1 = -1, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =        -7141, cls1 =           21, cls2 =            8, cls3 =         3070, cls4 =            0, cls5 =            4 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  0, nals3 =  2, nals4 =  1 , cls0 =        -6302, cls1 =          -11, cls2 =            2, cls3 =         3272, cls4 =            0, cls5 =            4 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  2, nals3 = -2, nals4 =  1 , cls0 =         5800, cls1 =           10, cls2 =            2, cls3 =        -3045, cls4 =            0, cls5 =           -1 },
-        new iau_row_t { nals0 =  2, nals1 =  0, nals2 =  2, nals3 = -2, nals4 =  2 , cls0 =         6443, cls1 =            0, cls2 =           -7, cls3 =        -2768, cls4 =            0, cls5 =           -4 },
-        new iau_row_t { nals0 = -2, nals1 =  0, nals2 =  0, nals3 =  2, nals4 =  1 , cls0 =        -5774, cls1 =          -11, cls2 =          -15, cls3 =         3041, cls4 =            0, cls5 =           -5 },
-        new iau_row_t { nals0 =  2, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  1 , cls0 =        -5350, cls1 =            0, cls2 =           21, cls3 =         2695, cls4 =            0, cls5 =           12 },
-        new iau_row_t { nals0 =  0, nals1 = -1, nals2 =  2, nals3 = -2, nals4 =  1 , cls0 =        -4752, cls1 =          -11, cls2 =           -3, cls3 =         2719, cls4 =            0, cls5 =           -3 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  0, nals3 = -2, nals4 =  1 , cls0 =        -4940, cls1 =          -11, cls2 =          -21, cls3 =         2720, cls4 =            0, cls5 =           -9 },
-        new iau_row_t { nals0 = -1, nals1 = -1, nals2 =  0, nals3 =  2, nals4 =  0 , cls0 =         7350, cls1 =            0, cls2 =           -8, cls3 =          -51, cls4 =            0, cls5 =            4 },
-        new iau_row_t { nals0 =  2, nals1 =  0, nals2 =  0, nals3 = -2, nals4 =  1 , cls0 =         4065, cls1 =            0, cls2 =            6, cls3 =        -2206, cls4 =            0, cls5 =            1 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  0, nals3 =  2, nals4 =  0 , cls0 =         6579, cls1 =            0, cls2 =          -24, cls3 =         -199, cls4 =            0, cls5 =            2 },
-        new iau_row_t { nals0 =  0, nals1 =  1, nals2 =  2, nals3 = -2, nals4 =  1 , cls0 =         3579, cls1 =            0, cls2 =            5, cls3 =        -1900, cls4 =            0, cls5 =            1 },
-        new iau_row_t { nals0 =  1, nals1 = -1, nals2 =  0, nals3 =  0, nals4 =  0 , cls0 =         4725, cls1 =            0, cls2 =           -6, cls3 =          -41, cls4 =            0, cls5 =            3 },
-        new iau_row_t { nals0 = -2, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =        -3075, cls1 =            0, cls2 =           -2, cls3 =         1313, cls4 =            0, cls5 =           -1 },
-        new iau_row_t { nals0 =  3, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =        -2904, cls1 =            0, cls2 =           15, cls3 =         1233, cls4 =            0, cls5 =            7 },
-        new iau_row_t { nals0 =  0, nals1 = -1, nals2 =  0, nals3 =  2, nals4 =  0 , cls0 =         4348, cls1 =            0, cls2 =          -10, cls3 =          -81, cls4 =            0, cls5 =            2 },
-        new iau_row_t { nals0 =  1, nals1 = -1, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =        -2878, cls1 =            0, cls2 =            8, cls3 =         1232, cls4 =            0, cls5 =            4 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  0, nals3 =  1, nals4 =  0 , cls0 =        -4230, cls1 =            0, cls2 =            5, cls3 =          -20, cls4 =            0, cls5 =           -2 },
-        new iau_row_t { nals0 = -1, nals1 = -1, nals2 =  2, nals3 =  2, nals4 =  2 , cls0 =        -2819, cls1 =            0, cls2 =            7, cls3 =         1207, cls4 =            0, cls5 =            3 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  0 , cls0 =        -4056, cls1 =            0, cls2 =            5, cls3 =           40, cls4 =            0, cls5 =           -2 },
-        new iau_row_t { nals0 =  0, nals1 = -1, nals2 =  2, nals3 =  2, nals4 =  2 , cls0 =        -2647, cls1 =            0, cls2 =           11, cls3 =         1129, cls4 =            0, cls5 =            5 },
-        new iau_row_t { nals0 = -2, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  1 , cls0 =        -2294, cls1 =            0, cls2 =          -10, cls3 =         1266, cls4 =            0, cls5 =           -4 },
-        new iau_row_t { nals0 =  1, nals1 =  1, nals2 =  2, nals3 =  0, nals4 =  2 , cls0 =         2481, cls1 =            0, cls2 =           -7, cls3 =        -1062, cls4 =            0, cls5 =           -3 },
-        new iau_row_t { nals0 =  2, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  1 , cls0 =         2179, cls1 =            0, cls2 =           -2, cls3 =        -1129, cls4 =            0, cls5 =           -2 },
-        new iau_row_t { nals0 = -1, nals1 =  1, nals2 =  0, nals3 =  1, nals4 =  0 , cls0 =         3276, cls1 =            0, cls2 =            1, cls3 =           -9, cls4 =            0, cls5 =            0 },
-        new iau_row_t { nals0 =  1, nals1 =  1, nals2 =  0, nals3 =  0, nals4 =  0 , cls0 =        -3389, cls1 =            0, cls2 =            5, cls3 =           35, cls4 =            0, cls5 =           -2 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  2, nals3 =  0, nals4 =  0 , cls0 =         3339, cls1 =            0, cls2 =          -13, cls3 =         -107, cls4 =            0, cls5 =            1 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  2, nals3 = -2, nals4 =  1 , cls0 =        -1987, cls1 =            0, cls2 =           -6, cls3 =         1073, cls4 =            0, cls5 =           -2 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  2 , cls0 =        -1981, cls1 =            0, cls2 =            0, cls3 =          854, cls4 =            0, cls5 =            0 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  0, nals3 =  1, nals4 =  0 , cls0 =         4026, cls1 =            0, cls2 =         -353, cls3 =         -553, cls4 =            0, cls5 =         -139 },
-        new iau_row_t { nals0 =  0, nals1 =  0, nals2 =  2, nals3 =  1, nals4 =  2 , cls0 =         1660, cls1 =            0, cls2 =           -5, cls3 =         -710, cls4 =            0, cls5 =           -2 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  2, nals3 =  4, nals4 =  2 , cls0 =        -1521, cls1 =            0, cls2 =            9, cls3 =          647, cls4 =            0, cls5 =            4 },
-        new iau_row_t { nals0 = -1, nals1 =  1, nals2 =  0, nals3 =  1, nals4 =  1 , cls0 =         1314, cls1 =            0, cls2 =            0, cls3 =         -700, cls4 =            0, cls5 =            0 },
-        new iau_row_t { nals0 =  0, nals1 = -2, nals2 =  2, nals3 = -2, nals4 =  1 , cls0 =        -1283, cls1 =            0, cls2 =            0, cls3 =          672, cls4 =            0, cls5 =            0 },
-        new iau_row_t { nals0 =  1, nals1 =  0, nals2 =  2, nals3 =  2, nals4 =  1 , cls0 =        -1331, cls1 =            0, cls2 =            8, cls3 =          663, cls4 =            0, cls5 =            4 },
-        new iau_row_t { nals0 = -2, nals1 =  0, nals2 =  2, nals3 =  2, nals4 =  2 , cls0 =         1383, cls1 =            0, cls2 =           -2, cls3 =         -594, cls4 =            0, cls5 =           -2 },
-        new iau_row_t { nals0 = -1, nals1 =  0, nals2 =  0, nals3 =  0, nals4 =  2 , cls0 =         1405, cls1 =            0, cls2 =            4, cls3 =         -610, cls4 =            0, cls5 =            2 },
-        new iau_row_t { nals0 =  1, nals1 =  1, nals2 =  2, nals3 = -2, nals4 =  2 , cls0 =         1290, cls1 =            0, cls2 =            0, cls3 =         -556, cls4 =            0, cls5 =            0 }
+        new iau_row_t { nals0 =  0, nals1 =  1, nals2 =  0, nals3 =  0, nals4 =  0 , cls0 =      1475877, cls1 =        -3633, cls2 =        11817, cls3 =        73871, cls4 =         -184, cls5 =        -1924 }
 
         };
 
@@ -4993,13 +4921,12 @@ namespace CosineKitty
         {
             // Adapted from the NOVAS C 3.1 function of the same name.
 
-            double t, el, elp, f, d, om, arg, dp, de, sarg, carg;
+            double t, elp, f, d, om, arg, dp, de, sarg, carg;
             int i;
 
             if (double.IsNaN(time.psi))
             {
                 t = time.tt / 36525.0;
-                el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD;
                 elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD;
                 f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD;
                 d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD;
@@ -5008,7 +4935,7 @@ namespace CosineKitty
                 de = 0;
                 for (i=iau_row.Length-1; i >= 0; --i)
                 {
-                    arg = (iau_row[i].nals0*el + iau_row[i].nals1*elp + iau_row[i].nals2*f + iau_row[i].nals3*d + iau_row[i].nals4*om) % PI2;
+                    arg = (iau_row[i].nals1*elp + iau_row[i].nals2*f + iau_row[i].nals3*d + iau_row[i].nals4*om) % PI2;
                     sarg = Math.Sin(arg);
                     carg = Math.Cos(arg);
                     dp += (iau_row[i].cls0 + iau_row[i].cls1*t) * sarg + iau_row[i].cls2*carg;
@@ -5136,8 +5063,11 @@ namespace CosineKitty
                 // Start with initial latitude estimate, based on a spherical Earth.
                 double lat = Math.Atan2(z, p);
                 double c, s, denom;
+                int count = 0;
                 for(;;)
                 {
+                    if (++count > 10)
+                        throw new InternalError("inverse_terra solver failed to converge.");
                     // Calculate the error function W(lat).
                     // We try to find the root of W, meaning where the error is 0.
                     c = Math.Cos(lat);
@@ -5148,7 +5078,7 @@ namespace CosineKitty
                     double radicand = c2 + F*s2;
                     denom = Math.Sqrt(radicand);
                     double W = (factor*s*c)/denom - z*c + p*s;
-                    if (Math.Abs(W) < 1.0e-12)
+                    if (Math.Abs(W) < 1.0e-8)
                         break;  // The error is now negligible.
                     // Error is still too large. Find the next estimate.
                     // Calculate D = the derivative of W with respect to lat.

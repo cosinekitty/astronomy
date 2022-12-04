@@ -770,7 +770,7 @@ interface NutationAngles {
 }
 
 function iau2000b(time: AstroTime): NutationAngles {
-    var i: number, t: number, el: number, elp: number, f: number, d: number, om: number, arg: number, dp: number, de: number, sarg: number, carg: number;
+    var i: number, t: number, elp: number, f: number, d: number, om: number, arg: number, dp: number, de: number, sarg: number, carg: number;
     var nals: number[], cls: number[];
 
     function mod(x: number): number {
@@ -778,7 +778,6 @@ function iau2000b(time: AstroTime): NutationAngles {
     }
 
     t = time.tt / 36525;
-    el  = mod(485868.249036 + t*1717915923.2178);
     elp = mod(1287104.79305 + t*129596581.0481);
     f   = mod(335779.526232 + t*1739527262.8478);
     d   = mod(1072260.70369 + t*1602961601.2090);
@@ -788,7 +787,7 @@ function iau2000b(time: AstroTime): NutationAngles {
     for (i=iaudata.length - 1; i >= 0; --i) {
         nals = iaudata[i][0];
         cls = iaudata[i][1];
-        arg = (nals[0]*el + nals[1]*elp + nals[2]*f + nals[3]*d + nals[4]*om) % PI2;
+        arg = (nals[1]*elp + nals[2]*f + nals[3]*d + nals[4]*om) % PI2;
         sarg = Math.sin(arg);
         carg = Math.cos(arg);
         dp += (cls[0] + cls[1]*t) * sarg + cls[2]*carg;
@@ -1364,7 +1363,10 @@ function inverse_terra(ovec: ArrayVector, st: number): Observer {
         // Start with initial latitude estimate, based on a spherical Earth.
         let lat = Math.atan2(z, p);
         let cos:number, sin:number, denom:number;
+        let count = 0;
         for(;;) {
+            if (++count > 10)
+                throw `inverse_terra failed to converge.`;
             // Calculate the error function W(lat).
             // We try to find the root of W, meaning where the error is 0.
             cos = Math.cos(lat);
@@ -1375,7 +1377,7 @@ function inverse_terra(ovec: ArrayVector, st: number): Observer {
             const radicand = cos2 + EARTH_FLATTENING_SQUARED*sin2;
             denom = Math.sqrt(radicand);
             const W = (factor*sin*cos)/denom - z*cos + p*sin;
-            if (Math.abs(W) < 1.0e-12)
+            if (Math.abs(W) < 1.0e-8)
                 break;  // The error is now negligible
             // Error is still too large. Find the next estimate.
             // Calculate D = the derivative of W with respect to lat.

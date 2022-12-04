@@ -443,9 +443,9 @@ namespace csharp_test
         {
             // Make sure we can handle dates outside the range supported by System.DateTime.
             // https://github.com/cosinekitty/astronomy/issues/250
-            if (0 != CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z")) return 1;
-            if (0 != CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.325Z")) return 1;
-            if (0 != CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.041Z")) return 1;
+            if (0 != CheckDecemberSolstice( 2022, "2022-12-21T21:47:54.456Z")) return 1;
+            if (0 != CheckDecemberSolstice(-2300, "-002300-12-19T16:22:27.929Z")) return 1;
+            if (0 != CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.276Z")) return 1;
             Console.WriteLine("C# DatesIssue250: PASS");
             return 0;
         }
@@ -900,7 +900,7 @@ namespace csharp_test
                     if (error_minutes > max_minutes)
                         max_minutes = error_minutes;
 
-                    if (error_minutes > 1.16)
+                    if (error_minutes > 1.18)
                     {
                         Console.WriteLine("C# RiseSetTest({0} line {1}): excessive prediction time error = {2} minutes.", filename, lnum, error_minutes);
                         return 1;
@@ -1913,7 +1913,7 @@ namespace csharp_test
             Debug("C# Test_EQD_HOR {0}: trusted alt={1}, az={2}; test alt={3}, az={4}; diff_alt={5}, diff_az={6}",
                 body, hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-            if (diff_alt > 3.2e-14 || diff_az > 1.2e-13)
+            if (diff_alt > 3.6e-14 || diff_az > 1.2e-13)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
                 return 1;
@@ -1934,7 +1934,7 @@ namespace csharp_test
             AstroVector check_eqd = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqd, vec_eqd);
             Debug("C# Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
-            if (diff > 2.1e-15)
+            if (diff > 2.3e-15)
             {
                 Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.");
                 return 1;
@@ -3567,7 +3567,7 @@ namespace csharp_test
         static int TopoStateTest()
         {
             if (0 != VerifyStateBody(new TopoStateFunc(Body.Earth),   "../../topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04)) return 1;
-            if (0 != VerifyStateBody(new TopoStateFunc(Body_Geo_EMB), "../../topostate/EMB_N30_W80_1000m.txt",    7.195e-04, 2.497e-04)) return 1;
+            if (0 != VerifyStateBody(new TopoStateFunc(Body_Geo_EMB), "../../topostate/EMB_N30_W80_1000m.txt",    7.197e-04, 2.497e-04)) return 1;
             Console.WriteLine("C# TopoStateTest: PASS");
             return 0;
         }
@@ -3575,7 +3575,7 @@ namespace csharp_test
         static int AberrationTest()
         {
             const string filename = "../../equatorial/Mars_j2000_ofdate_aberration.txt";
-            const double THRESHOLD_SECONDS = 0.4;
+            const double THRESHOLD_SECONDS = 0.453;
 
             using (StreamReader infile = File.OpenText(filename))
             {
@@ -3836,7 +3836,7 @@ namespace csharp_test
             if (0 != AxisTestBody(Body.Sun,      "../../axis/Sun.txt",       0.0))        return 1;
             if (0 != AxisTestBody(Body.Mercury,  "../../axis/Mercury.txt",   0.074340))   return 1;
             if (0 != AxisTestBody(Body.Venus,    "../../axis/Venus.txt",     0.0))        return 1;
-            if (0 != AxisTestBody(Body.Earth,    "../../axis/Earth.txt",     0.000591))   return 1;
+            if (0 != AxisTestBody(Body.Earth,    "../../axis/Earth.txt",     0.002032))   return 1;
             if (0 != AxisTestBody(Body.Moon,     "../../axis/Moon.txt",      0.264845))   return 1;
             if (0 != AxisTestBody(Body.Mars,     "../../axis/Mars.txt",      0.075323))   return 1;
             if (0 != AxisTestBody(Body.Jupiter,  "../../axis/Jupiter.txt",   0.000324))   return 1;
@@ -3910,7 +3910,7 @@ namespace csharp_test
             Debug($"C# AxisTestBody({body}): {count} test cases, max arcmin error = {max_arcmin}.");
             if (max_arcmin > arcmin_tolerance)
             {
-                Console.WriteLine($"C AxisTestBody({body}): EXCESSIVE ERROR = {max_arcmin} arcmin.");
+                Console.WriteLine($"C# AxisTestBody({body}): EXCESSIVE ERROR = {max_arcmin} arcmin.");
                 return 1;
             }
             return 0;
@@ -4061,11 +4061,11 @@ namespace csharp_test
 
         static int SiderealTimeTest()
         {
-            const double correct = 9.398368460418821;
+            const double correct = 9.3983699280076483;
             var time = new AstroTime(2022, 3, 15, 21, 50, 0);
             double gast = Astronomy.SiderealTime(time);
             double diff = abs(gast - correct);
-            Console.WriteLine($"C# SiderealTimeTest: gast={gast:F10}, correct={correct:F10}, diff={diff:E3}.");
+            Console.WriteLine($"C# SiderealTimeTest: gast={gast:F16}, correct={correct:F16}, diff={diff:E3}.");
             if (diff > 1.0e-15)
             {
                 Console.WriteLine("C# SiderealTimeTest: EXCESSIVE ERROR");

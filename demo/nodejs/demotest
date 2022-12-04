@@ -21,7 +21,7 @@ TestDemo camera 29 -81 2021-03-22T02:45:00Z
 TestDemo moonphase 2019-06-15T09:15:32.987Z
 TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z
 TestDemo riseset +45.6 -90.7 2018-11-30T17:55:07.234Z
-TestDemo seasons 2019 > test/seasons.txt
+TestDemo seasons 2019
 TestDemo culminate +30 -90 2015-02-28T00:00Z
 TestDemo horizon +25.5 -85.3 2016-12-25T12:30:45Z
 TestDemo lunar_eclipse 1988-01-01

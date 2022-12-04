@@ -1030,7 +1030,6 @@ class Spherical:
 class _iau2000b:
     def __init__(self, time):
         t = time.tt / 36525.0
-        el  = math.fmod((485868.249036 + t*1717915923.2178), _ASEC360) * _ASEC2RAD
         elp = math.fmod((1287104.79305 + t*129596581.0481),  _ASEC360) * _ASEC2RAD
         f   = math.fmod((335779.526232 + t*1739527262.8478), _ASEC360) * _ASEC2RAD
         d   = math.fmod((1072260.70369 + t*1602961601.2090), _ASEC360) * _ASEC2RAD
@@ -1334,7 +1333,11 @@ def _inverse_terra(ovec, st):
         # Numerically solve for exact latitude, using Newton's Method.
         # Start with initial latitude estimate, based on a spherical Earth.
         lat = math.atan2(z, p)
+        count = 0
         while True:
+            count += 1
+            if count > 10:
+                raise NoConvergeError()
             # Calculate the error function W(lat).
             # We try to find the root of W, meaning where the error is 0.
             cos = math.cos(lat)
@@ -1345,7 +1348,7 @@ def _inverse_terra(ovec, st):
             radicand = cos2 + _EARTH_FLATTENING_SQUARED*sin2
             denom = math.sqrt(radicand)
             W = (factor*sin*cos)/denom - z*cos + p*sin
-            if abs(W) < 1.0e-12:
+            if abs(W) < 1.0e-8:
                 # The error is now negligible
                 break
             # Error is still too large. Find the next estimate.

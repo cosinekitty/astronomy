@@ -294,7 +294,7 @@ class Tests {
         // are indirectly tested through their use in thousands of other
         // verified calculations. This is just to help isolate a problem
         // in sidereal time in case it is broken.
-        val correct = 9.398368460418821
+        val correct = 9.3983699280076483
         val time = Time(2022, 3, 15, 21, 50, 0.0)
         val gast = siderealTime(time)
         assertTrue(gast.isFinite())
@@ -309,7 +309,7 @@ class Tests {
         axisTestBody(Body.Sun,      "Sun.txt",       0.0)
         axisTestBody(Body.Mercury,  "Mercury.txt",   0.074340)
         axisTestBody(Body.Venus,    "Venus.txt",     0.0)
-        axisTestBody(Body.Earth,    "Earth.txt",     0.000591)
+        axisTestBody(Body.Earth,    "Earth.txt",     0.002032)
         axisTestBody(Body.Moon,     "Moon.txt",      0.264845)
         axisTestBody(Body.Mars,     "Mars.txt",      0.075323)
         axisTestBody(Body.Jupiter,  "Jupiter.txt",   0.000324)
@@ -510,13 +510,13 @@ class Tests {
         val observer = Observer(29.0, -81.0, 10.0)
 
         val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
-        checkScalar(ofdate.ra,   4.893134408107621,   8.9e-16, "Venus EQD RA")
-        checkScalar(ofdate.dec, 24.6998405830952,     1.0e-16, "Venus EQD DEC")
-        checkScalar(ofdate.dist, 0.29355004763155124, 1.0e-16, "Venus EQD distance")
+        checkScalar(ofdate.ra,   4.89313435330548,    8.9e-16, "Venus EQD RA")
+        checkScalar(ofdate.dec, 24.6998437389883,     1.0e-16, "Venus EQD DEC")
+        checkScalar(ofdate.dist, 0.29355004763100184, 1.0e-16, "Venus EQD distance")
 
         val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
-        checkScalar(hor.azimuth,  87.5963687042015,   1.0e-16, "Venus azimuth")
-        checkScalar(hor.altitude, 54.929061963517746, 7.2e-15, "Venus altitude")
+        checkScalar(hor.azimuth,  87.59636363753623,   1.0e-16, "Venus azimuth")
+        checkScalar(hor.altitude, 54.92906326370683,   7.2e-15, "Venus altitude")
     }
 
     private fun verifyHelio(
@@ -646,9 +646,9 @@ class Tests {
         compareMatrices(
             rotationEqjEqd(time),
             RotationMatrix(
-                0.9999856608656787, 0.004911515527973243, 0.002134262929010771,
-                -0.004911577234051216, 0.9999879378516134, 2.367175135753887e-05,
-                -0.002134120921040258, -3.4154009138639524e-05, 0.9999977221781049
+                0.99998566000575, 0.004911662853913063, 0.002134326796501882,
+                -0.004911724560994305, 0.9999879371280032, 2.3671042158291904e-05,
+                -0.0021341847862124536, -3.415392806310602e-05, 0.9999977220418094
             ),
             "EQJ EQD"
         )
@@ -656,9 +656,9 @@ class Tests {
         compareMatrices(
             rotationEqdEqj(time),
             RotationMatrix(
-                0.9999856608656787, -0.004911577234051216, -0.002134120921040258,
-                0.004911515527973243, 0.9999879378516134, -3.4154009138639524e-05,
-                0.002134262929010771, 2.367175135753887e-05, 0.9999977221781049,
+                0.99998566000575, -0.004911724560994305, -0.0021341847862124536,
+                0.004911662853913063, 0.9999879371280032, -3.415392806310602e-05,
+                0.002134326796501882, 2.3671042158291904e-05, 0.9999977220418094
             ),
             "EQD EQJ"
         )
@@ -666,9 +666,9 @@ class Tests {
         compareMatrices(
             rotationEqdHor(time, observer),
             RotationMatrix(
-                0.3272894142412824, -0.7559937548038297, 0.5668818942453582,
-                -0.3779968774019148, -0.6545788284825649, -0.6547097967625005,
-                0.8660254037844387, 0.0, -0.49999999999999994,
+                0.32728946993120217, -0.7559936583653404, 0.5668819907031286,
+                -0.3779968291826701, -0.6545789398624045, -0.6547097132443188,
+                0.8660254037844387, 0.0, -0.49999999999999994
             ),
             "EQD HOR"
         )
@@ -676,9 +676,9 @@ class Tests {
         compareMatrices(
             rotationHorEqd(time, observer),
             RotationMatrix(
-                0.3272894142412824, -0.3779968774019148, 0.8660254037844387,
-                -0.7559937548038297, -0.6545788284825649, 0.0,
-                0.5668818942453582, -0.6547097967625005, -0.49999999999999994,
+                0.32728946993120217, -0.3779968291826701, 0.8660254037844387,
+                -0.7559936583653404, -0.6545789398624045, 0.0,
+                0.5668819907031286, -0.6547097132443188, -0.49999999999999994
             ),
             "HOR EQD"
         )
@@ -686,9 +686,9 @@ class Tests {
         compareMatrices(
             rotationHorEqj(time, observer),
             RotationMatrix(
-                0.3272765095764035, -0.37957932484539564, 0.86533786605545,
-                -0.7591978885882081, -0.6508578111404256, 0.0016357385795925856,
-                0.5625910168521117, -0.657498019637632, -0.5011862946349386,
+                0.3272765648430403, -0.3795793254594772, 0.8653378448838741,
+                -0.7591978884845023, -0.6508578111406921, 0.0016357866061800894,
+                0.5625909848417523, -0.6574980192828539, -0.5011863310325927
             ),
             "HOR EQJ"
         )
@@ -696,9 +696,9 @@ class Tests {
         compareMatrices(
             rotationEqjHor(time, observer),
             RotationMatrix(
-                0.3272765095764035, -0.7591978885882081, 0.5625910168521117,
-                -0.37957932484539564, -0.6508578111404256, -0.657498019637632,
-                0.86533786605545, 0.0016357385795925856, -0.5011862946349386,
+                0.3272765648430403, -0.7591978884845023, 0.5625909848417523,
+                -0.3795793254594772, -0.6508578111406921, -0.6574980192828539,
+                0.8653378448838741, 0.0016357866061800894, -0.5011863310325927
             ),
             "EQJ HOR"
         )
@@ -706,9 +706,9 @@ class Tests {
         compareMatrices(
             rotationEqdEcl(time),
             RotationMatrix(
-                0.9999856608656787, -0.00535518855821894, -4.305530497609837e-06,
-                0.004911515527973243, 0.917457490583079, -0.39780350675706494,
-                0.002134262929010771, 0.39779778145246825, 0.9174706371286464,
+                0.99998566000575, -0.005355349132153044, -4.3055223877728165e-06,
+                0.004911662853913063, 0.9174574899514295, -0.3978035063948441,
+                0.002134326796501882, 0.39779778074757544, 0.9174706372857009
             ),
             "EQD ECL"
         )
@@ -716,9 +716,9 @@ class Tests {
         compareMatrices(
             rotationEclEqd(time),
             RotationMatrix(
-                0.9999856608656787, 0.004911515527973243, 0.002134262929010771,
-                -0.00535518855821894, 0.917457490583079, 0.39779778145246825,
-                -4.305530497609837e-06, -0.39780350675706494, 0.9174706371286464,
+                0.99998566000575, 0.004911662853913063, 0.002134326796501882,
+                -0.005355349132153044, 0.9174574899514295, 0.39779778074757544,
+                -4.3055223877728165e-06, -0.3978035063948441, 0.9174706372857009
             ),
             "ECL EQD"
         )
@@ -726,9 +726,9 @@ class Tests {
         compareMatrices(
             rotationEclHor(time, observer),
             RotationMatrix(
-                0.3272765095764035, -0.7591978885882081, 0.5625910168521117,
-                -0.004045778808843881, -0.5964997602626152, -0.8026030573580397,
-                0.9449199531988498, 0.26039700837346297, -0.1982919062312794,
+                0.3272765648430403, -0.7591978884845023, 0.5625909848417523,
+                -0.004045787793818034, -0.5964997411589893, -0.8026030715106858,
+                0.9449199340185743, 0.26039705243710537, -0.19829193976659965
             ),
             "ECL HOR"
         )
@@ -736,9 +736,9 @@ class Tests {
         compareMatrices(
             rotationHorEcl(time, observer),
             RotationMatrix(
-                0.3272765095764035, -0.004045778808843881, 0.9449199531988498,
-                -0.7591978885882081, -0.5964997602626152, 0.26039700837346297,
-                0.5625910168521117, -0.8026030573580397, -0.1982919062312794,
+                0.3272765648430403, -0.004045787793818034, 0.9449199340185743,
+                -0.7591978884845023, -0.5964997411589893, 0.26039705243710537,
+                0.5625909848417523, -0.8026030715106858, -0.19829193976659965
             ),
             "HOR ECL"
         )
@@ -902,9 +902,9 @@ class Tests {
     @Test
     fun `Extreme year values`() {
         // https://github.com/cosinekitty/astronomy/issues/250
-        assertEquals("2022-12-21T21:47:58.189Z", decemberSolstice(2022))
-        assertEquals("-002300-12-19T16:22:26.325Z", decemberSolstice(-2300))
-        assertEquals("+012345-12-11T13:30:10.040Z", decemberSolstice(12345))
+        assertEquals("2022-12-21T21:47:54.455Z", decemberSolstice(2022))
+        assertEquals("-002300-12-19T16:22:27.929Z", decemberSolstice(-2300))
+        assertEquals("+012345-12-11T13:30:10.276Z", decemberSolstice(12345))
     }
 
     //----------------------------------------------------------------------------------------
@@ -1135,7 +1135,7 @@ class Tests {
             // Expect the current search result to match the earlier of the found dates.
             assertTrue(aDir == direction, "$filename line $lnum: expected direction $direction, bound found $aDir")
             val errorMinutes = (24.0 * 60.0) * abs(aEvt.tt - correctDate.tt)
-            assertTrue(errorMinutes < 1.16, "$filename line $lnum: excessive prediction time error = $errorMinutes minutes.")
+            assertTrue(errorMinutes < 1.18, "$filename line $lnum: excessive prediction time error = $errorMinutes minutes.")
         }
     }
 
@@ -1301,8 +1301,8 @@ class Tests {
     //----------------------------------------------------------------------------------------
 
     private fun verifyGeoid(observer: Observer, time: Time, equator: EquatorEpoch) {
-        val degreeTolerance = 1.0e-12
-        val meterTolerance = 1.0e-8
+        val degreeTolerance = 1.0e-10
+        val meterTolerance = 1.0e-5
         val vector = observer.toVector(time, equator)
         val check = vector.toObserver(equator)
         val latDiff = abs(check.latitude - observer.latitude)
@@ -1884,7 +1884,7 @@ class Tests {
             time -> -observer.toStateVector(time, EquatorEpoch.J2000)
         }
 
-        verifyStateBody("topostate/EMB_N30_W80_1000m.txt", 7.195e-04, 2.497e-04) {
+        verifyStateBody("topostate/EMB_N30_W80_1000m.txt", 7.197e-04, 2.497e-04) {
             time -> geoEmbState(time) - observer.toStateVector(time, EquatorEpoch.J2000)
         }
     }

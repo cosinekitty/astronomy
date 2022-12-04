@@ -80,6 +80,7 @@ int Render(Image &image, astro_time_t time);
 int main(int argc, const char *argv[])
 {
     const char *outFileName;
+    const char *timeString;
     astro_time_t time;
 
     // Parse the command line parameters.
@@ -92,7 +93,10 @@ int main(int argc, const char *argv[])
 
     case 3:
         outFileName = argv[1];
-        if (0 != ParseTime(argv[2], &time))
+        timeString = argv[2];
+        if (!strcmp(timeString, "default"))
+            timeString = "2022-04-09T16:05:35Z";    // hack to get around vscode unhelpful modifying of my command-line arguments when debugging!
+        if (0 != ParseTime(timeString, &time))
             return 1;
         break;
 
@@ -167,6 +171,7 @@ void PrintZenithPoint(const char *name, astro_vector_t geovec)
     // Convert the geocentric vector into an observer location.
     astro_observer_t observer = Astronomy_VectorObserver(&geovec, EQUATOR_OF_DATE);
     printf("%-4s is at zenith for: lat = %7.3lf, lon = %8.3lf\n", name, observer.latitude, observer.longitude);
+    fflush(stdout);
 }
 
 

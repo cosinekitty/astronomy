@@ -3781,13 +3781,12 @@ $ASTRO_IAU_DATA()
         {
             // Adapted from the NOVAS C 3.1 function of the same name.
 
-            double t, el, elp, f, d, om, arg, dp, de, sarg, carg;
+            double t, elp, f, d, om, arg, dp, de, sarg, carg;
             int i;
 
             if (double.IsNaN(time.psi))
             {
                 t = time.tt / 36525.0;
-                el  = ((485868.249036 + t * 1717915923.2178) % ASEC360) * ASEC2RAD;
                 elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD;
                 f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD;
                 d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD;
@@ -3796,7 +3795,7 @@ $ASTRO_IAU_DATA()
                 de = 0;
                 for (i=iau_row.Length-1; i >= 0; --i)
                 {
-                    arg = (iau_row[i].nals0*el + iau_row[i].nals1*elp + iau_row[i].nals2*f + iau_row[i].nals3*d + iau_row[i].nals4*om) % PI2;
+                    arg = (iau_row[i].nals1*elp + iau_row[i].nals2*f + iau_row[i].nals3*d + iau_row[i].nals4*om) % PI2;
                     sarg = Math.Sin(arg);
                     carg = Math.Cos(arg);
                     dp += (iau_row[i].cls0 + iau_row[i].cls1*t) * sarg + iau_row[i].cls2*carg;
@@ -3924,8 +3923,11 @@ $ASTRO_IAU_DATA()
                 // Start with initial latitude estimate, based on a spherical Earth.
                 double lat = Math.Atan2(z, p);
                 double c, s, denom;
+                int count = 0;
                 for(;;)
                 {
+                    if (++count > 10)
+                        throw new InternalError("inverse_terra solver failed to converge.");
                     // Calculate the error function W(lat).
                     // We try to find the root of W, meaning where the error is 0.
                     c = Math.Cos(lat);
@@ -3936,7 +3938,7 @@ $ASTRO_IAU_DATA()
                     double radicand = c2 + F*s2;
                     denom = Math.Sqrt(radicand);
                     double W = (factor*s*c)/denom - z*c + p*s;
-                    if (Math.Abs(W) < 1.0e-12)
+                    if (Math.Abs(W) < 1.0e-8)
                         break;  // The error is now negligible.
                     // Error is still too large. Find the next estimate.
                     // Calculate D = the derivative of W with respect to lat.

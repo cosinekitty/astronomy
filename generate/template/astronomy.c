@@ -1305,13 +1305,12 @@ static void iau2000b(astro_time_t *time)
 $ASTRO_IAU_DATA()
     };
 
-    double t, el, elp, f, d, om, arg, dp, de, sarg, carg;
+    double t, elp, f, d, om, arg, dp, de, sarg, carg;
     int i;
 
     if (isnan(time->psi))
     {
         t = time->tt / 36525;
-        el  = fmod(485868.249036 + t * 1717915923.2178, ASEC360) * ASEC2RAD;
         elp = fmod(1287104.79305 + t * 129596581.0481,  ASEC360) * ASEC2RAD;
         f   = fmod(335779.526232 + t * 1739527262.8478, ASEC360) * ASEC2RAD;
         d   = fmod(1072260.70369 + t * 1602961601.2090, ASEC360) * ASEC2RAD;
@@ -1320,7 +1319,7 @@ $ASTRO_IAU_DATA()
         de = 0;
         for (i=sizeof(row)/sizeof(row[0]) - 1; i >= 0; --i)
         {
-            arg = fmod((row[i].nals[0]*el + row[i].nals[1]*elp + row[i].nals[2]*f + row[i].nals[3]*d + row[i].nals[4]*om), PI2);
+            arg = fmod((row[i].nals[1]*elp + row[i].nals[2]*f + row[i].nals[3]*d + row[i].nals[4]*om), PI2);
             sarg = sin(arg);
             carg = cos(arg);
             dp += (row[i].cls[0] + row[i].cls[1]*t) * sarg + row[i].cls[2]*carg;
@@ -1712,6 +1711,7 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
     double lon_deg, lat_deg, lat, radicand, factor, denom, adjust;
     double height_km, stlocl;
     astro_observer_t observer;
+    int count;
 
     /* Convert from AU to kilometers. */
     x = ovec[0] * KM_PER_AU;
@@ -1741,8 +1741,14 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
         F = EARTH_FLATTENING * EARTH_FLATTENING;
         /* Start with initial latitude estimate, based on a spherical Earth. */
         lat = atan2(z, p);
-        for(;;)
+        for (count = 0; ; ++count)
         {
+            if (count > 10)
+            {
+                fprintf(stderr, "\nFATAL(inverse_terra): did not converge!\n");
+                exit(1);
+            }
+
             /* Calculate the error function W(lat). */
             /* We try to find the root of W, meaning where the error is 0. */
             c = cos(lat);
@@ -1753,11 +1759,12 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
             radicand = c2 + F*s2;
             denom = sqrt(radicand);
             W = (factor*s*c)/denom - z*c + p*s;
-            if (fabs(W) < 1.0e-12)
+            if (fabs(W) < 1.0e-8)
                 break;  /* The error is now negligible. */
             /* Error is still too large. Find the next estimate. */
             /* Calculate D = the derivative of W with respect to lat. */
             D = factor*((c2 - s2)/denom - s2*c2*(F-1)/(factor*radicand)) + z*s + p*c;
+            adjust = W/D;
             lat -= W/D;
         }
         /* We now have a solution for the latitude in radians. */

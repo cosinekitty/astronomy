@@ -1441,7 +1441,7 @@ function RiseSet() {
             max_minutes = error_minutes;
             Debug(`Line ${evt.lnum} : error = ${error_minutes.toFixed(4)}`);
         }
-        if (error_minutes > 1.16) {
+        if (error_minutes > 1.18) {
             console.log(`Expected ${evt.date.toISOString()}`);
             console.log(`Found    ${a_date.toString()}`);
             Fail("Excessive prediction time error.");
@@ -1771,7 +1771,7 @@ function Rotation() {
         const check_eqd = Astronomy.RotateVector(irot, vec_hor);
         diff = VectorDiff(check_eqd, vec_eqd);
         Debug(`JS Test_EQD_HOR ${body}: OFDATE inverse rotation diff = ${diff}`);
-        if (diff > 2.1e-15)
+        if (diff > 2.3e-15)
             throw 'Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.';
 
         /* Exercise HOR to EQJ translation. */
@@ -2534,7 +2534,7 @@ function Issue103() {
 
 
 function AberrationTest() {
-    const THRESHOLD_SECONDS = 0.4;
+    const THRESHOLD_SECONDS = 0.453;
     const filename = 'equatorial/Mars_j2000_ofdate_aberration.txt';
     const lines = ReadLines(filename);
     let lnum = 0;
@@ -2759,7 +2759,7 @@ class TopoStateFunc {
 
 function TopoStateTest() {
     if (VerifyStateBody(new TopoStateFunc(Astronomy.Body.Earth),  "topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04)) return 1;
-    if (VerifyStateBody(new TopoStateFunc(Body_Geo_EMB),          "topostate/EMB_N30_W80_1000m.txt",    7.195e-04, 2.497e-04)) return 1;
+    if (VerifyStateBody(new TopoStateFunc(Body_Geo_EMB),          "topostate/EMB_N30_W80_1000m.txt",    7.197e-04, 2.497e-04)) return 1;
     console.log("JS TopoStateTest: PASS");
     return 0;
 }
@@ -2932,19 +2932,20 @@ function LibrationTest() {
 
 
 function AxisTest() {
-    if (0 !== AxisTestBody(Astronomy.Body.Sun,      "axis/Sun.txt",       0.0))        return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Mercury,  "axis/Mercury.txt",   0.074340))   return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Venus,    "axis/Venus.txt",     0.0))        return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Earth,    "axis/Earth.txt",     0.000591))   return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Moon,     "axis/Moon.txt",      0.264845))   return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Mars,     "axis/Mars.txt",      0.075323))   return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Jupiter,  "axis/Jupiter.txt",   0.000324))   return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Saturn,   "axis/Saturn.txt",    0.000304))   return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Uranus,   "axis/Uranus.txt",    0.0))        return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Neptune,  "axis/Neptune.txt",   0.000464))   return 1;
-    if (0 !== AxisTestBody(Astronomy.Body.Pluto,    "axis/Pluto.txt",     0.0))        return 1;
-    console.log("JS AxisTest: PASS");
-    return 0;
+    return (
+        AxisTestBody(Astronomy.Body.Sun,      "axis/Sun.txt",       0.0)        ||
+        AxisTestBody(Astronomy.Body.Mercury,  "axis/Mercury.txt",   0.074340)   ||
+        AxisTestBody(Astronomy.Body.Venus,    "axis/Venus.txt",     0.0)        ||
+        AxisTestBody(Astronomy.Body.Earth,    "axis/Earth.txt",     0.002033)   ||
+        AxisTestBody(Astronomy.Body.Moon,     "axis/Moon.txt",      0.264845)   ||
+        AxisTestBody(Astronomy.Body.Mars,     "axis/Mars.txt",      0.075323)   ||
+        AxisTestBody(Astronomy.Body.Jupiter,  "axis/Jupiter.txt",   0.000324)   ||
+        AxisTestBody(Astronomy.Body.Saturn,   "axis/Saturn.txt",    0.000304)   ||
+        AxisTestBody(Astronomy.Body.Uranus,   "axis/Uranus.txt",    0.0)        ||
+        AxisTestBody(Astronomy.Body.Neptune,  "axis/Neptune.txt",   0.000464)   ||
+        AxisTestBody(Astronomy.Body.Pluto,    "axis/Pluto.txt",     0.0)        ||
+        Pass("AxisTest")
+    );
 }
 
 
@@ -3122,7 +3123,7 @@ function LagrangeTest() {
 function SiderealTimeTest() {
     const date = new Date('2022-03-15T21:50:00Z');
     const gast = Astronomy.SiderealTime(date);
-    const correct = 9.398368460418821;
+    const correct = 9.3983699280076483;
     const diff = abs(gast - correct);
     console.log(`JS SiderealTimeTest: gast=${gast.toFixed(15)}, correct=${correct.toFixed(15)}, diff=${diff.toExponential(3)}`);
     if (diff > 1.0e-15) {
@@ -3318,9 +3319,9 @@ function CheckDecemberSolstice(year, expected) {
 
 function DatesIssue250() {
     return (
-        CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z") ||
-        CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.326Z") ||
-        CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.040Z") ||
+        CheckDecemberSolstice( 2022, "2022-12-21T21:47:54.455Z") ||
+        CheckDecemberSolstice(-2300, "-002300-12-19T16:22:27.930Z") ||
+        CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.275Z") ||
         Pass('DatesIssue250')
     );
 }

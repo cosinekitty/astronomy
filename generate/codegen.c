@@ -36,7 +36,7 @@
 #define MAX_DATA_PER_LINE    20
 #define IAU_DATA_PER_ROW     11
 #define IAU_DATA_NUM_ROWS    77
-#define IAU_DATA_KEEP_ROWS   77
+#define IAU_DATA_KEEP_ROWS    5
 #define ADDSOL_DATA_PER_ROW   8
 
 typedef struct

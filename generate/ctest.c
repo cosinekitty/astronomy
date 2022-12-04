@@ -1732,7 +1732,7 @@ static int RiseSet(void)
         if (error_minutes > max_minutes)
             max_minutes = error_minutes;
 
-        if (error_minutes > 1.16)
+        if (error_minutes > 1.18)
             FAIL("C RiseSet(%s line %d): excessive prediction time error = %lg minutes.\n", filename, lnum, error_minutes);
 
         if (a_dir != direction)
@@ -3425,7 +3425,7 @@ static int Test_EQD_HOR(astro_body_t body)
     DEBUG("C Test_EQD_HOR %s: trusted alt=%0.3lf, az=%0.3lf; test alt=%0.3lf, az=%0.3lf; diff_alt=%lg, diff_az=%lg\n",
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
-    if (diff_alt > 3.2e-14 || diff_az > 1.2e-13)
+    if (diff_alt > 3.6e-14 || diff_az > 1.2e-13)
         FAIL("C Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
 
     /* Confirm that we can convert back to horizontal vector. */
@@ -3441,7 +3441,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(check_eqd, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
     DEBUG("C Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 2.1e-15)
+    if (diff > 2.3e-15)
         FAIL("C Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
 
     /* Exercise HOR to EQJ translation. */
@@ -5211,7 +5211,7 @@ static int AberrationTest(void)
     astro_vector_t eqj_vec, eqd_vec;
     double factor, diff_seconds, max_diff_seconds = 0.0;
     astro_state_vector_t eqj_earth;
-    const double THRESHOLD_SECONDS = 0.4;
+    const double THRESHOLD_SECONDS = 0.453;
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
@@ -6382,7 +6382,7 @@ static int TopoStateTest(void)
 
     context.func = TopoStateFunc;
     CHECK(VerifyStateBody(&context, BODY_EARTH,   "topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04));
-    CHECK(VerifyStateBody(&context, BODY_GEO_EMB, "topostate/EMB_N30_W80_1000m.txt",    7.195e-04, 2.497e-04));
+    CHECK(VerifyStateBody(&context, BODY_GEO_EMB, "topostate/EMB_N30_W80_1000m.txt",    7.197e-04, 2.497e-04));
 
     printf("C TopoStateTest: PASS\n");
 fail:
@@ -6761,7 +6761,7 @@ static int AxisTest(void)
     CHECK(AxisTestBody(BODY_SUN,      "axis/Sun.txt",       0.0));
     CHECK(AxisTestBody(BODY_MERCURY,  "axis/Mercury.txt",   0.074340));
     CHECK(AxisTestBody(BODY_VENUS,    "axis/Venus.txt",     0.0));
-    CHECK(AxisTestBody(BODY_EARTH,    "axis/Earth.txt",     0.000591));
+    CHECK(AxisTestBody(BODY_EARTH,    "axis/Earth.txt",     0.002032));
     CHECK(AxisTestBody(BODY_MOON,     "axis/Moon.txt",      0.264845));
     CHECK(AxisTestBody(BODY_MARS,     "axis/Mars.txt",      0.075323));
     CHECK(AxisTestBody(BODY_JUPITER,  "axis/Jupiter.txt",   0.000324));
@@ -7040,7 +7040,7 @@ static int SiderealTimeTest(void)
     int error;
     astro_time_t time;
     double gast, diff;
-    const double correct = 9.398368460418821;
+    const double correct = 9.3983699280076483;
 
     time = Astronomy_MakeTime(2022, 3, 15, 21, 50, 0.0);
     gast = Astronomy_SiderealTime(&time);
@@ -7335,9 +7335,9 @@ static int DatesIssue250(void)
     /* Make sure we can handle dates outside the range supported by System.DateTime. */
     /* https://github.com/cosinekitty/astronomy/issues/250 */
     int error;
-    CHECK(CheckDecemberSolstice( 2022, "2022-12-21T21:47:58.189Z"));
-    CHECK(CheckDecemberSolstice(-2300, "-002300-12-19T16:22:26.325Z"));
-    CHECK(CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.041Z"));
+    CHECK(CheckDecemberSolstice( 2022, "2022-12-21T21:47:54.455Z"));
+    CHECK(CheckDecemberSolstice(-2300, "-002300-12-19T16:22:27.929Z"));
+    CHECK(CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.276Z"));
     printf("C DatesIssue250: PASS\n");
 fail:
     return error;
