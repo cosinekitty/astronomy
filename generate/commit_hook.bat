@@ -9,14 +9,16 @@ REM Change to project/repo root directory.
 cd %~dp0\..
 echo.commit_hook: Repo root = %cd%
 
-set DOXYGENURL=https://github.com/cosinekitty/ephemeris/raw/master/doxygen-1.9.5.windows.x64.bin.zip
+set DOXYGENZIP=doxygen-1.9.5.windows.x64.bin.zip
+set DOXYGENURL=https://github.com/cosinekitty/ephemeris/raw/master/!DOXYGENZIP!
 md bin
 cd bin
 echo.commit_hook: Downloading: !DOXYGENURL!
-curl -s -o doxygen.zip !DOXYGENURL! || exit /b 1
+if exist !DOXYGENZIP! ( del !DOXYGENZIP! )
+wget !DOXYGENURL! || exit /b 1
 echo.commit_hook: Installing Doxygen.
-7z x doxygen.zip || exit /b 1
-del doxygen.zip
+7z x !DOXYGENZIP! || exit /b 1
+del !DOXYGENZIP!
 
 REM change to 'generate' directory, which is where this batch file is located.
 cd %~dp0
