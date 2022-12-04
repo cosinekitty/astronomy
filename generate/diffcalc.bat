@@ -9,19 +9,19 @@ if not exist !CTESTEXE! (
 
 echo.Diffing calculations.
 
-!CTESTEXE! diff 4.9e-15 temp\c_check.txt dotnet\csharp_test\csharp_check.txt
+!CTESTEXE! diff 5.3e-15 temp\c_check.txt dotnet\csharp_test\csharp_check.txt
 if errorlevel 1 (exit /b 1)
 
 !CTESTEXE! diff 6.3e-15 temp\c_check.txt temp\k_check.txt
 if errorlevel 1 (exit /b 1)
 
-!CTESTEXE! diff 5.6e-15 temp\c_check.txt temp\js_check.txt
+!CTESTEXE! diff 5.7e-15 temp\c_check.txt temp\js_check.txt
 if errorlevel 1 (exit /b 1)
 
 !CTESTEXE! diff 1.6e-16 temp\c_check.txt temp\py_check.txt
 if errorlevel 1 (exit /b 1)
 
-!CTESTEXE! diff 5.6e-15 temp\js_check.txt temp\py_check.txt
+!CTESTEXE! diff 5.7e-15 temp\js_check.txt temp\py_check.txt
 if errorlevel 1 (exit /b 1)
 
 echo.diffcalc: PASS

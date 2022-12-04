@@ -1915,7 +1915,7 @@ namespace csharp_test
 
             if (diff_alt > 3.6e-14 || diff_az > 1.2e-13)
             {
-                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.");
+                Console.WriteLine($"C# Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR: diff_alt={diff_alt}, diff_az={diff_az}");
                 return 1;
             }
 
@@ -1925,7 +1925,7 @@ namespace csharp_test
             Debug("C# Test_EQD_HOR {0}: horizontal recovery: diff = {1}", body, diff);
             if (diff > 3.0e-15)
             {
-                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.");
+                Console.WriteLine($"C# Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY: diff = {diff}");
                 return 1;
             }
 
@@ -1934,9 +1934,9 @@ namespace csharp_test
             AstroVector check_eqd = Astronomy.RotateVector(rot, vec_hor);
             diff = VectorDiff(check_eqd, vec_eqd);
             Debug("C# Test_EQD_HOR {0}: OFDATE inverse rotation diff = {1}", body, diff);
-            if (diff > 2.3e-15)
+            if (diff > 2.67e-15)
             {
-                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.");
+                Console.WriteLine($"C# Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR: diff = {diff}");
                 return 1;
             }
 
@@ -1950,7 +1950,7 @@ namespace csharp_test
             Debug("C# Test_EQD_HOR {0}: J2000 inverse rotation diff = {1}", body, diff);
             if (diff > 6.0e-15)
             {
-                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.");
+                Console.WriteLine($"C# Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR: diff = {diff}");
                 return 1;
             }
 
@@ -1961,7 +1961,7 @@ namespace csharp_test
             Debug("C# Test_EQD_HOR {0}: EQJ inverse rotation diff = {1}", body, diff);
             if (diff > 3e-15)
             {
-                Console.WriteLine("C# Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.");
+                Console.WriteLine($"C# Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR: diff = {diff}");
                 return 1;
             }
 
@@ -2104,8 +2104,6 @@ namespace csharp_test
 
         static int Rotation_Pivot()
         {
-            //astro_rotation_t a;
-            //astro_vector_t v1, v2, ve;
             const double tolerance = 1.0e-15;
 
             // Test #1

@@ -3441,7 +3441,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK_VECTOR(check_eqd, Astronomy_RotateVector(rot, vec_hor));
     CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
     DEBUG("C Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
-    if (diff > 2.3e-15)
+    if (diff > 2.67e-15)
         FAIL("C Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
 
     /* Exercise HOR to EQJ translation. */
