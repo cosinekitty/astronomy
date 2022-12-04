@@ -5,11 +5,17 @@ echo "diffcalc: dotnet $(dotnet --version)"
 echo "diffcalc: Node.js $(node --version)"
 echo "diffcalc: $(python3 --version)"
 
-./ctest $1 diff 5.3e-15 temp/c_check.txt dotnet/csharp_test/csharp_check.txt || exit $?
-./ctest $1 diff 6.7e-15 temp/{c,k}_check.txt || exit $?
-./ctest $1 diff 6.7e-15 temp/{c,js}_check.txt || exit $?
-./ctest $1 diff 3.1e-15 temp/{c,py}_check.txt || exit $?
-./ctest $1 diff 6.7e-15 temp/{js,py}_check.txt || exit $?
+FAILCOUNT=0
+./ctest $1 diff 5.3e-15 temp/c_check.txt dotnet/csharp_test/csharp_check.txt || ((FAILCOUNT+=1))
+./ctest $1 diff 6.8e-15 temp/{c,k}_check.txt   || ((FAILCOUNT+=1))
+./ctest $1 diff 6.7e-15 temp/{c,js}_check.txt  || ((FAILCOUNT+=1))
+./ctest $1 diff 3.1e-15 temp/{c,py}_check.txt  || ((FAILCOUNT+=1))
+./ctest $1 diff 6.7e-15 temp/{js,py}_check.txt || ((FAILCOUNT+=1))
+
+if [[ ${FAILCOUNT} != 0 ]]; then
+    echo "diffcalc: *** FAILED ${FAILCOUNT} TESTS. ***"
+    exit 1
+fi
 
 echo "diffcalc: PASS"
 exit 0
