@@ -87,6 +87,14 @@ static double v(const char *filename, int lnum, double x)
 #define V(x)        v(__FILE__, __LINE__, (x))
 #define ABS(x)      fabs(V(x))
 
+static double DegreeDiff(double a, double b)
+{
+    double diff = ABS(a - b);
+    if (diff > 180.0 && diff < 360.0)
+        diff = 360.0 - diff;        /* handle wraparound of range [0, 360).*/
+    return diff;
+}
+
 typedef struct
 {
     int     lnum;
@@ -2219,21 +2227,27 @@ static int MoonEcliptic(void)
             /* " 1900-Jan-01 00:00 2415020.500000000        -1.944461  272.4162663   1.1082671" */
             if (4 != sscanf(&line[19], "%lf %lf %lf %lf", &jdut, &deltat, &lon, &lat))
                 FAIL("C MoonEcliptic(%s line %d): cannot parse data.\n", filename, lnum);
+            V(jdut);
+            V(deltat);
+            V(lon);
+            V(lat);
 
             /* Use JPL Horizons delta-t value to match their TT value as close as possible. */
             /* We do this because their Delta-T formula differs from Espenak-Meeus, especially in the future. */
             /* TT-UT = deltat ==> TT = UT + deltat */
 
-            tt = (jdut - JD_2000) + (deltat / SECONDS_PER_DAY);
+            tt = V((jdut - JD_2000) + (deltat / SECONDS_PER_DAY));
             time = Astronomy_TerrestrialTime(tt);
 
             /* Calculate Moon's ecliptic coordinates relative to mean equator of date. */
             sphere = Astronomy_EclipticGeoMoon(time);
             CHECK_STATUS(sphere);
+            V(sphere.lat);
+            V(sphere.lon);
 
             /* Find maximum arcsecond discrepancy between latitudes and longitudes. */
-            diff_lat = 3600.0 * ABS(sphere.lat - lat);
-            diff_lon = 3600.0 * ABS(sphere.lon - lon);
+            diff_lat = 3600.0 * DegreeDiff(sphere.lat, lat);
+            diff_lon = 3600.0 * DegreeDiff(sphere.lon, lon);
             if (diff_lat > max_lat) max_lat = diff_lat;
             if (diff_lon > max_lon) max_lon = diff_lon;
             ++count;
