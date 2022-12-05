@@ -3766,51 +3766,45 @@ $ASTRO_JUPITER_MOONS();
             }
         }
 
-        private struct iau_row_t
-        {
-            public int nals0;
-            public int nals1;
-            public int nals2;
-            public int nals3;
-            public int nals4;
-
-            public double cls0;
-            public double cls1;
-            public double cls2;
-            public double cls3;
-            public double cls4;
-            public double cls5;
-        }
-
-        private static readonly iau_row_t[] iau_row = new iau_row_t[]
-        {
-$ASTRO_IAU_DATA()
-        };
-
         private static void iau2000b(AstroTime time)
         {
             // Adapted from the NOVAS C 3.1 function of the same name.
 
-            double t, elp, f, d, om, arg, dp, de, sarg, carg;
-            int i;
-
             if (double.IsNaN(time.psi))
             {
-                t = time.tt / 36525.0;
-                elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD;
-                f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD;
-                d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD;
-                om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD;
-                dp = 0;
-                de = 0;
-                for (i=iau_row.Length-1; i >= 0; --i)
-                {
-                    arg = (iau_row[i].nals1*elp + iau_row[i].nals2*f + iau_row[i].nals3*d + iau_row[i].nals4*om) % PI2;
-                    sarg = Math.Sin(arg);
-                    carg = Math.Cos(arg);
-                    dp += (iau_row[i].cls0 + iau_row[i].cls1*t) * sarg + iau_row[i].cls2*carg;
-                    de += (iau_row[i].cls3 + iau_row[i].cls4*t) * carg + iau_row[i].cls5*sarg;
-                }
+                double t = time.tt / 36525.0;
+                double elp = ((1287104.79305 + t * 129596581.0481)  % ASEC360) * ASEC2RAD;
+                double f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD;
+                double d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD;
+                double om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD;
+
+                double sarg = Math.Sin(om);
+                double carg = Math.Cos(om);
+                double dp = (-172064161.0 - 174666.0*t)*sarg + 33386.0*carg;
+                double de = (92052331.0 + 9086.0*t)*carg + 15377.0*sarg;
+
+                double arg = 2.0*(f - d + om);
+                sarg = Math.Sin(arg);
+                carg = Math.Cos(arg);
+                dp += (-13170906.0 - 1675.0*t)*sarg - 13696.0*carg;
+                de += (5730336.0 - 3015.0*t)*carg - 4587.0*sarg;
+
+                arg = 2.0*(f + om);
+                sarg = Math.Sin(arg);
+                carg = Math.Cos(arg);
+                dp += (-2276413.0 - 234.0*t)*sarg + 2796.0*carg;
+                de += (978459.0 - 485.0*t)*carg + 1374.0*sarg;
+
+                arg = 2.0*om;
+                sarg = Math.Sin(arg);
+                carg = Math.Cos(arg);
+                dp += (2074554.0 + 207.0*t)*sarg - 698.0*carg;
+                de += (-897492.0 + 470.0*t)*carg - 291.0*sarg;
+
+                sarg = Math.Sin(elp);
+                carg = Math.Cos(elp);
+                dp += (1475877.0 - 3633.0*t)*sarg + 11817.0*carg;
+                de += (73871.0 - 184.0*t)*carg - 1924.0*sarg;
 
                 time.psi = -0.000135 + (dp * 1.0e-7);
                 time.eps = +0.000388 + (de * 1.0e-7);

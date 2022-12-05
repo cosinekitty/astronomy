@@ -1317,35 +1317,38 @@ function MakeTime(date) {
     return new AstroTime(date);
 }
 exports.MakeTime = MakeTime;
-const iaudata = [
-    [[0, 0, 0, 0, 1], [-172064161, -174666, 33386, 92052331, 9086, 15377]],
-    [[0, 0, 2, -2, 2], [-13170906, -1675, -13696, 5730336, -3015, -4587]],
-    [[0, 0, 2, 0, 2], [-2276413, -234, 2796, 978459, -485, 1374]],
-    [[0, 0, 0, 0, 2], [2074554, 207, -698, -897492, 470, -291]],
-    [[0, 1, 0, 0, 0], [1475877, -3633, 11817, 73871, -184, -1924]]
-];
 function iau2000b(time) {
-    var i, t, elp, f, d, om, arg, dp, de, sarg, carg;
-    var nals, cls;
     function mod(x) {
         return (x % ASEC360) * ASEC2RAD;
     }
-    t = time.tt / 36525;
-    elp = mod(1287104.79305 + t * 129596581.0481);
-    f = mod(335779.526232 + t * 1739527262.8478);
-    d = mod(1072260.70369 + t * 1602961601.2090);
-    om = mod(450160.398036 - t * 6962890.5431);
-    dp = 0;
-    de = 0;
-    for (i = iaudata.length - 1; i >= 0; --i) {
-        nals = iaudata[i][0];
-        cls = iaudata[i][1];
-        arg = (nals[1] * elp + nals[2] * f + nals[3] * d + nals[4] * om) % PI2;
-        sarg = Math.sin(arg);
-        carg = Math.cos(arg);
-        dp += (cls[0] + cls[1] * t) * sarg + cls[2] * carg;
-        de += (cls[3] + cls[4] * t) * carg + cls[5] * sarg;
-    }
+    const t = time.tt / 36525;
+    const elp = mod(1287104.79305 + t * 129596581.0481);
+    const f = mod(335779.526232 + t * 1739527262.8478);
+    const d = mod(1072260.70369 + t * 1602961601.2090);
+    const om = mod(450160.398036 - t * 6962890.5431);
+    let sarg = Math.sin(om);
+    let carg = Math.cos(om);
+    let dp = (-172064161.0 - 174666.0 * t) * sarg + 33386.0 * carg;
+    let de = (92052331.0 + 9086.0 * t) * carg + 15377.0 * sarg;
+    let arg = 2.0 * (f - d + om);
+    sarg = Math.sin(arg);
+    carg = Math.cos(arg);
+    dp += (-13170906.0 - 1675.0 * t) * sarg - 13696.0 * carg;
+    de += (5730336.0 - 3015.0 * t) * carg - 4587.0 * sarg;
+    arg = 2.0 * (f + om);
+    sarg = Math.sin(arg);
+    carg = Math.cos(arg);
+    dp += (-2276413.0 - 234.0 * t) * sarg + 2796.0 * carg;
+    de += (978459.0 - 485.0 * t) * carg + 1374.0 * sarg;
+    arg = 2.0 * om;
+    sarg = Math.sin(arg);
+    carg = Math.cos(arg);
+    dp += (2074554.0 + 207.0 * t) * sarg - 698.0 * carg;
+    de += (-897492.0 + 470.0 * t) * carg - 291.0 * sarg;
+    sarg = Math.sin(elp);
+    carg = Math.cos(elp);
+    dp += (1475877.0 - 3633.0 * t) * sarg + 11817.0 * carg;
+    de += (73871.0 - 184.0 * t) * carg - 1924.0 * sarg;
     return {
         dpsi: -0.000135 + (dp * 1.0e-7),
         deps: +0.000388 + (de * 1.0e-7)

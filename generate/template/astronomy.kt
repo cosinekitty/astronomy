@@ -4125,7 +4125,7 @@ private class EarthTilt(
 )
 
 private fun iau2000b(time: Time) {
-    // Adapted from the NOVAS C 3.1 function of the same name.
+    // Truncated version of the NOVAS C 3.1 function of the same name.
     // We cache Earth nutation angles `psi` and `eps` inside Time for efficiency.
     // If nutation has not already been calculated, these values will be NaN.
     // Lazy-evaluate both angles.
@@ -4136,20 +4136,35 @@ private fun iau2000b(time: Time) {
         val f   = ((335779.526232 + t * 1739527262.8478) % ASEC360) * ASEC2RAD
         val d   = ((1072260.70369 + t * 1602961601.2090) % ASEC360) * ASEC2RAD
         val om  = ((450160.398036 - t * 6962890.5431)    % ASEC360) * ASEC2RAD
-        var dp = 0.0
-        var de = 0.0
-        for (i in iauRow.size-1 downTo 0) {
-            val arg = (
-                iauRow[i].nals1*elp +
-                iauRow[i].nals2*f +
-                iauRow[i].nals3*d +
-                iauRow[i].nals4*om
-            ) % PI2
-            val sarg = sin(arg)
-            val carg = cos(arg)
-            dp += (iauRow[i].cls0 + iauRow[i].cls1*t) * sarg + iauRow[i].cls2*carg
-            de += (iauRow[i].cls3 + iauRow[i].cls4*t) * carg + iauRow[i].cls5*sarg
-        }
+
+        var sarg = sin(om)
+        var carg = cos(om)
+        var dp = (-172064161.0 - 174666.0*t)*sarg + 33386.0*carg
+        var de = (92052331.0 + 9086.0*t)*carg + 15377.0*sarg
+
+        var arg = 2.0*(f - d + om)
+        sarg = sin(arg)
+        carg = cos(arg)
+        dp += (-13170906.0 - 1675.0*t)*sarg - 13696.0*carg
+        de += (5730336.0 - 3015.0*t)*carg - 4587.0*sarg
+
+        arg = 2.0*(f + om)
+        sarg = sin(arg)
+        carg = cos(arg)
+        dp += (-2276413.0 - 234.0*t)*sarg + 2796.0*carg
+        de += (978459.0 - 485.0*t)*carg + 1374.0*sarg
+
+        arg = 2.0*om
+        sarg = sin(arg)
+        carg = cos(arg)
+        dp += (2074554.0 + 207.0*t)*sarg - 698.0*carg
+        de += (-897492.0 + 470.0*t)*carg - 291.0*sarg
+
+        sarg = sin(elp)
+        carg = cos(elp)
+        dp += (1475877.0 - 3633.0*t)*sarg + 11817.0*carg
+        de += (73871.0 - 184.0*t)*carg - 1924.0*sarg
+
         time.psi = -0.000135 + (dp * 1.0e-7)
         time.eps = +0.000388 + (de * 1.0e-7)
     }
