@@ -1298,45 +1298,45 @@ astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, doubl
 
 static void iau2000b(astro_time_t *time)
 {
-    /* Adapted from the NOVAS C 3.1 function of the same name. */
-
-    struct row_t
-    {
-        int nals[5];
-        double cls[6];
-    };
-
-    static const struct row_t row[] =
-    {
-
-        { {  0,  0,  0,  0,  1 }, {   -172064161,      -174666,        33386,     92052331,         9086,        15377 } },
-        { {  0,  0,  2, -2,  2 }, {    -13170906,        -1675,       -13696,      5730336,        -3015,        -4587 } },
-        { {  0,  0,  2,  0,  2 }, {     -2276413,         -234,         2796,       978459,         -485,         1374 } },
-        { {  0,  0,  0,  0,  2 }, {      2074554,          207,         -698,      -897492,          470,         -291 } },
-        { {  0,  1,  0,  0,  0 }, {      1475877,        -3633,        11817,        73871,         -184,        -1924 } }
-
-    };
-
-    double t, elp, f, d, om, arg, dp, de, sarg, carg;
-    int i;
+    /* Truncated and hand-optimized nutation model. */
 
     if (isnan(time->psi))
     {
-        t = time->tt / 36525;
+        double t, elp, f, d, om, arg, dp, de, sarg, carg;
+
+        t = time->tt / 36525.0;
         elp = fmod(1287104.79305 + t * 129596581.0481,  ASEC360) * ASEC2RAD;
         f   = fmod(335779.526232 + t * 1739527262.8478, ASEC360) * ASEC2RAD;
         d   = fmod(1072260.70369 + t * 1602961601.2090, ASEC360) * ASEC2RAD;
         om  = fmod(450160.398036 - t * 6962890.5431,    ASEC360) * ASEC2RAD;
-        dp = 0;
-        de = 0;
-        for (i=sizeof(row)/sizeof(row[0]) - 1; i >= 0; --i)
-        {
-            arg = fmod((row[i].nals[1]*elp + row[i].nals[2]*f + row[i].nals[3]*d + row[i].nals[4]*om), PI2);
-            sarg = sin(arg);
-            carg = cos(arg);
-            dp += (row[i].cls[0] + row[i].cls[1]*t) * sarg + row[i].cls[2]*carg;
-            de += (row[i].cls[3] + row[i].cls[4]*t) * carg + row[i].cls[5]*sarg;
-        }
+
+        sarg = sin(om);
+        carg = cos(om);
+        dp = (-172064161.0 - 174666.0*t)*sarg + 33386.0*carg;
+        de = (92052331.0 + 9086.0*t)*carg + 15377.0*sarg;
+
+        arg = 2.0*(f - d + om);
+        sarg = sin(arg);
+        carg = cos(arg);
+        dp += (-13170906.0 - 1675.0*t)*sarg - 13696.0*carg;
+        de += (5730336.0 - 3015.0*t)*carg - 4587.0*sarg;
+
+        arg = 2.0*(f + om);
+        sarg = sin(arg);
+        carg = cos(arg);
+        dp += (-2276413.0 - 234.0*t)*sarg + 2796.0*carg;
+        de += (978459.0 - 485.0*t)*carg + 1374.0*sarg;
+
+        arg = 2.0*om;
+        sarg = sin(arg);
+        carg = cos(arg);
+        dp += (2074554.0 + 207.0*t)*sarg - 698.0*carg;
+        de += (-897492.0 + 470.0*t)*carg - 291.0*sarg;
+
+        sarg = sin(elp);
+        carg = cos(elp);
+        dp += (1475877.0 - 3633.0*t)*sarg + 11817.0*carg;
+        de += (73871.0 - 184.0*t)*carg - 1924.0*sarg;
 
         time->psi = -0.000135 + (dp * 1.0e-7);
         time->eps = +0.000388 + (de * 1.0e-7);
