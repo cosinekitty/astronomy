@@ -1,10 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-call :Download https://github.com/cosinekitty/ephemeris/raw/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256
+call :Download https://raw.githubusercontent.com/cosinekitty/ephemeris/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256
 if errorlevel 1 (exit /b 1)
 
-call :Download https://github.com/cosinekitty/ephemeris/raw/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256
+call :Download https://raw.githubusercontent.com/cosinekitty/ephemeris/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256
 if errorlevel 1 (exit /b 1)
 
 call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256
