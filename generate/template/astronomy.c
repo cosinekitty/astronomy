@@ -2147,7 +2147,11 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
  * Given a time of observation, calculates the Moon's geocentric position
  * in ecliptic spherical coordinates. Provides the ecliptic latitude and
  * longitude in degrees, and the geocentric distance in astronomical units (AU).
- * The ecliptic longitude is measured relative to the equinox of date.
+ *
+ * The ecliptic angles are measured in "ECT": relative to the true ecliptic plane and
+ * equatorial plane at the specified time. This means the Earth's equator
+ * is corrected for precession and nutation, and the plane of the Earth's
+ * orbit is corrected for gradual obliquity drift.
  *
  * This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
  * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
@@ -2158,19 +2162,43 @@ astro_vector_t Astronomy_GeoMoon(astro_time_t time)
  * To calculate an equatorial J2000 vector instead, use #Astronomy_GeoMoon.
  *
  * @param time  The date and time for which to calculate the Moon's position.
- * @return The Moon's position expressed in ecliptic coordinates using the mean equinox of date.
+ * @return The Moon's position expressed in ecliptic coordinates using the true equinox of date (ECT).
  */
 astro_spherical_t Astronomy_EclipticGeoMoon(astro_time_t time)
 {
     astro_spherical_t sphere;
+    astro_ecliptic_t eclip;
+    earth_tilt_t et;
+    double dist_cos_lat, ecm[3], eqm[3], eqd[3];
 
     /* CalcMoon produces ecliptic coordinates in mean equinox of date (ECM). */
     CalcMoon(time.tt / 36525.0, &sphere.lon, &sphere.lat, &sphere.dist);
 
-    /* Convert angles from radians to degrees. */
-    sphere.lon *= RAD2DEG;
-    sphere.lat *= RAD2DEG;
-    sphere.status = ASTRO_SUCCESS;
+    /* Calculate vector in ecliptic coordinates (ECM). */
+    dist_cos_lat = sphere.dist * cos(sphere.lat);
+    ecm[0] = dist_cos_lat * cos(sphere.lon);
+    ecm[1] = dist_cos_lat * sin(sphere.lon);
+    ecm[2] = sphere.dist * sin(sphere.lat);
+
+    /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
+    /* In other words, convert ECM to EQM. */
+    ecl2equ_vec(time, ecm, eqm);
+
+    /* Obtain true obliquity angle for the given time. */
+    /* This serves to pre-calculate the nutation also, and cache it in `time`. */
+    et = e_tilt(&time);
+
+    /* Add nutation to convert ECM to true equatorial coordinates of date (EQD). */
+    nutation(eqm, &time, FROM_2000, eqd);
+
+    /* Convert back to ecliptic, this time in true equinox of date (ECT). */
+    eclip = RotateEquatorialToEcliptic(eqd, DEG2RAD * et.tobl, time);
+
+    /* Package the return value. */
+    /* CalcMoon() already set sphere.dist to the correct value. */
+    sphere.status = eclip.status;
+    sphere.lat = eclip.elat;
+    sphere.lon = eclip.elon;
     return sphere;
 }
 
