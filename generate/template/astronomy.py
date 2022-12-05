@@ -1034,9 +1034,35 @@ class _iau2000b:
         f   = math.fmod((335779.526232 + t*1739527262.8478), _ASEC360) * _ASEC2RAD
         d   = math.fmod((1072260.70369 + t*1602961601.2090), _ASEC360) * _ASEC2RAD
         om  = math.fmod((450160.398036 - t*6962890.5431),    _ASEC360) * _ASEC2RAD
-        dp = 0
-        de = 0
-$ASTRO_IAU_DATA()
+
+        sarg = math.sin(om)
+        carg = math.cos(om)
+        dp = (-172064161.0 - 174666.0*t)*sarg + 33386.0*carg
+        de = (92052331.0 + 9086.0*t)*carg + 15377.0*sarg
+
+        arg = 2.0*(f - d + om)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-13170906.0 - 1675.0*t)*sarg - 13696.0*carg
+        de += (5730336.0 - 3015.0*t)*carg - 4587.0*sarg
+
+        arg = 2.0*(f + om)
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (-2276413.0 - 234.0*t)*sarg + 2796.0*carg
+        de += (978459.0 - 485.0*t)*carg + 1374.0*sarg
+
+        arg = 2.0*om
+        sarg = math.sin(arg)
+        carg = math.cos(arg)
+        dp += (2074554.0 + 207.0*t)*sarg - 698.0*carg
+        de += (-897492.0 + 470.0*t)*carg - 291.0*sarg
+
+        sarg = math.sin(elp)
+        carg = math.cos(elp)
+        dp += (1475877.0 - 3633.0*t)*sarg + 11817.0*carg
+        de += (73871.0 - 184.0*t)*carg - 1924.0*sarg
+
         self.dpsi = -0.000135 + (dp * 1.0e-7)
         self.deps = +0.000388 + (de * 1.0e-7)
 
