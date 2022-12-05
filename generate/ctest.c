@@ -239,6 +239,8 @@ typedef struct
 }
 unit_test_t;
 
+#define EXCLUDE_FROM_AUTOMATED_TESTS 1
+
 static unit_test_t UnitTests[] =
 {
     {"aberration",              AberrationTest},
@@ -264,16 +266,16 @@ static unit_test_t UnitTests[] =
     {"lunar_eclipse_78",        LunarEclipseIssue78},
     {"lunar_fraction",          LunarFractionTest},
     {"magnitude",               MagnitudeTest},
-    {"map",                     MapPerformanceTest,     1},
+    {"map",                     MapPerformanceTest,     EXCLUDE_FROM_AUTOMATED_TESTS},
     {"moon",                    MoonTest},
     {"moon_apsis",              LunarApsis},
     {"moon_ecm",                MoonEcliptic},
     {"moon_nodes",              MoonNodes},
-    {"moon_performance",        GeoMoonPerformance,     1},
+    {"moon_performance",        GeoMoonPerformance,     EXCLUDE_FROM_AUTOMATED_TESTS},
     {"moon_phase",              MoonPhase},
     {"moon_reverse",            MoonReverse},
     {"moon_vector",             MoonVector},
-    {"nutation",                NutationPerformance,    1},
+    {"nutation",                NutationPerformance,    EXCLUDE_FROM_AUTOMATED_TESTS},
     {"planet_apsis",            PlanetApsis},
     {"pluto",                   PlutoCheck},
     {"refraction",              RefractionTest},
