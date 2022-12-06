@@ -124,6 +124,9 @@ function AstroCheck() {
         const et = Astronomy.e_tilt(time);
         console.log(`n ${et.dpsi.toExponential(18)} ${et.deps.toExponential(18)}`);
 
+        const sphere = Astronomy.EclipticGeoMoon(time);
+        console.log(`m ${sphere.lat.toExponential(18)} ${sphere.lon.toExponential(18)} ${sphere.dist.toExponential(18)}`);
+
         date = date.AddDays(dt);
     }
 

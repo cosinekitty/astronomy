@@ -360,29 +360,6 @@ class Tests {
     //----------------------------------------------------------------------------------------
 
     @Test
-    fun `Sanity check geocentric moon`() {
-        val time = Time(2019, 6, 24, 15, 45, 37.0)
-
-        val eclSphere = eclipticGeoMoon(time)
-        val dlat = eclSphere.lat  - (-4.851798346972171)
-        val dlon = eclSphere.lon  - (+354.5951298193645)
-        val drad = eclSphere.dist - 0.0026968810499258147
-        assertTrue(abs(dlat) < 1.0e-15, "eclipticGeoMoon: excessive latitude error $dlat")
-        assertTrue(abs(dlon) < 1.0e-15, "eclipticGeoMoon: excessive longitude error $dlon")
-        assertTrue(abs(drad) < 1.0e-17, "eclipticGeoMoon: excessive distance error $drad")
-
-        val equVec = geoMoon(time)
-        checkVector(
-            equVec,
-            +0.002674037026701135, -0.0001531610316600666, -0.0003150159927069429,
-            5.43e-20,
-            "geoMoon"
-        )
-    }
-
-    //----------------------------------------------------------------------------------------
-
-    @Test
     fun `Heliocentric vectors and distances`() {
         val time = Time(2022, 3, 28, 15, 21, 41.0)
 
@@ -603,6 +580,10 @@ class Tests {
 
             // Nutation
             outfile.println("n ${time.nutationPsi()} ${time.nutationEps()}")
+
+            // EclipticGeoMoon
+            val sphere = eclipticGeoMoon(time)
+            outfile.println("m ${sphere.lat} ${sphere.lon} ${sphere.dist}")
 
             time = time.addDays(10.0 + PI/100.0)
         }

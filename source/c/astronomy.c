@@ -1384,17 +1384,22 @@ static earth_tilt_t e_tilt(astro_time_t *time)
     return et;
 }
 
-static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
+static void obl_ecl2equ_vec(double obl, astro_time_t time, const double ecl[3], double equ[3])
 {
-    double obl = mean_obliq(time.tt) * DEG2RAD;
-    double cos_obl = cos(obl);
-    double sin_obl = sin(obl);
+    double obl_rad = obl * DEG2RAD;
+    double cos_obl = cos(obl_rad);
+    double sin_obl = sin(obl_rad);
 
     equ[0] = ecl[0];
     equ[1] = ecl[1]*cos_obl - ecl[2]*sin_obl;
     equ[2] = ecl[1]*sin_obl + ecl[2]*cos_obl;
 }
 
+static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
+{
+    double obl = mean_obliq(time.tt);
+    return obl_ecl2equ_vec(obl, time, ecl, equ);
+}
 
 static astro_rotation_t precession_rot(astro_time_t time, precess_dir_t dir)
 {
@@ -2291,13 +2296,13 @@ astro_spherical_t Astronomy_EclipticGeoMoon(astro_time_t time)
     ecm[1] = dist_cos_lat * sin(sphere.lon);
     ecm[2] = sphere.dist * sin(sphere.lat);
 
-    /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
-    /* In other words, convert ECM to EQM. */
-    ecl2equ_vec(time, ecm, eqm);
-
-    /* Obtain true obliquity angle for the given time. */
+    /* Obtain true and mean obliquity angles for the given time. */
     /* This serves to pre-calculate the nutation also, and cache it in `time`. */
     et = e_tilt(&time);
+
+    /* Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date. */
+    /* In other words, convert ECM to EQM. */
+    obl_ecl2equ_vec(et.mobl, time, ecm, eqm);
 
     /* Add nutation to convert ECM to true equatorial coordinates of date (EQD). */
     nutation(eqm, &time, FROM_2000, eqd);

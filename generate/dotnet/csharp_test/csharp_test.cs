@@ -298,6 +298,10 @@ namespace csharp_test
                     // Nutation
                     outfile.WriteLine($"n {time.Psi:G18} {time.Eps:G18}");
 
+                    // EclipticGeoMoon
+                    Spherical sphere = Astronomy.EclipticGeoMoon(time);
+                    outfile.WriteLine($"m {sphere.lat:G18} {sphere.lon:G18} {sphere.dist:G18}");
+
                     time = time.AddDays(10.0 + Math.PI/100.0);
                 }
             }

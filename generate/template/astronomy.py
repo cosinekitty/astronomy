@@ -1087,15 +1087,18 @@ class _e_tilt:
         self.tt = time.tt
         self.ee = e.dpsi * math.cos(math.radians(self.mobl)) / 15.0
 
-def _ecl2equ_vec(time, ecl):
-    obl = math.radians(_mean_obliq(time.tt))
-    cos_obl = math.cos(obl)
-    sin_obl = math.sin(obl)
+def _obl_ecl2equ_vec(obl_deg, ecl):
+    obl_rad = math.radians(obl_deg)
+    cos_obl = math.cos(obl_rad)
+    sin_obl = math.sin(obl_rad)
     return [
         ecl[0],
         ecl[1]*cos_obl - ecl[2]*sin_obl,
         ecl[1]*sin_obl + ecl[2]*cos_obl
     ]
+
+def _ecl2equ_vec(time, ecl):
+    return _obl_ecl2equ_vec(_mean_obliq(time.tt), ecl)
 
 def _precession_rot(time, direction):
     eps0 = 84381.406
@@ -1593,7 +1596,11 @@ def EclipticGeoMoon(time):
     Given a time of observation, calculates the Moon's geocentric position
     in ecliptic spherical coordinates. Provides the ecliptic latitude and
     longitude in degrees, and the geocentric distance in astronomical units (AU).
-    The ecliptic longitude is measured relative to the equinox of date.
+
+    The ecliptic angles are measured in "ECT": relative to the true ecliptic plane and
+    equatorial plane at the specified time. This means the Earth's equator
+    is corrected for precession and nutation, and the plane of the Earth's
+    orbit is corrected for gradual obliquity drift.
 
     This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
     which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
@@ -1613,12 +1620,32 @@ def EclipticGeoMoon(time):
     Spherical
         The Moon's position as a distance, ecliptic latitude, and ecliptic longitude.
     """
+
+    # Find ecliptic coordinates of the Moon in mean equinox of date (ECM).
     moon = _CalcMoon(time)
-    return Spherical(
-        math.degrees(moon.geo_eclip_lat),
-        math.degrees(moon.geo_eclip_lon),
-        moon.distance_au
-    )
+
+    # Convert spherical coordinates to a vector.
+    dist_cos_lat = moon.distance_au * math.cos(moon.geo_eclip_lat)
+    ecm = [
+        dist_cos_lat * math.cos(moon.geo_eclip_lon),
+        dist_cos_lat * math.sin(moon.geo_eclip_lon),
+        moon.distance_au * math.sin(moon.geo_eclip_lat)
+    ]
+
+    # Obtain true and mean obliquity angles for the given time.
+    # This serves to pre-calculate the nutation also, and cache it in `time`.
+    et = _e_tilt(time)
+
+    # Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
+    eqm = _obl_ecl2equ_vec(et.mobl, ecm)
+
+    # Add nutation to convert ECM to true equatorial coordinates of date (EQD).
+    eqd = _nutation(eqm, time, _PrecessDir.From2000)
+
+    # Convert back to ecliptic, this time in true equinox of date (ECT).
+    eclip = _RotateEquatorialToEcliptic(eqd, math.radians(et.tobl), time)
+
+    return Spherical(eclip.elat, eclip.elon, moon.distance_au)
 
 
 def GeoMoonState(time):

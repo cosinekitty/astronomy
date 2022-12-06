@@ -2452,7 +2452,7 @@ fun searchLunarEclipse(startTime: Time): LunarEclipseInfo {
         // Pruning: if the full Moon's ecliptic latitude is too large,
         // a lunar eclipse is not possible. Avoid needless work searching for
         // the minimum moon distance.
-        val moon = eclipticGeoMoon(fullmoon)
+        val moon = MoonContext(fullmoon).calcMoon()
         if (moon.lat < pruneLatitude) {
             // Search near the full moon for the time when the center of the Moon
             // is closest to the line passing through the centers of the Sun and Earth.
@@ -2528,7 +2528,7 @@ fun lunarEclipsesAfter(startTime: Time): Sequence<LunarEclipseInfo> =
     generateSequence(searchLunarEclipse(startTime)) { nextLunarEclipse(it.peak) }
 
 
-internal fun moonEclipticLatitudeDegrees(time: Time) = eclipticGeoMoon(time).lat
+internal fun moonEclipticLatitudeDegrees(time: Time) = MoonContext(time).calcMoon().lat
 
 // Convert all distances from AU to km.
 // But dilate the z-coordinates so that the Earth becomes a perfect sphere.
@@ -4436,10 +4436,9 @@ private fun nutation(pos: Vector, dir: PrecessDirection) =
 private fun nutationPosVel(state: StateVector, dir: PrecessDirection) =
     nutationRot(state.t, dir).rotate(state)
 
-private fun eclipticToEquatorial(ecl: Vector): Vector {
-    val obl = meanObliquity(ecl.t).degreesToRadians()
-    val cosObl = cos(obl)
-    val sinObl = sin(obl)
+private fun eclipticToEquatorial(oblRadians: Double, ecl: Vector): Vector {
+    val cosObl = cos(oblRadians)
+    val sinObl = sin(oblRadians)
     return Vector(
         ecl.x,
         (ecl.y * cosObl) - (ecl.z * sinObl),
@@ -4447,6 +4446,9 @@ private fun eclipticToEquatorial(ecl: Vector): Vector {
         ecl.t
     )
 }
+
+private fun eclipticToEquatorial(ecl: Vector) =
+    eclipticToEquatorial(meanObliquity(ecl.t).degreesToRadians(), ecl)
 
 private fun earthRotationAxis(time: Time): AxisInfo {
     // Unlike the other planets, we have a model of precession and nutation
@@ -4694,7 +4696,11 @@ fun rotationAxis(body: Body, time: Time): AxisInfo {
 * Given a time of observation, calculates the Moon's geocentric position
 * in ecliptic spherical coordinates. Provides the ecliptic latitude and
 * longitude in degrees, and the geocentric distance in astronomical units (AU).
-* The ecliptic longitude is measured relative to the equinox of date.
+*
+* The ecliptic angles are measured in "ECT": relative to the true ecliptic plane and
+* equatorial plane at the specified time. This means the Earth's equator
+* is corrected for precession and nutation, and the plane of the Earth's
+* orbit is corrected for gradual obliquity drift.
 *
 * This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
 * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
@@ -4703,8 +4709,42 @@ fun rotationAxis(body: Body, time: Time): AxisInfo {
 * by Montenbruck and Pfleger.
 *
 * To calculate an equatorial J2000 vector instead, use [geoMoon].
+*
+* @param time
+* The date and time for which to calculate the Moon's position.
+*
+* @return The Moon's distance, ecliptic latitude, and ecliptic longitude, expressed in true equinox of date.
 */
-fun eclipticGeoMoon(time: Time) = MoonContext(time).calcMoon()
+fun eclipticGeoMoon(time: Time): Spherical {
+    // Find ecliptic coordinates of the Moon in mean equinox of date (ECM).
+    val moon = MoonContext(time).calcMoon()
+
+    // Convert spherical coordinates to a vector.
+    val latRad = moon.lat.degreesToRadians()
+    val lonRad = moon.lon.degreesToRadians()
+    val distCosLat = moon.dist * cos(latRad)
+    val ecm = Vector(
+        distCosLat * cos(lonRad),
+        distCosLat * sin(lonRad),
+        moon.dist * sin(latRad),
+        time
+    )
+
+    // Obtain true and mean obliquity angles for the given time.
+    // This serves to pre-calculate the nutation also, and cache it in `time`.
+    val et = earthTilt(time)
+
+    // Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
+    val eqm = eclipticToEquatorial(et.mobl.degreesToRadians(), ecm)
+
+    // Add nutation to convert ECM to true equatorial coordinates of date (EQD).
+    val eqd = nutation(eqm, PrecessDirection.From2000)
+
+    // Convert back to ecliptic, this time in true equinox of date (ECT).
+    val eclip = rotateEquatorialToEcliptic(eqd, et.tobl.degreesToRadians())
+
+    return Spherical(eclip.elat, eclip.elon, moon.dist)
+}
 
 /**
  * Calculates equatorial geocentric position of the Moon at a given time.
@@ -4721,7 +4761,7 @@ fun eclipticGeoMoon(time: Time) = MoonContext(time).calcMoon()
  * @return The Moon's position vector in J2000 equatorial coordinates (EQJ).
  */
 fun geoMoon(time: Time): Vector {
-    val eclSphere = eclipticGeoMoon(time)
+    val eclSphere = MoonContext(time).calcMoon()
     val eclVec = eclSphere.toVector(time)
     val equVec = eclipticToEquatorial(eclVec)
     return precession(equVec, PrecessDirection.Into2000)
@@ -6725,7 +6765,7 @@ fun angleFromSun(body: Body, time: Time): Double {
 }
 
 
-internal fun moonDistance(time: Time): Double = eclipticGeoMoon(time).dist
+internal fun moonDistance(time: Time): Double = MoonContext(time).calcMoon().dist
 
 internal fun moonRadialSpeed(time: Time): Double {
     val dt = 0.001
@@ -7637,7 +7677,7 @@ fun libration(time: Time): LibrationInfo {
     val t3 = t2 * t
     val t4 = t2 * t2
 
-    val moon = eclipticGeoMoon(time)
+    val moon = MoonContext(time).calcMoon()
 
     val mlon = moon.lon.degreesToRadians()
     val mlat = moon.lat.degreesToRadians()
@@ -7755,10 +7795,10 @@ fun searchMoonNode(startTime: Time): NodeEventInfo {
     // Start at the given moment in time and sample the Moon's ecliptic latitude.
     // Step 10 days at a time, searching for an interval where that latitude crosses zero.
     var time1 = startTime
-    var eclip1 = eclipticGeoMoon(time1)
+    var eclip1 = MoonContext(time1).calcMoon()
     while (true) {
         val time2 = time1.addDays(moonNodeStepDays)
-        val eclip2 = eclipticGeoMoon(time2)
+        val eclip2 = MoonContext(time2).calcMoon()
         if (eclip1.lat * eclip2.lat <= 0.0) {
             // There is a node somewhere in this closed time interval.
             // Figure out whether it is an ascending node or a descending node.
@@ -7772,7 +7812,7 @@ fun searchMoonNode(startTime: Time): NodeEventInfo {
                 kind = NodeEventKind.Descending
             }
             val nodeTime = search(time1, time2, 1.0) {
-                time -> direction * eclipticGeoMoon(time).lat
+                time -> direction * moonEclipticLatitudeDegrees(time)
             } ?: throw InternalError("Could not find Moon node.")
             return NodeEventInfo(nodeTime, kind)
         }

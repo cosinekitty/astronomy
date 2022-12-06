@@ -168,6 +168,9 @@ def AstroCheck(printflag):
         if printflag:
             # Nutation calculations
             print('n {:0.18e} {:0.18e}'.format(time._et.dpsi, time._et.deps))
+        sphere = astronomy.EclipticGeoMoon(time)
+        if printflag:
+            print('m {:0.18f} {:0.18f} {:0.18f}'.format(sphere.lat, sphere.lon, sphere.dist))
         time = time.AddDays(dt)
     return 0
 

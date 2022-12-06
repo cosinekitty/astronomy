@@ -479,7 +479,11 @@ This is the default Delta T function used by Astronomy Engine.
 Given a time of observation, calculates the Moon's geocentric position
 in ecliptic spherical coordinates. Provides the ecliptic latitude and
 longitude in degrees, and the geocentric distance in astronomical units (AU).
-The ecliptic longitude is measured relative to the equinox of date.
+
+The ecliptic angles are measured in "ECT": relative to the true ecliptic plane and
+equatorial plane at the specified time. This means the Earth's equator
+is corrected for precession and nutation, and the plane of the Earth's
+orbit is corrected for gradual obliquity drift.
 
 This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
 which in turn derives from E. W. Brown's lunar theories from the early twentieth century.

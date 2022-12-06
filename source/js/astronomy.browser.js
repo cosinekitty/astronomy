@@ -1381,15 +1381,18 @@ function e_tilt(time) {
     return cache_e_tilt;
 }
 exports.e_tilt = e_tilt;
-function ecl2equ_vec(time, pos) {
-    var obl = mean_obliq(time) * exports.DEG2RAD;
-    var cos_obl = Math.cos(obl);
-    var sin_obl = Math.sin(obl);
+function obl_ecl2equ_vec(oblDegrees, pos) {
+    const obl = oblDegrees * exports.DEG2RAD;
+    const cos_obl = Math.cos(obl);
+    const sin_obl = Math.sin(obl);
     return [
         pos[0],
         pos[1] * cos_obl - pos[2] * sin_obl,
         pos[1] * sin_obl + pos[2] * cos_obl
     ];
+}
+function ecl2equ_vec(time, pos) {
+    return obl_ecl2equ_vec(mean_obliq(time), pos);
 }
 exports.CalcMoonCount = 0;
 function CalcMoon(time) {
@@ -2815,7 +2818,11 @@ exports.GeoMoon = GeoMoon;
  * Given a time of observation, calculates the Moon's geocentric position
  * in ecliptic spherical coordinates. Provides the ecliptic latitude and
  * longitude in degrees, and the geocentric distance in astronomical units (AU).
- * The ecliptic longitude is measured relative to the equinox of date.
+ *
+ * The ecliptic angles are measured in "ECT": relative to the true ecliptic plane and
+ * equatorial plane at the specified time. This means the Earth's equator
+ * is corrected for precession and nutation, and the plane of the Earth's
+ * orbit is corrected for gradual obliquity drift.
  *
  * This algorithm is based on the Nautical Almanac Office's <i>Improved Lunar Ephemeris</i> of 1954,
  * which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
@@ -2833,7 +2840,28 @@ exports.GeoMoon = GeoMoon;
 function EclipticGeoMoon(date) {
     const time = MakeTime(date);
     const moon = CalcMoon(time);
-    return new Spherical(moon.geo_eclip_lat * exports.RAD2DEG, moon.geo_eclip_lon * exports.RAD2DEG, moon.distance_au);
+    // Convert spherical coordinates to a vector.
+    // The MoonResult angles are already expressed in radians.
+    const dist_cos_lat = moon.distance_au * Math.cos(moon.geo_eclip_lat);
+    const ecm = [
+        dist_cos_lat * Math.cos(moon.geo_eclip_lon),
+        dist_cos_lat * Math.sin(moon.geo_eclip_lon),
+        moon.distance_au * Math.sin(moon.geo_eclip_lat)
+    ];
+    // Obtain true and mean obliquity angles for the given time.
+    // This serves to pre-calculate the nutation also, and cache it in `time`.
+    const et = e_tilt(time);
+    // Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
+    const eqm = obl_ecl2equ_vec(et.mobl, ecm);
+    // Add nutation to convert ECM to true equatorial coordinates of date (EQD).
+    const eqd = nutation(eqm, time, PrecessDirection.From2000);
+    const eqd_vec = VectorFromArray(eqd, time);
+    // Convert back to ecliptic, this time in true equinox of date (ECT).
+    const toblRad = et.tobl * exports.DEG2RAD;
+    const cos_tobl = Math.cos(toblRad);
+    const sin_tobl = Math.sin(toblRad);
+    const eclip = RotateEquatorialToEcliptic(eqd_vec, cos_tobl, sin_tobl);
+    return new Spherical(eclip.elat, eclip.elon, moon.distance_au);
 }
 exports.EclipticGeoMoon = EclipticGeoMoon;
 /**

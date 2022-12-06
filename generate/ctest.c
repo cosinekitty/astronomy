@@ -109,7 +109,8 @@ maxdiff_column_t;
 #define NUM_S_COLUMNS       7
 #define NUM_J_COLUMNS       8
 #define NUM_N_COLUMNS       2
-#define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS + NUM_N_COLUMNS)
+#define NUM_M_COLUMNS       3
+#define NUM_DIFF_COLUMNS    (NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS + NUM_N_COLUMNS + NUM_M_COLUMNS)
 
 /*-------------------------------------------------------------------------------------------------*/
 
@@ -518,6 +519,7 @@ static int AstroCheck(void)
     astro_equatorial_t ofdate;
     astro_horizon_t hor;
     astro_jupiter_moons_t jm;
+    astro_spherical_t sphere;
     astro_observer_t observer = Astronomy_MakeObserver(29.0, -81.0, 10.0);
     int b;
     static const astro_body_t bodylist[] =  /* match the order in the JavaScript unit test */
@@ -572,6 +574,11 @@ static int AstroCheck(void)
 
         /* Nutation calculations. */
         fprintf(outfile, "n %0.18le %0.18le\n", time.psi, time.eps);
+
+        /* Moon's ecliptic coordinates in true equinox of date. */
+        sphere = Astronomy_EclipticGeoMoon(time);
+        CHECK_STATUS(sphere);
+        fprintf(outfile, "m %0.18le %0.18le %0.18le\n", sphere.lat, sphere.lon, sphere.dist);
 
         time = Astronomy_AddDays(time, 10.0 + PI/100.0);
     }
@@ -695,7 +702,12 @@ static const maxdiff_settings_t DiffSettings[NUM_DIFF_COLUMNS] =
 
     /* 'n' lines: nutation angles */
     { "psi",            -1,     0,     10.0 },      /* 19 */
-    { "eps",            -1,     0,     10.0 }       /* 20 */
+    { "eps",            -1,     0,     10.0 },      /* 20 */
+
+    /* 'm' lines: EclipticGeoMoon calculations. */
+    { "moon_lat",       -1,     0,    180.0 },      /* 21 */
+    { "moon_lon",       21,   360,    360.0 },      /* 22 */
+    { "moon_dist",      -1,     0,    0.003 }       /* 23 */
 };
 
 static int Diff(double tolerance, const char *a_filename, const char *b_filename)
@@ -846,6 +858,13 @@ static int DiffLine(int lnum, const char *aline, const char *bline, maxdiff_colu
         na = sscanf(aline, "n %lf %lf", &adata[0], &adata[1]);
         nb = sscanf(bline, "n %lf %lf", &bdata[0], &bdata[1]);
         nrequired = 2;
+        break;
+
+    case 'm':   /* EclipticGeoMoon */
+        colbase = NUM_V_COLUMNS + NUM_S_COLUMNS + NUM_J_COLUMNS + NUM_N_COLUMNS;
+        na = sscanf(aline, "m %lf %lf %lf", &adata[0], &adata[1], &adata[2]);
+        nb = sscanf(bline, "m %lf %lf %lf", &bdata[0], &bdata[1], &bdata[2]);
+        nrequired = 3;
         break;
 
     default:

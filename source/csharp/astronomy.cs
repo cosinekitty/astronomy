@@ -5235,9 +5235,8 @@ namespace CosineKitty
             );
         }
 
-        private static AstroVector ecl2equ_vec(AstroVector ecl)
+        private static AstroVector ecl2equ_vec(AstroVector ecl, double obl)
         {
-            double obl = mean_obliq(ecl.t.tt) * DEG2RAD;
             double cos_obl = Math.Cos(obl);
             double sin_obl = Math.Sin(obl);
 
@@ -5247,6 +5246,11 @@ namespace CosineKitty
                 ecl.y*sin_obl + ecl.z*cos_obl,
                 ecl.t
             );
+        }
+
+        private static AstroVector ecl2equ_vec(AstroVector ecl)
+        {
+            return ecl2equ_vec(ecl, mean_obliq(ecl.t.tt) * DEG2RAD);
         }
 
         /// <summary>
@@ -5292,7 +5296,11 @@ namespace CosineKitty
         /// Given a time of observation, calculates the Moon's geocentric position
         /// in ecliptic spherical coordinates. Provides the ecliptic latitude and
         /// longitude in degrees, and the geocentric distance in astronomical units (AU).
-        /// The ecliptic longitude is measured relative to the equinox of date.
+        ///
+        /// The ecliptic angles are measured in "ECT": relative to the true ecliptic plane and
+        /// equatorial plane at the specified time. This means the Earth's equator
+        /// is corrected for precession and nutation, and the plane of the Earth's
+        /// orbit is corrected for gradual obliquity drift.
         ///
         /// This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
         /// which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
@@ -5307,13 +5315,34 @@ namespace CosineKitty
         /// </param>
         public static Spherical EclipticGeoMoon(AstroTime time)
         {
+            // Find ecliptic coordinates of the Moon in mean equinox of date (ECM).
             var context = new MoonContext(time.tt / 36525.0);
             MoonResult moon = context.CalcMoon();
-            return new Spherical(
-                moon.geo_eclip_lat * RAD2DEG,
-                moon.geo_eclip_lon * RAD2DEG,
-                moon.distance_au
+
+            // Convert spherical coordinates to a vector.
+            // The MoonResult angles are already expressed in radians.
+            double dist_cos_lat = moon.distance_au * Math.Cos(moon.geo_eclip_lat);
+            var ecm = new AstroVector(
+                dist_cos_lat * Math.Cos(moon.geo_eclip_lon),
+                dist_cos_lat * Math.Sin(moon.geo_eclip_lon),
+                moon.distance_au * Math.Sin(moon.geo_eclip_lat),
+                time
             );
+
+            // Obtain true and mean obliquity angles for the given time.
+            // This serves to pre-calculate the nutation also, and cache it in `time`.
+            earth_tilt_t et = e_tilt(time);
+
+            // Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
+            AstroVector eqm = ecl2equ_vec(ecm, et.mobl * DEG2RAD);
+
+            // Add nutation to convert ECM to true equatorial coordinates of date (EQD).
+            AstroVector eqd = nutation(eqm, PrecessDirection.From2000);
+
+            // Convert back to ecliptic, this time in true equinox of date (ECT).
+            Ecliptic eclip = RotateEquatorialToEcliptic(eqd, et.tobl * DEG2RAD);
+
+            return new Spherical(eclip.elat, eclip.elon, moon.distance_au);
         }
 
         /// <summary>
