@@ -1798,7 +1798,7 @@ namespace csharp_test
 
             RotationMatrix b = Astronomy.InverseRotation(a);
             if (0 != CompareMatrices("Rotation_MatrixInverse", b, v, 0.0)) return 1;
-            Console.WriteLine("C# Rotation_MatrixInverse: PASS");
+            Debug("C# Rotation_MatrixInverse: PASS");
             return 0;
         }
 
@@ -1821,7 +1821,7 @@ namespace csharp_test
 
             RotationMatrix c = Astronomy.CombineRotation(b, a);
             if (0 != CompareMatrices("Rotation_MatrixMultiply", c, v, 0.0)) return 1;
-            Console.WriteLine("C# Rotation_MatrixMultiply: PASS");
+            Debug("C# Rotation_MatrixMultiply: PASS");
             return 0;
         }
 
@@ -2150,34 +2150,30 @@ namespace csharp_test
 
             if (0 != CompareVectors("Rotation_Pivot #2", v2, ve, tolerance)) return 1;
 
-            Console.WriteLine("C# Rotation_Pivot: PASS");
+            Debug("C# Rotation_Pivot: PASS");
             return 0;
         }
 
         static int RotationTest()
         {
-            if (0 != Rotation_MatrixInverse()) return 1;
-            if (0 != Rotation_MatrixMultiply()) return 1;
-            if (0 != Rotation_Pivot()) return 1;
-            if (0 != Test_EQJ_ECL()) return 1;
-            if (0 != Test_EQJ_GAL_NOVAS("../../temp/galeqj.txt")) return 1;
-
-            if (0 != Test_EQJ_EQD(Body.Mercury)) return 1;
-            if (0 != Test_EQJ_EQD(Body.Venus)) return 1;
-            if (0 != Test_EQJ_EQD(Body.Mars)) return 1;
-            if (0 != Test_EQJ_EQD(Body.Jupiter)) return 1;
-            if (0 != Test_EQJ_EQD(Body.Saturn)) return 1;
-
-            if (0 != Test_EQD_HOR(Body.Mercury)) return 1;
-            if (0 != Test_EQD_HOR(Body.Venus)) return 1;
-            if (0 != Test_EQD_HOR(Body.Mars)) return 1;
-            if (0 != Test_EQD_HOR(Body.Jupiter)) return 1;
-            if (0 != Test_EQD_HOR(Body.Saturn)) return 1;
-
-            if (0 != Test_RotRoundTrip()) return 1;
-
-            Console.WriteLine("C# RotationTest: PASS");
-            return 0;
+            return (
+                0 == Rotation_MatrixInverse() &&
+                0 == Rotation_MatrixMultiply() &&
+                0 == Rotation_Pivot() &&
+                0 == Test_EQJ_ECL() &&
+                0 == Test_EQJ_GAL_NOVAS("../../temp/galeqj.txt") &&
+                0 == Test_EQJ_EQD(Body.Mercury) &&
+                0 == Test_EQJ_EQD(Body.Venus) &&
+                0 == Test_EQJ_EQD(Body.Mars) &&
+                0 == Test_EQJ_EQD(Body.Jupiter) &&
+                0 == Test_EQJ_EQD(Body.Saturn) &&
+                0 == Test_EQD_HOR(Body.Mercury) &&
+                0 == Test_EQD_HOR(Body.Venus) &&
+                0 == Test_EQD_HOR(Body.Mars) &&
+                0 == Test_EQD_HOR(Body.Jupiter) &&
+                0 == Test_EQD_HOR(Body.Saturn) &&
+                0 == Test_RotRoundTrip()
+            ) ? Pass("RotationTest") : 1;
         }
 
         static int RefractionTest()
