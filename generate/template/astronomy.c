@@ -1392,7 +1392,7 @@ static void obl_ecl2equ_vec(double obl, astro_time_t time, const double ecl[3], 
 static void ecl2equ_vec(astro_time_t time, const double ecl[3], double equ[3])
 {
     double obl = mean_obliq(time.tt);
-    return obl_ecl2equ_vec(obl, time, ecl, equ);
+    obl_ecl2equ_vec(obl, time, ecl, equ);
 }
 
 static astro_rotation_t precession_rot(astro_time_t time, precess_dir_t dir)
