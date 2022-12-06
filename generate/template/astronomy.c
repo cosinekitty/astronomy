@@ -9071,6 +9071,94 @@ astro_rotation_t Astronomy_Rotation_GAL_EQJ(void)
 }
 
 
+/**
+ * @brief
+ *      Returns a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = true ecliptic of date.
+ * Target: EQD = equator of date.
+ *
+ * @return
+ *      A rotation matrix that converts ECT to EQD.
+ */
+astro_rotation_t Astronomy_Rotation_ECT_EQD(astro_time_t *time)
+{
+    astro_rotation_t m;
+    earth_tilt_t et;
+    double tobl, cos_tobl, sin_tobl;
+
+    /* Find true ecliptic obliquity for this time. */
+    et = e_tilt(time);
+    tobl = et.tobl * DEG2RAD;
+    cos_tobl = cos(tobl);
+    sin_tobl = sin(tobl);
+
+    /* EQD.x = ECT.x */
+    m.rot[0][0] = 1.0;
+    m.rot[1][0] = 0.0;
+    m.rot[2][0] = 0.0;
+
+    /* EQD.y = +cos*ECT.y - sin*ECT.z */
+    m.rot[0][1] = 0.0;
+    m.rot[1][1] = +cos_tobl;
+    m.rot[2][1] = -sin_tobl;
+
+    /* EQD.z = +sin*ECT.y + cos*ECT.z */
+    m.rot[0][2] = 0.0;
+    m.rot[1][2] = +sin_tobl;
+    m.rot[2][2] = +cos_tobl;
+
+    m.status = ASTRO_SUCCESS;
+    return m;
+}
+
+
+/**
+ * @brief
+ *      Returns a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equator of date.
+ * Target: ECT = true ecliptic of date.
+ *
+ * @return
+ *      A rotation matrix that converts EQD to ECT.
+ */
+astro_rotation_t Astronomy_Rotation_EQD_ECT(astro_time_t *time)
+{
+    astro_rotation_t m;
+    earth_tilt_t et;
+    double tobl, cos_tobl, sin_tobl;
+
+    /* Find true ecliptic obliquity for this time. */
+    et = e_tilt(time);
+    tobl = et.tobl * DEG2RAD;
+    cos_tobl = cos(tobl);
+    sin_tobl = sin(tobl);
+
+    /* ECT.x = EQD.x */
+    m.rot[0][0] = 1.0;
+    m.rot[1][0] = 0.0;
+    m.rot[2][0] = 0.0;
+
+    /* ECT.y = +cos*EQJ.y + sin*EQJ.z */
+    m.rot[0][1] = 0.0;
+    m.rot[1][1] = +cos_tobl;
+    m.rot[2][1] = +sin_tobl;
+
+    /* ECT.z = -sin*EQJ.y + cos*EQJ.z */
+    m.rot[0][2] = 0.0;
+    m.rot[1][2] = -sin_tobl;
+    m.rot[2][2] = +cos_tobl;
+
+    m.status = ASTRO_SUCCESS;
+    return m;
+}
+
+
 /** @cond DOXYGEN_SKIP */
 typedef struct
 {

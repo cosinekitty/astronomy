@@ -2089,6 +2089,23 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 ---
 
+<a name="Astronomy_Rotation_ECT_EQD"></a>
+### Astronomy_Rotation_ECT_EQD(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Returns a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: ECT = true ecliptic of date. Target: EQD = equator of date.
+
+
+
+**Returns:**  A rotation matrix that converts ECT to EQD. 
+
+
+
+---
+
 <a name="Astronomy_Rotation_EQD_ECL"></a>
 ### Astronomy_Rotation_EQD_ECL(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
@@ -2108,6 +2125,23 @@ This is one of the family of functions that returns a rotation matrix for conver
 | --- | --- | --- |
 | <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the source equator. | 
 
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQD_ECT"></a>
+### Astronomy_Rotation_EQD_ECT(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Returns a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQD = equator of date. Target: ECT = true ecliptic of date.
+
+
+
+**Returns:**  A rotation matrix that converts EQD to ECT. 
 
 
 

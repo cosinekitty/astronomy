@@ -3522,6 +3522,60 @@ fail:
     return error;
 }
 
+static int Test_EQD_ECT(void)
+{
+    int error = 1;
+    int count = 0;
+    astro_time_t time = Astronomy_MakeTime(1900, 1, 1, 0, 0, 0.0);
+    astro_time_t stopTime = Astronomy_MakeTime(2100, 1, 1, 0, 0, 0.0);
+    astro_vector_t eqj, eqd, ect, check_ect;
+    astro_rotation_t eqj_eqd, eqd_ect;
+    astro_spherical_t sphere;
+    double diff, max_diff = 0.0;
+
+    while (time.ut <= stopTime.ut)
+    {
+        /* Get Moon's geocentric position in EQJ. */
+        eqj = Astronomy_GeoMoon(time);
+        CHECK_STATUS(eqj);
+
+        /* Convert EQJ to EQD. */
+        eqj_eqd = Astronomy_Rotation_EQJ_EQD(&time);
+        CHECK_ROTMAT(eqj_eqd);
+        eqd = Astronomy_RotateVector(eqj_eqd, eqj);
+        CHECK_STATUS(eqd);
+
+        /* Convert EQD to ECT. */
+        eqd_ect = Astronomy_Rotation_EQD_ECT(&time);
+        CHECK_ROTMAT(eqd_ect);
+        ect = Astronomy_RotateVector(eqd_ect, eqd);
+        CHECK_STATUS(ect);
+
+        /* Independently get the Moon's spherical coordinates in ECT. */
+        sphere = Astronomy_EclipticGeoMoon(time);
+        CHECK_STATUS(sphere);
+
+        /* Convert spherical coordinates to ECT vector. */
+        check_ect = Astronomy_VectorFromSphere(sphere, time);
+        CHECK_STATUS(check_ect);
+
+        /* Verify the two ECT vectors are identical, within tolerance. */
+        CHECK(VectorDiff(ect, check_ect, &diff));
+        if (diff > max_diff) max_diff = diff;
+
+        time = Astronomy_AddDays(time, 10.0);
+        ++count;
+    }
+
+    if (max_diff > 3.743e-18)
+        FAIL("C Test_EQD_ECT: excessive vector diff = %0.6le AU.\n", max_diff);
+
+    DEBUG("C Test_EQD_ECT: PASS: count = %d, max_diff = %0.6le AU\n", count, max_diff);
+    error = 0;
+fail:
+    return error;
+}
+
 static int CheckInverse(const char *aname, const char *bname, astro_rotation_t arot, astro_rotation_t brot)
 {
     int error;
@@ -3575,6 +3629,7 @@ static int Test_RotRoundTrip(void)
     astro_rotation_t hor_eqd, eqd_hor;
     astro_rotation_t eqd_ecl, ecl_eqd;
     astro_rotation_t hor_ecl, ecl_hor;
+    astro_rotation_t eqd_ect, ect_eqd;
 
     time = Astronomy_MakeTime(2067, 5, 30, 14, 45, 0.0);
     observer = Astronomy_MakeObserver(+28.0, -82.0, 0.0);
@@ -3613,6 +3668,11 @@ static int Test_RotRoundTrip(void)
     hor_ecl = Astronomy_Rotation_HOR_ECL(&time, observer);
     ecl_hor = Astronomy_Rotation_ECL_HOR(&time, observer);
     CHECK_INVERSE(hor_ecl, ecl_hor);
+
+    /* Round trip #7: EQD <==> ECT. */
+    eqd_ect = Astronomy_Rotation_EQD_ECT(&time);
+    ect_eqd = Astronomy_Rotation_ECT_EQD(&time);
+    CHECK_INVERSE(eqd_ect, ect_eqd);
 
     /*
         Verify that combining different sequences of rotations result
@@ -3683,6 +3743,7 @@ static int RotationTest(void)
     CHECK(Test_EQD_HOR(BODY_JUPITER));
     CHECK(Test_EQD_HOR(BODY_SATURN));
 
+    CHECK(Test_EQD_ECT());
 
     CHECK(Test_RotRoundTrip());
 

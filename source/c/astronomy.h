@@ -1319,6 +1319,7 @@ astro_state_vector_t Astronomy_RotateState(astro_rotation_t rotation, astro_stat
 
 astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t *time);
 astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t *time);
+astro_rotation_t Astronomy_Rotation_EQD_ECT(astro_time_t *time);
 astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t *time, astro_observer_t observer);
 astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t *time);
 astro_rotation_t Astronomy_Rotation_EQJ_ECL(void);
@@ -1326,6 +1327,7 @@ astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t *time, astro_observer_t
 astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t *time);
 astro_rotation_t Astronomy_Rotation_ECL_EQJ(void);
 astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t *time, astro_observer_t observer);
+astro_rotation_t Astronomy_Rotation_ECT_EQD(astro_time_t *time);
 astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t *time, astro_observer_t observer);
 astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t *time, astro_observer_t observer);
 astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t *time, astro_observer_t observer);
