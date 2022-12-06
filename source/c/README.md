@@ -2106,6 +2106,13 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 
 
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the ecliptic/equator conversion. | 
+
+
+
+
 ---
 
 <a name="Astronomy_Rotation_EQD_ECL"></a>
@@ -2144,6 +2151,13 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 
 **Returns:**  A rotation matrix that converts EQD to ECT. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time of the equator/ecliptic conversion. | 
+
 
 
 

@@ -1511,6 +1511,22 @@ Target: HOR = horizontal system.
 
 **Returns:** A rotation matrix that converts ECL to HOR at `time` and for `observer`. The components of the horizontal vector are: x = north, y = west, z = zenith (straight up from the observer). These components are chosen so that the "right-hand rule" works for the vector and so that north represents the direction where azimuth = 0.
 
+<a name="Astronomy.Rotation_ECT_EQD"></a>
+### Astronomy.Rotation_ECT_EQD(time) &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECT = true ecliptic of date.
+Target: EQD = equator of date.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the ecliptic/equator conversion. |
+
+**Returns:** A rotation matrix that converts ECT to EQD.
+
 <a name="Astronomy.Rotation_EQD_ECL"></a>
 ### Astronomy.Rotation_EQD_ECL(time) &#8658; [`RotationMatrix`](#RotationMatrix)
 
@@ -1526,6 +1542,22 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the source equator. |
 
 **Returns:** A rotation matrix that converts EQD to ECL.
+
+<a name="Astronomy.Rotation_EQD_ECT"></a>
+### Astronomy.Rotation_EQD_ECT(time) &#8658; [`RotationMatrix`](#RotationMatrix)
+
+**Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT) .**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equator of date.
+Target: ECT = true ecliptic of date.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`AstroTime`](#AstroTime) | `time` | The date and time of the equator/ecliptic conversion. |
+
+**Returns:** A rotation matrix that converts EQD to ECT.
 
 <a name="Astronomy.Rotation_EQD_EQJ"></a>
 ### Astronomy.Rotation_EQD_EQJ(time) &#8658; [`RotationMatrix`](#RotationMatrix)

@@ -9080,6 +9080,9 @@ astro_rotation_t Astronomy_Rotation_GAL_EQJ(void)
  * Source: ECT = true ecliptic of date.
  * Target: EQD = equator of date.
  *
+ * @param time
+ *      The date and time of the ecliptic/equator conversion.
+ *
  * @return
  *      A rotation matrix that converts ECT to EQD.
  */
@@ -9123,6 +9126,9 @@ astro_rotation_t Astronomy_Rotation_ECT_EQD(astro_time_t *time)
  * for converting from one orientation to another.
  * Source: EQD = equator of date.
  * Target: ECT = true ecliptic of date.
+ *
+ * @param time
+ *      The date and time of the equator/ecliptic conversion.
  *
  * @return
  *      A rotation matrix that converts EQD to ECT.

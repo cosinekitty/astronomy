@@ -11112,6 +11112,93 @@ namespace CosineKitty
             return new RotationMatrix(rot);
         }
 
+        /// <summary>
+        /// Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: ECT = true ecliptic of date.
+        /// Target: EQD = equator of date.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time of the ecliptic/equator conversion.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts ECT to EQD.
+        /// </returns>
+        public static RotationMatrix Rotation_ECT_EQD(AstroTime time)
+        {
+            var rot = new double[3, 3];
+
+            // Find true ecliptic obliquity for this time.
+            earth_tilt_t et = e_tilt(time);
+            double tobl = et.tobl * DEG2RAD;
+            double cos_tobl = Math.Cos(tobl);
+            double sin_tobl = Math.Sin(tobl);
+
+            // EQD.x = ECT.x
+            rot[0, 0] = 1.0;
+            rot[1, 0] = 0.0;
+            rot[2, 0] = 0.0;
+
+            // EQD.y = +cos*ECT.y - sin*ECT.z
+            rot[0, 1] = 0.0;
+            rot[1, 1] = +cos_tobl;
+            rot[2, 1] = -sin_tobl;
+
+            // EQD.z = +sin*ECT.y + cos*ECT.z
+            rot[0, 2] = 0.0;
+            rot[1, 2] = +sin_tobl;
+            rot[2, 2] = +cos_tobl;
+
+            return new RotationMatrix(rot);
+        }
+
+        /// <summary>
+        /// Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT) .
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: EQD = equator of date.
+        /// Target: ECT = true ecliptic of date.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time of the equator/ecliptic conversion.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts EQD to ECT.
+        /// </returns>
+        public static RotationMatrix Rotation_EQD_ECT(AstroTime time)
+        {
+            var rot = new double[3, 3];
+
+            // Find true ecliptic obliquity for this time.
+            earth_tilt_t et = e_tilt(time);
+            double tobl = et.tobl * DEG2RAD;
+            double cos_tobl = Math.Cos(tobl);
+            double sin_tobl = Math.Sin(tobl);
+
+            // ECT.x = EQD.x
+            rot[0, 0] = 1.0;
+            rot[1, 0] = 0.0;
+            rot[2, 0] = 0.0;
+
+            // ECT.y = +cos*EQJ.y + sin*EQJ.z
+            rot[0, 1] = 0.0;
+            rot[1, 1] = +cos_tobl;
+            rot[2, 1] = +sin_tobl;
+
+            // ECT.z = -sin*EQJ.y + cos*EQJ.z
+            rot[0, 2] = 0.0;
+            rot[1, 2] = -sin_tobl;
+            rot[2, 2] = +cos_tobl;
+
+            return new RotationMatrix(rot);
+        }
+
+
         private struct constel_info_t
         {
             public readonly string symbol;

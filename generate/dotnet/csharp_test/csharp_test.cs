@@ -2154,6 +2154,46 @@ namespace csharp_test
             return 0;
         }
 
+        static int Test_EQD_ECT()
+        {
+            var time = new AstroTime(1900, 1, 1, 0, 0, 0.0);
+            var stopTime = new AstroTime(2100, 1, 1, 0, 0, 0.0);
+            double max_diff = 0.0;
+            int count = 0;
+
+            while (time.ut <= stopTime.ut)
+            {
+                // Get Moon's geocentric position in EQJ.
+                AstroVector eqj = Astronomy.GeoMoon(time);
+
+                // Convert EQJ to EQD.
+                RotationMatrix eqj_eqd = Astronomy.Rotation_EQJ_EQD(time);
+                AstroVector eqd = Astronomy.RotateVector(eqj_eqd, eqj);
+
+                // Convert EQD to ECT.
+                RotationMatrix eqd_ect = Astronomy.Rotation_EQD_ECT(time);
+                AstroVector ect = Astronomy.RotateVector(eqd_ect, eqd);
+
+                // Independently get the Moon's spherical coordinates in ECT.
+                Spherical sphere = Astronomy.EclipticGeoMoon(time);
+
+                // Convert spherical coordinates to ECT vector.
+                AstroVector check_ect = Astronomy.VectorFromSphere(sphere, time);
+
+                // Verify the two ECT vectors are identical, within tolerance.
+                max_diff = Math.Max(max_diff, VectorDiff(ect, check_ect));
+
+                time = time.AddDays(10.0);
+                ++count;
+            }
+
+            if (max_diff > 3.743e-18)
+                return Fail($"Test_EQD_ECT: excessive vector diff = {max_diff:G6} AU.");
+
+            Debug($"C# Test_EQD_ECT: PASS: count = {count}, max_diff = {max_diff:G6} AU.");
+            return 0;
+        }
+
         static int RotationTest()
         {
             return (
@@ -2172,6 +2212,7 @@ namespace csharp_test
                 0 == Test_EQD_HOR(Body.Mars) &&
                 0 == Test_EQD_HOR(Body.Jupiter) &&
                 0 == Test_EQD_HOR(Body.Saturn) &&
+                0 == Test_EQD_ECT() &&
                 0 == Test_RotRoundTrip()
             ) ? Pass("RotationTest") : 1;
         }
