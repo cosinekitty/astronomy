@@ -2093,6 +2093,11 @@ namespace csharp_test
             RotationMatrix ecl_hor = Astronomy.Rotation_ECL_HOR(time, observer);
             if (0 != CheckInverse(nameof(hor_ecl), nameof(ecl_hor), hor_ecl, ecl_hor)) return 1;
 
+            // Round trip #7: EQD <==> ECT.
+            RotationMatrix eqd_ect = Astronomy.Rotation_EQD_ECT(time);
+            RotationMatrix ect_eqd = Astronomy.Rotation_ECT_EQD(time);
+            if (0 != CheckInverse(nameof(eqd_ect), nameof(ect_eqd), eqd_ect, ect_eqd)) return 1;
+
             // Verify that combining different sequences of rotations result
             // in the expected combination.
             // For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
