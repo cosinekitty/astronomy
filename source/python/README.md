@@ -141,10 +141,10 @@ It also allows converting from a vector to spherical (angular) coordinates and b
 within a given orientation. Note the 3-letter codes for each of the orientation systems;
 these are used in function and type names.
 
-- **EQJ = Equatorial J2000**: Uses the Earth's equator on January 1, 2000, at noon UTC.
+- **EQJ = J2000 Mean Equator**: Uses the Earth's equator on January 1, 2000, at noon UTC.
 - **EQD = Equator of Date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
 - **ECT = True Ecliptic of Date**: Uses the true orbital plane and equator of the Earth on the given date.
-- **ECL = Mean J2000 Ecliptic**: Uses the plane of the Earth's orbit around the Sun in the year 2000. The x-axis is referenced against the J2000 mean equinox.
+- **ECL = J2000 Mean Ecliptic**: Uses the plane of the Earth's orbit around the Sun in the year 2000. The x-axis is referenced against the J2000 mean equinox.
 - **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
 - **GAL = Galactic**: Based on the IAU 1958 definition of galactic coordinates.
 
@@ -160,20 +160,22 @@ these are used in function and type names.
 | [EquatorFromVector](#EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
-| [Rotation_EQD_EQJ](#Rotation_EQD_EQJ) | Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ). |
-| [Rotation_EQD_ECL](#Rotation_EQD_ECL) | Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL). |
-| [Rotation_EQD_HOR](#Rotation_EQD_HOR) | Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR). |
-| [Rotation_EQJ_EQD](#Rotation_EQJ_EQD) | Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD). |
-| [Rotation_EQJ_ECL](#Rotation_EQJ_ECL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL). |
-| [Rotation_EQJ_HOR](#Rotation_EQJ_HOR) | Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR). |
-| [Rotation_ECL_EQD](#Rotation_ECL_EQD) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD). |
-| [Rotation_ECL_EQJ](#Rotation_ECL_EQJ) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ). |
+| [Rotation_EQD_EQJ](#Rotation_EQD_EQJ) | Calculates a rotation matrix from equator of date (EQD) to J2000 mean equator (EQJ). |
+| [Rotation_EQD_ECT](#Rotation_EQD_ECT) | Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT). |
+| [Rotation_EQD_ECL](#Rotation_EQD_ECL) | Calculates a rotation matrix from equator of date (EQD) to ecliptic J2000 (ECL). |
+| [Rotation_EQD_HOR](#Rotation_EQD_HOR) | Calculates a rotation matrix from equator of date (EQD) to horizontal (HOR). |
+| [Rotation_EQJ_EQD](#Rotation_EQJ_EQD) | Calculates a rotation matrix from J2000 mean equator (EQJ) to equator of date (EQD). |
+| [Rotation_EQJ_ECL](#Rotation_EQJ_ECL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to ecliptic J2000 (ECL). |
+| [Rotation_EQJ_HOR](#Rotation_EQJ_HOR) | Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR). |
+| [Rotation_ECT_EQD](#Rotation_ECT_EQD) | Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD). |
+| [Rotation_ECL_EQD](#Rotation_ECL_EQD) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equator of date (EQD). |
+| [Rotation_ECL_EQJ](#Rotation_ECL_EQJ) | Calculates a rotation matrix from ecliptic J2000 (ECL) to J2000 mean equator (EQJ). |
 | [Rotation_ECL_HOR](#Rotation_ECL_HOR) | Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR). |
-| [Rotation_HOR_EQD](#Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD). |
+| [Rotation_HOR_EQD](#Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equator of date (EQD). |
 | [Rotation_HOR_EQJ](#Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ). |
 | [Rotation_HOR_ECL](#Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
-| [Rotation_EQJ_GAL](#Rotation_EQJ_GAL) | Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL). |
-| [Rotation_GAL_EQJ](#Rotation_GAL_EQJ) | Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ). |
+| [Rotation_EQJ_GAL](#Rotation_EQJ_GAL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL). |
+| [Rotation_GAL_EQJ](#Rotation_GAL_EQJ) | Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ). |
 
 ### Gravitational simulation of small bodies
 
@@ -2553,6 +2555,25 @@ and so that north represents the direction where azimuth = 0.
 
 ---
 
+<a name="Rotation_ECT_EQD"></a>
+### Rotation_ECT_EQD(time)
+
+**Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECT = true ecliptic of date.
+Target: EQD = equator of date.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the ecliptic/equator conversion. |
+
+**Returns**: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts ECT to EQD.
+
+---
+
 <a name="Rotation_EQD_ECL"></a>
 ### Rotation_EQD_ECL(time)
 
@@ -2569,6 +2590,25 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 **Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQD to ECL.
+
+---
+
+<a name="Rotation_EQD_ECT"></a>
+### Rotation_EQD_ECT(time)
+
+**Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQD = equator of date.
+Target: ECT = true ecliptic of date.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time of the equator/ecliptic conversion. |
+
+**Returns**: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQD to ECT.
 
 ---
 

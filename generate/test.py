@@ -1180,6 +1180,11 @@ def Test_RotRoundTrip():
     ecl_hor = astronomy.Rotation_ECL_HOR(time, observer)
     CheckInverse('hor_ecl', 'ecl_hor', hor_ecl, ecl_hor)
 
+    # Round trip #7: EQJ <==> ECT
+    eqd_ect = astronomy.Rotation_EQD_ECT(time)
+    ect_eqd = astronomy.Rotation_ECT_EQD(time)
+    CheckInverse('eqd_ect', 'ect_eqd', eqd_ect, ect_eqd)
+
     # Verify that combining different sequences of rotations result
     # in the expected combination.
     # For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
@@ -1231,7 +1236,32 @@ def Rotation_Pivot():
 
     Debug('PY Rotation_Pivot: PASS')
 
-
+def Test_EQD_ECT():
+    time = astronomy.Time.Make(1900, 1, 1, 0, 0, 0.0)
+    stopTime = astronomy.Time.Make(2100, 1, 1, 0, 0, 0.0)
+    count = 0
+    max_diff = 0.0
+    while time.ut <= stopTime.ut:
+        # Get Moon's geocentric position in EQJ.
+        eqj = astronomy.GeoMoon(time)
+        # Convert EQJ to EQD.
+        eqj_eqd = astronomy.Rotation_EQJ_EQD(time)
+        eqd = astronomy.RotateVector(eqj_eqd, eqj)
+        # Convert EQD to ECT.
+        eqd_ect = astronomy.Rotation_EQD_ECT(time)
+        ect = astronomy.RotateVector(eqd_ect, eqd)
+        # Independently get the Moon's spherical coordinates in ECT.
+        sphere = astronomy.EclipticGeoMoon(time)
+        # Convert spherical coordinates to ECT vector.
+        check_ect = astronomy.VectorFromSphere(sphere, time)
+        # Verify the two ECT vectors are identical, within tolerance.
+        max_diff = max(max_diff, VectorDiff(ect, check_ect))
+        time = time.AddDays(10.0)
+        count += 1
+    if max_diff > 3.743e-18:
+        print('PY Test_EQD_ECT: excessive vector diff = {:0.6e} au.'.format(max_diff))
+        sys.exit(1)
+    Debug('PY Test_EQD_ECT: PASS: count = {}, max_diff = {:0.6e} au.'.format(count, max_diff))
 
 def Rotation():
     Rotation_MatrixInverse()
@@ -1249,6 +1279,7 @@ def Rotation():
     Test_EQD_HOR(astronomy.Body.Mars)
     Test_EQD_HOR(astronomy.Body.Jupiter)
     Test_EQD_HOR(astronomy.Body.Saturn)
+    Test_EQD_ECT()
     Test_RotRoundTrip()
     print('PY Rotation: PASS')
     return 0
