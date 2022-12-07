@@ -8401,6 +8401,55 @@ fun rotationGalEqj() =
         -0.8676668813529025, -0.1980677870294097, +0.4559861124470794
     )
 
+
+/**
+ * Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = true ecliptic of date
+ * Target: EQD = equator of date
+ *
+ * @return
+ * A rotation matrix that converts ECT to EQD.
+ */
+fun rotationEctEqd(time: Time): RotationMatrix {
+    val et = earthTilt(time)
+    val tobl = et.tobl.degreesToRadians()
+    val c = cos(tobl)
+    val s = sin(tobl)
+    return RotationMatrix(
+        1.0, 0.0, 0.0,
+        0.0,  +c,  +s,
+        0.0,  -s,  +c
+    )
+}
+
+
+/**
+ * Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equator of date
+ * Target: ECT = true ecliptic of date
+ *
+ * @return
+ * A rotation matrix that converts EQD to ECT.
+ */
+fun rotationEqdEct(time: Time): RotationMatrix {
+    val et = earthTilt(time)
+    val tobl = et.tobl.degreesToRadians()
+    val c = cos(tobl)
+    val s = sin(tobl)
+    return RotationMatrix(
+        1.0, 0.0, 0.0,
+        0.0,  +c,  -s,
+        0.0,  +s,  +c
+    )
+}
+
+
 /**
  * Determines the constellation that contains the given point in the sky.
  *
