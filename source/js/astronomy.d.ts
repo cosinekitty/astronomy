@@ -2533,6 +2533,30 @@ export declare function Rotation_EQJ_GAL(): RotationMatrix;
  */
 export declare function Rotation_GAL_EQJ(): RotationMatrix;
 /**
+ * @brief Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = true ecliptic of date
+ * Target: EQD = equator of date
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts ECT to EQD.
+ */
+export declare function Rotation_ECT_EQD(time: AstroTime): RotationMatrix;
+/**
+ * @brief Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equator of date
+ * Target: ECT = true ecliptic of date
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts EQD to ECT.
+ */
+export declare function Rotation_EQD_ECT(time: AstroTime): RotationMatrix;
+/**
  * @brief Reports the constellation that a given celestial point lies within.
  *
  * @property {string} symbol

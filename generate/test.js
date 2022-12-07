@@ -1800,6 +1800,41 @@ function Rotation() {
             throw 'Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.';
     }
 
+    function Test_EQD_ECT() {
+        let time = Astronomy.MakeTime(new Date('1900-01-01T00:00:00Z'));
+        const stopTime = Astronomy.MakeTime(new Date('2100-01-01T00:00:00Z'));
+        let max_diff = 0.0;
+        let count = 0;
+        while (time.ut <= stopTime.ut) {
+            // Get Moon's geocentric position in EQJ.
+            const eqj = Astronomy.GeoMoon(time);
+
+            // Convert EQJ to EQD.
+            const eqj_eqd = Astronomy.Rotation_EQJ_EQD(time);
+            const eqd = Astronomy.RotateVector(eqj_eqd, eqj);
+
+            // Convert EQD to ECT.
+            const eqd_ect = Astronomy.Rotation_EQD_ECT(time);
+            const ect = Astronomy.RotateVector(eqd_ect, eqd);
+
+            // Independently get the Moon's spherical coordinates in ECT.
+            const sphere = Astronomy.EclipticGeoMoon(time);
+
+            // Convert spherical coordinates to ECT vector.
+            const check_ect = Astronomy.VectorFromSphere(sphere, time);
+
+            // Verify the two ECT vectors are identical, within tolerance.
+            max_diff = Math.max(max_diff, VectorDiff(ect, check_ect));
+
+            time = time.AddDays(10.0);
+            ++count;
+        }
+        if (max_diff > 3.743e-18)
+            throw `Test_EQD_ECT: excessive vector diff = ${max_diff.toExponential(6)} AU.`;
+
+        Debug(`JS Test_EQD_ECT: PASS: count = ${count}, max_diff = ${max_diff.toExponential(6)} AU.`);
+    }
+
     const IdentityMatrix = Astronomy.IdentityMatrix();
 
     function CheckInverse(aname, bname, arot, brot) {
@@ -1851,6 +1886,11 @@ function Rotation() {
         const hor_ecl = Astronomy.Rotation_HOR_ECL(time, observer);
         const ecl_hor = Astronomy.Rotation_ECL_HOR(time, observer);
         CheckInverse('hor_ecl', 'ecl_hor', hor_ecl, ecl_hor);
+
+        /* Round trip #7: EQD <==> ECT. */
+        const eqd_ect = Astronomy.Rotation_EQD_ECT(time);
+        const ect_eqd = Astronomy.Rotation_ECT_EQD(time);
+        CheckInverse('eqd_ect', 'ect_eqd', eqd_ect, ect_eqd);
 
         /*
             Verify that combining different sequences of rotations result
@@ -1929,6 +1969,8 @@ function Rotation() {
     Test_EQD_HOR('Mars');
     Test_EQD_HOR('Jupiter');
     Test_EQD_HOR('Saturn');
+
+    Test_EQD_ECT();
 
     Test_RotRoundTrip();
 

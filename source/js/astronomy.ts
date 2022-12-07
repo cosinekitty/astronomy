@@ -7524,6 +7524,54 @@ export function Rotation_GAL_EQJ(): RotationMatrix {
 }
 
 
+/**
+ * @brief Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = true ecliptic of date
+ * Target: EQD = equator of date
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts ECT to EQD.
+ */
+ export function Rotation_ECT_EQD(time: AstroTime): RotationMatrix {
+    const et = e_tilt(time);
+    const tobl = et.tobl * DEG2RAD;
+    const c = Math.cos(tobl);
+    const s = Math.sin(tobl);
+    return new RotationMatrix([
+        [1.0, 0.0, 0.0],
+        [0.0,  +c,  +s],
+        [0.0,  -s,  +c]
+    ]);
+}
+
+
+/**
+ * @brief Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQD = equator of date
+ * Target: ECT = true ecliptic of date
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts EQD to ECT.
+ */
+ export function Rotation_EQD_ECT(time: AstroTime): RotationMatrix {
+    const et = e_tilt(time);
+    const tobl = et.tobl * DEG2RAD;
+    const c = Math.cos(tobl);
+    const s = Math.sin(tobl);
+    return new RotationMatrix([
+        [1.0, 0.0, 0.0],
+        [0.0,  +c,  -s],
+        [0.0,  +s,  +c]
+    ]);
+}
+
+
 const ConstelNames = [
     ['And', 'Andromeda'           ]  //  0
 ,   ['Ant', 'Antila'              ]  //  1
