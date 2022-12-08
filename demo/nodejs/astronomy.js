@@ -2829,7 +2829,7 @@ exports.GeoMoon = GeoMoon;
  * <a href="https://www.springer.com/us/book/9783540672210">Astronomy on the Personal Computer</a>
  * by Montenbruck and Pfleger.
  *
- * To calculate an equatorial J2000 vector instead, use {@link GeoMoon}.
+ * To calculate a J2000 mean equator vector instead, use {@link GeoMoon}.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the Moon's position.
@@ -3918,7 +3918,7 @@ function ExportState(terse, time) {
  *
  * Given a body and a time, calculates the barycentric position and velocity
  * vectors for the center of that body at that time.
- * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ * The vectors are expressed in J2000 mean equator coordinates (EQJ).
  *
  * @param {Body} body
  *      The celestial body whose barycentric state vector is to be calculated.
@@ -3969,7 +3969,7 @@ exports.BaryState = BaryState;
  *
  * Given a body and a time, calculates the position and velocity
  * vectors for the center of that body at that time, relative to the center of the Sun.
- * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ * The vectors are expressed in J2000 mean equator coordinates (EQJ).
  * If you need the position vector only, it is more efficient to call {@link HelioVector}.
  * The Sun's center is a non-inertial frame of reference. In other words, the Sun
  * experiences acceleration due to gravitational forces, mostly from the larger
@@ -6425,7 +6425,7 @@ function RotateState(rotation, state) {
 }
 exports.RotateState = RotateState;
 /**
- * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+ * @brief Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6447,7 +6447,7 @@ function Rotation_EQJ_ECL() {
 }
 exports.Rotation_EQJ_ECL = Rotation_EQJ_ECL;
 /**
- * @brief Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+ * @brief Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6469,7 +6469,7 @@ function Rotation_ECL_EQJ() {
 }
 exports.Rotation_ECL_EQJ = Rotation_ECL_EQJ;
 /**
- * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+ * @brief Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6490,7 +6490,7 @@ function Rotation_EQJ_EQD(time) {
 }
 exports.Rotation_EQJ_EQD = Rotation_EQJ_EQD;
 /**
- * @brief Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+ * @brief Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6601,7 +6601,7 @@ function Rotation_HOR_EQJ(time, observer) {
 }
 exports.Rotation_HOR_EQJ = Rotation_HOR_EQJ;
 /**
- * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+ * @brief Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6630,7 +6630,7 @@ function Rotation_EQJ_HOR(time, observer) {
 }
 exports.Rotation_EQJ_HOR = Rotation_EQJ_HOR;
 /**
- * @brief Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+ * @brief Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6650,7 +6650,7 @@ function Rotation_EQD_ECL(time) {
 }
 exports.Rotation_EQD_ECL = Rotation_EQD_ECL;
 /**
- * @brief Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+ * @brief Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6669,7 +6669,7 @@ function Rotation_ECL_EQD(time) {
 }
 exports.Rotation_ECL_EQD = Rotation_ECL_EQD;
 /**
- * @brief Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+ * @brief Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6700,7 +6700,7 @@ function Rotation_ECL_HOR(time, observer) {
 }
 exports.Rotation_ECL_HOR = Rotation_ECL_HOR;
 /**
- * @brief Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+ * @brief Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6722,7 +6722,7 @@ function Rotation_HOR_ECL(time, observer) {
 }
 exports.Rotation_HOR_ECL = Rotation_HOR_ECL;
 /**
- * @brief Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL).
+ * @brief Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -6744,7 +6744,7 @@ function Rotation_EQJ_GAL() {
 }
 exports.Rotation_EQJ_GAL = Rotation_EQJ_GAL;
 /**
- * @brief Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+ * @brief Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8890,7 +8890,7 @@ exports.NextMoonNode = NextMoonNode;
  * α0, δ0, and W, respectively, from
  * [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
  * The field `north` is a unit vector pointing in the direction of the body's north pole.
- * It is expressed in the equatorial J2000 system (EQJ).
+ * It is expressed in the J2000 mean equator system (EQJ).
  *
  * @property {number} ra
  *      The J2000 right ascension of the body's north pole direction, in sidereal hours.
@@ -9117,7 +9117,7 @@ exports.RotationAxis = RotationAxis;
  * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
  *
  * The function returns the state vector for the selected Lagrange point
- * in equatorial J2000 coordinates (EQJ), with respect to the center of the
+ * in J2000 mean equator coordinates (EQJ), with respect to the center of the
  * major body.
  *
  * To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`

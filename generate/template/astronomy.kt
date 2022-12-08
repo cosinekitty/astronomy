@@ -2912,7 +2912,7 @@ class IlluminationInfo(
  * [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
  *
  * The field `north` is a unit vector pointing in the direction of the body's north pole.
- * It is expressed in the equatorial J2000 system (EQJ).
+ * It is expressed in the J2000 mean equator system (EQJ).
  */
 class AxisInfo(
     /**
@@ -4708,7 +4708,7 @@ fun rotationAxis(body: Body, time: Time): AxisInfo {
 * [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
 * by Montenbruck and Pfleger.
 *
-* To calculate an equatorial J2000 vector instead, use [geoMoon].
+* To calculate a J2000 mean equator vector instead, use [geoMoon].
 *
 * @param time
 * The date and time for which to calculate the Moon's position.
@@ -4950,7 +4950,7 @@ fun helioDistance(body: Body, time: Time): Double {
  *
  * Given a body and a time, calculates the position and velocity
  * vectors for the center of that body at that time, relative to the center of the Sun.
- * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ * The vectors are expressed in J2000 mean equator coordinates (EQJ).
  * If you need the position vector only, it is more efficient to call [helioVector].
  * The Sun's center is a non-inertial frame of reference. In other words, the Sun
  * experiences acceleration due to gravitational forces, mostly from the larger
@@ -4995,7 +4995,7 @@ fun helioState(body: Body, time: Time): StateVector {
  *
  * Given a body and a time, calculates the barycentric position and velocity
  * vectors for the center of that body at that time.
- * The vectors are expressed in equatorial J2000 coordinates (EQJ).
+ * The vectors are expressed in J2000 mean equator coordinates (EQJ).
  *
  * @param body
  * The celestial body whose barycentric state vector is to be calculated.
@@ -7396,7 +7396,7 @@ fun observerGravity(latitude: Double, height: Double): Double {
  * 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
  *
  * The function returns the state vector for the selected Lagrange point
- * in equatorial J2000 coordinates (EQJ), with respect to the center of the
+ * in J2000 mean equator coordinates (EQJ), with respect to the center of the
  * major body.
  *
  * To calculate Sun/Earth Lagrange points, pass in [Body.Sun] for `majorBody`
@@ -8106,7 +8106,7 @@ internal fun planetExtreme(body: Body, kind: ApsisKind, startTime: Time, initDay
 
 
 /**
- * Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+ * Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8125,7 +8125,7 @@ fun rotationEqjEcl(): RotationMatrix {
 }
 
 /**
- * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+ * Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8144,7 +8144,7 @@ fun rotationEclEqj(): RotationMatrix {
 }
 
 /**
- * Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+ * Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8159,7 +8159,7 @@ fun rotationEqjEqd(time: Time): RotationMatrix =
     nutationRot(time, PrecessDirection.From2000)
 
 /**
- * Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+ * Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8260,7 +8260,7 @@ fun rotationHorEqj(time: Time, observer: Observer): RotationMatrix =
     rotationEqdEqj(time)
 
 /**
- * Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+ * Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8284,7 +8284,7 @@ fun rotationEqjHor(time: Time, observer: Observer): RotationMatrix =
     rotationHorEqj(time, observer).inverse()
 
 /**
- * Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+ * Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8301,7 +8301,7 @@ fun rotationEqdEcl(time: Time): RotationMatrix =
     rotationEqjEcl()
 
 /**
- * Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+ * Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8317,7 +8317,7 @@ fun rotationEclEqd(time: Time): RotationMatrix =
     rotationEqdEcl(time).inverse()
 
 /**
- * Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+ * Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8342,7 +8342,7 @@ fun rotationEclHor(time: Time, observer: Observer): RotationMatrix =
     rotationEqdHor(time, observer)
 
 /**
- * Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+ * Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8362,7 +8362,7 @@ fun rotationHorEcl(time: Time, observer: Observer): RotationMatrix =
     rotationEclHor(time, observer).inverse()
 
 /**
- * Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+ * Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.
@@ -8382,7 +8382,7 @@ fun rotationEqjGal() =
     )
 
 /**
- * Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+ * Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
  * for converting from one orientation to another.

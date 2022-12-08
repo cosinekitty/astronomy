@@ -2295,7 +2295,7 @@ def EclipticGeoMoon(time):
     [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
     by Montenbruck and Pfleger.
 
-    To calculate an equatorial J2000 vector instead, use #GeoMoon.
+    To calculate a J2000 mean equator vector instead, use #GeoMoon.
 
     Parameters
     ----------
@@ -4336,7 +4336,7 @@ def BaryState(body, time):
 
     Given a body and a time, calculates the barycentric position and velocity
     vectors for the center of that body at that time.
-    The vectors are expressed in equatorial J2000 coordinates (EQJ).
+    The vectors are expressed in J2000 mean equator coordinates (EQJ).
 
     Parameters
     ----------
@@ -4414,7 +4414,7 @@ def HelioState(body, time):
 
     Given a body and a time, calculates the position and velocity
     vectors for the center of that body at that time, relative to the center of the Sun.
-    The vectors are expressed in equatorial J2000 coordinates (EQJ).
+    The vectors are expressed in J2000 mean equator coordinates (EQJ).
     If you need the position vector only, it is more efficient to call #HelioVector.
     The Sun's center is a non-inertial frame of reference. In other words, the Sun
     experiences acceleration due to gravitational forces, mostly from the larger
@@ -7237,7 +7237,7 @@ def RotateState(rotation, state):
 
 
 def Rotation_EQJ_ECL():
-    """Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).
+    """Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7260,7 +7260,7 @@ def Rotation_EQJ_ECL():
 
 
 def Rotation_ECL_EQJ():
-    """Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).
+    """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7282,7 +7282,7 @@ def Rotation_ECL_EQJ():
     ])
 
 def Rotation_EQJ_EQD(time):
-    """Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+    """Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7305,7 +7305,7 @@ def Rotation_EQJ_EQD(time):
 
 
 def Rotation_EQD_EQJ(time):
-    """Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+    """Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7422,7 +7422,7 @@ def Rotation_HOR_EQJ(time, observer):
 
 
 def Rotation_EQJ_HOR(time, observer):
-    """Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+    """Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7453,7 +7453,7 @@ def Rotation_EQJ_HOR(time, observer):
 
 
 def Rotation_EQD_ECL(time):
-    """Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+    """Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7476,7 +7476,7 @@ def Rotation_EQD_ECL(time):
 
 
 def Rotation_ECL_EQD(time):
-    """Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+    """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7498,7 +7498,7 @@ def Rotation_ECL_EQD(time):
 
 
 def Rotation_ECL_HOR(time, observer):
-    """Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+    """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7530,7 +7530,7 @@ def Rotation_ECL_HOR(time, observer):
 
 
 def Rotation_HOR_ECL(time, observer):
-    """Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+    """Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7553,7 +7553,7 @@ def Rotation_HOR_ECL(time, observer):
     return InverseRotation(rot)
 
 def Rotation_EQJ_GAL():
-    """Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL).
+    """Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -7575,7 +7575,7 @@ def Rotation_EQJ_GAL():
     ])
 
 def Rotation_GAL_EQJ():
-    """Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+    """Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
     for converting from one orientation to another.
@@ -9494,7 +9494,7 @@ class AxisInfo:
     [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
 
     The field `north` is a unit vector pointing in the direction of the body's north pole.
-    It is expressed in the equatorial J2000 system (EQJ).
+    It is expressed in the J2000 mean equator system (EQJ).
 
     Attributes
     ----------
@@ -9759,7 +9759,7 @@ def LagrangePoint(point, time, major_body, minor_body):
     5 = the Lagrange point 60 degrees behind the minor body's orbital position.
 
     The function returns the state vector for the selected Lagrange point
-    in equatorial J2000 coordinates (EQJ), with respect to the center of the
+    in J2000 mean equator coordinates (EQJ), with respect to the center of the
     major body.
 
     To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
@@ -10023,7 +10023,7 @@ class GravitySimulator:
             of the small bodies to be simulated.
             The caller must know the positions and velocities of the small bodies at an initial moment in time.
             Their positions and velocities are expressed with respect to `originBody`,
-            using equatorial J2000 orientation (EQJ).
+            using J2000 mean equator orientation (EQJ).
             Positions are expressed in astronomical units (AU).
             Velocities are expressed in AU/day.
             All the times embedded within the state vectors must exactly match `time`,

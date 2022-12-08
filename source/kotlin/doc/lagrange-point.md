@@ -10,7 +10,7 @@ Given a more massive "major" body and a much less massive "minor" body, calculat
 
 1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
 
-The function returns the state vector for the selected Lagrange point in equatorial J2000 coordinates (EQJ), with respect to the center of the major body.
+The function returns the state vector for the selected Lagrange point in J2000 mean equator coordinates (EQJ), with respect to the center of the major body.
 
 To calculate Sun/Earth Lagrange points, pass in [Body.Sun](-body/-sun/index.md) for majorBody and [Body.EMB](-body/-e-m-b/index.md) (Earth/Moon barycenter) for minorBody. For Lagrange points of the Sun and any other planet, pass in just that planet (e.g. [Body.Jupiter](-body/-jupiter/index.md)) for minorBody. To calculate Earth/Moon Lagrange points, pass in [Body.Earth](-body/-earth/index.md) and [Body.Moon](-body/-moon/index.md) for the major and minor bodies respectively.
 

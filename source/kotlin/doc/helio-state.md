@@ -6,7 +6,7 @@ fun [helioState](helio-state.md)(body: [Body](-body/index.md), time: [Time](-tim
 
 Calculates heliocentric position and velocity vectors for the given body.
 
-Given a body and a time, calculates the position and velocity vectors for the center of that body at that time, relative to the center of the Sun. The vectors are expressed in equatorial J2000 coordinates (EQJ). If you need the position vector only, it is more efficient to call [helioVector](helio-vector.md). The Sun's center is a non-inertial frame of reference. In other words, the Sun experiences acceleration due to gravitational forces, mostly from the larger planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum, kinetic energy, or other quantities that require a non-accelerating frame of reference, consider using [baryState](bary-state.md) instead.
+Given a body and a time, calculates the position and velocity vectors for the center of that body at that time, relative to the center of the Sun. The vectors are expressed in J2000 mean equator coordinates (EQJ). If you need the position vector only, it is more efficient to call [helioVector](helio-vector.md). The Sun's center is a non-inertial frame of reference. In other words, the Sun experiences acceleration due to gravitational forces, mostly from the larger planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum, kinetic energy, or other quantities that require a non-accelerating frame of reference, consider using [baryState](bary-state.md) instead.
 
 #### Return
 

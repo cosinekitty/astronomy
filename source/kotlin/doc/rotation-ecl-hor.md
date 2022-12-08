@@ -4,7 +4,7 @@
 
 fun [rotationEclHor](rotation-ecl-hor.md)(time: [Time](-time/index.md), observer: [Observer](-observer/index.md)): [RotationMatrix](-rotation-matrix/index.md)
 
-Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).
 
 This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: ECL = ecliptic system, using equator at J2000 epoch. Target: HOR = horizontal system.
 

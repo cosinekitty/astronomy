@@ -14,7 +14,7 @@ The spin field indicates the angular position of a prime meridian arbitrarily re
 
 The fields ra, dec, and spin correspond to the variables α0, δ0, and W, respectively, from [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
 
-The field north is a unit vector pointing in the direction of the body's north pole. It is expressed in the equatorial J2000 system (EQJ).
+The field north is a unit vector pointing in the direction of the body's north pole. It is expressed in the J2000 mean equator system (EQJ).
 
 ## Constructors
 

@@ -329,7 +329,7 @@ For a more generalized light travel correction solver, see [`Astronomy_CorrectLi
 
 
 
-Given a body and a time, calculates the barycentric position and velocity vectors for the center of that body at that time. The vectors are expressed in equatorial J2000 coordinates (EQJ).
+Given a body and a time, calculates the barycentric position and velocity vectors for the center of that body at that time. The vectors are expressed in J2000 mean equator coordinates (EQJ).
 
 
 
@@ -598,7 +598,7 @@ The ecliptic angles are measured in "ECT": relative to the true ecliptic plane a
 
 This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954, which in turn derives from E. W. Brown's lunar theories from the early twentieth century. It is adapted from Turbo Pascal code from the book [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210) by Montenbruck and Pfleger.
 
-To calculate an equatorial J2000 vector instead, use [`Astronomy_GeoMoon`](#Astronomy_GeoMoon).
+To calculate a J2000 mean equator vector instead, use [`Astronomy_GeoMoon`](#Astronomy_GeoMoon).
 
 
 
@@ -937,7 +937,7 @@ If this function succeeds (returns `ASTRO_SUCCESS`), `sim` will be set to a dyna
 | [`astro_body_t`](#astro_body_t) | `originBody` |  Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStateArray` parameter of this function, along with all output vectors returned by [`Astronomy_GravSimUpdate`](#Astronomy_GravSimUpdate). Most callers will want to provide one of the following: `BODY_SUN` for heliocentric coordinates, `BODY_SSB` for solar system barycentric coordinates, or `BODY_EARTH` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The initial time at which to start the simulation. | 
 | `int` | `numBodies` |  The number of small bodies to be simulated. This may be any non-negative integer. | 
-| `const astro_state_vector_t *` | `bodyStateArray` |  An array of initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must be exactly equal to `time`, or this function will fail with the error `ASTRO_INCONSISTENT_TIMES`. | 
+| `const astro_state_vector_t *` | `bodyStateArray` |  An array of initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using J2000 mean equator orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must be exactly equal to `time`, or this function will fail with the error `ASTRO_INCONSISTENT_TIMES`. | 
 
 
 
@@ -1085,7 +1085,7 @@ Given a date and time, this function calculates the distance between the center 
 
 
 
-Given a body and a time, calculates the position and velocity vectors for the center of that body at that time, relative to the center of the Sun. The vectors are expressed in equatorial J2000 coordinates (EQJ). If you need the position vector only, it is more efficient to call [`Astronomy_HelioVector`](#Astronomy_HelioVector). The Sun's center is a non-inertial frame of reference. In other words, the Sun experiences acceleration due to gravitational forces, mostly from the larger planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum, kinetic energy, or other quantities that require a non-accelerating frame of reference, consider using [`Astronomy_BaryState`](#Astronomy_BaryState) instead.
+Given a body and a time, calculates the position and velocity vectors for the center of that body at that time, relative to the center of the Sun. The vectors are expressed in J2000 mean equator coordinates (EQJ). If you need the position vector only, it is more efficient to call [`Astronomy_HelioVector`](#Astronomy_HelioVector). The Sun's center is a non-inertial frame of reference. In other words, the Sun experiences acceleration due to gravitational forces, mostly from the larger planets (Jupiter, Saturn, Uranus, and Neptune). If you want to calculate momentum, kinetic energy, or other quantities that require a non-accelerating frame of reference, consider using [`Astronomy_BaryState`](#Astronomy_BaryState) instead.
 
 
 
@@ -1335,7 +1335,7 @@ Given a more massive "major" body and a much less massive "minor" body, calculat
 
 1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
 
-The function returns the state vector for the selected Lagrange point in equatorial J2000 coordinates (EQJ), with respect to the center of the major body.
+The function returns the state vector for the selected Lagrange point in J2000 mean equator coordinates (EQJ), with respect to the center of the major body.
 
 To calculate Sun/Earth Lagrange points, pass in `BODY_SUN` for `major_body` and `BODY_EMB` (Earth/Moon barycenter) for `minor_body`. For Lagrange points of the Sun and any other planet, pass in that planet (e.g. `BODY_JUPITER`) for `minor_body`. To calculate Earth/Moon Lagrange points, pass in `BODY_EARTH` and `BODY_MOON` for the major and minor bodies respectively.
 
@@ -2028,7 +2028,7 @@ See [`astro_axis_t`](#astro_axis_t) for more detailed information.
 <a name="Astronomy_Rotation_ECL_EQD"></a>
 ### Astronomy_Rotation_ECL_EQD(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).** 
+**Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).** 
 
 
 
@@ -2052,7 +2052,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_ECL_EQJ"></a>
 ### Astronomy_Rotation_ECL_EQJ() &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).** 
+**Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).** 
 
 
 
@@ -2069,7 +2069,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_ECL_HOR"></a>
 ### Astronomy_Rotation_ECL_HOR(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).** 
+**Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).** 
 
 
 
@@ -2118,7 +2118,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_EQD_ECL"></a>
 ### Astronomy_Rotation_EQD_ECL(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).** 
+**Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).** 
 
 
 
@@ -2166,7 +2166,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_EQD_EQJ"></a>
 ### Astronomy_Rotation_EQD_EQJ(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).** 
+**Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).** 
 
 
 
@@ -2215,7 +2215,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_EQJ_ECL"></a>
 ### Astronomy_Rotation_EQJ_ECL() &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).** 
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).** 
 
 
 
@@ -2232,7 +2232,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_EQJ_EQD"></a>
 ### Astronomy_Rotation_EQJ_EQD(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).** 
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).** 
 
 
 
@@ -2256,7 +2256,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_EQJ_GAL"></a>
 ### Astronomy_Rotation_EQJ_GAL() &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Returns a rotation matrix from ecliptic J2000 (EQJ) to galactic (GAL).** 
+**Returns a rotation matrix from J2000 mean ecliptic (EQJ) to galactic (GAL).** 
 
 
 
@@ -2273,7 +2273,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_EQJ_HOR"></a>
 ### Astronomy_Rotation_EQJ_HOR(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).** 
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).** 
 
 
 
@@ -2315,7 +2315,7 @@ This is one of the family of functions that returns a rotation matrix for conver
 <a name="Astronomy_Rotation_HOR_ECL"></a>
 ### Astronomy_Rotation_HOR_ECL(time, observer) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
-**Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).** 
+**Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).** 
 
 
 

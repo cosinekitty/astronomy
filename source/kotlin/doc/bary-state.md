@@ -6,7 +6,7 @@ fun [baryState](bary-state.md)(body: [Body](-body/index.md), time: [Time](-time/
 
 Calculates barycentric position and velocity vectors for the given body.
 
-Given a body and a time, calculates the barycentric position and velocity vectors for the center of that body at that time. The vectors are expressed in equatorial J2000 coordinates (EQJ).
+Given a body and a time, calculates the barycentric position and velocity vectors for the center of that body at that time. The vectors are expressed in J2000 mean equator coordinates (EQJ).
 
 #### Return
 

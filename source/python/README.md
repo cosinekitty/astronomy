@@ -321,7 +321,7 @@ The fields `ra`, `dec`, and `spin` correspond to the variables
 α0, δ0, and W, respectively, from
 [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
 The field `north` is a unit vector pointing in the direction of the body's north pole.
-It is expressed in the equatorial J2000 system (EQJ).
+It is expressed in the J2000 mean equator system (EQJ).
 
 | Type | Attribute | Description |
 | --- | --- | --- |
@@ -493,7 +493,7 @@ time steps.
 | --- | --- | --- |
 | [`Body`](#Body) | `originBody` | Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStates` parameter of this function, along with all output vectors returned by [`GravitySimulator.Update`](#GravitySimulator.Update). Most callers will want to provide one of the following: `Body.Sun` for heliocentric coordinates, `Body.SSB` for solar system barycentric coordinates, or `Body.Earth` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. |
 | [`Time`](#Time) | `time` | The initial time at which to start the simulation. |
-| [`StateVector`](#StateVector)`[]` | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using equatorial J2000 orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
+| [`StateVector`](#StateVector)`[]` | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using J2000 mean equator orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
 
 <a name="GravitySimulator.OriginBody"></a>
 ### GravitySimulator.OriginBody(self)
@@ -1344,7 +1344,7 @@ body to arrive at the observer at the observation time.
 
 Given a body and a time, calculates the barycentric position and velocity
 vectors for the center of that body at that time.
-The vectors are expressed in equatorial J2000 coordinates (EQJ).
+The vectors are expressed in J2000 mean equator coordinates (EQJ).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1526,7 +1526,7 @@ which in turn derives from E. W. Brown's lunar theories from the early twentieth
 It is adapted from Turbo Pascal code from the book
 [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
 by Montenbruck and Pfleger.
-To calculate an equatorial J2000 vector instead, use [`GeoMoon`](#GeoMoon).
+To calculate a J2000 mean equator vector instead, use [`GeoMoon`](#GeoMoon).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -1752,7 +1752,7 @@ The heliocentric distance in AU.
 
 Given a body and a time, calculates the position and velocity
 vectors for the center of that body at that time, relative to the center of the Sun.
-The vectors are expressed in equatorial J2000 coordinates (EQJ).
+The vectors are expressed in J2000 mean equator coordinates (EQJ).
 If you need the position vector only, it is more efficient to call [`HelioVector`](#HelioVector).
 The Sun's center is a non-inertial frame of reference. In other words, the Sun
 experiences acceleration due to gravitational forces, mostly from the larger
@@ -1987,7 +1987,7 @@ selects the Lagrange point as follows:
 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
 The function returns the state vector for the selected Lagrange point
-in equatorial J2000 coordinates (EQJ), with respect to the center of the
+in J2000 mean equator coordinates (EQJ), with respect to the center of the
 major body.
 To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
 and `Body.EMB` (Earth/Moon barycenter) for `minor_body`.
@@ -2498,7 +2498,7 @@ The body's north pole direction and angle of its prime meridian.
 <a name="Rotation_ECL_EQD"></a>
 ### Rotation_ECL_EQD(time)
 
-**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).**
+**Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2517,7 +2517,7 @@ A rotation matrix that converts ECL to EQD.
 <a name="Rotation_ECL_EQJ"></a>
 ### Rotation_ECL_EQJ()
 
-**Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).**
+**Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2532,7 +2532,7 @@ A rotation matrix that converts ECL to EQJ.
 <a name="Rotation_ECL_HOR"></a>
 ### Rotation_ECL_HOR(time, observer)
 
-**Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).**
+**Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2577,7 +2577,7 @@ A rotation matrix that converts ECT to EQD.
 <a name="Rotation_EQD_ECL"></a>
 ### Rotation_EQD_ECL(time)
 
-**Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).**
+**Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2615,7 +2615,7 @@ A rotation matrix that converts EQD to ECT.
 <a name="Rotation_EQD_EQJ"></a>
 ### Rotation_EQD_EQJ(time)
 
-**Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).**
+**Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2660,7 +2660,7 @@ and so that north represents the direction where azimuth = 0.
 <a name="Rotation_EQJ_ECL"></a>
 ### Rotation_EQJ_ECL()
 
-**Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).**
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2675,7 +2675,7 @@ A rotation matrix that converts EQJ to ECL.
 <a name="Rotation_EQJ_EQD"></a>
 ### Rotation_EQJ_EQD(time)
 
-**Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).**
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2694,7 +2694,7 @@ A rotation matrix that converts EQJ to EQD at `time`.
 <a name="Rotation_EQJ_GAL"></a>
 ### Rotation_EQJ_GAL()
 
-**Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL).**
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2709,7 +2709,7 @@ A rotation matrix that converts EQJ to GAL.
 <a name="Rotation_EQJ_HOR"></a>
 ### Rotation_EQJ_HOR(time, observer)
 
-**Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).**
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2735,7 +2735,7 @@ and so that north represents the direction where azimuth = 0.
 <a name="Rotation_GAL_EQJ"></a>
 ### Rotation_GAL_EQJ()
 
-**Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).**
+**Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
@@ -2750,7 +2750,7 @@ A rotation matrix that converts GAL to EQJ.
 <a name="Rotation_HOR_ECL"></a>
 ### Rotation_HOR_ECL(time, observer)
 
-**Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).**
+**Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).**
 
 This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.

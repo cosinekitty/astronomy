@@ -1577,7 +1577,7 @@ namespace CosineKitty
     /// [Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015](https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf).
     ///
     /// The field `north` is a unit vector pointing in the direction of the body's north pole.
-    /// It is expressed in the equatorial J2000 system (EQJ).
+    /// It is expressed in the J2000 mean equator system (EQJ).
     /// </remarks>
     public struct AxisInfo
     {
@@ -5308,7 +5308,7 @@ namespace CosineKitty
         /// [Astronomy on the Personal Computer](https://www.springer.com/us/book/9783540672210)
         /// by Montenbruck and Pfleger.
         ///
-        /// To calculate an equatorial J2000 vector instead, use #Astronomy.GeoMoon.
+        /// To calculate a J2000 mean equator vector instead, use #Astronomy.GeoMoon.
         /// </remarks>
         /// <param name="time">
         /// The date and time for which to calculate the Moon's position.
@@ -5928,7 +5928,7 @@ namespace CosineKitty
         /// <remarks>
         /// Given a body and a time, calculates the barycentric position and velocity
         /// vectors for the center of that body at that time.
-        /// The vectors are expressed in equatorial J2000 coordinates (EQJ).
+        /// The vectors are expressed in J2000 mean equator coordinates (EQJ).
         /// </remarks>
         /// <param name="body">
         /// The celestial body whose barycentric state vector is to be calculated.
@@ -6009,7 +6009,7 @@ namespace CosineKitty
         /// <remarks>
         /// Given a body and a time, calculates the position and velocity
         /// vectors for the center of that body at that time, relative to the center of the Sun.
-        /// The vectors are expressed in equatorial J2000 coordinates (EQJ).
+        /// The vectors are expressed in J2000 mean equator coordinates (EQJ).
         /// If you need the position vector only, it is more efficient to call #Astronomy.HelioVector.
         /// The Sun's center is a non-inertial frame of reference. In other words, the Sun
         /// experiences acceleration due to gravitational forces, mostly from the larger
@@ -9787,7 +9787,7 @@ namespace CosineKitty
         /// 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
         ///
         /// The function returns the state vector for the selected Lagrange point
-        /// in equatorial J2000 coordinates (EQJ), with respect to the center of the
+        /// in J2000 mean equator coordinates (EQJ), with respect to the center of the
         /// major body.
         ///
         /// To calculate Sun/Earth Lagrange points, pass in `Body.Sun` for `major_body`
@@ -10723,7 +10723,7 @@ namespace CosineKitty
             return axis;
         }
 
-        /// <summary>Calculates a rotation matrix from equatorial J2000 (EQJ) to ecliptic J2000 (ECL).</summary>
+        /// <summary>Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).</summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
         /// for converting from one orientation to another.
@@ -10746,7 +10746,7 @@ namespace CosineKitty
         }
 
 
-        /// <summary>Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial J2000 (EQJ).</summary>
+        /// <summary>Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).</summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
         /// for converting from one orientation to another.
@@ -10770,7 +10770,7 @@ namespace CosineKitty
 
 
         /// <summary>
-        /// Calculates a rotation matrix from equatorial J2000 (EQJ) to equatorial of-date (EQD).
+        /// Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -10793,7 +10793,7 @@ namespace CosineKitty
 
 
         /// <summary>
-        /// Calculates a rotation matrix from equatorial of-date (EQD) to equatorial J2000 (EQJ).
+        /// Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -10916,7 +10916,7 @@ namespace CosineKitty
 
 
         /// <summary>
-        /// Calculates a rotation matrix from equatorial J2000 (EQJ) to horizontal (HOR).
+        /// Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -10945,7 +10945,7 @@ namespace CosineKitty
 
 
         /// <summary>
-        /// Calculates a rotation matrix from equatorial of-date (EQD) to ecliptic J2000 (ECL).
+        /// Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -10968,7 +10968,7 @@ namespace CosineKitty
 
 
         /// <summary>
-        /// Calculates a rotation matrix from ecliptic J2000 (ECL) to equatorial of-date (EQD).
+        /// Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -10990,7 +10990,7 @@ namespace CosineKitty
 
 
         /// <summary>
-        /// Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR).
+        /// Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -11019,7 +11019,7 @@ namespace CosineKitty
         }
 
         /// <summary>
-        /// Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL).
+        /// Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -11043,7 +11043,7 @@ namespace CosineKitty
         }
 
         /// <summary>
-        /// Calculates a rotation matrix from equatorial J2000 (EQJ) to galactic (GAL).
+        /// Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
@@ -11078,7 +11078,7 @@ namespace CosineKitty
         }
 
         /// <summary>
-        /// Calculates a rotation matrix from galactic (GAL) to equatorial J2000 (EQJ).
+        /// Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).
         /// </summary>
         /// <remarks>
         /// This is one of the family of functions that returns a rotation matrix
