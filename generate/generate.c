@@ -1497,7 +1497,7 @@ fail:
     return error;
 }
 
-static int TestChebFunc(const void *context, double t, double f[CHEB_MAX_DIM])
+static int TestChebFunc(const void *context, double t, double f[])
 {
     (void)context;
     f[0] = cos(t) - t;

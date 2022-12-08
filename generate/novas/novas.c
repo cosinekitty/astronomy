@@ -9458,8 +9458,8 @@ double norm_ang (double angle)
 
 /********make_cat_entry */
 
-short int make_cat_entry (char star_name[SIZE_OF_OBJ_NAME],
-                          char catalog[SIZE_OF_CAT_NAME],
+short int make_cat_entry (const char *star_name,
+                          const char *catalog,
                           long int star_num, double ra, double dec,
                           double pm_ra, double pm_dec, double parallax,
                           double rad_vel,

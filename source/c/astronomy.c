@@ -1168,7 +1168,7 @@ astro_status_t Astronomy_FormatTime(
     double rounding;
     size_t min_size;
     astro_utc_t utc;
-    char ytext[8];   /* worst case: "+999999" = 8 characters including terminal '\0'. */
+    char ytext[20];   /* worst case: "+999999" = 8 characters including terminal '\0'. But gcc 12.2 still complains! */
 
     if (text == NULL)
         return ASTRO_INVALID_PARAMETER;
