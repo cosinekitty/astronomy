@@ -8725,6 +8725,57 @@ astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t *time)
     return Astronomy_CombineRotation(prec, nut);
 }
 
+
+/**
+ * @brief
+ *      Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using mean equator at J2000 epoch.
+ * Target: ECT = ecliptic system, using true equinox of the specified date/time.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @return
+ *      A rotation matrix that converts EQJ to ECT at `time`.
+ */
+astro_rotation_t Astronomy_Rotation_EQJ_ECT(astro_time_t *time)
+{
+    astro_rotation_t rot, step;
+
+    rot = Astronomy_Rotation_EQJ_EQD(time);
+    step = Astronomy_Rotation_EQD_ECT(time);
+    return Astronomy_CombineRotation(rot, step);
+}
+
+
+/**
+ * @brief
+ *      Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = ecliptic system, using true equinox of the specified date/time.
+ * Target: EQJ = equatorial system, using mean equator at J2000 epoch.
+ *
+ * @param time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @return
+ *      A rotation matrix that converts ECT to EQJ at `time`.
+ */
+astro_rotation_t Astronomy_Rotation_ECT_EQJ(astro_time_t *time)
+{
+    astro_rotation_t rot, step;
+
+    rot = Astronomy_Rotation_ECT_EQD(time);
+    step = Astronomy_Rotation_EQD_EQJ(time);
+    return Astronomy_CombineRotation(rot, step);
+}
+
+
 /**
  * @brief
  *      Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).

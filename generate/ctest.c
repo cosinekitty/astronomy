@@ -3630,6 +3630,7 @@ static int Test_RotRoundTrip(void)
     astro_rotation_t eqd_ecl, ecl_eqd;
     astro_rotation_t hor_ecl, ecl_hor;
     astro_rotation_t eqd_ect, ect_eqd;
+    astro_rotation_t eqj_ect, ect_eqj;
 
     time = Astronomy_MakeTime(2067, 5, 30, 14, 45, 0.0);
     observer = Astronomy_MakeObserver(+28.0, -82.0, 0.0);
@@ -3674,19 +3675,21 @@ static int Test_RotRoundTrip(void)
     ect_eqd = Astronomy_Rotation_ECT_EQD(&time);
     CHECK_INVERSE(eqd_ect, ect_eqd);
 
+    /* Round trip #8: EQJ <==> ECT. */
+    eqj_ect = Astronomy_Rotation_EQJ_ECT(&time);
+    ect_eqj = Astronomy_Rotation_ECT_EQJ(&time);
+    CHECK_INVERSE(eqj_ect, ect_eqj);
+
     /*
         Verify that combining different sequences of rotations result
         in the expected combination.
         For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
-        Each of these is a "triangle" of relationships between 3 orientations.
-        There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
-        Because we have just proved that each transformation is reversible,
-        we only need to verify the triangle in one cyclic direction.
     */
-    CHECK_CYCLE(eqj_ecl, ecl_eqd, eqd_eqj);     /* excluded corner = HOR */
-    CHECK_CYCLE(eqj_hor, hor_ecl, ecl_eqj);     /* excluded corner = EQD */
-    CHECK_CYCLE(eqj_hor, hor_eqd, eqd_eqj);     /* excluded corner = ECL */
-    CHECK_CYCLE(ecl_eqd, eqd_hor, hor_ecl);     /* excluded corner = EQJ */
+    CHECK_CYCLE(eqj_ecl, ecl_eqd, eqd_eqj);
+    CHECK_CYCLE(eqj_hor, hor_ecl, ecl_eqj);
+    CHECK_CYCLE(eqj_hor, hor_eqd, eqd_eqj);
+    CHECK_CYCLE(ecl_eqd, eqd_hor, hor_ecl);
+    CHECK_CYCLE(eqj_eqd, eqd_ect, ect_eqj);
 
     DEBUG("C Test_RotRoundTrip: PASS\n");
     error = 0;

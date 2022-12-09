@@ -54,8 +54,8 @@ To get started quickly, here are some [examples](../../demo/c/).
 | [HelioVector](#Astronomy_HelioVector) | Calculates body position vector with respect to the center of the Sun. |
 | [GeoVector](#Astronomy_GeoVector)     | Calculates body position vector with respect to the center of the Earth. |
 | [Equator](#Astronomy_Equator)         | Calculates right ascension and declination. |
-| [Ecliptic](#Astronomy_Ecliptic)       | Converts J2000 mean equator coordinates to J2000 ecliptic coordinates. |
-| [EclipticLongitude](#Astronomy_EclipticLongitude) | Calculates ecliptic longitude of a body in the J2000 system. |
+| [Ecliptic](#Astronomy_Ecliptic)       | Converts J2000 mean equator (EQJ) coordinates to true ecliptic of date (ECT) coordinates. |
+| [EclipticLongitude](#Astronomy_EclipticLongitude) | Calculates true ecliptic of date (ECT) longitude for a body. |
 | [Horizon](#Astronomy_Horizon)         | Calculates horizontal coordinates (azimuth, altitude) for a given observer on the Earth. |
 | [PairLongitude](#Astronomy_PairLongitude) | Calculates the difference in apparent ecliptic longitude between two bodies, as seen from the Earth. |
 | [BaryState](#Astronomy_BaryState) | Calculates the barycentric position and velocity vectors of the Sun or a planet. |
@@ -132,9 +132,9 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Function | Description |
 | -------- | ----------- |
-| [SearchSunLongitude](#Astronomy_SearchSunLongitude) | Finds the next time the Sun reaches a specified apparent ecliptic longitude in the *true equator of date* system. |
+| [SearchSunLongitude](#Astronomy_SearchSunLongitude) | Finds the next time the Sun reaches a specified apparent ecliptic longitude in the true ecliptic of date (ECT) system. |
 | [Seasons](#Astronomy_Seasons) | Finds the equinoxes and solstices for a given calendar year. |
-| [SunPosition](#Astronomy_SunPosition) | Calculates the Sun's apparent ecliptic coordinates as seen from the Earth. |
+| [SunPosition](#Astronomy_SunPosition) | Calculates the Sun's apparent true ecliptic of date (ECT) coordinates as seen from the Earth. |
 
 ### Coordinate transforms
 
@@ -144,10 +144,10 @@ It also allows converting from a vector to spherical (angular) coordinates and b
 within a given orientation. Note the 3-letter codes for each of the orientation systems;
 these are used in function and type names.
 
-- **EQJ = J2000 Mean Equator**: Uses the Earth's equator on January 1, 2000, at noon UTC.
-- **EQD = Equator of Date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
-- **ECT = True Ecliptic of Date**: Uses the true orbital plane and equator of the Earth on the given date.
-- **ECL = J2000 Mean Ecliptic**: Uses the plane of the Earth's orbit around the Sun in the year 2000. The x-axis is referenced against the J2000 mean equinox.
+- **EQJ = J2000 Mean Equator**: Uses the Earth's mean equator (corrected for precession but ignoring nutation) on January 1, 2000, at noon UTC. This moment in time is called J2000.
+- **EQD = True Equator of Date**: Uses the Earth's equator on a given date and time, adjusted for precession and nutation.
+- **ECL = J2000 Mean Ecliptic**: Uses the plane of the Earth's orbit around the Sun at J2000. The x-axis is referenced against the J2000 mean equinox.
+- **ECT = True Ecliptic of Date**: Uses the true (corrected for precession and nutation) orbital plane of the Earth on the given date. The x-axis is referenced against the true equinox for that date.
 - **HOR = Horizontal**: Uses the viewpoint of an observer at a specific location on the Earth at a given date and time.
 - **GAL = Galactic**: Based on the IAU 1958 definition of galactic coordinates.
 
@@ -163,20 +163,22 @@ these are used in function and type names.
 | [EquatorFromVector](#Astronomy_EquatorFromVector) | Given an equatorial vector, calculates equatorial angular coordinates. |
 | [VectorFromHorizon](#Astronomy_VectorFromHorizon) | Given apparent angular horizontal coordinates, calculates horizontal vector. |
 | [HorizonFromVector](#Astronomy_HorizonFromVector) | Given a vector in horizontal orientation, calculates horizontal angular coordinates. |
-| [Rotation_EQD_EQJ](#Astronomy_Rotation_EQD_EQJ) | Calculates a rotation matrix from equator of date (EQD) to J2000 mean equator (EQJ). |
-| [Rotation_EQD_ECT](#Astronomy_Rotation_EQD_ECT) | Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT). |
-| [Rotation_EQD_ECL](#Astronomy_Rotation_EQD_ECL) | Calculates a rotation matrix from equator of date (EQD) to ecliptic J2000 (ECL). |
-| [Rotation_EQD_HOR](#Astronomy_Rotation_EQD_HOR) | Calculates a rotation matrix from equator of date (EQD) to horizontal (HOR). |
-| [Rotation_EQJ_EQD](#Astronomy_Rotation_EQJ_EQD) | Calculates a rotation matrix from J2000 mean equator (EQJ) to equator of date (EQD). |
-| [Rotation_EQJ_ECL](#Astronomy_Rotation_EQJ_ECL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to ecliptic J2000 (ECL). |
+| [Rotation_EQD_EQJ](#Astronomy_Rotation_EQD_EQJ) | Calculates a rotation matrix from true equator of date (EQD) to J2000 mean equator (EQJ). |
+| [Rotation_EQD_ECT](#Astronomy_Rotation_EQD_ECT) | Calculates a rotation matrix from true equator of date (EQD) to true ecliptic of date (ECT). |
+| [Rotation_EQD_ECL](#Astronomy_Rotation_EQD_ECL) | Calculates a rotation matrix from true equator of date (EQD) to J2000 mean ecliptic (ECL). |
+| [Rotation_EQD_HOR](#Astronomy_Rotation_EQD_HOR) | Calculates a rotation matrix from true equator of date (EQD) to horizontal (HOR). |
+| [Rotation_EQJ_EQD](#Astronomy_Rotation_EQJ_EQD) | Calculates a rotation matrix from J2000 mean equator (EQJ) to true equator of date (EQD). |
+| [Rotation_EQJ_ECT](#Astronomy_Rotation_EQJ_ECT) | Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL). |
+| [Rotation_EQJ_ECL](#Astronomy_Rotation_EQJ_ECL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT). |
 | [Rotation_EQJ_HOR](#Astronomy_Rotation_EQJ_HOR) | Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR). |
-| [Rotation_ECT_EQD](#Astronomy_Rotation_ECT_EQD) | Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD). |
-| [Rotation_ECL_EQD](#Astronomy_Rotation_ECL_EQD) | Calculates a rotation matrix from ecliptic J2000 (ECL) to equator of date (EQD). |
-| [Rotation_ECL_EQJ](#Astronomy_Rotation_ECL_EQJ) | Calculates a rotation matrix from ecliptic J2000 (ECL) to J2000 mean equator (EQJ). |
-| [Rotation_ECL_HOR](#Astronomy_Rotation_ECL_HOR) | Calculates a rotation matrix from ecliptic J2000 (ECL) to horizontal (HOR). |
-| [Rotation_HOR_EQD](#Astronomy_Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to equator of date (EQD). |
+| [Rotation_ECT_EQD](#Astronomy_Rotation_ECT_EQD) | Calculates a rotation matrix from true ecliptic of date (ECT) to true equator of date (EQD). |
+| [Rotation_ECT_EQD](#Astronomy_Rotation_ECT_EQJ) | Calculates a rotation matrix from true ecliptic of date (ECT) J2000 mean equator (EQJ). |
+| [Rotation_ECL_EQD](#Astronomy_Rotation_ECL_EQD) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to true true equator of date (EQD). |
+| [Rotation_ECL_EQJ](#Astronomy_Rotation_ECL_EQJ) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ). |
+| [Rotation_ECL_HOR](#Astronomy_Rotation_ECL_HOR) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR). |
+| [Rotation_HOR_EQD](#Astronomy_Rotation_HOR_EQD) | Calculates a rotation matrix from horizontal (HOR) to true equator of date (EQD). |
 | [Rotation_HOR_EQJ](#Astronomy_Rotation_HOR_EQJ) | Calculates a rotation matrix from horizontal (HOR) to J2000 mean equator (EQJ). |
-| [Rotation_HOR_ECL](#Astronomy_Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to ecliptic J2000 (ECL). |
+| [Rotation_HOR_ECL](#Astronomy_Rotation_HOR_ECL) | Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL). |
 | [Rotation_EQJ_GAL](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL). |
 | [Rotation_GAL_EQJ](#Astronomy_Rotation_EQJ_GAL) | Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ). |
 
@@ -2115,6 +2117,30 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 ---
 
+<a name="Astronomy_Rotation_ECT_EQJ"></a>
+### Astronomy_Rotation_ECT_EQJ(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: ECT = ecliptic system, using true equinox of the specified date/time. Target: EQJ = equatorial system, using mean equator at J2000 epoch.
+
+
+
+**Returns:**  A rotation matrix that converts ECT to EQJ at `time`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time at which the Earth's equator defines the target orientation. | 
+
+
+
+
+---
+
 <a name="Astronomy_Rotation_EQD_ECL"></a>
 ### Astronomy_Rotation_EQD_ECL(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
 
@@ -2224,6 +2250,30 @@ This is one of the family of functions that returns a rotation matrix for conver
 
 
 **Returns:**  A rotation matrix that converts EQJ to ECL. 
+
+
+
+---
+
+<a name="Astronomy_Rotation_EQJ_ECT"></a>
+### Astronomy_Rotation_EQJ_ECT(time) &#8658; [`astro_rotation_t`](#astro_rotation_t)
+
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).** 
+
+
+
+This is one of the family of functions that returns a rotation matrix for converting from one orientation to another. Source: EQJ = equatorial system, using mean equator at J2000 epoch. Target: ECT = ecliptic system, using true equinox of the specified date/time.
+
+
+
+**Returns:**  A rotation matrix that converts EQJ to ECT at `time`. 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time at which the Earth's equator defines the target orientation. | 
+
 
 
 
