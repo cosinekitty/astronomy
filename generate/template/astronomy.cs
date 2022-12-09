@@ -9659,6 +9659,50 @@ $ASTRO_JUPITER_MOONS();
 
 
         /// <summary>
+        /// Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: EQJ = equatorial system, using equator at J2000 epoch.
+        /// Target: ECT = ecliptic system, using true equinox of the specified date/time.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time at which the Earth's equator defines the target orientation.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts EQJ to ECT at `time`.
+        /// </returns>
+        public static RotationMatrix Rotation_EQJ_ECT(AstroTime time)
+        {
+            RotationMatrix rot  = Rotation_EQJ_EQD(time);
+            RotationMatrix step = Rotation_EQD_ECT(time);
+            return CombineRotation(rot, step);
+        }
+
+        /// <summary>
+        /// Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
+        /// </summary>
+        /// <remarks>
+        /// This is one of the family of functions that returns a rotation matrix
+        /// for converting from one orientation to another.
+        /// Source: ECT = ecliptic system, using true equinox of the specified date/time.
+        /// Target: EQJ = equatorial system, using equator at J2000 epoch.
+        /// </remarks>
+        /// <param name="time">
+        /// The date and time at which the Earth's equator defines the target orientation.
+        /// </param>
+        /// <returns>
+        /// A rotation matrix that converts ECT to EQJ at `time`.
+        /// </returns>
+        public static RotationMatrix Rotation_ECT_EQJ(AstroTime time)
+        {
+            RotationMatrix rot  = Rotation_ECT_EQD(time);
+            RotationMatrix step = Rotation_EQD_EQJ(time);
+            return CombineRotation(rot, step);
+        }
+
+        /// <summary>
         /// Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
         /// </summary>
         /// <remarks>

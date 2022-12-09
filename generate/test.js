@@ -1892,21 +1892,21 @@ function Rotation() {
         const ect_eqd = Astronomy.Rotation_ECT_EQD(time);
         CheckInverse('eqd_ect', 'ect_eqd', eqd_ect, ect_eqd);
 
-        /*
-            Verify that combining different sequences of rotations result
-            in the expected combination.
-            For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
-            Each of these is a "triangle" of relationships between 3 orientations.
-            There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
-            Because we have just proved that each transformation is reversible,
-            we only need to verify the triangle in one cyclic direction.
-        */
-       CheckCycle('eqj_ecl, ecl_eqd, eqd_eqj', eqj_ecl, ecl_eqd, eqd_eqj);     /* excluded corner = HOR */
-       CheckCycle('eqj_hor, hor_ecl, ecl_eqj', eqj_hor, hor_ecl, ecl_eqj);     /* excluded corner = EQD */
-       CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj);     /* excluded corner = ECL */
-       CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl);     /* excluded corner = EQJ */
+        /* Round trip #8: EQJ <==> ECT. */
+        const eqj_ect = Astronomy.Rotation_EQJ_ECT(time);
+        const ect_eqj = Astronomy.Rotation_ECT_EQJ(time);
+        CheckInverse('eqj_ect', 'ect_eqj', eqj_ect, ect_eqj);
 
-       Debug('JS Test_RotRoundTrip: PASS');
+        // Verify that combining different sequences of rotations result
+        // in the expected combination.
+        // For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
+        CheckCycle('eqj_ecl, ecl_eqd, eqd_eqj', eqj_ecl, ecl_eqd, eqd_eqj);
+        CheckCycle('eqj_hor, hor_ecl, ecl_eqj', eqj_hor, hor_ecl, ecl_eqj);
+        CheckCycle('eqj_hor, hor_eqd, eqd_eqj', eqj_hor, hor_eqd, eqd_eqj);
+        CheckCycle('ecl_eqd, eqd_hor, hor_ecl', ecl_eqd, eqd_hor, hor_ecl);
+        CheckCycle('eqj_eqd, eqd_ect, ect_eqj', eqj_eqd, eqd_ect, ect_eqj);
+
+        Debug('JS Test_RotRoundTrip: PASS');
     }
 
     function Rotation_Pivot() {

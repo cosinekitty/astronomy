@@ -287,20 +287,16 @@ class Tests {
     }
 
     @Test
-    fun `Rotation matrices EQD ECT`() {
+    fun `Rotation matrices EQJ ECT`() {
         var time = Time(1900, 1, 1, 0, 0, 0.0)
         val stopTime = Time(2100, 1, 1, 0, 0, 0.0)
         while (time.ut <= stopTime.ut) {
             // Get Moon's geocentric position in EQJ.
             val eqj = geoMoon(time)
 
-            // Convert EQJ to EQD.
-            val eqjEqd = rotationEqjEqd(time)
-            val eqd = eqjEqd.rotate(eqj)
-
-            // Convert EQD to ECT.
-            val eqdEct = rotationEqdEct(time)
-            val ect = eqdEct.rotate(eqd)
+            // Convert EQJ to ECT.
+            val eqjEct = rotationEqjEct(time)
+            val ect = eqjEct.rotate(eqj)
 
             // Independently get the Moon's spherical coordinates in ECT.
             val sphere = eclipticGeoMoon(time)
@@ -313,8 +309,8 @@ class Tests {
             assertTrue(diff < 3.743e-18, "excessive vector diff = $diff")
 
             // Make sure counterpart is the inverse rotation matrix.
-            val ectEqd = rotationEctEqd(time)
-            compareMatrices("eqdEct = inverse(ectEqd)", eqdEct, ectEqd.inverse())
+            val ectEqj = rotationEctEqj(time)
+            compareMatrices("eqjEct = inverse(ectEqj)", eqjEct, ectEqj.inverse())
 
             time = time.addDays(10.0)
         }

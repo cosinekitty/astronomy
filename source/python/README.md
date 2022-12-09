@@ -165,9 +165,11 @@ these are used in function and type names.
 | [Rotation_EQD_ECL](#Rotation_EQD_ECL) | Calculates a rotation matrix from true equator of date (EQD) to J2000 mean ecliptic (ECL). |
 | [Rotation_EQD_HOR](#Rotation_EQD_HOR) | Calculates a rotation matrix from true equator of date (EQD) to horizontal (HOR). |
 | [Rotation_EQJ_EQD](#Rotation_EQJ_EQD) | Calculates a rotation matrix from J2000 mean equator (EQJ) to true equator of date (EQD). |
+| [Rotation_EQJ_ECT](#Rotation_EQJ_ECT) | Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL). |
 | [Rotation_EQJ_ECL](#Rotation_EQJ_ECL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL). |
 | [Rotation_EQJ_HOR](#Rotation_EQJ_HOR) | Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR). |
 | [Rotation_ECT_EQD](#Rotation_ECT_EQD) | Calculates a rotation matrix from true ecliptic of date (ECT) to true equator of date (EQD). |
+| [Rotation_ECT_EQJ](#Rotation_ECT_EQJ) | Calculates a rotation matrix from true ecliptic of date (ECT) J2000 mean equator (EQJ). |
 | [Rotation_ECL_EQD](#Rotation_ECL_EQD) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to true equator of date (EQD). |
 | [Rotation_ECL_EQJ](#Rotation_ECL_EQJ) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ). |
 | [Rotation_ECL_HOR](#Rotation_ECL_HOR) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR). |
@@ -2574,6 +2576,25 @@ A rotation matrix that converts ECT to EQD.
 
 ---
 
+<a name="Rotation_ECT_EQJ"></a>
+### Rotation_ECT_EQJ(time)
+
+**Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: ECT = ecliptic system, using true equinox of the specified date/time.
+Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator defines the target orientation. |
+
+**Returns**: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts ECT to EQJ at `time`.
+
+---
+
 <a name="Rotation_EQD_ECL"></a>
 ### Rotation_EQD_ECL(time)
 
@@ -2669,6 +2690,25 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 **Returns**: [`RotationMatrix`](#RotationMatrix)
 A rotation matrix that converts EQJ to ECL.
+
+---
+
+<a name="Rotation_EQJ_ECT"></a>
+### Rotation_EQJ_ECT(time)
+
+**Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).**
+
+This is one of the family of functions that returns a rotation matrix
+for converting from one orientation to another.
+Source: EQJ = equatorial system, using equator at J2000 epoch.
+Target: ECT = ecliptic system, using true equinox of the specified date/time.
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| [`Time`](#Time) | `time` | The date and time at which the Earth's equator defines the target orientation. |
+
+**Returns**: [`RotationMatrix`](#RotationMatrix)
+A rotation matrix that converts EQJ to ECT at `time`.
 
 ---
 

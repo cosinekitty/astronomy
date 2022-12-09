@@ -6398,6 +6398,46 @@ export function Rotation_EQJ_EQD(time) {
     return CombineRotation(prec, nut);
 }
 /**
+ * @brief Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: ECT = ecliptic system, using true equinox of the specified date/time.
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts EQJ to ECT at `time`.
+ */
+export function Rotation_EQJ_ECT(time) {
+    const t = MakeTime(time);
+    const rot = Rotation_EQJ_EQD(t);
+    const step = Rotation_EQD_ECT(t);
+    return CombineRotation(rot, step);
+}
+/**
+ * @brief Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = ecliptic system, using true equinox of the specified date/time.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts ECT to EQJ at `time`.
+ */
+export function Rotation_ECT_EQJ(time) {
+    const t = MakeTime(time);
+    const rot = Rotation_ECT_EQD(t);
+    const step = Rotation_EQD_EQJ(t);
+    return CombineRotation(rot, step);
+}
+/**
  * @brief Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
@@ -6674,7 +6714,7 @@ export function Rotation_GAL_EQJ() {
  *      A rotation matrix that converts ECT to EQD.
  */
 export function Rotation_ECT_EQD(time) {
-    const et = e_tilt(time);
+    const et = e_tilt(MakeTime(time));
     const tobl = et.tobl * DEG2RAD;
     const c = Math.cos(tobl);
     const s = Math.sin(tobl);
@@ -6696,7 +6736,7 @@ export function Rotation_ECT_EQD(time) {
  *      A rotation matrix that converts EQD to ECT.
  */
 export function Rotation_EQD_ECT(time) {
-    const et = e_tilt(time);
+    const et = e_tilt(MakeTime(time));
     const tobl = et.tobl * DEG2RAD;
     const c = Math.cos(tobl);
     const s = Math.sin(tobl);

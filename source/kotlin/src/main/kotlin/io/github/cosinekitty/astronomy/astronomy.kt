@@ -8159,6 +8159,36 @@ fun rotationEqjEqd(time: Time): RotationMatrix =
     nutationRot(time, PrecessDirection.From2000)
 
 /**
+ * Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: ECT = ecliptic system, using true equinox of the specified date/time.
+ *
+ * @param time
+ * The date and time at which the Earth's equator defines the target orientation.
+ */
+fun rotationEqjEct(time: Time): RotationMatrix =
+    rotationEqjEqd(time) combine
+    rotationEqdEct(time)
+
+/**
+ * Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = ecliptic system, using true equinox of the specified date/time.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @param time
+ * The date and time at which the Earth's equator defines the target orientation.
+ */
+fun rotationEctEqj(time: Time): RotationMatrix =
+    rotationEctEqd(time) combine
+    rotationEqdEqj(time)
+
+/**
  * Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix

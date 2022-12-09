@@ -7304,6 +7304,52 @@ def Rotation_EQJ_EQD(time):
     return CombineRotation(prec, nut)
 
 
+def Rotation_EQJ_ECT(time):
+    """Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: EQJ = equatorial system, using equator at J2000 epoch.
+    Target: ECT = ecliptic system, using true equinox of the specified date/time.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator defines the target orientation.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts EQJ to ECT at `time`.
+    """
+    rot  = Rotation_EQJ_EQD(time)
+    step = Rotation_EQD_ECT(time)
+    return CombineRotation(rot, step)
+
+
+def Rotation_ECT_EQJ(time):
+    """Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
+
+    This is one of the family of functions that returns a rotation matrix
+    for converting from one orientation to another.
+    Source: ECT = ecliptic system, using true equinox of the specified date/time.
+    Target: EQJ = equatorial system, using equator at J2000 epoch.
+
+    Parameters
+    ----------
+    time : Time
+        The date and time at which the Earth's equator defines the target orientation.
+
+    Returns
+    -------
+    RotationMatrix
+        A rotation matrix that converts ECT to EQJ at `time`.
+    """
+    rot  = Rotation_ECT_EQD(time)
+    step = Rotation_EQD_EQJ(time)
+    return CombineRotation(rot, step)
+
+
 def Rotation_EQD_EQJ(time):
     """Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
 

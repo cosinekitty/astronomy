@@ -35,7 +35,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.SiderealTime = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.e_tilt = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.PlanetOrbitalPeriod = exports.DefineStar = exports.Body = exports.AngleBetween = exports.MassProduct = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.AU_PER_LY = exports.KM_PER_AU = exports.C_AUDAY = void 0;
 exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.ApsisKind = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = exports.BackdatePosition = exports.CorrectLightTravel = exports.PositionFunction = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = void 0;
-exports.GravitySimulator = exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_EQD_ECT = exports.Rotation_ECT_EQD = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = void 0;
+exports.GravitySimulator = exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_EQD_ECT = exports.Rotation_ECT_EQD = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_ECT_EQJ = exports.Rotation_EQJ_ECT = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -6490,6 +6490,48 @@ function Rotation_EQJ_EQD(time) {
 }
 exports.Rotation_EQJ_EQD = Rotation_EQJ_EQD;
 /**
+ * @brief Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: ECT = ecliptic system, using true equinox of the specified date/time.
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts EQJ to ECT at `time`.
+ */
+function Rotation_EQJ_ECT(time) {
+    const t = MakeTime(time);
+    const rot = Rotation_EQJ_EQD(t);
+    const step = Rotation_EQD_ECT(t);
+    return CombineRotation(rot, step);
+}
+exports.Rotation_EQJ_ECT = Rotation_EQJ_ECT;
+/**
+ * @brief Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = ecliptic system, using true equinox of the specified date/time.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts ECT to EQJ at `time`.
+ */
+function Rotation_ECT_EQJ(time) {
+    const t = MakeTime(time);
+    const rot = Rotation_ECT_EQD(t);
+    const step = Rotation_EQD_EQJ(t);
+    return CombineRotation(rot, step);
+}
+exports.Rotation_ECT_EQJ = Rotation_ECT_EQJ;
+/**
  * @brief Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
@@ -6777,7 +6819,7 @@ exports.Rotation_GAL_EQJ = Rotation_GAL_EQJ;
  *      A rotation matrix that converts ECT to EQD.
  */
 function Rotation_ECT_EQD(time) {
-    const et = e_tilt(time);
+    const et = e_tilt(MakeTime(time));
     const tobl = et.tobl * exports.DEG2RAD;
     const c = Math.cos(tobl);
     const s = Math.sin(tobl);
@@ -6800,7 +6842,7 @@ exports.Rotation_ECT_EQD = Rotation_ECT_EQD;
  *      A rotation matrix that converts EQD to ECT.
  */
 function Rotation_EQD_ECT(time) {
-    const et = e_tilt(time);
+    const et = e_tilt(MakeTime(time));
     const tobl = et.tobl * exports.DEG2RAD;
     const c = Math.cos(tobl);
     const s = Math.sin(tobl);

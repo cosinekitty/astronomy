@@ -172,7 +172,7 @@ these are used in function and type names.
 | [Rotation_EQJ_ECL](#Astronomy_Rotation_EQJ_ECL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT). |
 | [Rotation_EQJ_HOR](#Astronomy_Rotation_EQJ_HOR) | Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR). |
 | [Rotation_ECT_EQD](#Astronomy_Rotation_ECT_EQD) | Calculates a rotation matrix from true ecliptic of date (ECT) to true equator of date (EQD). |
-| [Rotation_ECT_EQD](#Astronomy_Rotation_ECT_EQJ) | Calculates a rotation matrix from true ecliptic of date (ECT) J2000 mean equator (EQJ). |
+| [Rotation_ECT_EQJ](#Astronomy_Rotation_ECT_EQJ) | Calculates a rotation matrix from true ecliptic of date (ECT) J2000 mean equator (EQJ). |
 | [Rotation_ECL_EQD](#Astronomy_Rotation_ECL_EQD) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to true true equator of date (EQD). |
 | [Rotation_ECL_EQJ](#Astronomy_Rotation_ECL_EQJ) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ). |
 | [Rotation_ECL_HOR](#Astronomy_Rotation_ECL_HOR) | Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR). |

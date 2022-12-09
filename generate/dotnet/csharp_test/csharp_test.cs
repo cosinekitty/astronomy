@@ -2098,17 +2098,19 @@ namespace csharp_test
             RotationMatrix ect_eqd = Astronomy.Rotation_ECT_EQD(time);
             if (0 != CheckInverse(nameof(eqd_ect), nameof(ect_eqd), eqd_ect, ect_eqd)) return 1;
 
+            // Round trip #8: EQJ <==> ECT.
+            RotationMatrix eqj_ect = Astronomy.Rotation_EQJ_ECT(time);
+            RotationMatrix ect_eqj = Astronomy.Rotation_ECT_EQJ(time);
+            if (0 != CheckInverse(nameof(eqj_ect), nameof(ect_eqj), eqj_ect, ect_eqj)) return 1;
+
             // Verify that combining different sequences of rotations result
             // in the expected combination.
             // For example, (EQJ ==> HOR ==> ECL) must be the same matrix as (EQJ ==> ECL).
-            // Each of these is a "triangle" of relationships between 3 orientations.
-            // There are 4 possible ways to pick 3 orientations from the 4 to form a triangle.
-            // Because we have just proved that each transformation is reversible,
-            // we only need to verify the triangle in one cyclic direction.
-            if (0 != CheckCycle(nameof(eqj_ecl), nameof(ecl_eqd), nameof(eqd_eqj), eqj_ecl, ecl_eqd, eqd_eqj)) return 1;     // excluded corner = HOR
-            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_ecl), nameof(ecl_eqj), eqj_hor, hor_ecl, ecl_eqj)) return 1;     // excluded corner = EQD
-            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_eqd), nameof(eqd_eqj), eqj_hor, hor_eqd, eqd_eqj)) return 1;     // excluded corner = ECL
-            if (0 != CheckCycle(nameof(ecl_eqd), nameof(eqd_hor), nameof(hor_ecl), ecl_eqd, eqd_hor, hor_ecl)) return 1;     // excluded corner = EQJ
+            if (0 != CheckCycle(nameof(eqj_ecl), nameof(ecl_eqd), nameof(eqd_eqj), eqj_ecl, ecl_eqd, eqd_eqj)) return 1;
+            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_ecl), nameof(ecl_eqj), eqj_hor, hor_ecl, ecl_eqj)) return 1;
+            if (0 != CheckCycle(nameof(eqj_hor), nameof(hor_eqd), nameof(eqd_eqj), eqj_hor, hor_eqd, eqd_eqj)) return 1;
+            if (0 != CheckCycle(nameof(ecl_eqd), nameof(eqd_hor), nameof(hor_ecl), ecl_eqd, eqd_hor, hor_ecl)) return 1;
+            if (0 != CheckCycle(nameof(eqj_eqd), nameof(eqd_ect), nameof(ect_eqj), eqj_eqd, eqd_ect, ect_eqj)) return 1;
 
             Debug("C# Test_RotRoundTrip: PASS");
             return 0;

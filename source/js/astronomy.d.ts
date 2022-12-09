@@ -2335,6 +2335,36 @@ export declare function Rotation_ECL_EQJ(): RotationMatrix;
  */
 export declare function Rotation_EQJ_EQD(time: FlexibleDateTime): RotationMatrix;
 /**
+ * @brief Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: EQJ = equatorial system, using equator at J2000 epoch.
+ * Target: ECT = ecliptic system, using true equinox of the specified date/time.
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts EQJ to ECT at `time`.
+ */
+export declare function Rotation_EQJ_ECT(time: FlexibleDateTime): RotationMatrix;
+/**
+ * @brief Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
+ *
+ * This is one of the family of functions that returns a rotation matrix
+ * for converting from one orientation to another.
+ * Source: ECT = ecliptic system, using true equinox of the specified date/time.
+ * Target: EQJ = equatorial system, using equator at J2000 epoch.
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time at which the Earth's equator defines the target orientation.
+ *
+ * @returns {RotationMatrix}
+ *      A rotation matrix that converts ECT to EQJ at `time`.
+ */
+export declare function Rotation_ECT_EQJ(time: FlexibleDateTime): RotationMatrix;
+/**
  * @brief Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
  *
  * This is one of the family of functions that returns a rotation matrix
@@ -2543,7 +2573,7 @@ export declare function Rotation_GAL_EQJ(): RotationMatrix;
  * @returns {RotationMatrix}
  *      A rotation matrix that converts ECT to EQD.
  */
-export declare function Rotation_ECT_EQD(time: AstroTime): RotationMatrix;
+export declare function Rotation_ECT_EQD(time: FlexibleDateTime): RotationMatrix;
 /**
  * @brief Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).
  *
@@ -2555,7 +2585,7 @@ export declare function Rotation_ECT_EQD(time: AstroTime): RotationMatrix;
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQD to ECT.
  */
-export declare function Rotation_EQD_ECT(time: AstroTime): RotationMatrix;
+export declare function Rotation_EQD_ECT(time: FlexibleDateTime): RotationMatrix;
 /**
  * @brief Reports the constellation that a given celestial point lies within.
  *
