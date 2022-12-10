@@ -1217,7 +1217,7 @@ astro_observer_t Astronomy_VectorObserver(astro_vector_t *vector, astro_equator_
 double Astronomy_ObserverGravity(double latitude, double height);
 
 astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
-astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t equ);
+astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t eqj);
 astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);
 
 astro_horizon_t Astronomy_Horizon(

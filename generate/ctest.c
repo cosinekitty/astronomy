@@ -237,6 +237,7 @@ static int StarRiseSetCulm(void);
 static int MapPerformanceTest(void);
 static int GeoMoonPerformance(void);
 static int NutationPerformance(void);
+static int EclipticTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -260,6 +261,7 @@ static unit_test_t UnitTests[] =
     {"dates250",                DatesIssue250},
     {"de405",                   DE405_Check},
     {"earth_apsis",             EarthApsis},
+    {"ecliptic",                EclipticTest},
     {"elongation",              ElongationTest},
     {"geoid",                   GeoidTest},
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
@@ -1990,13 +1992,13 @@ static int CheckSaturn()
     }
     data[] =
     {
-        { "1972-01-01T00:00Z", -0.31904865,  +24.50061220 },
-        { "1980-01-01T00:00Z", +0.85213663,   -1.85761461 },
-        { "2009-09-04T00:00Z", +1.01626809,   +0.08380716 },
-        { "2017-06-15T00:00Z", -0.12318790,  -26.60871409 },
-        { "2019-05-01T00:00Z", +0.32954097,  -23.53880802 },
-        { "2025-09-25T00:00Z", +0.51286575,   +1.52327932 },
-        { "2032-05-15T00:00Z", -0.04652109,  +26.95717765 }
+        { "1972-01-01T00:00Z", -0.31725492,  +24.43386475 },
+        { "1980-01-01T00:00Z", +0.85796177,   -1.72627324 },
+        { "2009-09-04T00:00Z", +1.01932560,   +0.01834451 },
+        { "2017-06-15T00:00Z", -0.12303373,  -26.60068380 },
+        { "2019-05-01T00:00Z", +0.33124502,  -23.47173574 },
+        { "2025-09-25T00:00Z", +0.50543708,   +1.69118986 },
+        { "2032-05-15T00:00Z", -0.04649573,  +26.95238680 }
     };
 
     static const int ncases = sizeof(data) / sizeof(data[0]);
@@ -2019,11 +2021,11 @@ static int CheckSaturn()
         DEBUG("Saturn: date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
 
         mag_diff = ABS(illum.mag - data[i].mag);
-        if (mag_diff > 1.0e-4)
+        if (mag_diff > 1.0e-8)
             FAILRET("C ERROR: Excessive magnitude error %lg\n", mag_diff);
 
         tilt_diff = ABS(illum.ring_tilt - data[i].tilt);
-        if (tilt_diff > 3.0e-5)
+        if (tilt_diff > 1.0e-8)
             FAILRET("C ERROR: Excessive ring tilt error %lg\n", tilt_diff);
     }
 
@@ -3151,65 +3153,6 @@ fail:
     return error;
 }
 
-static int Test_EQJ_ECL(void)
-{
-    astro_rotation_t r;
-    astro_time_t time;
-    astro_vector_t ev;      /* Earth vector in equatorial J2000 */
-    astro_ecliptic_t ecl;
-    astro_vector_t ee;      /* Earth vector in ecliptic J2000 */
-    astro_vector_t et;      /* Test of reconstructing original Earth vector in equatorial J2000 */
-    double diff, dx, dy, dz;
-    int error;
-
-    r = Astronomy_Rotation_EQJ_ECL();
-    CHECK_ROTMAT(r);
-
-    DEBUG("C Test_EQJ_ECL:\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n[%0.18lf  %0.18lf  %0.18lf]\n",
-        r.rot[0][0], r.rot[1][0], r.rot[2][0],
-        r.rot[0][1], r.rot[1][1], r.rot[2][1],
-        r.rot[0][2], r.rot[1][2], r.rot[2][2]);
-
-    /* Calculate heliocentric Earth position at a test time (when I wrote this code). */
-    time = Astronomy_MakeTime(2019, 12, 8, 19, 39, 15.0);
-    ev = Astronomy_HelioVector(BODY_EARTH, time);
-    if (ev.status != ASTRO_SUCCESS)
-        FAIL("C Test_EQJ_ECL: Astronomy_HelioVector returned error %d\n", ev.status);
-
-    /* Use the existing Astronomy_Ecliptic() to calculate ecliptic vector and angles. */
-    ecl = Astronomy_Ecliptic(ev);
-    if (ecl.status != ASTRO_SUCCESS)
-        FAIL("C Test_EQJ_ECL: Astronomy_Ecliptic returned error %d\n", ecl.status);
-
-    DEBUG("C Test_EQJ_ECL ecl = (%0.18lf, %0.18lf,%0.18lf)\n", ecl.vec.x, ecl.vec.y, ecl.vec.z);
-
-    /* Now compute the same vector via rotation matrix. */
-    ee = Astronomy_RotateVector(r, ev);
-    if (ee.status != ASTRO_SUCCESS)
-        FAIL("C Test_EQJ_ECL: Astronomy_RotateVector returned error %d\n", ee.status);
-
-    dx = ee.x - ecl.vec.x;
-    dy = ee.y - ecl.vec.y;
-    dz = ee.z - ecl.vec.z;
-    diff = V(sqrt(dx*dx + dy*dy + dz*dz));
-    DEBUG("C Test_EQJ_ECL  ee = (%0.18lf, %0.18lf,%0.18lf);  diff=%lg\n", ee.x, ee.y, ee.z, diff);
-    if (diff > 1.0e-16)
-        FAIL("C Test_EQJ_ECL: EXCESSIVE VECTOR ERROR\n");
-
-    /* Reverse the test: go from ecliptic back to equatorial. */
-    r = Astronomy_Rotation_ECL_EQJ();
-    CHECK_ROTMAT(r);
-    et = Astronomy_RotateVector(r, ee);
-    CHECK(VectorDiff(et, ev, &diff));
-    DEBUG("C Test_EQJ_ECL  ev diff=%lg\n", diff);
-    if (diff > 2.3e-16)
-        FAIL("C Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR\n");
-
-    error = 0;
-fail:
-    return error;
-}
-
 static int Test_EQJ_GAL_NOVAS(const char *filename)
 {
     /* Compare against ICRS/GAL calculated by NOVAS C 3.1. */
@@ -3730,7 +3673,6 @@ static int RotationTest(void)
     CHECK(TestSpin(180.0, 180.0, 180.0, +1, +2, +3, +1, +2, +3));
     CHECK(TestSpin(0.0, 0.0, -45.0, +1, 0, 0, +0.7071067811865476, -0.7071067811865476, 0));
 
-    CHECK(Test_EQJ_ECL());
     CHECK(Test_EQJ_GAL_NOVAS("temp/galeqj.txt"));
     CHECK(Test_EQJ_GAL_JPL("galactic/mars.txt"));
 
@@ -4369,14 +4311,14 @@ static int LocalSolarEclipseTest1(void)
         }
 
         diff_minutes = (24 * 60) * ABS(diff_days);
-        if (diff_minutes > 7.734)
+        if (diff_minutes > 7.737)
         {
             printf("Expected: ");
             PrintTime(peak);
             printf("\nFound:    ");
             PrintTime(eclipse.peak.time);
             printf("  ut=%0.6lf, tt=%0.6lf\n", eclipse.peak.time.ut, eclipse.peak.time.tt);
-            FAIL("C LocalSolarEclipseTest1(%s line %d): EXCESSIVE TIME ERROR = %0.2lf minutes\n", inFileName, lnum, diff_minutes);
+            FAIL("C LocalSolarEclipseTest1(%s line %d): EXCESSIVE TIME ERROR = %0.6lf minutes\n", inFileName, lnum, diff_minutes);
         }
 
         if (diff_minutes > max_minutes)
@@ -7537,6 +7479,70 @@ static int StarRiseSetCulm(void)
     CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56));
 
     printf("C StarRiseSetCulm: PASS\n");
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int EclipticTest(void)
+{
+    int error = 1;
+    int count = 0;
+    astro_time_t time = Astronomy_MakeTime(1900, 1, 1, 0, 0, 0.0);
+    astro_time_t stopTime = Astronomy_MakeTime(2100, 1, 1, 0, 0, 0.0);
+    astro_vector_t eqj, check_ect;
+    astro_spherical_t sphere;
+    astro_ecliptic_t eclip;
+    double diff, max_vec_diff = 0.0, max_angle_diff = 0.0;
+
+    while (time.ut <= stopTime.ut)
+    {
+        /* Get Moon's geocentric position in EQJ. */
+        eqj = Astronomy_GeoMoon(time);
+        CHECK_STATUS(eqj);
+
+        /* Convert EQJ to ECT. */
+        eclip = Astronomy_Ecliptic(eqj);
+        CHECK_STATUS(eclip);
+
+        /* Confirm that the ecliptic angles and ecliptic vector are consistent.*/
+        CHECK_STATUS(eclip.vec);
+        V(eclip.vec.x);
+        V(eclip.vec.y);
+        V(eclip.vec.z);
+        sphere.dist = V(Astronomy_VectorLength(eclip.vec));
+        sphere.lat = V(eclip.elat);
+        sphere.lon = V(eclip.elon);
+        sphere.status = ASTRO_SUCCESS;
+        check_ect = Astronomy_VectorFromSphere(sphere, time);
+        CHECK(VectorDiff(eclip.vec, check_ect, &diff));
+        if (diff > max_angle_diff) max_angle_diff = diff;
+
+        /* Independently get the Moon's spherical coordinates in ECT. */
+        sphere = Astronomy_EclipticGeoMoon(time);
+        CHECK_STATUS(sphere);
+
+        /* Convert spherical coordinates to ECT vector. */
+        check_ect = Astronomy_VectorFromSphere(sphere, time);
+        CHECK_STATUS(check_ect);
+
+        /* Verify the two ECT vectors are identical, within tolerance. */
+        CHECK(VectorDiff(eclip.vec, check_ect, &diff));
+        if (diff > max_vec_diff) max_vec_diff = diff;
+
+        time = Astronomy_AddDays(time, 10.0);
+        ++count;
+    }
+
+    if (max_angle_diff > 2.910e-18)
+        FAIL("C EclipticTest: EXCESSIVE ANGLE DIFF = %0.6le AU.\n", max_angle_diff);
+
+    if (max_vec_diff > 3.388e-18)
+        FAIL("C EclipticTest: EXCESSIVE VECTOR DIFF = %0.6le AU.\n", max_vec_diff);
+
+    DEBUG("C EclipticTest: PASS: count = %d, max_vec_diff = %0.6le AU, max_angle_diff = %0.6le AU.\n", count, max_vec_diff, max_angle_diff);
+    error = 0;
 fail:
     return error;
 }
