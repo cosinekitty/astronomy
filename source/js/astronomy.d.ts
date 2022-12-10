@@ -838,18 +838,19 @@ export declare function VectorObserver(vector: Vector, ofdate: boolean): Observe
  */
 export declare function ObserverGravity(latitude: number, height: number): number;
 /**
- * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
+ * @brief Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
  *
- * Given J2000 equatorial Cartesian coordinates,
- * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
- * You can call {@link GeoVector} and pass the resulting vector to this function.
+ * Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
+ * on 1 January 2000), this function converts those coordinates to true ecliptic coordinates
+ * that are relative to the plane of the Earth's orbit around the Sun on that date.
  *
- * @param {Vector} equ
- *      A vector in the J2000 equatorial coordinate system.
+ * @param {Vector} eqj
+ *      Equatorial coordinates in the EQJ frame of reference.
+ *      You can call {@link GeoVector} to obtain suitable equatorial coordinates.
  *
  * @returns {EclipticCoordinates}
  */
-export declare function Ecliptic(equ: Vector): EclipticCoordinates;
+export declare function Ecliptic(eqj: Vector): EclipticCoordinates;
 /**
  * @brief Calculates equatorial geocentric Cartesian coordinates for the Moon.
  *
@@ -1354,21 +1355,20 @@ export declare function PairLongitude(body1: Body, body2: Body, date: FlexibleDa
  */
 export declare function AngleFromSun(body: Body, date: FlexibleDateTime): number;
 /**
- * @brief Calculates heliocentric ecliptic longitude based on the J2000 equinox.
+ * @brief Calculates heliocentric ecliptic longitude of a body.
+ *
+ * This function calculates the angle around the plane of the Earth's orbit
+ * of a celestial body, as seen from the center of the Sun.
+ * The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
+ * in degrees from the true equinox of date. The ecliptic longitude is always in the range [0, 360).
  *
  * @param {Body} body
- *      The name of a celestial body other than the Sun.
+ *      A body other than the Sun.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the ecliptic longitude.
  *
  * @returns {number}
- *      The ecliptic longitude angle of the body in degrees measured counterclockwise around the mean
- *      plane of the Earth's orbit, as seen from above the Sun's north pole.
- *      Ecliptic longitude starts at 0 at the J2000
- *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a> and
- *      increases in the same direction the Earth orbits the Sun.
- *      The returned value is always in the range [0, 360).
  */
 export declare function EclipticLongitude(body: Body, date: FlexibleDateTime): number;
 /**

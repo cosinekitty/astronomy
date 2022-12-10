@@ -216,10 +216,6 @@ export function MassProduct(body: Body): number {
 }
 
 
-let ob2000: number;   // lazy-evaluated mean obliquity of the ecliptic at J2000, in radians
-let cos_ob2000: number;
-let sin_ob2000: number;
-
 function VerifyBoolean(b: boolean): boolean {
     if (b !== true && b !== false) {
         console.trace();
@@ -2999,27 +2995,33 @@ function RotateEquatorialToEcliptic(equ: Vector, cos_ob: number, sin_ob: number)
 }
 
 /**
- * @brief Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
+ * @brief Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
  *
- * Given J2000 equatorial Cartesian coordinates,
- * returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
- * You can call {@link GeoVector} and pass the resulting vector to this function.
+ * Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
+ * on 1 January 2000), this function converts those coordinates to true ecliptic coordinates
+ * that are relative to the plane of the Earth's orbit around the Sun on that date.
  *
- * @param {Vector} equ
- *      A vector in the J2000 equatorial coordinate system.
+ * @param {Vector} eqj
+ *      Equatorial coordinates in the EQJ frame of reference.
+ *      You can call {@link GeoVector} to obtain suitable equatorial coordinates.
  *
  * @returns {EclipticCoordinates}
  */
-export function Ecliptic(equ: Vector): EclipticCoordinates {
-    // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
-    if (ob2000 === undefined) {
-        // Lazy-evaluate and keep the mean obliquity of the ecliptic at J2000.
-        // This way we don't need to crunch the numbers more than once.
-        ob2000 = DEG2RAD * e_tilt(MakeTime(J2000)).mobl;
-        cos_ob2000 = Math.cos(ob2000);
-        sin_ob2000 = Math.sin(ob2000);
-    }
-    return RotateEquatorialToEcliptic(equ, cos_ob2000, sin_ob2000);
+export function Ecliptic(eqj: Vector): EclipticCoordinates {
+    // Calculate nutation and obliquity for this time.
+    // As an optimization, the nutation angles are cached in `time`,
+    // and reused below when the `nutation` function is called.
+    const et = e_tilt(eqj.t);
+
+    // Convert mean J2000 equator (EQJ) to true equator of date (EQD).
+    const eqj_pos: ArrayVector = [eqj.x, eqj.y, eqj.z];
+    const mean_pos = precession(eqj_pos, eqj.t, PrecessDirection.From2000);
+    const [x, y, z] = nutation(mean_pos, eqj.t, PrecessDirection.From2000);
+    const eqd = new Vector(x, y, z, eqj.t)
+
+    // Rotate from EQD to true ecliptic of date (ECT).
+    const tobl = et.tobl * DEG2RAD;
+    return RotateEquatorialToEcliptic(eqd, Math.cos(tobl), Math.sin(tobl));
 }
 
 /**
@@ -4887,21 +4889,20 @@ export function AngleFromSun(body: Body, date: FlexibleDateTime): number {
 }
 
 /**
- * @brief Calculates heliocentric ecliptic longitude based on the J2000 equinox.
+ * @brief Calculates heliocentric ecliptic longitude of a body.
+ *
+ * This function calculates the angle around the plane of the Earth's orbit
+ * of a celestial body, as seen from the center of the Sun.
+ * The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
+ * in degrees from the true equinox of date. The ecliptic longitude is always in the range [0, 360).
  *
  * @param {Body} body
- *      The name of a celestial body other than the Sun.
+ *      A body other than the Sun.
  *
  * @param {FlexibleDateTime} date
  *      The date and time for which to calculate the ecliptic longitude.
  *
  * @returns {number}
- *      The ecliptic longitude angle of the body in degrees measured counterclockwise around the mean
- *      plane of the Earth's orbit, as seen from above the Sun's north pole.
- *      Ecliptic longitude starts at 0 at the J2000
- *      <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a> and
- *      increases in the same direction the Earth orbits the Sun.
- *      The returned value is always in the range [0, 360).
  */
 export function EclipticLongitude(body: Body, date: FlexibleDateTime): number {
     if (body === Body.Sun)

@@ -5417,7 +5417,7 @@ $ASTRO_JUPITER_MOONS();
         /// </summary>
         /// <remarks>
         /// Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
-        /// on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
+        /// on 1 January 2000), this function converts those coordinates to true ecliptic coordinates of date,
         /// which are relative to the plane of the Earth's orbit around the Sun.
         /// </remarks>
         /// <param name="eqj">

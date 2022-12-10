@@ -3,12 +3,12 @@
 
 The next 10 lunar quarters are:
 2019-06-17 08:31:18 UTC : Full Moon
-2019-06-25 09:47:08 UTC : Third Quarter
+2019-06-25 09:47:06 UTC : Third Quarter
 2019-07-02 19:16:47 UTC : New Moon
-2019-07-09 10:55:29 UTC : First Quarter
+2019-07-09 10:55:27 UTC : First Quarter
 2019-07-16 21:38:54 UTC : Full Moon
-2019-07-25 01:18:43 UTC : Third Quarter
+2019-07-25 01:18:41 UTC : Third Quarter
 2019-08-01 03:12:26 UTC : New Moon
-2019-08-07 17:31:36 UTC : First Quarter
-2019-08-15 12:29:57 UTC : Full Moon
+2019-08-07 17:31:35 UTC : First Quarter
+2019-08-15 12:29:56 UTC : Full Moon
 2019-08-23 14:56:46 UTC : Third Quarter

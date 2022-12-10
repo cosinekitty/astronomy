@@ -1362,17 +1362,17 @@ definition until re-defined by another call to `DefineStar`.
 
 <a name="Ecliptic"></a>
 
-## Ecliptic(equ) ⇒ [<code>EclipticCoordinates</code>](#EclipticCoordinates)
+## Ecliptic(eqj) ⇒ [<code>EclipticCoordinates</code>](#EclipticCoordinates)
 **Kind**: global function  
-**Brief**: Converts equatorial Cartesian coordinates to ecliptic Cartesian and angular coordinates.
+**Brief**: Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
 
-Given J2000 equatorial Cartesian coordinates,
-returns J2000 ecliptic latitude, longitude, and cartesian coordinates.
-You can call [GeoVector](#GeoVector) and pass the resulting vector to this function.  
+Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
+on 1 January 2000), this function converts those coordinates to true ecliptic coordinates
+that are relative to the plane of the Earth's orbit around the Sun on that date.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| equ | [<code>Vector</code>](#Vector) | A vector in the J2000 equatorial coordinate system. |
+| eqj | [<code>Vector</code>](#Vector) | Equatorial coordinates in the EQJ frame of reference.      You can call [GeoVector](#GeoVector) to obtain suitable equatorial coordinates. |
 
 
 * * *
@@ -1411,17 +1411,16 @@ To calculate a J2000 mean equator vector instead, use [GeoMoon](#GeoMoon).
 
 ## EclipticLongitude(body, date) ⇒ <code>number</code>
 **Kind**: global function  
-**Returns**: <code>number</code> - The ecliptic longitude angle of the body in degrees measured counterclockwise around the mean
-     plane of the Earth's orbit, as seen from above the Sun's north pole.
-     Ecliptic longitude starts at 0 at the J2000
-     <a href="https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)">equinox</a> and
-     increases in the same direction the Earth orbits the Sun.
-     The returned value is always in the range [0, 360).  
-**Brief**: Calculates heliocentric ecliptic longitude based on the J2000 equinox.  
+**Brief**: Calculates heliocentric ecliptic longitude of a body.
+
+This function calculates the angle around the plane of the Earth's orbit
+of a celestial body, as seen from the center of the Sun.
+The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
+in degrees from the true equinox of date. The ecliptic longitude is always in the range [0, 360).  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The name of a celestial body other than the Sun. |
+| body | [<code>Body</code>](#Body) | A body other than the Sun. |
 | date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time for which to calculate the ecliptic longitude. |
 
 

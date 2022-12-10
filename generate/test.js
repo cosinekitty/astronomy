@@ -745,7 +745,7 @@ function LocalSolarEclipse1() {
         }
 
         const diff_minutes = (24 * 60) * abs(diff_days);
-        if (diff_minutes > 7.734) {
+        if (diff_minutes > 7.737) {
             console.error(`JS LocalSolarEclipse1(${filename} line ${lnum}): EXCESSIVE TIME ERROR = ${diff_minutes} minutes`);
             return 1;
         }
@@ -1561,6 +1561,12 @@ function RiseSetReverse() {
     return 0;
 }
 
+function VectorDiff(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    const dz = a.z - b.z;
+    return sqrt(dx*dx + dy*dy + dz*dz);
+}
 
 function Rotation() {
     function CompareMatrices(caller, a, b, tolerance) {
@@ -1631,43 +1637,6 @@ function Rotation() {
 
         const c = Astronomy.CombineRotation(b, a);
         CompareMatrices('Rotation_MatrixMultiply', c, v, 0);
-    }
-
-    function VectorDiff(a, b) {
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const dz = a.z - b.z;
-        return sqrt(dx*dx + dy*dy + dz*dz);
-    }
-
-    function Test_EQJ_ECL() {
-        const r = Astronomy.Rotation_EQJ_ECL();
-
-        /* Calculate heliocentric Earth position at a test time. */
-        const time = Astronomy.MakeTime(new Date('2019-12-08T19:39:15Z'));
-        const ev = Astronomy.HelioVector('Earth', time);
-
-        /* Use the existing Astronomy.Ecliptic() to calculate ecliptic vector and angles. */
-        const ecl = Astronomy.Ecliptic(ev);
-        Debug(`JS Test_EQJ_ECL ecl = (${ecl.vec.x}, ${ecl.vec.y}, ${ecl.vec.z})`);
-
-        /* Now compute the same vector via rotation matrix. */
-        const ee = Astronomy.RotateVector(r, ev);
-        const dx = ee.x - ecl.vec.x;
-        const dy = ee.y - ecl.vec.y;
-        const dz = ee.z - ecl.vec.z;
-        const diff = sqrt(dx*dx + dy*dy + dz*dz);
-        Debug(`JS Test_EQJ_ECL ee = (${ee.x}, ${ee.y}, ${ee.z}); diff = ${diff}`);
-        if (diff > 2.0e-15)
-            throw 'Test_EQJ_ECL: EXCESSIVE VECTOR ERROR';
-
-        /* Reverse the test: go from ecliptic back to equatorial. */
-        const ir = Astronomy.Rotation_ECL_EQJ();
-        const et = Astronomy.RotateVector(ir, ee);
-        const idiff = VectorDiff(et, ev);
-        Debug(`JS Test_EQJ_ECL ev diff = ${idiff}`);
-        if (idiff > 2.3e-16)
-            throw 'Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR';
     }
 
     function Test_GAL_EQJ_NOVAS(filename) {
@@ -1955,7 +1924,6 @@ function Rotation() {
     Rotation_MatrixInverse();
     Rotation_MatrixMultiply();
     Rotation_Pivot();
-    Test_EQJ_ECL();
     Test_GAL_EQJ_NOVAS('temp/galeqj.txt');
 
     Test_EQJ_EQD('Mercury');
@@ -2064,7 +2032,7 @@ function Magnitude() {
         return pass;
     }
 
-    function TestSaturn() {
+    function CheckSaturn() {
         // JPL Horizons does not include Saturn's rings in its magnitude models.
         // I still don't have authoritative test data for Saturn's magnitude.
         // For now, I just test for consistency with Paul Schlyter's formulas at:
@@ -2073,25 +2041,25 @@ function Magnitude() {
         let success = true;
 
         const data = [
-            { date: '1972-01-01T00:00Z', mag: -0.31904865,  tilt: +24.50061220 },
-            { date: '1980-01-01T00:00Z', mag: +0.85213663,  tilt:  -1.85761461 },
-            { date: '2009-09-04T00:00Z', mag: +1.01626809,  tilt:  +0.08380716 },
-            { date: '2017-06-15T00:00Z', mag: -0.12318790,  tilt: -26.60871409 },
-            { date: '2019-05-01T00:00Z', mag: +0.32954097,  tilt: -23.53880802 },
-            { date: '2025-09-25T00:00Z', mag: +0.51286575,  tilt:  +1.52327932 },
-            { date: '2032-05-15T00:00Z', mag: -0.04652109,  tilt: +26.95717765 }
+            { date: "1972-01-01T00:00Z", mag: -0.31725492,  tilt: +24.43386475 },
+            { date: "1980-01-01T00:00Z", mag: +0.85796177,  tilt:  -1.72627324 },
+            { date: "2009-09-04T00:00Z", mag: +1.01932560,  tilt:  +0.01834451 },
+            { date: "2017-06-15T00:00Z", mag: -0.12303373,  tilt: -26.60068380 },
+            { date: "2019-05-01T00:00Z", mag: +0.33124502,  tilt: -23.47173574 },
+            { date: "2025-09-25T00:00Z", mag: +0.50543708,  tilt:  +1.69118986 },
+            { date: "2032-05-15T00:00Z", mag: -0.04649573,  tilt: +26.95238680 }
         ];
 
         for (let item of data) {
             let illum = Astronomy.Illumination('Saturn', new Date(item.date));
             Debug(`JS Saturn: date=${illum.time.date.toISOString()}  mag=${illum.mag.toFixed(8).padStart(12)}  ring_tilt=${illum.ring_tilt.toFixed(8).padStart(12)}`);
             const mag_diff = abs(illum.mag - item.mag);
-            if (mag_diff > 1.0e-4) {
+            if (mag_diff > 1.0e-8) {
                 console.log(`ERROR: Excessive magnitude error ${mag_diff}`);
                 success = false;
             }
             const tilt_diff = abs(illum.ring_tilt - item.tilt);
-            if (tilt_diff > 3.0e-5) {
+            if (tilt_diff > 1.0e-8) {
                 console.log(`ERROR: Excessive ring tilt error ${tilt_diff}`);
                 success = false;
             }
@@ -2137,7 +2105,7 @@ function Magnitude() {
             all_passed = false;
     }
 
-    if (!TestSaturn())
+    if (!CheckSaturn())
         all_passed = false;
 
     if (!TestMaxMag('magnitude/maxmag_Venus.txt', 'Venus'))
@@ -3465,12 +3433,55 @@ function StarRiseSetCulm() {
 
 //-------------------------------------------------------------------------------------------------
 
+function EclipticTest() {
+    let time = Astronomy.MakeTime(new Date('1900-01-01T00:00:00Z'));
+    const stopTime = Astronomy.MakeTime(new Date('2100-01-01T00:00:00Z'));
+    let max_vec_diff = 0.0;
+    let max_angle_diff = 0.0;
+    let count = 0;
+    while (time.ut <= stopTime.ut) {
+        // Get Moon's geocentric position in EQJ.
+        const eqj = Astronomy.GeoMoon(time);
+
+        // Convert EQJ to ECT.
+        const eclip = Astronomy.Ecliptic(eqj);
+
+        // Confirm that the ecliptic angles and ecliptic vectors are consistent.
+        const check_sphere = new Astronomy.Spherical(eclip.elat, eclip.elon, eclip.vec.Length());
+        const check_vec = Astronomy.VectorFromSphere(check_sphere, time);
+        max_angle_diff = Math.max(max_angle_diff, VectorDiff(eclip.vec, check_vec));
+
+        // Independently get the Moon's spherical coordinates in ECT.
+        const sphere = Astronomy.EclipticGeoMoon(time);
+
+        // Convert spherical coordinates to ECT vector.
+        const check_ect = Astronomy.VectorFromSphere(sphere, time);
+
+        // Verify the two ECT vectors are identical, within tolerance.
+        max_vec_diff = Math.max(max_vec_diff, VectorDiff(eclip.vec, check_ect));
+
+        time = time.AddDays(10.0);
+        ++count;
+    }
+
+    if (max_angle_diff > 3.040e-18)
+        throw `EclipticTest: EXCESSIVE ANGLE DIFF = ${max_angle_diff.toExponential(6)} AU.`;
+
+    if (max_vec_diff > 3.743e-18)
+        throw `EclipticTest: EXCESSIVE VECTOR DIFF = ${max_vec_diff.toExponential(6)} AU.`;
+
+    Debug(`JS EclipticTest: PASS: count = ${count}, max_vec_diff = ${max_vec_diff.toExponential(6)} AU., max_angle_diff = ${max_angle_diff.toExponential(6)} AU.`);
+}
+
+//-------------------------------------------------------------------------------------------------
+
 const UnitTests = {
     aberration:             AberrationTest,
     axis:                   AxisTest,
     barystate:              BaryStateTest,
     constellation:          Constellation,
     dates250:               DatesIssue250,
+    ecliptic:               EclipticTest,
     elongation:             Elongation,
     geoid:                  Geoid,
     global_solar_eclipse:   GlobalSolarEclipse,
