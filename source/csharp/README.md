@@ -505,12 +505,12 @@ To calculate a J2000 mean equator vector instead, use [`Astronomy.GeoMoon`](#Ast
 <a name="Astronomy.EclipticLongitude"></a>
 ### Astronomy.EclipticLongitude(body, time) &#8658; `double`
 
-**Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.**
+**Calculates heliocentric ecliptic longitude of a body.**
 
 This function calculates the angle around the plane of the Earth's orbit
 of a celestial body, as seen from the center of the Sun.
 The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
-in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+in degrees from the true equinox of date. The ecliptic longitude is always in the range [0, 360).
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -588,9 +588,9 @@ Correction for aberration is optional, using the `aberration` parameter.
 **Returns:** Angular coordinates expressed in the same equatorial system as `vector`.
 
 <a name="Astronomy.EquatorialToEcliptic"></a>
-### Astronomy.EquatorialToEcliptic(equ) &#8658; [`Ecliptic`](#Ecliptic)
+### Astronomy.EquatorialToEcliptic(eqj) &#8658; [`Ecliptic`](#Ecliptic)
 
-**Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.**
+**Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.**
 
 Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
 on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
@@ -598,9 +598,9 @@ which are relative to the plane of the Earth's orbit around the Sun.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`AstroVector`](#AstroVector) | `equ` | Equatorial coordinates in the J2000 frame of reference. You can call [`Astronomy.GeoVector`](#Astronomy.GeoVector) to obtain suitable equatorial coordinates. |
+| [`AstroVector`](#AstroVector) | `eqj` | Equatorial coordinates in the J2000 frame of reference. You can call [`Astronomy.GeoVector`](#Astronomy.GeoVector) to obtain suitable equatorial coordinates. |
 
-**Returns:** Ecliptic coordinates in the J2000 frame of reference.
+**Returns:** Spherical and vector coordinates expressed in true ecliptic coordinates of date (ECT).
 
 <a name="Astronomy.GeoEmbState"></a>
 ### Astronomy.GeoEmbState(time) &#8658; [`StateVector`](#StateVector)

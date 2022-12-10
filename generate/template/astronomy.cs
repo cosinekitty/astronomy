@@ -5413,23 +5413,31 @@ $ASTRO_JUPITER_MOONS();
         }
 
         /// <summary>
-        /// Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
+        /// Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
         /// </summary>
         /// <remarks>
         /// Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
         /// on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
         /// which are relative to the plane of the Earth's orbit around the Sun.
         /// </remarks>
-        /// <param name="equ">
+        /// <param name="eqj">
         /// Equatorial coordinates in the J2000 frame of reference.
         /// You can call #Astronomy.GeoVector to obtain suitable equatorial coordinates.
         /// </param>
-        /// <returns>Ecliptic coordinates in the J2000 frame of reference.</returns>
-        public static Ecliptic EquatorialToEcliptic(AstroVector equ)
+        /// <returns>Spherical and vector coordinates expressed in true ecliptic coordinates of date (ECT).</returns>
+        public static Ecliptic EquatorialToEcliptic(AstroVector eqj)
         {
-            // Based on NOVAS functions equ2ecl() and equ2ecl_vec().
-            const double ob2000 = 0.40909260059599012;   // mean obliquity of the J2000 ecliptic in radians
-            return RotateEquatorialToEcliptic(equ, ob2000);
+            // Calculate nutation and obliquity for this time.
+            // As an optimization, the nutation angles are cached in `time`,
+            // and reused below when the `nutation` function is called.
+            earth_tilt_t et = e_tilt(eqj.t);
+
+            // Convert J2000 mean equator (EQJ) to true equator of date (EQD).
+            AstroVector mean_pos = precession(eqj, PrecessDirection.From2000);
+            AstroVector eqd = nutation(mean_pos, PrecessDirection.From2000);
+
+            // Rotate from EQD to true ecliptic of date (ECT).
+            return RotateEquatorialToEcliptic(eqd, et.tobl * DEG2RAD);
         }
 
         /// <summary>
@@ -6616,12 +6624,12 @@ $ASTRO_JUPITER_MOONS();
             return Math.Abs(EARTH_ORBITAL_PERIOD / (EARTH_ORBITAL_PERIOD/Tp - 1.0));
         }
 
-        /// <summary>Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.</summary>
+        /// <summary>Calculates heliocentric ecliptic longitude of a body.</summary>
         /// <remarks>
         /// This function calculates the angle around the plane of the Earth's orbit
         /// of a celestial body, as seen from the center of the Sun.
         /// The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
-        /// in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+        /// in degrees from the true equinox of date. The ecliptic longitude is always in the range [0, 360).
         /// </remarks>
         ///
         /// <param name="body">A body other than the Sun.</param>

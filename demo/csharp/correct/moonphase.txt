@@ -2,13 +2,13 @@
 2019-06-15T09:15:32.987Z : Moon's illuminated fraction = 95.63%.
 
 The next 10 lunar quarters are:
-2019-06-17T08:31:17.934Z : Full Moon
-2019-06-25T09:47:07.624Z : Third Quarter
-2019-07-02T19:16:46.550Z : New Moon
-2019-07-09T10:55:28.849Z : First Quarter
-2019-07-16T21:38:53.691Z : Full Moon
-2019-07-25T01:18:42.697Z : Third Quarter
-2019-08-01T03:12:26.152Z : New Moon
-2019-08-07T17:31:35.717Z : First Quarter
-2019-08-15T12:29:57.164Z : Full Moon
-2019-08-23T14:56:46.202Z : Third Quarter
+2019-06-17T08:31:17.943Z : Full Moon
+2019-06-25T09:47:05.867Z : Third Quarter
+2019-07-02T19:16:46.600Z : New Moon
+2019-07-09T10:55:27.398Z : First Quarter
+2019-07-16T21:38:53.593Z : Full Moon
+2019-07-25T01:18:41.310Z : Third Quarter
+2019-08-01T03:12:25.793Z : New Moon
+2019-08-07T17:31:34.799Z : First Quarter
+2019-08-15T12:29:56.277Z : Full Moon
+2019-08-23T14:56:45.685Z : Third Quarter

@@ -5343,7 +5343,7 @@ astro_ecliptic_t Astronomy_SunPosition(astro_time_t time)
 }
 
 /**
- * @brief Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector.
+ * @brief Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
  *
  * Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
  * on 1 January 2000), this function converts those coordinates to true ecliptic coordinates
@@ -5366,7 +5366,9 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t eqj)
     if (eqj.status != ASTRO_SUCCESS)
         return EclError(eqj.status);
 
-    /* Calculate obliquity angles. Optimization: cached and re-used by nutation(). */
+    /* Calculate nutation and obliquity for this time. */
+    /* As an optimization, the nutation angles are cached in `time`, */
+    /* and reused below when the `nutation` function is called. */
     et = e_tilt(&eqj.t);
 
     /* Convert mean J2000 equator (EQJ) to true equator of date (EQD). */
@@ -5376,7 +5378,7 @@ astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t eqj)
     precession(eqj_pos, eqj.t, FROM_2000, mean_pos);
     nutation(mean_pos, &eqj.t, FROM_2000, eqd_pos);
 
-    /* Rotate from EQJ to true ecliptic of date (ECT). */
+    /* Rotate from EQD to true ecliptic of date (ECT). */
     return RotateEquatorialToEcliptic(eqd_pos, et.tobl * DEG2RAD, eqj.t);
 }
 

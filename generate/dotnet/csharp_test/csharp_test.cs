@@ -57,6 +57,7 @@ namespace csharp_test
             new Test("geoid", GeoidTest),
             new Test("constellation", ConstellationTest),
             new Test("dates250", DatesIssue250),
+            new Test("ecliptic", EclipticTest),
             new Test("elongation", ElongationTest),
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
             new Test("gravsim", GravitySimulatorTest),
@@ -1620,13 +1621,13 @@ namespace csharp_test
         // http://www.stjarnhimlen.se/comp/ppcomp.html#15
         static saturn_test_case[] saturn_data = new saturn_test_case[]
         {
-            new saturn_test_case("1972-01-01T00:00Z", -0.31904865,  +24.50061220),
-            new saturn_test_case("1980-01-01T00:00Z", +0.85213663,   -1.85761461),
-            new saturn_test_case("2009-09-04T00:00Z", +1.01626809,   +0.08380716),
-            new saturn_test_case("2017-06-15T00:00Z", -0.12318790,  -26.60871409),
-            new saturn_test_case("2019-05-01T00:00Z", +0.32954097,  -23.53880802),
-            new saturn_test_case("2025-09-25T00:00Z", +0.51286575,   +1.52327932),
-            new saturn_test_case("2032-05-15T00:00Z", -0.04652109,  +26.95717765)
+            new saturn_test_case("1972-01-01T00:00Z", -0.31725492,  +24.43386475),
+            new saturn_test_case("1980-01-01T00:00Z", +0.85796177,   -1.72627324),
+            new saturn_test_case("2009-09-04T00:00Z", +1.01932560,   +0.01834451),
+            new saturn_test_case("2017-06-15T00:00Z", -0.12303373,  -26.60068380),
+            new saturn_test_case("2019-05-01T00:00Z", +0.33124502,  -23.47173574),
+            new saturn_test_case("2025-09-25T00:00Z", +0.50543708,   +1.69118986),
+            new saturn_test_case("2032-05-15T00:00Z", -0.04649573,  +26.95238680)
         };
 
         static int CheckSaturn()
@@ -1641,14 +1642,14 @@ namespace csharp_test
                 Debug("C# Saturn: date={0}  calc mag={1}  ring_tilt={2}", data.date, illum.mag, illum.ring_tilt);
 
                 double mag_diff = abs(illum.mag - data.mag);
-                if (mag_diff > 1.0e-4)
+                if (mag_diff > 1.0e-8)
                 {
                     Console.WriteLine("C# CheckSaturn ERROR: Excessive magnitude error {0}", mag_diff);
                     error = 1;      // keep going -- print all errors before exiting
                 }
 
                 double tilt_diff = abs(illum.ring_tilt - data.tilt);
-                if (tilt_diff > 3.0e-5)
+                if (tilt_diff > 1.0e-8)
                 {
                     Console.WriteLine("C# CheckSaturn ERROR: Excessive ring tilt error {0}", tilt_diff);
                     error = 1;      // keep going -- print all errors before exiting
@@ -1822,46 +1823,6 @@ namespace csharp_test
             RotationMatrix c = Astronomy.CombineRotation(b, a);
             if (0 != CompareMatrices("Rotation_MatrixMultiply", c, v, 0.0)) return 1;
             Debug("C# Rotation_MatrixMultiply: PASS");
-            return 0;
-        }
-
-        static int Test_EQJ_ECL()
-        {
-            RotationMatrix r = Astronomy.Rotation_EQJ_ECL();
-
-            // Calculate heliocentric Earth position at a test time.
-            var time = new AstroTime(2019, 12, 8, 19, 39, 15);
-            var ev = Astronomy.HelioVector(Body.Earth, time);
-
-            // Use the older function to calculate ecliptic vector and angles.
-            Ecliptic ecl = Astronomy.EquatorialToEcliptic(ev);
-            Debug("C# Test_EQJ_ECL ecl = ({0}, {1}, {2})", ecl.vec.x, ecl.vec.y, ecl.vec.z);
-
-            // Now compute the same vector via rotation matrix.
-            AstroVector ee = Astronomy.RotateVector(r, ev);
-            double dx = ee.x - ecl.vec.x;
-            double dy = ee.y - ecl.vec.y;
-            double dz = ee.z - ecl.vec.z;
-            double diff = sqrt(dx*dx + dy*dy + dz*dz);
-            Debug("C# Test_EQJ_ECL ee = ({0}, {1}, {2}); diff={3}", ee.x, ee.y, ee.z, diff);
-            if (diff > 1.0e-16)
-            {
-                Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE VECTOR ERROR");
-                return 1;
-            }
-
-            // Reverse the test: go from ecliptic back to equatorial.
-            r = Astronomy.Rotation_ECL_EQJ();
-            AstroVector et = Astronomy.RotateVector(r, ee);
-            diff = VectorDiff(et, ev);
-            Debug("C# Test_EQJ_ECL  ev diff={0}", diff);
-            if (diff > 2.3e-16)
-            {
-                Console.WriteLine("C# Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR");
-                return 1;
-            }
-
-            Debug("C# Test_EQJ_ECL: PASS");
             return 0;
         }
 
@@ -2201,13 +2162,56 @@ namespace csharp_test
             return 0;
         }
 
+        static int EclipticTest()
+        {
+            var time = new AstroTime(1900, 1, 1, 0, 0, 0.0);
+            var stopTime = new AstroTime(2100, 1, 1, 0, 0, 0.0);
+            double max_vec_diff = 0.0;
+            double max_angle_diff = 0.0;
+            int count = 0;
+
+            while (time.ut <= stopTime.ut)
+            {
+                // Get Moon's geocentric position in EQJ.
+                AstroVector eqj = Astronomy.GeoMoon(time);
+
+                // Convert EQJ to ECT.
+                Ecliptic eclip = Astronomy.EquatorialToEcliptic(eqj);
+
+                // Confirm that the ecliptic angles and ecliptic vector are consistent.
+                var check_sphere = new Spherical(eclip.elat, eclip.elon, eclip.vec.Length());
+                AstroVector check_vec = Astronomy.VectorFromSphere(check_sphere, time);
+                max_angle_diff = Math.Max(max_angle_diff, VectorDiff(eclip.vec, check_vec));
+
+                // Independently get the Moon's spherical coordinates in ECT.
+                Spherical sphere = Astronomy.EclipticGeoMoon(time);
+
+                // Convert spherical coordinates to ECT vector.
+                AstroVector check_ect = Astronomy.VectorFromSphere(sphere, time);
+
+                // Verify the two ECT vectors are identical, within tolerance.
+                max_vec_diff = Math.Max(max_vec_diff, VectorDiff(eclip.vec, check_ect));
+
+                time = time.AddDays(10.0);
+                ++count;
+            }
+
+            if (max_angle_diff > 2.910e-18)
+                return Fail($"EclipticTest: EXCESSIVE ANGLE DIFF = {max_angle_diff:G6} AU.");
+
+            if (max_vec_diff > 3.743e-18)
+                return Fail($"EclipticTest: EXCESSIVE VECTOR DIFF = {max_vec_diff:G6} AU.");
+
+            Debug($"C# EclipticTest: PASS: count = {count}, max_diff = {max_vec_diff:G6} AU, max_angle_diff = {max_angle_diff:G6} AU.");
+            return 0;
+        }
+
         static int RotationTest()
         {
             return (
                 0 == Rotation_MatrixInverse() &&
                 0 == Rotation_MatrixMultiply() &&
                 0 == Rotation_Pivot() &&
-                0 == Test_EQJ_ECL() &&
                 0 == Test_EQJ_GAL_NOVAS("../../temp/galeqj.txt") &&
                 0 == Test_EQJ_EQD(Body.Mercury) &&
                 0 == Test_EQJ_EQD(Body.Venus) &&
@@ -2735,7 +2739,7 @@ namespace csharp_test
                     }
 
                     double diff_minutes = (24 * 60) * abs(diff_days);
-                    if (diff_minutes > 7.734)
+                    if (diff_minutes > 7.737)
                     {
                         Console.WriteLine("C# LocalSolarEclipseTest1({0} line {1}): EXCESSIVE TIME ERROR = {2} minutes", inFileName, lnum, diff_minutes);
                         return 1;

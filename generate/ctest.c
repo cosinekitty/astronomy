@@ -3519,6 +3519,70 @@ fail:
     return error;
 }
 
+
+static int EclipticTest(void)
+{
+    int error = 1;
+    int count = 0;
+    astro_time_t time = Astronomy_MakeTime(1900, 1, 1, 0, 0, 0.0);
+    astro_time_t stopTime = Astronomy_MakeTime(2100, 1, 1, 0, 0, 0.0);
+    astro_vector_t eqj, check_ect;
+    astro_spherical_t sphere;
+    astro_ecliptic_t eclip;
+    double diff, max_vec_diff = 0.0, max_angle_diff = 0.0;
+
+    while (time.ut <= stopTime.ut)
+    {
+        /* Get Moon's geocentric position in EQJ. */
+        eqj = Astronomy_GeoMoon(time);
+        CHECK_STATUS(eqj);
+
+        /* Convert EQJ to ECT. */
+        eclip = Astronomy_Ecliptic(eqj);
+        CHECK_STATUS(eclip);
+
+        /* Confirm that the ecliptic angles and ecliptic vector are consistent.*/
+        CHECK_STATUS(eclip.vec);
+        V(eclip.vec.x);
+        V(eclip.vec.y);
+        V(eclip.vec.z);
+        sphere.dist = V(Astronomy_VectorLength(eclip.vec));
+        sphere.lat = V(eclip.elat);
+        sphere.lon = V(eclip.elon);
+        sphere.status = ASTRO_SUCCESS;
+        check_ect = Astronomy_VectorFromSphere(sphere, time);
+        CHECK(VectorDiff(eclip.vec, check_ect, &diff));
+        if (diff > max_angle_diff) max_angle_diff = diff;
+
+        /* Independently get the Moon's spherical coordinates in ECT. */
+        sphere = Astronomy_EclipticGeoMoon(time);
+        CHECK_STATUS(sphere);
+
+        /* Convert spherical coordinates to ECT vector. */
+        check_ect = Astronomy_VectorFromSphere(sphere, time);
+        CHECK_STATUS(check_ect);
+
+        /* Verify the two ECT vectors are identical, within tolerance. */
+        CHECK(VectorDiff(eclip.vec, check_ect, &diff));
+        if (diff > max_vec_diff) max_vec_diff = diff;
+
+        time = Astronomy_AddDays(time, 10.0);
+        ++count;
+    }
+
+    if (max_angle_diff > 2.910e-18)
+        FAIL("C EclipticTest: EXCESSIVE ANGLE DIFF = %0.6le AU.\n", max_angle_diff);
+
+    if (max_vec_diff > 3.388e-18)
+        FAIL("C EclipticTest: EXCESSIVE VECTOR DIFF = %0.6le AU.\n", max_vec_diff);
+
+    DEBUG("C EclipticTest: PASS: count = %d, max_vec_diff = %0.6le AU, max_angle_diff = %0.6le AU.\n", count, max_vec_diff, max_angle_diff);
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int CheckInverse(const char *aname, const char *bname, astro_rotation_t arot, astro_rotation_t brot)
 {
     int error;
@@ -7479,70 +7543,6 @@ static int StarRiseSetCulm(void)
     CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56));
 
     printf("C StarRiseSetCulm: PASS\n");
-fail:
-    return error;
-}
-
-/*-----------------------------------------------------------------------------------------------------------*/
-
-static int EclipticTest(void)
-{
-    int error = 1;
-    int count = 0;
-    astro_time_t time = Astronomy_MakeTime(1900, 1, 1, 0, 0, 0.0);
-    astro_time_t stopTime = Astronomy_MakeTime(2100, 1, 1, 0, 0, 0.0);
-    astro_vector_t eqj, check_ect;
-    astro_spherical_t sphere;
-    astro_ecliptic_t eclip;
-    double diff, max_vec_diff = 0.0, max_angle_diff = 0.0;
-
-    while (time.ut <= stopTime.ut)
-    {
-        /* Get Moon's geocentric position in EQJ. */
-        eqj = Astronomy_GeoMoon(time);
-        CHECK_STATUS(eqj);
-
-        /* Convert EQJ to ECT. */
-        eclip = Astronomy_Ecliptic(eqj);
-        CHECK_STATUS(eclip);
-
-        /* Confirm that the ecliptic angles and ecliptic vector are consistent.*/
-        CHECK_STATUS(eclip.vec);
-        V(eclip.vec.x);
-        V(eclip.vec.y);
-        V(eclip.vec.z);
-        sphere.dist = V(Astronomy_VectorLength(eclip.vec));
-        sphere.lat = V(eclip.elat);
-        sphere.lon = V(eclip.elon);
-        sphere.status = ASTRO_SUCCESS;
-        check_ect = Astronomy_VectorFromSphere(sphere, time);
-        CHECK(VectorDiff(eclip.vec, check_ect, &diff));
-        if (diff > max_angle_diff) max_angle_diff = diff;
-
-        /* Independently get the Moon's spherical coordinates in ECT. */
-        sphere = Astronomy_EclipticGeoMoon(time);
-        CHECK_STATUS(sphere);
-
-        /* Convert spherical coordinates to ECT vector. */
-        check_ect = Astronomy_VectorFromSphere(sphere, time);
-        CHECK_STATUS(check_ect);
-
-        /* Verify the two ECT vectors are identical, within tolerance. */
-        CHECK(VectorDiff(eclip.vec, check_ect, &diff));
-        if (diff > max_vec_diff) max_vec_diff = diff;
-
-        time = Astronomy_AddDays(time, 10.0);
-        ++count;
-    }
-
-    if (max_angle_diff > 2.910e-18)
-        FAIL("C EclipticTest: EXCESSIVE ANGLE DIFF = %0.6le AU.\n", max_angle_diff);
-
-    if (max_vec_diff > 3.388e-18)
-        FAIL("C EclipticTest: EXCESSIVE VECTOR DIFF = %0.6le AU.\n", max_vec_diff);
-
-    DEBUG("C EclipticTest: PASS: count = %d, max_vec_diff = %0.6le AU, max_angle_diff = %0.6le AU.\n", count, max_vec_diff, max_angle_diff);
-    error = 0;
 fail:
     return error;
 }
