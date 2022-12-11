@@ -10,7 +10,7 @@
         </td>
         <td style="text-align: center;"><a href="demo/c/">Examples</a></td>
         <td style="text-align: center;">
-            <div><a href="source/c/"><img src="https://img.shields.io/badge/C%20%2f%20C%2b%2b-v2.1.12-blue" /></a></div>
+            <div><a href="source/c/"><img src="https://img.shields.io/badge/C%20%2f%20C%2b%2b-v2.1.13-blue" /></a></div>
             <div><a href="source/c/">Code &amp; Docs</a></div>
         </td>
     </tr>

@@ -587,13 +587,13 @@ def CheckSaturn():
     # For now, I just test for consistency with Paul Schlyter's formulas at:
     # http://www.stjarnhimlen.se/comp/ppcomp.html#15
     data = [
-        ( "1972-01-01T00:00Z", -0.31904865,  +24.50061220 ),
-        ( "1980-01-01T00:00Z", +0.85213663,   -1.85761461 ),
-        ( "2009-09-04T00:00Z", +1.01626809,   +0.08380716 ),
-        ( "2017-06-15T00:00Z", -0.12318790,  -26.60871409 ),
-        ( "2019-05-01T00:00Z", +0.32954097,  -23.53880802 ),
-        ( "2025-09-25T00:00Z", +0.51286575,   +1.52327932 ),
-        ( "2032-05-15T00:00Z", -0.04652109,  +26.95717765 )
+        ( "1972-01-01T00:00Z", -0.31725492,  +24.43386475 ),
+        ( "1980-01-01T00:00Z", +0.85796177,   -1.72627324 ),
+        ( "2009-09-04T00:00Z", +1.01932560,   +0.01834451 ),
+        ( "2017-06-15T00:00Z", -0.12303373,  -26.60068380 ),
+        ( "2019-05-01T00:00Z", +0.33124502,  -23.47173574 ),
+        ( "2025-09-25T00:00Z", +0.50543708,   +1.69118986 ),
+        ( "2032-05-15T00:00Z", -0.04649573,  +26.95238680 )
     ]
     error = 0
     for (dtext, mag, tilt) in data:
@@ -961,36 +961,6 @@ def VectorDiff(a, b):
     return sqrt(dx*dx + dy*dy + dz*dz)
 
 
-def Test_EQJ_ECL():
-    r = astronomy.Rotation_EQJ_ECL()
-    # Calculate heliocentric Earth position at a test time.
-    time = astronomy.Time.Make(2019, 12, 8, 19, 39, 15)
-    ev = astronomy.HelioVector(astronomy.Body.Earth, time)
-
-    # Use the existing astronomy.Ecliptic() to calculate ecliptic vector and angles.
-    ecl = astronomy.Ecliptic(ev)
-    Debug('PY Test_EQJ_ECL ecl = ({}, {}, {})'.format(ecl.vec.x, ecl.vec.y, ecl.vec.z))
-
-    # Now compute the same vector via rotation matrix.
-    ee = astronomy.RotateVector(r, ev)
-    dx = ee.x - ecl.vec.x
-    dy = ee.y - ecl.vec.y
-    dz = ee.z - ecl.vec.z
-    diff = sqrt(dx*dx + dy*dy + dz*dz)
-    Debug('PY Test_EQJ_ECL ee = ({}, {}, {}); diff = {}'.format(ee.x, ee.y, ee.z, diff))
-    if diff > 1.0e-16:
-        print('PY Test_EQJ_ECL: EXCESSIVE VECTOR ERROR')
-        sys.exit(1)
-
-    # Reverse the test: go from ecliptic back to equatorial.
-    ir = astronomy.Rotation_ECL_EQJ()
-    et = astronomy.RotateVector(ir, ee)
-    idiff = VectorDiff(et, ev)
-    Debug('PY Test_EQJ_ECL ev diff = {}'.format(idiff))
-    if idiff > 2.3e-16:
-        print('PY Test_EQJ_ECL: EXCESSIVE REVERSE ROTATION ERROR')
-        sys.exit(1)
-
 def Test_GAL_EQJ_NOVAS(filename):
     THRESHOLD_SECONDS = 8.8
     rot = astronomy.Rotation_EQJ_GAL()
@@ -1265,11 +1235,51 @@ def Test_EQD_ECT():
         sys.exit(1)
     Debug('PY Test_EQD_ECT: PASS: count = {}, max_diff = {:0.6e} au.'.format(count, max_diff))
 
+
+def Ecliptic():
+    time = astronomy.Time.Make(1900, 1, 1, 0, 0, 0.0)
+    stopTime = astronomy.Time.Make(2100, 1, 1, 0, 0, 0.0)
+    count = 0
+    max_vec_diff = 0
+    max_angle_diff = 0.0
+    while time.ut <= stopTime.ut:
+        # Get Moon's geocentric position in EQJ.
+        eqj = astronomy.GeoMoon(time)
+
+        # Convert EQJ to ECT.
+        eclip = astronomy.Ecliptic(eqj)
+
+        # Confirm that the ecliptic angles and ecliptic vector are consistent.
+        check_sphere = astronomy.Spherical(eclip.elat, eclip.elon, eclip.vec.Length())
+        check_vec = astronomy.VectorFromSphere(check_sphere, time)
+        max_angle_diff = max(max_angle_diff, VectorDiff(eclip.vec, check_vec))
+
+        # Independently get the Moon's spherical coordinates in ECT.
+        sphere = astronomy.EclipticGeoMoon(time)
+
+        # Convert spherical coordinates to ECT vector.
+        check_ect = astronomy.VectorFromSphere(sphere, time)
+
+        # Verify the two ECT vectors are identical, within tolerance.
+        max_vec_diff = max(max_vec_diff, VectorDiff(eclip.vec, check_ect))
+
+        time = time.AddDays(10.0)
+        count += 1
+
+    if max_vec_diff > 3.388e-18:
+        return Fail('Ecliptic', 'EXCESSIVE VECTOR DIFF = {:0.6e} au.'.format(max_vec_diff))
+
+    if max_angle_diff > 2.910e-18:
+        return Fail('Ecliptic', 'EXCESSIVE ANGLE DIFF = {:0.6e} au.'.format(max_angle_diff))
+
+    print('PY Ecliptic: PASS: count = {:d}, max_vec_diff = {:0.6e} au, max_angle_diff = {:0.6e} au.'.format(count, max_vec_diff, max_angle_diff))
+    return 0
+
+
 def Rotation():
     Rotation_MatrixInverse()
     Rotation_MatrixMultiply()
     Rotation_Pivot()
-    Test_EQJ_ECL()
     Test_GAL_EQJ_NOVAS('temp/galeqj.txt')
     Test_EQJ_EQD(astronomy.Body.Mercury)
     Test_EQJ_EQD(astronomy.Body.Venus)
@@ -1669,7 +1679,7 @@ def LocalSolarEclipse1():
                 continue
 
             diff_minutes = (24 * 60) * vabs(diff_days)
-            if diff_minutes > 7.734:
+            if diff_minutes > 7.737:
                 return Fail(funcname, 'EXCESSIVE TIME ERROR = {} minutes'.format(diff_minutes))
 
             if diff_minutes > max_minutes:
@@ -3127,6 +3137,7 @@ UnitTests = {
     'barystate':                BaryState,
     'constellation':            Constellation,
     'dates250':                 DatesIssue250,
+    'ecliptic':                 Ecliptic,
     'elongation':               Elongation,
     'geoid':                    Geoid,
     'global_solar_eclipse':     GlobalSolarEclipse,

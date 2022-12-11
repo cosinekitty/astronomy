@@ -3576,7 +3576,7 @@ static int EclipticTest(void)
     if (max_vec_diff > 3.388e-18)
         FAIL("C EclipticTest: EXCESSIVE VECTOR DIFF = %0.6le AU.\n", max_vec_diff);
 
-    DEBUG("C EclipticTest: PASS: count = %d, max_vec_diff = %0.6le AU, max_angle_diff = %0.6le AU.\n", count, max_vec_diff, max_angle_diff);
+    printf("C EclipticTest: PASS: count = %d, max_vec_diff = %0.6le AU, max_angle_diff = %0.6le AU.\n", count, max_vec_diff, max_angle_diff);
     error = 0;
 fail:
     return error;

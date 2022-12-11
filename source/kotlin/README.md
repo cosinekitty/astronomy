@@ -25,7 +25,7 @@ allprojects {
 Now add the dependency:
 ```kotlin
 dependencies {
-    implementation("io.github.cosinekitty:astronomy:2.1.12")
+    implementation("io.github.cosinekitty:astronomy:2.1.13")
 }
 ```
 
@@ -129,10 +129,10 @@ movement through the Solar System.
 | [defineStar](doc/define-star.md)<br>fun [defineStar](doc/define-star.md)(body: [Body](doc/-body/index.md), ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), distanceLightYears: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html))<br>Assign equatorial coordinates to a user-defined star. |
 | [degreesToRadians](doc/degrees-to-radians.md)<br>fun [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html).[degreesToRadians](doc/degrees-to-radians.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Convert an angle expressed in degrees to an angle expressed in radians. |
 | [eclipticGeoMoon](doc/ecliptic-geo-moon.md)<br>fun [eclipticGeoMoon](doc/ecliptic-geo-moon.md)(time: [Time](doc/-time/index.md)): [Spherical](doc/-spherical/index.md)<br>Calculates spherical ecliptic geocentric position of the Moon. |
-| [eclipticLongitude](doc/ecliptic-longitude.md)<br>fun [eclipticLongitude](doc/ecliptic-longitude.md)(body: [Body](doc/-body/index.md), time: [Time](doc/-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox. |
+| [eclipticLongitude](doc/ecliptic-longitude.md)<br>fun [eclipticLongitude](doc/ecliptic-longitude.md)(body: [Body](doc/-body/index.md), time: [Time](doc/-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Calculates heliocentric ecliptic longitude of a body. |
 | [elongation](doc/elongation.md)<br>fun [elongation](doc/elongation.md)(body: [Body](doc/-body/index.md), time: [Time](doc/-time/index.md)): [ElongationInfo](doc/-elongation-info/index.md)<br>Determines visibility of a celestial body relative to the Sun, as seen from the Earth. |
 | [equator](doc/equator.md)<br>fun [equator](doc/equator.md)(body: [Body](doc/-body/index.md), time: [Time](doc/-time/index.md), observer: [Observer](doc/-observer/index.md), equdate: [EquatorEpoch](doc/-equator-epoch/index.md), aberration: [Aberration](doc/-aberration/index.md)): [Equatorial](doc/-equatorial/index.md)<br>Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface. |
-| [equatorialToEcliptic](doc/equatorial-to-ecliptic.md)<br>fun [equatorialToEcliptic](doc/equatorial-to-ecliptic.md)(equ: [Vector](doc/-vector/index.md)): [Ecliptic](doc/-ecliptic/index.md)<br>Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates. |
+| [equatorialToEcliptic](doc/equatorial-to-ecliptic.md)<br>fun [equatorialToEcliptic](doc/equatorial-to-ecliptic.md)(eqj: [Vector](doc/-vector/index.md)): [Ecliptic](doc/-ecliptic/index.md)<br>Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles. |
 | [geoEmbState](doc/geo-emb-state.md)<br>fun [geoEmbState](doc/geo-emb-state.md)(time: [Time](doc/-time/index.md)): [StateVector](doc/-state-vector/index.md)<br>Calculates the geocentric position and velocity of the Earth/Moon barycenter. |
 | [geoMoon](doc/geo-moon.md)<br>fun [geoMoon](doc/geo-moon.md)(time: [Time](doc/-time/index.md)): [Vector](doc/-vector/index.md)<br>Calculates equatorial geocentric position of the Moon at a given time. |
 | [geoMoonState](doc/geo-moon-state.md)<br>fun [geoMoonState](doc/geo-moon-state.md)(time: [Time](doc/-time/index.md)): [StateVector](doc/-state-vector/index.md)<br>Calculates equatorial geocentric position and velocity of the Moon at a given time. |

@@ -1494,20 +1494,20 @@ The estimated difference TT-UT on the given date, expressed in seconds.
 ---
 
 <a name="Ecliptic"></a>
-### Ecliptic(equ)
+### Ecliptic(eqj)
 
-**Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.**
+**Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.**
 
 Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
-on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
+on 1 January 2000), this function converts those coordinates to true ecliptic coordinates of date,
 which are relative to the plane of the Earth's orbit around the Sun.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Equatorial`](#Equatorial) | `equ` | Equatorial coordinates in the J2000 frame of reference. |
+| [`Equatorial`](#Equatorial) | `eqj` | Equatorial coordinates in the J2000 frame of reference. You can call [`GeoVector`](#GeoVector) to obtain suitable equatorial coordinates. |
 
 **Returns**: [`EclipticCoordinates`](#EclipticCoordinates)
-Ecliptic coordinates in the J2000 frame of reference.
+Spherical and vector coordinates expressed in true ecliptic coordinates of date (ECT).
 
 ---
 
@@ -1542,12 +1542,12 @@ The Moon's position as a distance, ecliptic latitude, and ecliptic longitude.
 <a name="EclipticLongitude"></a>
 ### EclipticLongitude(body, time)
 
-**Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.**
+**Calculates heliocentric ecliptic longitude of a body.**
 
 This function calculates the angle around the plane of the Earth's orbit
 of a celestial body, as seen from the center of the Sun.
 The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
-in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+in degrees from the true equinox of date. The ecliptic longitude is always in the range [0, 360).
 
 | Type | Parameter | Description |
 | --- | --- | --- |

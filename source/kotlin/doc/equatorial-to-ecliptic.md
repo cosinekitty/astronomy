@@ -2,18 +2,18 @@
 
 # equatorialToEcliptic
 
-fun [equatorialToEcliptic](equatorial-to-ecliptic.md)(equ: [Vector](-vector/index.md)): [Ecliptic](-ecliptic/index.md)
+fun [equatorialToEcliptic](equatorial-to-ecliptic.md)(eqj: [Vector](-vector/index.md)): [Ecliptic](-ecliptic/index.md)
 
-Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
+Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
 
-Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates, which are relative to the plane of the Earth's orbit around the Sun.
+Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC on 1 January 2000), this function converts those coordinates to true ecliptic coordinates of date, which are relative to the plane of the Earth's orbit around the Sun.
 
 #### Return
 
-Ecliptic coordinates in the J2000 frame of reference (ECL).
+Spherical and vector coordinates expressed in true ecliptic coordinates of date (ECT)..
 
 ## Parameters
 
 | | |
 |---|---|
-| equ | Equatorial coordinates in the J2000 frame of reference. You can call [geoVector](geo-vector.md) to obtain suitable equatorial coordinates. |
+| eqj | Equatorial coordinates in the J2000 frame of reference. You can call [geoVector](geo-vector.md) to obtain suitable equatorial coordinates. |

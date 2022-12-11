@@ -287,16 +287,24 @@ class Tests {
     }
 
     @Test
-    fun `Rotation matrices EQJ ECT`() {
+    fun `Convert EQJ to ECT`() {
         var time = Time(1900, 1, 1, 0, 0, 0.0)
         val stopTime = Time(2100, 1, 1, 0, 0, 0.0)
+        var max_eclip_diff = 0.0
+        var max_sphere_diff = 0.0
         while (time.ut <= stopTime.ut) {
             // Get Moon's geocentric position in EQJ.
             val eqj = geoMoon(time)
 
-            // Convert EQJ to ECT.
+            // Convert EQJ to ECT using rotation matrices.
             val eqjEct = rotationEqjEct(time)
-            val ect = eqjEct.rotate(eqj)
+            val ect_r = eqjEct.rotate(eqj)
+
+            // Convert EQJ to ECT using the special-purpose function.
+            val eclip = equatorialToEcliptic(eqj)
+
+            // Verify both answers are consistent
+            max_eclip_diff = max(max_eclip_diff, (eclip.vec - ect_r).length())
 
             // Independently get the Moon's spherical coordinates in ECT.
             val sphere = eclipticGeoMoon(time)
@@ -305,8 +313,7 @@ class Tests {
             val check_ect = sphere.toVector(time)
 
             // Verify the two ECT vectors are identical, within tolerance.
-            val diff = (ect - check_ect).length()
-            assertTrue(diff < 3.743e-18, "excessive vector diff = $diff")
+            max_sphere_diff = max(max_sphere_diff, (eclip.vec - check_ect).length())
 
             // Make sure counterpart is the inverse rotation matrix.
             val ectEqj = rotationEctEqj(time)
@@ -314,6 +321,9 @@ class Tests {
 
             time = time.addDays(10.0)
         }
+
+        assertTrue(max_eclip_diff < 1.511e-18, "excessive eclip_diff = $max_eclip_diff AU.")
+        assertTrue(max_sphere_diff < 3.406e-18, "excessive sphere_diff = $max_sphere_diff AU.")
     }
 
     //----------------------------------------------------------------------------------------
@@ -1550,7 +1560,7 @@ class Tests {
             }
 
             val diffMinutes = MINUTES_PER_DAY * abs(diffDays)
-            assertTrue(diffMinutes < 7.734, "$filename line $lnum: excessive time error = $diffMinutes minutes")
+            assertTrue(diffMinutes < 7.737, "$filename line $lnum: excessive time error = $diffMinutes minutes")
         }
 
         assertTrue(skipCount <= 6, "$filename: excessive skip count = $skipCount")
@@ -1736,18 +1746,17 @@ class Tests {
     fun `Heliocentric ecliptic longitude`() {
         // These test data were generated using the Python version of Astronomy Engine.
         val time = Time(8141.199164526366)   // 2022-04-16T16:46:47.815Z
-        verifyEclipticLongitude(time, Body.Mercury,  94.721630860364  )
-        verifyEclipticLongitude(time, Body.Venus,   265.7830489493118 )
-        verifyEclipticLongitude(time, Body.Earth,   206.37462137776242)
-        verifyEclipticLongitude(time, Body.EMB,     206.37458597072734)
-        verifyEclipticLongitude(time, Body.Moon,    206.37171443948878)
-        verifyEclipticLongitude(time, Body.Mars,    294.9980436292426 )
-        verifyEclipticLongitude(time, Body.Jupiter, 348.4960299261051 )
-        verifyEclipticLongitude(time, Body.Saturn,  317.84336759149676)
-        verifyEclipticLongitude(time, Body.Uranus,   44.28789479945196)
-        verifyEclipticLongitude(time, Body.Neptune, 352.78484144085974)
-        verifyEclipticLongitude(time, Body.Pluto,   296.58427291483525)
-        verifyEclipticLongitude(time, Body.SSB,     344.6690770393668 )
+        verifyEclipticLongitude(time, Body.Mercury,  95.02894558749874)
+        verifyEclipticLongitude(time, Body.Venus,   266.0903196139245 )
+        verifyEclipticLongitude(time, Body.Earth,   206.6818916092405)
+        verifyEclipticLongitude(time, Body.EMB,     206.68185620530505)
+        verifyEclipticLongitude(time, Body.Moon,    206.67898492545427)
+        verifyEclipticLongitude(time, Body.Mars,    295.3053568069638)
+        verifyEclipticLongitude(time, Body.Jupiter, 348.8033611282255)
+        verifyEclipticLongitude(time, Body.Saturn,  318.1506794001811)
+        verifyEclipticLongitude(time, Body.Uranus,   44.59517759166631)
+        verifyEclipticLongitude(time, Body.Neptune, 353.0921704660749)
+        verifyEclipticLongitude(time, Body.Pluto,   296.89159475346855)
     }
 
     private fun verifyEclipticLongitude(time: Time, body: Body, expectedLongitude: Double) {
@@ -2077,11 +2086,11 @@ class Tests {
     fun `Elongation sanity check`() {
         // Comparison with Python calculations.
         val time = Time(8143.135471001447)  // 2022-04-18T15:15:04.695Z
-        verifyElongation(Body.Mercury, time, Visibility.Evening, 16.100478087685758, 16.01391544801653 )
-        verifyElongation(Body.Venus,   time, Visibility.Morning, 44.380271294737405, 44.37884461595604 )
-        verifyElongation(Body.Mars,    time, Visibility.Morning, 55.92935847869356,  55.920119745861314)
-        verifyElongation(Body.Jupiter, time, Visibility.Morning, 33.25618304272404,  33.2426920240577  )
-        verifyElongation(Body.Uranus,  time, Visibility.Evening, 15.276009178442616, 15.271572246395817)
+        verifyElongation(Body.Mercury, time, Visibility.Evening, 16.100478087685758, 16.013859719196727)
+        verifyElongation(Body.Venus,   time, Visibility.Morning, 44.380271294737405, 44.37881570570113 )
+        verifyElongation(Body.Mars,    time, Visibility.Morning, 55.92935847869356,  55.9200536671587  )
+        verifyElongation(Body.Jupiter, time, Visibility.Morning, 33.25618304272404,  33.24263918900169 )
+        verifyElongation(Body.Uranus,  time, Visibility.Evening, 15.276009178442616, 15.27158439607594 )
     }
 
     private fun verifyElongation(body: Body, time: Time, visibility: Visibility, elong: Double, sep: Double) {
@@ -2288,13 +2297,13 @@ class Tests {
             val tilt: Double
         )
         val saturnTestList = arrayOf(
-            SaturnTestCase("1972-01-01T00:00Z", -0.31904865,  +24.50061220),
-            SaturnTestCase("1980-01-01T00:00Z", +0.85213663,   -1.85761461),
-            SaturnTestCase("2009-09-04T00:00Z", +1.01626809,   +0.08380716),
-            SaturnTestCase("2017-06-15T00:00Z", -0.12318790,  -26.60871409),
-            SaturnTestCase("2019-05-01T00:00Z", +0.32954097,  -23.53880802),
-            SaturnTestCase("2025-09-25T00:00Z", +0.51286575,   +1.52327932),
-            SaturnTestCase("2032-05-15T00:00Z", -0.04652109,  +26.95717765)
+            SaturnTestCase("1972-01-01T00:00Z", -0.31725492,  +24.43386475),
+            SaturnTestCase("1980-01-01T00:00Z", +0.85796177,   -1.72627324),
+            SaturnTestCase("2009-09-04T00:00Z", +1.01932560,   +0.01834451),
+            SaturnTestCase("2017-06-15T00:00Z", -0.12303373,  -26.60068380),
+            SaturnTestCase("2019-05-01T00:00Z", +0.33124502,  -23.47173574),
+            SaturnTestCase("2025-09-25T00:00Z", +0.50543708,   +1.69118986),
+            SaturnTestCase("2032-05-15T00:00Z", -0.04649573,  +26.95238680)
         )
         for (c in saturnTestList) {
             val time = parseDate(c.date)

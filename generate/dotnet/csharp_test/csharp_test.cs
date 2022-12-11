@@ -2202,7 +2202,7 @@ namespace csharp_test
             if (max_vec_diff > 3.743e-18)
                 return Fail($"EclipticTest: EXCESSIVE VECTOR DIFF = {max_vec_diff:G6} AU.");
 
-            Debug($"C# EclipticTest: PASS: count = {count}, max_diff = {max_vec_diff:G6} AU, max_angle_diff = {max_angle_diff:G6} AU.");
+            Console.WriteLine($"C# EclipticTest: PASS: count = {count}, max_diff = {max_vec_diff:G6} AU, max_angle_diff = {max_angle_diff:G6} AU.");
             return 0;
         }
 

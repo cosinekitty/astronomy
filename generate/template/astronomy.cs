@@ -5428,7 +5428,7 @@ $ASTRO_JUPITER_MOONS();
         public static Ecliptic EquatorialToEcliptic(AstroVector eqj)
         {
             // Calculate nutation and obliquity for this time.
-            // As an optimization, the nutation angles are cached in `time`,
+            // As an optimization, the nutation angles are cached in `eqj.t`,
             // and reused below when the `nutation` function is called.
             earth_tilt_t et = e_tilt(eqj.t);
 

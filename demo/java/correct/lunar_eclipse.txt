@@ -7,7 +7,7 @@
 1988-08-27T12:01:33.171Z  Partial eclipse ends.
 
 1989-02-20T13:43:24.717Z  Partial eclipse begins.
-1989-02-20T14:55:34.838Z  Total eclipse begins.
+1989-02-20T14:55:34.839Z  Total eclipse begins.
 1989-02-20T15:35:19.955Z  Peak of total eclipse.
 1989-02-20T16:15:05.072Z  Total eclipse ends.
 1989-02-20T17:27:15.193Z  Partial eclipse ends.

@@ -3578,34 +3578,44 @@ def SunPosition(time):
     true_obliq = math.radians(adjusted_time._etilt().tobl)
     return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq, time)
 
-def Ecliptic(equ):
-    """Converts J2000 equatorial Cartesian coordinates to J2000 ecliptic coordinates.
+def Ecliptic(eqj):
+    """Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
 
     Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
-    on 1 January 2000), this function converts those coordinates to J2000 ecliptic coordinates,
+    on 1 January 2000), this function converts those coordinates to true ecliptic coordinates of date,
     which are relative to the plane of the Earth's orbit around the Sun.
 
     Parameters
     ----------
-    equ : Equatorial
+    eqj : Equatorial
         Equatorial coordinates in the J2000 frame of reference.
+        You can call #GeoVector to obtain suitable equatorial coordinates.
 
     Returns
     -------
     EclipticCoordinates
-        Ecliptic coordinates in the J2000 frame of reference.
+        Spherical and vector coordinates expressed in true ecliptic coordinates of date (ECT).
     """
-    # Based on NOVAS functions equ2ecl() and equ2ecl_vec().
-    ob2000 = 0.40909260059599012   # mean obliquity of the J2000 ecliptic in radians
-    return _RotateEquatorialToEcliptic([equ.x, equ.y, equ.z], ob2000, equ.t)
+    # Calculate nutation and obliquity for this time.
+    # As an optimization, the nutation angles are cached in `eqj.t`,
+    # and reused below when the `nutation` function is called.
+    et = _e_tilt(eqj.t)
+
+    # Convert J2000 mean equator (EQJ) to true equator of date (EQD).
+    mean_pos = _precession([eqj.x, eqj.y, eqj.z], eqj.t, _PrecessDir.From2000)
+    eqd_pos = _nutation(mean_pos, eqj.t, _PrecessDir.From2000)
+
+    # Rotate from EQD to true ecliptic of date (ECT).
+    return _RotateEquatorialToEcliptic(eqd_pos, math.radians(et.tobl), eqj.t)
+
 
 def EclipticLongitude(body, time):
-    """Calculates heliocentric ecliptic longitude of a body based on the J2000 equinox.
+    """Calculates heliocentric ecliptic longitude of a body.
 
     This function calculates the angle around the plane of the Earth's orbit
     of a celestial body, as seen from the center of the Sun.
     The angle is measured prograde (in the direction of the Earth's orbit around the Sun)
-    in degrees from the J2000 equinox. The ecliptic longitude is always in the range [0, 360).
+    in degrees from the true equinox of date. The ecliptic longitude is always in the range [0, 360).
 
     Parameters
     ----------
