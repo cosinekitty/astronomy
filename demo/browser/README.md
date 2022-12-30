@@ -20,9 +20,20 @@ Astronomy Engine is completely self-contained, and it always will be.
 
 All the functionality is wrapped inside an object called `Astronomy`.
 
-Here are some example web pages using Astronomy Engine in a web browser.
+---
+
+## Functional demo
+
+This is an example of a functioning page that uses Astronomy Engine
+to calculate some live information about the Moon.
+
+### [Moon Info](https://faisalr.github.io/) calculator by [faisalr](https://github.com/faisalr).
 
 ---
+
+## Reference HTML files
+
+Here are more example html files showing how to use Astronomy Engine in a web browser.
 
 ### [Moon Phase Calculator](moonphase.html)
 Determines the Moon's current phase and
