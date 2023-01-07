@@ -10,6 +10,14 @@ if errorlevel 1 (exit /b 1)
 call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256
 if errorlevel 1 (exit /b 1)
 
+cd ..
+set copyright=
+for /f %%f in ('git grep -l Copyright -- generate hydrogen LICENSE source/c/astronomy.h') do (
+    set copyright=!copyright! %%f
+)
+py generate/update_copyrights.py !copyright!
+cd generate
+
 set FASTMODE=true
 set GENEXE=bin\generate.exe
 set CTESTEXE=bin\ctest.exe
