@@ -88,6 +88,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM -- We don't run demos in Windows, but we should update copyright year.
+copy ..\source\js\astronomy.ts ..\demo\nodejs\calendar\astronomy.ts
+if errorlevel 1 (
+    echo.Error copying astronomy.ts to calendar demo directory.
+    exit /b 1
+)
+
 for %%f in (
     ..\source\js\astronomy.js
     ..\source\js\astronomy.min.js
