@@ -3447,7 +3447,7 @@ The ecliptic coordinates of the Sun using the Earth's true equator of date.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Spherical`](#Spherical) | `sphere` | A structure that contains apparent horizontal coordinates: `lat` holds the refracted azimuth angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. |
+| [`Spherical`](#Spherical) | `sphere` | A structure that contains apparent horizontal coordinates: `lat` holds the refracted altitude angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. |
 | [`Time`](#Time) | `time` | The date and time of the observation. This is needed because the returned vector object requires a valid time value when passed to certain other functions. |
 | [`Refraction`](#Refraction) | `refraction` | See remarks in function [`RefractionAngle`](#RefractionAngle). |
 

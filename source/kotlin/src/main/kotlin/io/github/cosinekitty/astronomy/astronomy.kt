@@ -1359,7 +1359,7 @@ data class Spherical(
      * Given apparent angular horizontal coordinates, calculate the unrefracted horizontal vector.
      *
      * Assumes `this` contains apparent horizontal coordinates:
-     * `lat` holds the refracted azimuth angle,
+     * `lat` holds the refracted altitude angle,
      * `lon` holds the azimuth in degrees clockwise from north,
      * and `dist` holds the distance from the observer to the object in AU.
      *

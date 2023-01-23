@@ -6,7 +6,7 @@ fun [toVectorFromHorizon](to-vector-from-horizon.md)(time: [Time](../-time/index
 
 Given apparent angular horizontal coordinates, calculate the unrefracted horizontal vector.
 
-Assumes this contains apparent horizontal coordinates: lat holds the refracted azimuth angle, lon holds the azimuth in degrees clockwise from north, and dist holds the distance from the observer to the object in AU.
+Assumes this contains apparent horizontal coordinates: lat holds the refracted altitude angle, lon holds the azimuth in degrees clockwise from north, and dist holds the distance from the observer to the object in AU.
 
 #### Return
 

@@ -2365,7 +2365,7 @@ This is a convenience wrapper around the functions
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Spherical`](#Spherical) | `sphere` | A structure that contains apparent horizontal coordinates: `lat` holds the refracted azimuth angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. |
+| [`Spherical`](#Spherical) | `sphere` | A structure that contains apparent horizontal coordinates: `lat` holds the refracted altitude angle, `lon` holds the azimuth in degrees clockwise from north, and `dist` holds the distance from the observer to the object in AU. |
 | [`AstroTime`](#AstroTime) | `time` | The date and time of the observation. This is needed because the returned [`AstroVector`](#AstroVector) requires a valid time value when passed to certain other functions. |
 | [`Refraction`](#Refraction) | `refraction` | The refraction option used to model atmospheric lensing. See [`Astronomy.RefractionAngle`](#Astronomy.RefractionAngle). This specifies how refraction is to be removed from the altitude stored in `sphere.lat`. |
 

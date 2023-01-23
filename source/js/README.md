@@ -3262,7 +3262,7 @@ axis of rotation on the given date.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| sphere | [<code>Spherical</code>](#Spherical) | A structure that contains apparent horizontal coordinates:      `lat` holds the refracted azimuth angle,      `lon` holds the azimuth in degrees clockwise from north,      and `dist` holds the distance from the observer to the object in AU. |
+| sphere | [<code>Spherical</code>](#Spherical) | A structure that contains apparent horizontal coordinates:      `lat` holds the refracted altitude angle,      `lon` holds the azimuth in degrees clockwise from north,      and `dist` holds the distance from the observer to the object in AU. |
 | time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the observation. This is needed because the returned      vector object requires a valid time value when passed to certain other functions. |
 | refraction | <code>string</code> | `"normal"`: correct altitude for atmospheric refraction (recommended).      `"jplhor"`: for JPL Horizons compatibility testing only; not recommended for normal use.      `null`: no atmospheric refraction correction is performed. |
 

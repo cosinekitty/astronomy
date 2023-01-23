@@ -6184,7 +6184,7 @@ export function HorizonFromVector(vector, refraction) {
  *
  * @param {Spherical} sphere
  *      A structure that contains apparent horizontal coordinates:
- *      `lat` holds the refracted azimuth angle,
+ *      `lat` holds the refracted altitude angle,
  *      `lon` holds the azimuth in degrees clockwise from north,
  *      and `dist` holds the distance from the observer to the object in AU.
  *
