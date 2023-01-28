@@ -2445,7 +2445,7 @@ to a traditional altitude/azimuth pair.
 
 <a name="Rotation_ECT_EQD"></a>
 
-## Rotation\_ECT\_EQD() ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
+## Rotation\_ECT\_EQD(time) ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
 **Kind**: global function  
 **Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A rotation matrix that converts ECT to EQD.  
 **Brief**: Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).
@@ -2454,6 +2454,11 @@ This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
 Source: ECT = true ecliptic of date
 Target: EQD = equator of date  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the ecliptic/equator conversion. |
+
 
 * * *
 
@@ -2497,7 +2502,7 @@ Target: ECL = ecliptic system, using equator at J2000 epoch.
 
 <a name="Rotation_EQD_ECT"></a>
 
-## Rotation\_EQD\_ECT() ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
+## Rotation\_EQD\_ECT(time) ⇒ [<code>RotationMatrix</code>](#RotationMatrix)
 **Kind**: global function  
 **Returns**: [<code>RotationMatrix</code>](#RotationMatrix) - A rotation matrix that converts EQD to ECT.  
 **Brief**: Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).
@@ -2506,6 +2511,11 @@ This is one of the family of functions that returns a rotation matrix
 for converting from one orientation to another.
 Source: EQD = equator of date
 Target: ECT = true ecliptic of date  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| time | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the equator/ecliptic conversion. |
+
 
 * * *
 

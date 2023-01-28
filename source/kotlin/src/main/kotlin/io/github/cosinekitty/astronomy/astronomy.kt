@@ -8447,6 +8447,9 @@ fun rotationGalEqj() =
  * Source: ECT = true ecliptic of date
  * Target: EQD = equator of date
  *
+ * @param time
+ * The date and time of the ecliptic/equator conversion.
+ *
  * @return
  * A rotation matrix that converts ECT to EQD.
  */
@@ -8470,6 +8473,9 @@ fun rotationEctEqd(time: Time): RotationMatrix {
  * for converting from one orientation to another.
  * Source: EQD = equator of date
  * Target: ECT = true ecliptic of date
+ *
+ * @param time
+ * The date and time of the equator/ecliptic conversion.
  *
  * @return
  * A rotation matrix that converts EQD to ECT.

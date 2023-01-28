@@ -6816,6 +6816,9 @@ exports.Rotation_GAL_EQJ = Rotation_GAL_EQJ;
  * Source: ECT = true ecliptic of date
  * Target: EQD = equator of date
  *
+ * @param {FlexibleDateTime} time
+ *      The date and time of the ecliptic/equator conversion.
+ *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts ECT to EQD.
  */
@@ -6838,6 +6841,9 @@ exports.Rotation_ECT_EQD = Rotation_ECT_EQD;
  * for converting from one orientation to another.
  * Source: EQD = equator of date
  * Target: ECT = true ecliptic of date
+ *
+ * @param {FlexibleDateTime} time
+ *      The date and time of the equator/ecliptic conversion.
  *
  * @returns {RotationMatrix}
  *      A rotation matrix that converts EQD to ECT.
