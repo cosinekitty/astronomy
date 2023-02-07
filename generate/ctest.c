@@ -43,11 +43,15 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
 #define FAIL(...)       do{printf(__VA_ARGS__); error = 1; goto fail;}while(0)
 #define FAILRET(...)    do{printf(__VA_ARGS__); return 1;}while(0)
 
+#define FFAIL(...)      do{printf("C %s: ", __func__); printf(__VA_ARGS__); error = 1; goto fail;}while(0)
+#define FPASS()         do{printf("C %s: PASS\n", __func__); error = 0;}while(0)
+
 static int CheckInverse(const char *aname, const char *bname, astro_rotation_t arot, astro_rotation_t brot);
 #define CHECK_INVERSE(a,b)   CHECK(CheckInverse(#a, #b, a, b))
 
 int Verbose = 0;
 #define DEBUG(...)      do{if(Verbose)printf(__VA_ARGS__);}while(0)
+#define FDEBUG(...)     do{if(Verbose){printf("C %s: ", __func__); printf(__VA_ARGS__);}}while(0)
 
 static int CheckStatus(int lnum, const char *varname, astro_status_t status)
 {
@@ -422,12 +426,12 @@ static int CheckTimeFormat(
 
     status = Astronomy_FormatTime(time, format, text, sizeof(text));
     if (status != expected_status)
-        FAIL("C CheckTimeFormat(%s): expected status %d, got %d\n", expected_text, expected_status, status);
+        FAIL("C %s(%s): expected status %d, got %d\n", __func__, expected_text, expected_status, status);
 
     if (strcmp(text, expected_text))
-        FAIL("C CheckTimeFormat(%s): computed wrong text '%s'\n", expected_text, text);
+        FAIL("C %s(%s): computed wrong text '%s'\n", __func__, expected_text, text);
 
-    DEBUG("C CheckTimeFormat(%s): PASS\n", expected_text);
+    DEBUG("C %s(%s): PASS\n", __func__, expected_text);
     error = 0;
 fail:
     return error;
@@ -451,27 +455,27 @@ static int Test_AstroTime(void)
     const double second = 12.543;
 
     time = Astronomy_MakeTime(year, month, day, hour, minute, second);
-    DEBUG("C Test_AstroTime: ut=%0.12lf, tt=%0.12lf\n", time.ut, time.tt);
+    FDEBUG("ut=%0.12lf, tt=%0.12lf\n", time.ut, time.tt);
 
     diff = time.ut - expected_ut;
     if (ABS(diff) > 1.0e-12)
-        FAIL("C Test_AstroTime: excessive UT error %lg\n", diff);
+        FFAIL("excessive UT error %lg\n", diff);
 
     diff = time.tt - expected_tt;
     if (ABS(diff) > 1.0e-12)
-        FAIL("C Test_AstroTime: excessive TT error %lg\n", diff);
+        FFAIL("excessive TT error %lg\n", diff);
 
     utc = Astronomy_UtcFromTime(time);
     if (utc.year != year || utc.month != month || utc.day != day || utc.hour != hour || utc.minute != minute)
     {
-        FAIL("C Test_AstroTime: UtcFromTime FAILURE - Expected %04d-%02d-%02dT%02d:%02dZ, found %04d-%02d-%02dT%02d:%02dZ\n",
+        FFAIL("UtcFromTime FAILURE - Expected %04d-%02d-%02dT%02d:%02dZ, found %04d-%02d-%02dT%02d:%02dZ\n",
             year, month, day, hour, minute,
             utc.year, utc.month, utc.day, utc.hour, utc.minute);
     }
 
     diff = utc.second - second;
     if (ABS(diff) > 2.0e-5)
-        FAIL("C Test_AstroTime: excessive UTC second error %lg\n", diff);
+        FFAIL("excessive UTC second error %lg\n", diff);
 
     time = Astronomy_MakeTime(2020, 12, 31, 23, 59, 59.4994);
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI,  ASTRO_SUCCESS, "2020-12-31T23:59:59.499Z"));
@@ -485,8 +489,7 @@ static int Test_AstroTime(void)
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MINUTE, ASTRO_SUCCESS, "2021-01-01T00:00Z"));
     CHECK(CheckTimeFormat(time, TIME_FORMAT_DAY,    ASTRO_SUCCESS, "2020-12-31"));
 
-    printf("C %s: PASS\n", __func__);
-    error = 0;
+    FPASS();
 fail:
     return error;
 }
