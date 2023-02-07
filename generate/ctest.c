@@ -485,7 +485,7 @@ static int Test_AstroTime(void)
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MINUTE, ASTRO_SUCCESS, "2021-01-01T00:00Z"));
     CHECK(CheckTimeFormat(time, TIME_FORMAT_DAY,    ASTRO_SUCCESS, "2020-12-31"));
 
-    printf("C Test_AstroTime: PASS\n");
+    printf("C %s: PASS\n", __func__);
     error = 0;
 fail:
     return error;
