@@ -103,9 +103,7 @@ disable=invalid-name,
         chained-comparison,
         consider-using-in,
         too-many-nested-blocks,
-        too-many-instance-attributes,
-        bad-whitespace,
-        bad-continuation
+        too-many-instance-attributes
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -576,5 +574,4 @@ preferred-modules=
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "BaseException, Exception".
-overgeneral-exceptions=BaseException,
-                       Exception
+overgeneral-exceptions=builtins.BaseException, builtins.Exception

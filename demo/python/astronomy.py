@@ -6955,7 +6955,7 @@ def SphereFromVector(vector):
     dist = math.sqrt(xyproj + vector.z*vector.z)
     if xyproj == 0.0:
         if vector.z == 0.0:
-            raise Exception('Zero-length vector not allowed.')
+            raise Error('Zero-length vector not allowed.')
         lon = 0.0
         if vector.z < 0.0:
             lat = -90.0
