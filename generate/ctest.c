@@ -26,7 +26,8 @@ char *ReadLine(char *s, int n, FILE *f, const char *filename, int lnum)
                 found = 1;
         if (!found)
         {
-            fprintf(stderr, "ReadLine(%s line %d): No EOLN character found. Is the line too long for buffer size %d?\n", filename, lnum+1, n);
+            fprintf(stderr, "C %s(%s line %d): No EOLN character found. Is the line too long for buffer size %d?\n",
+                __func__, filename, lnum+1, n);
             exit(1);
         }
     }
@@ -1069,8 +1070,8 @@ static int SeasonsTest(void)
             FFAIL("%s line %d: excessive error (%s): %lf minutes.\n", filename, lnum, name, diff_minutes);
     }
 
-    printf("C SeasonsTest: verified %d lines from file %s : max error minutes = %0.3lf\n", lnum, filename, max_minutes);
-    printf("C SeasonsTest: Event counts: mar=%d, jun=%d, sep=%d, dec=%d\n", mar_count, jun_count, sep_count, dec_count);
+    printf("C %s: verified %d lines from file %s : max error minutes = %0.3lf\n", __func__, lnum, filename, max_minutes);
+    printf("C %s: Event counts: mar=%d, jun=%d, sep=%d, dec=%d\n", __func__, mar_count, jun_count, sep_count, dec_count);
     error = 0;
 
 fail:
@@ -1096,7 +1097,7 @@ static int SeasonsIssue187(void)
 
         if (Verbose && ((year > 0) && (year % 1000 == 999)))
         {
-            printf("C SeasonsIssue187: DEBUG");
+            printf("C %s: DEBUG", __func__);
             Astronomy_FormatTime(seasons.mar_equinox, TIME_FORMAT_DAY, text, sizeof(text));
             printf(" %s", text);
             Astronomy_FormatTime(seasons.jun_solstice, TIME_FORMAT_DAY, text, sizeof(text));
@@ -1108,9 +1109,7 @@ static int SeasonsIssue187(void)
         }
     }
 
-    printf("C SeasonsIssue187: PASS\n");
-    error = 0;
-
+    FPASS();
 fail:
     return error;
 }
@@ -1815,8 +1814,8 @@ static int RiseSetSlot(double ut1, double ut2, astro_direction_t dir, astro_obse
         if (diff > maxDiff) maxDiff = diff;
     }
     if (maxDiff > 0.13)
-        FAIL("C RiseSetSlot(dir=%d): EXCESSIVE slot-test discrepancy = %0.6lf seconds.\n", dir, maxDiff);
-    DEBUG("C RiseSetSlot(dir=%d): slot discrepancy = %0.6lf seconds.\n", dir, maxDiff);
+        FAIL("C %s(dir=%d): EXCESSIVE slot-test discrepancy = %0.6lf seconds.\n", __func__, dir, maxDiff);
+    DEBUG("C %s(dir=%d): slot discrepancy = %0.6lf seconds.\n", __func__, dir, maxDiff);
     error = 0;
 fail:
     return error;
@@ -1842,7 +1841,7 @@ static int RiseSetReverse(void)
 
     utList = (double *)calloc(nsamples, sizeof(utList[0]));
     if (utList == NULL)
-        FAIL("C RiseSetReverse: out of memory!");
+        FFAIL("out of memory!\n");
 
     /* Find alternating sunrise/sunset events in forward chronological order. */
     dir = DIRECTION_RISE;
@@ -1864,9 +1863,9 @@ static int RiseSetReverse(void)
         time = Astronomy_AddDays(result.time, +nudge);
     }
 
-    DEBUG("C RiseSetReverse: dtMin=%0.6lf days, dtMax=%0.6lf days.\n", dtMin, dtMax);
+    FDEBUG("dtMin=%0.6lf days, dtMax=%0.6lf days.\n", dtMin, dtMax);
     if (dtMin < 0.411 || dtMax > 0.589)
-        FAIL("C RiseSetReverse: Invalid intervals between sunrise/sunset.\n");
+        FFAIL("Invalid intervals between sunrise/sunset.\n");
 
     /* Perform the same search in reverse. Verify we get consistent rise/set times. */
     for (int i = nsamples-1; i >= 0; --i)
@@ -1879,8 +1878,8 @@ static int RiseSetReverse(void)
         time = Astronomy_AddDays(result.time, -nudge);
     }
     if (maxDiff > 0.1)
-        FAIL("C RiseSetReverse: EXCESSIVE forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
-    DEBUG("C RiseSetReverse: forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
+        FFAIL("EXCESSIVE forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
+    FDEBUG("forward/backward discrepancy = %0.6lf seconds.\n", maxDiff);
 
     /* All even indexes in utList hold sunrise times. */
     /* All odd indexes in utList hold sunset times. */
@@ -1890,9 +1889,7 @@ static int RiseSetReverse(void)
     CHECK(RiseSetSlot(utList[k+0], utList[k+2], DIRECTION_RISE, observer));
     CHECK(RiseSetSlot(utList[k+1], utList[k+3], DIRECTION_SET,  observer));
 
-    printf("C RiseSetReverse: PASS\n");
-    error = 0;
-
+    FPASS();
 fail:
     free(utList);
     return error;
@@ -1916,7 +1913,7 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C CheckMagnitudeData: cannot open input file: %s\n", filename);
+        FFAIL("cannot open input file: %s\n", filename);
 
     count = lnum = 0;
     while (ReadLine(line, sizeof(line), infile, filename, lnum))
@@ -1930,15 +1927,15 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
                 &mag, &sbrt, &dist, &rdot, &delta, &deldot, &phase_angle);
 
             if (nscanned != 7)
-                FAIL("C CheckMagnitudeData(%s line %d): invalid data format\n", filename, lnum);
+                FLNFAIL("invalid data format\n");
 
             illum = Astronomy_Illumination(body, time);
             if (illum.status != ASTRO_SUCCESS)
-                FAIL("C CheckMagnitudeData(%s line %d): Astronomy_Illumination returned %d\n", filename, lnum, illum.status);
+                FLNFAIL("Astronomy_Illumination returned %d\n", illum.status);
 
             diff = illum.mag - mag;
             if (ABS(diff) > limit)
-                FAIL("C CheckMagnitudeData(%s line %d): EXCESSIVE ERROR: correct mag=%lf, calc mag=%lf, diff=%lf\n", filename, lnum, mag, illum.mag, diff);
+                FLNFAIL("EXCESSIVE ERROR: correct mag=%lf, calc mag=%lf, diff=%lf\n", mag, illum.mag, diff);
 
             sum_squared_diff += diff * diff;
             if (count == 0)
@@ -1959,10 +1956,10 @@ static int CheckMagnitudeData(astro_body_t body, const char *filename)
     }
 
     if (count == 0)
-        FAIL("C CheckMagnitudeData: Did not find any data in file: %s\n", filename);
+        FFAIL("Did not find any data in file: %s\n", filename);
 
     rms = V(sqrt(sum_squared_diff / count));
-    DEBUG("C CheckMagnitudeData: %-21s %5d rows diff_lo=%0.4lf diff_hi=%0.4lf rms=%0.4lf\n", filename, count, diff_lo, diff_hi, rms);
+    FDEBUG("%-21s %5d rows diff_lo=%0.4lf diff_hi=%0.4lf rms=%0.4lf\n", filename, count, diff_lo, diff_hi, rms);
     error = 0;
 
 fail:
@@ -2009,17 +2006,17 @@ static int CheckSaturn()
 
         illum = Astronomy_Illumination(BODY_SATURN, time);
         if (illum.status != ASTRO_SUCCESS)
-            FAILRET("C CheckSaturn(%d): Illumination returned %d\n", i, illum.status);
+            FAILRET("C %s(%d): Illumination returned %d\n", __func__, i, illum.status);
 
-        DEBUG("Saturn: date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
+        FDEBUG("date=%s  calc mag=%12.8lf  ring_tilt=%12.8lf\n", data[i].date, illum.mag, illum.ring_tilt);
 
         mag_diff = ABS(illum.mag - data[i].mag);
         if (mag_diff > 1.0e-8)
-            FAILRET("C ERROR: Excessive magnitude error %lg\n", mag_diff);
+            FAILRET("C %s: ERROR: Excessive magnitude error %lg\n", __func__, mag_diff);
 
         tilt_diff = ABS(illum.ring_tilt - data[i].tilt);
         if (tilt_diff > 1.0e-8)
-            FAILRET("C ERROR: Excessive ring tilt error %lg\n", tilt_diff);
+            FAILRET("C %s: ERROR: Excessive ring tilt error %lg\n", __func__, tilt_diff);
     }
 
     return 0;
@@ -2032,21 +2029,18 @@ static int MoonTest(void)
     double dx, dy, dz, diff;
 
     if (vec.status != ASTRO_SUCCESS)
-        FAILRET("C MoonTest: ERROR: vec.status = %d\n", vec.status);
+        FAILRET("C %s: ERROR: vec.status = %d\n", __func__, vec.status);
 
-    printf("C MoonTest: %0.16lg %0.16lg %0.16lg\n", vec.x, vec.y, vec.z);
+    printf("C %s: %0.16lg %0.16lg %0.16lg\n", __func__, vec.x, vec.y, vec.z);
 
 
     dx = vec.x - (+0.002674037026701135);
     dy = vec.y - (-0.0001531610316600666);
     dz = vec.z - (-0.0003150159927069429);
     diff = V(sqrt(dx*dx + dy*dy + dz*dz));
-    printf("C MoonTest: diff = %lg\n", diff);
+    printf("C %s: diff = %lg\n", __func__, diff);
     if (diff > 4.34e-19)
-    {
-        fprintf(stderr, "C MoonTest: EXCESSIVE ERROR\n");
-        return 1;
-    }
+        FAILRET("C %s: EXCESSIVE ERROR\n", __func__);
 
     return 0;
 }
@@ -2087,7 +2081,7 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C MoonVector: cannot open file: %s\n", filename);
+        FFAIL("cannot open file: %s\n", filename);
 
     while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
@@ -2103,7 +2097,7 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
                 break;
 
             if (strlen(line) < 62)
-                FAIL("C MoonVector(%s line %d): line is too short.\n", filename, lnum);
+                FLNFAIL("line is too short.\n");
 
             /*
                 2444239.500000000 = A.D. 1980-Jan-01 00:00:00.0000 TDB [del_T=     50.183943 s]
@@ -2112,14 +2106,14 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
             if (toggle == 0)
             {
                 if (1 != sscanf(line, "%lf", &jd))
-                    FAIL("C MoonVector(%s line %d): cannot parse julian date.\n", filename, lnum);
+                    FLNFAIL("cannot parse julian date.\n");
                 V(jd);
             }
             else
             {
                 /* Complete the expected Moon position vector for this time. */
                 if (3 != sscanf(line, " X =%lf Y =%lf Z =%lf", &expected.x, &expected.y, &expected.z))
-                    FAIL("C MoonVector(%s line %d): cannot parse position vector.\n", filename, lnum);
+                    FLNFAIL("cannot parse position vector.\n");
                 expected.t = Astronomy_TerrestrialTime(jd - JD_2000);
                 expected.status = ASTRO_SUCCESS;
 
@@ -2138,7 +2132,7 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
                     break;
 
                 default:
-                    FAIL("C MoonVector(%s): unknown coord system %d\n", filename, coords);
+                    FLNFAIL("unknown coord system %d\n", coords);
                 }
 
                 /* Compare distances and angles between vectors. */
@@ -2167,7 +2161,7 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
     }
 
     if (count != 73050)
-        FAIL("C MoonVector(%s): unexpected count = %d!\n", filename, count);
+        FAIL("C %s(%s): unexpected count = %d!\n", __func__, filename, count);
 
     rms_angle = V(3600.0 * sqrt(angle_square_sum / count));
     rms_length = V(KM_PER_AU * sqrt(length_error_square_sum / count));
@@ -2175,13 +2169,13 @@ static int MoonVectorFile(const char *filename, coord_sys_t coords, double rms_a
     max_length = V(KM_PER_AU * max_length);
 
     if (rms_angle > rms_angle_limit)
-        FAIL("C MoonVector(%s): EXCESSIVE rms angular error = %0.6lf arcsec\n", filename, rms_angle);
+        FAIL("C %s(%s): EXCESSIVE rms angular error = %0.6lf arcsec\n", __func__, filename, rms_angle);
 
     if (rms_length > rms_length_limit)
-        FAIL("C MoonVector(%s): EXCESSIVE rms distance error = %0.3lf km\n", filename, rms_length);
+        FAIL("C %s(%s): EXCESSIVE rms distance error = %0.3lf km\n", __func__, filename, rms_length);
 
-    printf("C MoonVector(%s): PASS (%d lines, %d cases, angular error rms=%0.6lf arcsec, max=%0.6lf arcsec; distance error rms=%0.3lf km, max=%0.3lf km)\n",
-        filename, lnum, count, rms_angle, max_angle, rms_length, max_length);
+    printf("C %s(%s): PASS (%d lines, %d cases, angular error rms=%0.6lf arcsec, max=%0.6lf arcsec; distance error rms=%0.3lf km, max=%0.3lf km)\n",
+        __func__, filename, lnum, count, rms_angle, max_angle, rms_length, max_length);
 
     error = 0;
 fail:
@@ -2217,7 +2211,7 @@ static int MoonEcliptic(void)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C MoonEcliptic: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     while (ReadLine(line, sizeof(line), infile, filename, lnum))
     {
@@ -2233,14 +2227,14 @@ static int MoonEcliptic(void)
                 break;
 
             if (strlen(line) < 79)
-                FAIL("C MoonEcliptic(%s line %d): line is too short.\n", filename, lnum);
+                FLNFAIL("line is too short.\n");
 
             /* Parse reference data from JPL Horizons. */
 
             /* " Date__(UT)__HR:MN Date_________JDUT           TDB-UT     ObsEcLon    ObsEcLat" */
             /* " 1900-Jan-01 00:00 2415020.500000000        -1.944461  272.4162663   1.1082671" */
             if (4 != sscanf(&line[19], "%lf %lf %lf %lf", &jdut, &deltat, &lon, &lat))
-                FAIL("C MoonEcliptic(%s line %d): cannot parse data.\n", filename, lnum);
+                FLNFAIL("cannot parse data.\n");
             V(jdut);
             V(deltat);
             V(lon);
@@ -2269,16 +2263,15 @@ static int MoonEcliptic(void)
     }
 
     if (count != 73050)
-        FAIL("C MoonEcliptic: Unexpected count = %d\n", count);
+        FFAIL("Unexpected count = %d\n", count);
 
     if (max_lat > 1.826)
-        FAIL("C MoonEcliptic: EXCESSIVE ecliptic latitude discrepancy = %0.6lf arcsec.\n", max_lat);
+        FFAIL("EXCESSIVE ecliptic latitude discrepancy = %0.6lf arcsec.\n", max_lat);
 
     if (max_lon > 5.928)
-        FAIL("C MoonEcliptic: EXCESSIVE ecliptic longitude discrepancy = %0.6lf arcsec.\n", max_lon);
+        FFAIL("EXCESSIVE ecliptic longitude discrepancy = %0.6lf arcsec.\n", max_lon);
 
-    printf("C MoonEcliptic: PASS: count=%d, max lat=%0.3lf arcsec, max lon=%0.3lf arcsec.\n", count, max_lat, max_lon);
-    error = 0;
+    FPASSA("count=%d, max lat=%0.3lf arcsec, max lon=%0.3lf arcsec.\n", count, max_lat, max_lon);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -2294,11 +2287,7 @@ static int CheckIlluminationInvalidBody(astro_body_t body)
 
     illum = Astronomy_Illumination(body, time);
     if (illum.status == ASTRO_SUCCESS)
-    {
-        /* This should have failed! */
-        fprintf(stderr, "C CheckIlluminationInvalidBody: FAILURE -- incorrect success status for body %d\n", (int)body);
-        return 1;
-    }
+        FAILRET("C %s: FAILURE -- incorrect success status for body %d\n", __func__, (int)body);
 
     return 0;   /* Correct behavior. */
 }
@@ -2327,9 +2316,9 @@ static int MagnitudeTest(void)
     nfailed += TestMaxMag(BODY_VENUS, "magnitude/maxmag_Venus.txt");
 
     if (nfailed == 0)
-        printf("C MagnitudeTest: PASS\n");
+        printf("C %s: PASS\n", __func__);
     else
-        fprintf(stderr, "C MagnitudeTest: FAILED %d test(s).\n", nfailed);
+        fprintf(stderr, "C %s: FAILED %d test(s).\n", __func__, nfailed);
 
     return nfailed;
 }
@@ -2359,7 +2348,7 @@ static int TestMaxMag(astro_body_t body, const char *filename)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C TestMaxMag: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     lnum = 0;
     search_time = Astronomy_MakeTime(2001, 1, 1, 0, 0, 0.0);
@@ -2373,7 +2362,7 @@ static int TestMaxMag(astro_body_t body, const char *filename)
             &correct_angle1, &correct_angle2, &correct_mag);
 
         if (nscanned != 13)
-            FAIL("C TestMaxMag(%s line %d): invalid data format.\n", filename, lnum);
+            FLNFAIL("invalid data format.\n");
 
         time1 = Astronomy_MakeTime(year1, month1, day1, hour1, minute1, 0.0);
         time2 = Astronomy_MakeTime(year2, month2, day2, hour2, minute2, 0.0);
@@ -2381,23 +2370,21 @@ static int TestMaxMag(astro_body_t body, const char *filename)
 
         illum = Astronomy_SearchPeakMagnitude(body, search_time);
         if (illum.status != ASTRO_SUCCESS)
-            FAIL("C TestMaxMag(%s line %d): SearchPeakMagnitude returned %d\n", filename, lnum, illum.status);
+            FLNFAIL("SearchPeakMagnitude returned %d\n", illum.status);
 
         mag_diff = ABS(illum.mag - correct_mag);
         hours_diff = 24.0 * ABS(illum.time.ut - center_time.ut);
-        DEBUG("C TestMaxMag: mag_diff=%0.3lf, hours_diff=%0.3lf\n", mag_diff, hours_diff);
+        FDEBUG("mag_diff=%0.3lf, hours_diff=%0.3lf\n", mag_diff, hours_diff);
         if (hours_diff > 7.1)
-            FAIL("C TestMaxMag(%s line %d): EXCESSIVE TIME DIFFERENCE.\n", filename, lnum);
+            FLNFAIL("EXCESSIVE TIME DIFFERENCE.\n");
 
         if (mag_diff > 0.005)
-            FAIL("C TestMaxMag(%s line %d): EXCESSIVE MAGNITUDE DIFFERENCE.\n", filename, lnum);
+            FLNFAIL("EXCESSIVE MAGNITUDE DIFFERENCE.\n");
 
         search_time = time2;
     }
 
-    printf("C TestMaxMag: processed %d lines from file %s\n", lnum, filename);
-    error = 0;
-
+    FPASSA("processed %d lines from file %s\n", lnum, filename);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -2533,7 +2520,7 @@ static int LunarApsis(void)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C LunarApsis: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     /*
         0 2001-01-10T08:59Z 357132
@@ -2552,14 +2539,14 @@ static int LunarApsis(void)
             apsis = Astronomy_NextLunarApsis(apsis);
 
         if (apsis.status != ASTRO_SUCCESS)
-            FAIL("C LunarApsis(%s line %d): Failed to find apsis.\n", filename, lnum);
+            FLNFAIL("Failed to find apsis.\n");
 
         nscanned = sscanf(line, "%d %d-%d-%dT%d:%dZ %lf", &kind, &year, &month, &day, &hour, &minute, &dist_km);
         if (nscanned != 7)
-            FAIL("C LunarApsis(%s line %d): invalid data format\n", filename, lnum);
+            FLNFAIL("invalid data format\n");
 
         if (kind != apsis.kind)
-            FAIL("C LunarApsis(%s line %d): expected apsis kind %d but found %d\n", filename, lnum, kind, apsis.kind);
+            FLNFAIL("expected apsis kind %d but found %d\n", kind, apsis.kind);
 
         correct_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
 
@@ -2567,10 +2554,10 @@ static int LunarApsis(void)
         diff_km = ABS(apsis.dist_km - dist_km);
 
         if (diff_minutes > 35.0)
-            FAIL("C LunarApsis(%s line %d): Excessive time error: %lf minutes.\n", filename, lnum, diff_minutes);
+            FLNFAIL("Excessive time error: %lf minutes.\n", diff_minutes);
 
         if (diff_km > 25.0)
-            FAIL("C LunarApsis(%s line %d): Excessive distance error: %lf km.\n", filename, lnum, diff_km);
+            FLNFAIL("Excessive distance error: %lf km.\n", diff_km);
 
         if (diff_minutes > max_minutes)
             max_minutes = diff_minutes;
@@ -2579,9 +2566,7 @@ static int LunarApsis(void)
             max_km = diff_km;
     }
 
-    printf("C LunarApsis: found %d events, max time error = %0.3lf minutes, max distance error = %0.3lf km.\n", lnum, max_minutes, max_km);
-    error = 0;
-
+    FPASSA("found %d events, max time error = %0.3lf minutes, max distance error = %0.3lf km.\n", lnum, max_minutes, max_km);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -2605,7 +2590,7 @@ static int EarthApsis(void)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C EarthApsis: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     /*
         0 2001-01-04T08:52Z 0.9832860
@@ -2624,14 +2609,14 @@ static int EarthApsis(void)
             apsis = Astronomy_NextPlanetApsis(BODY_EARTH, apsis);
 
         if (apsis.status != ASTRO_SUCCESS)
-            FAIL("C EarthApsis(%s line %d): Failed to find apsis.\n", filename, lnum);
+            FLNFAIL("Failed to find apsis.\n");
 
         nscanned = sscanf(line, "%d %d-%d-%dT%d:%dZ %lf", &kind, &year, &month, &day, &hour, &minute, &dist_au);
         if (nscanned != 7)
-            FAIL("C EarthApsis(%s line %d): invalid data format\n", filename, lnum);
+            FLNFAIL("invalid data format\n");
 
         if (kind != apsis.kind)
-            FAIL("C EarthApsis(%s line %d): expected apsis kind %d but found %d\n", filename, lnum, kind, apsis.kind);
+            FLNFAIL("expected apsis kind %d but found %d\n", kind, apsis.kind);
 
         correct_time = Astronomy_MakeTime(year, month, day, hour, minute, 0.0);
 
@@ -2639,10 +2624,10 @@ static int EarthApsis(void)
         diff_au = ABS(apsis.dist_au - dist_au);
 
         if (diff_minutes > 120.58)
-            FAIL("C EarthApsis(%s line %d): Excessive time error: %lf minutes.\n", filename, lnum, diff_minutes);
+            FLNFAIL("Excessive time error: %lf minutes.\n", diff_minutes);
 
         if (diff_au > 1.2e-5)
-            FAIL("C EarthApsis(%s line %d): Excessive distance error: %lg AU.\n", filename, lnum, diff_au);
+            FLNFAIL("Excessive distance error: %lg AU.\n", diff_au);
 
         if (diff_minutes > max_minutes)
             max_minutes = diff_minutes;
@@ -2651,9 +2636,7 @@ static int EarthApsis(void)
             max_au = diff_au;
     }
 
-    printf("C EarthApsis: found %d events, max time error = %0.3lf minutes, max distance error = %0.3lg AU.\n", lnum, max_minutes, max_au);
-    error = 0;
-
+    FPASSA("found %d events, max time error = %0.3lf minutes, max distance error = %0.3lg AU.\n", lnum, max_minutes, max_au);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -2692,12 +2675,12 @@ static int PlanetApsis(void)
         if (infile) fclose(infile);
         infile = fopen(filename, "rt");
         if (infile == NULL)
-            FAIL("C PlanetApsis: ERROR - cannot open input file: %s\n", filename);
+            FFAIL("ERROR - cannot open input file: %s\n", filename);
 
         min_interval = max_interval = -1.0;
         apsis = Astronomy_SearchPlanetApsis(body, start_time);
         if (apsis.status != ASTRO_SUCCESS)
-            FAIL("C PlanetApsis: ERROR %d finding first apsis for %s\n", apsis.status, Astronomy_BodyName(body));
+            FFAIL("ERROR %d finding first apsis for %s\n", apsis.status, Astronomy_BodyName(body));
 
         count = 1;
         while (ReadLine(line, sizeof(line), infile, filename, count-1))
@@ -2708,12 +2691,12 @@ static int PlanetApsis(void)
                 || (expected_distance <= 0.0)
                 || ParseDate(expected_time_text, &expected_time))
             {
-                FAIL("C PlanetApsis: INPUT SYNTAX ERROR (%s line %d): '%s'\n", filename, count, line);
+                FFAIL("INPUT SYNTAX ERROR (%s line %d): '%s'\n", filename, count, line);
             }
 
             /* Compare computed values against expected values. */
             if (apsis.kind != expected_kind)
-                FAIL("C PlanetApsis: WRONG APSIS KIND (%s line %d)\n", filename, count);
+                FFAIL("WRONG APSIS KIND (%s line %d)\n", filename, count);
 
             diff_days = ABS(expected_time.tt - apsis.time.tt);
             if (diff_days > max_diff_days) max_diff_days = diff_days;
@@ -2722,13 +2705,13 @@ static int PlanetApsis(void)
                 max_degrees = diff_degrees;
 
             if (diff_degrees > degree_threshold)
-                FAIL("C PlanetApsis: FAIL - %s exceeded angular threshold (%lg versus %lg degrees)\n", Astronomy_BodyName(body), max_degrees, degree_threshold);
+                FFAIL("FAIL - %s exceeded angular threshold (%lg versus %lg degrees)\n", Astronomy_BodyName(body), max_degrees, degree_threshold);
 
             diff_dist_ratio = ABS(expected_distance - apsis.dist_au) / expected_distance;
             if (diff_dist_ratio > max_dist_ratio) max_dist_ratio = diff_dist_ratio;
             if (diff_dist_ratio > 1.05e-4)
             {
-                FAIL("C PlanetApsis: EXCESSIVE DISTANCE ERROR for %s (%s line %d): expected=%0.16lf, calculated=%0.16lf, error ratio=%lg\n",
+                FFAIL("EXCESSIVE DISTANCE ERROR for %s (%s line %d): expected=%0.16lf, calculated=%0.16lf, error ratio=%lg\n",
                     Astronomy_BodyName(body), filename, count, expected_distance, apsis.dist_au, diff_dist_ratio);
             }
 
@@ -2738,7 +2721,7 @@ static int PlanetApsis(void)
             apsis = Astronomy_NextPlanetApsis(body, apsis);
             if (apsis.status != ASTRO_SUCCESS)
             {
-                FAIL("C PlanetApsis: ERROR %d finding apsis for %s after %04d-%02d-%02d\n",
+                FFAIL("ERROR %d finding apsis for %s after %04d-%02d-%02d\n",
                     apsis.status, Astronomy_BodyName(body), utc.year, utc.month, utc.day);
             }
 
@@ -2759,9 +2742,9 @@ static int PlanetApsis(void)
         }
 
         if (count < 2)
-            FAIL("C PlanetApsis: FAILED to find apsides for %s\n", Astronomy_BodyName(body));
+            FFAIL("FAILED to find apsides for %s\n", Astronomy_BodyName(body));
 
-        DEBUG("C PlanetApsis: %5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf; max day=%lg, degrees=%0.3lf, dist ratio=%lg\n",
+        FDEBUG("%5d apsides for %-9s -- intervals: min=%9.2lf, max=%9.2lf, ratio=%8.6lf; max day=%lg, degrees=%0.3lf, dist ratio=%lg\n",
             count, Astronomy_BodyName(body),
             min_interval, max_interval, max_interval / min_interval,
             max_diff_days,
@@ -2769,8 +2752,7 @@ static int PlanetApsis(void)
             max_dist_ratio);
     }
 
-    printf("C PlanetApsis: PASS\n");
-    error = 0;
+    FPASS();
 fail:
     if (infile) fclose(infile);
     return error;
@@ -2880,9 +2862,7 @@ static int Rotation_MatrixInverse(void)
     b = Astronomy_InverseRotation(a);
     CHECK(CompareMatrices("Rotation_MatrixInverse", b, v, 0.0));
 
-    printf("C Rotation_MatrixInverse: PASS\n");
-    error = 0;
-
+    FPASS();
 fail:
     return error;
 }
@@ -2942,8 +2922,7 @@ static int Rotation_Pivot(void)
 
     CHECK(CompareVectors("Rotation_Pivot #2", v2, ve, tolerance));
 
-    printf("C Rotation_Pivot: PASS\n");
-    error = 0;
+    FPASS();
 fail:
     return error;
 }
@@ -2974,9 +2953,7 @@ static int Rotation_MatrixMultiply(void)
     /* Verify that c = v. */
     CHECK(CompareMatrices("Rotation_MatrixMultiply", c, v, 0.0));
 
-    printf("C Rotation_MatrixMultiply: PASS\n");
-    error = 0;
-
+    FPASS();
 fail:
     return error;
 }
@@ -2991,7 +2968,7 @@ static int TestVectorFromAngles(double lat, double lon, double x, double y, doub
     /* Confirm the expected vector really is a unit vector. */
     diff = ABS((x*x + y*y + z*z) - 1.0);
     if (diff > 1.0e-16)
-        FAILRET("C TestVectorFromAngles: EXCESSIVE unit error = %lg\n", diff);
+        FAILRET("C %s: EXCESSIVE unit error = %lg\n", __func__, diff);
 
     sphere.status = ASTRO_SUCCESS;
     sphere.lat = lat;
@@ -3011,7 +2988,7 @@ static int TestVectorFromAngles(double lat, double lon, double x, double y, doub
 
     DEBUG("C TestVectorFromAngles(%lf, %lf): diff = %lg\n", lat, lon, diff);
     if (diff > 2.0e-16)
-        FAILRET("C TestVectorFromAngles: EXCESSIVE ERROR.\n");
+        FAILRET("C %s: EXCESSIVE ERROR.\n", __func__);
 
     return 0;
 }
@@ -3035,13 +3012,13 @@ static int TestAnglesFromVector(double lat, double lon, double x, double y, doub
 
     sphere = Astronomy_SphereFromVector(vector);
     if (sphere.status != ASTRO_SUCCESS)
-        FAILRET("C ERROR TestAnglesFromVector(lat=%lf, lon=%lf, x=%lf, y=%lf, z=%lf): sphere.status = %d\n", lat, lon, x, y, z, sphere.status);
+        FAILRET("C %s(lat=%lf, lon=%lf, x=%lf, y=%lf, z=%lf): sphere.status = %d\n", __func__, lat, lon, x, y, z, sphere.status);
 
     latdiff = ABS(sphere.lat - lat);
     londiff = ABS(sphere.lon - lon);
     DEBUG("TestAnglesFromVector(x=%lf, y=%lf, z=%lf): latdiff=%lg, londiff=%lg\n", x, y, z, latdiff, londiff);
     if (latdiff > 8.0e-15 || londiff > 8.0e-15)
-        FAILRET("C TestAnglesFromVector: EXCESSIVE ERROR\n");
+        FAILRET("C %s: EXCESSIVE ERROR\n", __func__);
 
     return 0;
 }
@@ -3139,7 +3116,7 @@ static int TestSpin(
     diff = V(sqrt(dx*dx + dy*dy + dz*dz));
     DEBUG("C TestSpin(xrot=%0.0lf, yrot=%0.0lf, zrot=%0.0lf, sx=%0.0lf, sy=%0.0lf, sz=%0.0lf): diff = %lg\n", xrot, yrot, zrot, sx, sy, sz, diff);
     if (diff > 1.0e-15)
-        FAIL("C TestSpin: EXCESSIVE ERROR\n");
+        FFAIL("EXCESSIVE ERROR\n");
 
     error = 0;
 fail:
@@ -3172,7 +3149,7 @@ static int Test_EQJ_GAL_NOVAS(const char *filename)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C Test_EQJ_GAL_NOVAS: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     max_diff = 0.0;
     lnum = 0;
@@ -3212,7 +3189,7 @@ static int Test_EQJ_GAL_NOVAS(const char *filename)
             max_diff = diff;
     }
 
-    DEBUG("C Test_EQJ_GAL_NOVAS: PASS. max_diff = %0.3lf arcseconds.\n", max_diff);
+    FDEBUG("PASS. max_diff = %0.3lf arcseconds.\n", max_diff);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -3247,7 +3224,7 @@ static int Test_EQJ_GAL_JPL(const char *filename)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C Test_EQJ_GAL_JPL: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     lnum = 0;
     while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
@@ -3303,12 +3280,12 @@ static int Test_EQJ_GAL_JPL(const char *filename)
     }
 
     if (!found_begin)
-        FAIL("C Test_EQJ_GAL_JPL: did not find begin-data marker in: %s\n", filename);
+        FFAIL("did not find begin-data marker in: %s\n", filename);
 
     if (!found_end)
-        FAIL("C Test_EQJ_GAL_JPL: did not find end-data marker in: %s\n", filename);
+        FFAIL("did not find end-data marker in: %s\n", filename);
 
-    DEBUG("C Test_EQJ_GAL_JPL: PASS. max_diff = %0.3lf arcseconds.\n", max_diff);
+    FDEBUG("PASS. max_diff = %0.3lf arcseconds.\n", max_diff);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -3355,9 +3332,9 @@ static int Test_EQJ_EQD(astro_body_t body)
     ra_diff = ABS(eqcheck.ra - eqdate.ra);
     dec_diff = ABS(eqcheck.dec - eqdate.dec);
     dist_diff = ABS(eqcheck.dist - eqdate.dist);
-    DEBUG("C Test_EQJ_EQD: %s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
+    FDEBUG("%s ra=%0.3lf, dec=%0.3lf, dist=%0.3lf, ra_diff=%lg, dec_diff=%lg, dist_diff=%lg\n", Astronomy_BodyName(body), eqdate.ra, eqdate.dec, eqdate.dist, ra_diff, dec_diff, dist_diff);
     if (ra_diff > 1.0e-14 || dec_diff > 1.0e-14 || dist_diff > 4.0e-15)
-        FAIL("C Test_EQJ_EQD: EXCESSIVE ERROR\n");
+        FFAIL("EXCESSIVE ERROR\n");
 
     /* Perform the inverse conversion back to equatorial J2000 coordinates. */
     r = Astronomy_Rotation_EQD_EQJ(&time);
@@ -3365,9 +3342,9 @@ static int Test_EQJ_EQD(astro_body_t body)
     t2000 = Astronomy_RotateVector(r, vdate);
     CHECK_STATUS(t2000);
     CHECK(VectorDiff(t2000, v2000, &diff));
-    DEBUG("C Test_EQJ_EQD: %s inverse diff = %lg\n", Astronomy_BodyName(body), diff);
+    FDEBUG("%s inverse diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 5.0e-15)
-        FAIL("C Test_EQJ_EQD: EXCESSIVE INVERSE ERROR\n");
+        FFAIL("EXCESSIVE INVERSE ERROR\n");
 
     error = 0;
 fail:
@@ -3414,14 +3391,14 @@ static int Test_EQD_HOR(astro_body_t body)
         Astronomy_BodyName(body), hor.altitude, hor.azimuth, sphere.lat, sphere.lon, diff_alt, diff_az);
 
     if (diff_alt > 3.6e-14 || diff_az > 1.2e-13)
-        FAIL("C Test_EQD_HOR: EXCESSIVE HORIZONTAL ERROR.\n");
+        FFAIL("EXCESSIVE HORIZONTAL ERROR.\n");
 
     /* Confirm that we can convert back to horizontal vector. */
     CHECK_VECTOR(check_hor, Astronomy_VectorFromHorizon(sphere, time, REFRACTION_NORMAL));
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
     DEBUG("C Test_EQD_HOR %s: horizontal recovery: diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 3.0e-15)
-        FAIL("C Test_EQD_HOR: EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
+        FFAIL("EXCESSIVE ERROR IN HORIZONTAL RECOVERY.\n");
 
     /* Verify the inverse translation from horizontal vector to equatorial of-date vector. */
     rot = Astronomy_Rotation_HOR_EQD(&time, observer);
@@ -3430,7 +3407,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK(VectorDiff(check_eqd, vec_eqd, &diff));
     DEBUG("C Test_EQD_HOR %s: OFDATE inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 2.67e-15)
-        FAIL("C Test_EQD_HOR: EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
+        FFAIL("EXCESSIVE OFDATE INVERSE HORIZONTAL ERROR.\n");
 
     /* Exercise HOR to EQJ translation. */
     CHECK_EQU(eqj, Astronomy_Equator(body, &time, observer, EQUATOR_J2000, ABERRATION));
@@ -3442,7 +3419,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK(VectorDiff(check_eqj, vec_eqj, &diff));
     DEBUG("C Test_EQD_HOR %s: J2000 inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 6.0e-15)
-        FAIL("C Test_EQD_HOR: EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
+        FFAIL("EXCESSIVE J2000 INVERSE HORIZONTAL ERROR.\n");
 
     /* Verify the inverse translation: EQJ to HOR. */
     rot = Astronomy_Rotation_EQJ_HOR(&time, observer);
@@ -3451,7 +3428,7 @@ static int Test_EQD_HOR(astro_body_t body)
     CHECK(VectorDiff(check_hor, vec_hor, &diff));
     DEBUG("C Test_EQD_HOR %s: EQJ inverse rotation diff = %lg\n", Astronomy_BodyName(body), diff);
     if (diff > 5.0e-15)
-        FAIL("C Test_EQD_HOR: EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.\n");
+        FFAIL("EXCESSIVE EQJ INVERSE HORIZONTAL ERROR.\n");
 
     error = 0;
 fail:
@@ -3504,9 +3481,9 @@ static int Test_EQD_ECT(void)
     }
 
     if (max_diff > 3.743e-18)
-        FAIL("C Test_EQD_ECT: excessive vector diff = %0.6le AU.\n", max_diff);
+        FFAIL("excessive vector diff = %0.6le AU.\n", max_diff);
 
-    DEBUG("C Test_EQD_ECT: PASS: count = %d, max_diff = %0.6le AU\n", count, max_diff);
+    FDEBUG("PASS: count = %d, max_diff = %0.6le AU\n", count, max_diff);
     error = 0;
 fail:
     return error;
@@ -3564,13 +3541,12 @@ static int EclipticTest(void)
     }
 
     if (max_angle_diff > 2.910e-18)
-        FAIL("C EclipticTest: EXCESSIVE ANGLE DIFF = %0.6le AU.\n", max_angle_diff);
+        FFAIL("EXCESSIVE ANGLE DIFF = %0.6le AU.\n", max_angle_diff);
 
     if (max_vec_diff > 3.388e-18)
-        FAIL("C EclipticTest: EXCESSIVE VECTOR DIFF = %0.6le AU.\n", max_vec_diff);
+        FFAIL("EXCESSIVE VECTOR DIFF = %0.6le AU.\n", max_vec_diff);
 
-    printf("C EclipticTest: PASS: count = %d, max_vec_diff = %0.6le AU, max_angle_diff = %0.6le AU.\n", count, max_vec_diff, max_angle_diff);
-    error = 0;
+    FPASSA("PASS: count = %d, max_vec_diff = %0.6le AU, max_angle_diff = %0.6le AU.\n", count, max_vec_diff, max_angle_diff);
 fail:
     return error;
 }
@@ -3691,7 +3667,7 @@ static int Test_RotRoundTrip(void)
     CHECK_CYCLE(ecl_eqd, eqd_hor, hor_ecl);
     CHECK_CYCLE(eqj_eqd, eqd_ect, ect_eqj);
 
-    DEBUG("C Test_RotRoundTrip: PASS\n");
+    FDEBUG("PASS\n");
     error = 0;
 fail:
     return error;
@@ -3749,8 +3725,7 @@ static int RotationTest(void)
 
     CHECK(Test_RotRoundTrip());
 
-    printf("C RotationTest: PASS\n");
-    error = 0;
+    FPASS();
 fail:
     return error;
 }
@@ -3762,10 +3737,10 @@ static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff)
     *diff = NAN;
 
     if (a.status != ASTRO_SUCCESS)
-        FAILRET("C VectorDiff: ERROR - first vector has status %d\n", a.status);
+        FAILRET("C %s: ERROR - first vector has status %d\n", __func__, a.status);
 
     if (b.status != ASTRO_SUCCESS)
-        FAILRET("C VectorDiff: ERROR - second vector has status %d\n", b.status);
+        FAILRET("C %s: ERROR - second vector has status %d\n", __func__, b.status);
 
     dx = a.x - b.x;
     dy = a.y - b.y;
@@ -3778,6 +3753,7 @@ static int VectorDiff(astro_vector_t a, astro_vector_t b, double *diff)
 
 static int RefractionTest(void)
 {
+    int error;
     double alt, corrected, refr, inv_refr, check_alt, diff;
 
     for (alt = -90.1; alt <= +90.1; alt += 0.001)
@@ -3788,14 +3764,12 @@ static int RefractionTest(void)
         check_alt = corrected + inv_refr;
         diff = ABS(check_alt - alt);
         if (diff > 2.0e-14)
-        {
-            printf("C ERROR(RefractionTest): alt=%8.3lf, refr=%10.6lf, diff=%lg\n", alt, refr, diff);
-            return 1;
-        }
+            FFAIL("EXCESSIVE diff: alt=%8.3lf, refr=%10.6lf, diff=%lg\n", alt, refr, diff);
     }
 
-    printf("C RefractionTest: PASS\n");
-    return 0;
+    FPASS();
+fail:
+    return error;
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
@@ -3813,7 +3787,7 @@ static int ConstellationTest(void)
 
     infile = fopen(inFileName, "rt");
     if (infile == NULL)
-        FAIL("C ConstellationTest: Cannot open input file: %s\n", inFileName);
+        FFAIL("Cannot open input file: %s\n", inFileName);
 
     lnum = 0;
     failcount = 0;
@@ -3821,14 +3795,14 @@ static int ConstellationTest(void)
     {
         ++lnum;
         if (4 != sscanf(line, "%d %lf %lf %3s", &id, &ra, &dec, symbol) || 3 != strlen(symbol))
-            FAIL("C ConstellationTest: Invalid test data in %s line %d\n", inFileName, lnum);
+            FFAIL("Invalid test data in %s line %d\n", inFileName, lnum);
 
         constel = Astronomy_Constellation(ra, dec);
         if (constel.status != ASTRO_SUCCESS)
-            FAIL("C ConstellationTest: FAILED star %d with status %d: %s line %d\n", id, constel.status, inFileName, lnum);
+            FFAIL("FAILED star %d with status %d: %s line %d\n", id, constel.status, inFileName, lnum);
 
         if (constel.symbol == NULL || constel.name == NULL)
-            FAIL("C ConstellationTest: UNEXPECTED NULL name/symbol: star %d, %s line %d\n", id, inFileName, lnum);
+            FFAIL("UNEXPECTED NULL name/symbol: star %d, %s line %d\n", id, inFileName, lnum);
 
         if (strcmp(constel.symbol, symbol))
         {
@@ -3838,10 +3812,9 @@ static int ConstellationTest(void)
     }
 
     if (failcount > 0)
-        FAIL("C ConstellationTest: %d failures\n", failcount);
+        FFAIL("%d failures\n", failcount);
 
-    printf("C ConstellationTest: PASS (verified %d)\n", lnum);
-    error = 0;
+    FPASSA("(verified %d)\n", lnum);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -3868,13 +3841,12 @@ static int LunarEclipseIssue78(void)
 
     dt_seconds = (24.0 * 3600.0) * ABS(eclipse.peak.tt - expected_peak.tt);
     if (dt_seconds > 40.0)
-        FAIL("C LunarEclipseIssue78: Excessive prediction error = %lf seconds.\n", dt_seconds);
+        FFAIL("Excessive prediction error = %lf seconds.\n", dt_seconds);
 
     if (eclipse.kind != ECLIPSE_TOTAL)
-        FAIL("C LunarEclipseIssue78: Expected total eclipse; found %d\n", eclipse.kind);
+        FFAIL("Expected total eclipse; found %d\n", eclipse.kind);
 
-    printf("C LunarEclipseIssue78: PASS\n");
-    error = 0;
+    FPASS();
 fail:
     return error;
 }
@@ -3904,11 +3876,11 @@ static int LunarEclipseTest(void)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C LunarEclipseTest: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     outfile = fopen(statsFileName, "wt");
     if (outfile == NULL)
-        FAIL("C LunarEclipseTest: Cannot open output stats file: %s\n", statsFileName);
+        FFAIL("Cannot open output stats file: %s\n", statsFileName);
 
     eclipse = Astronomy_SearchLunarEclipse(Astronomy_MakeTime(1701, 1, 1, 0, 0, 0.0));
     CHECK_STATUS(eclipse);
@@ -4039,13 +4011,12 @@ static int LunarEclipseTest(void)
 
     sum_diff_minutes /= diff_count;     /* convert to average error in minutes */
     if (sum_diff_minutes > 0.274)
-        FAIL("C LunarEclipseTest: EXCESSIVE AVERAGE TIME ERROR: %lf\n", sum_diff_minutes);
+        FFAIL("EXCESSIVE AVERAGE TIME ERROR: %lf\n", sum_diff_minutes);
 
     if (skip_count > 9)
-        FAIL("C LunarEclipseTest: Skipped too many penumbral eclipses: %d\n", skip_count);
+        FFAIL("Skipped too many penumbral eclipses: %d\n", skip_count);
 
-    printf("C LunarEclipseTest: PASS (verified %d, skipped %d, %d CalcMoons, max_diff_minutes = %0.3lf, avg_diff_minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_diff_minutes, sum_diff_minutes);
-    error = 0;
+    FPASSA("(verified %d, skipped %d, %d CalcMoons, max_diff_minutes = %0.3lf, avg_diff_minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_diff_minutes, sum_diff_minutes);
 fail:
     if (infile != NULL) fclose(infile);
     if (outfile != NULL) fclose(outfile);
@@ -4105,8 +4076,7 @@ static int LunarFractionTest(void)
     CHECK(LunarFractionCase(2028,  7,  6, 0.325));  /* https://www.timeanddate.com/eclipse/lunar/2028-july-6 */
     CHECK(LunarFractionCase(2030,  6, 15, 0.464));  /* https://www.timeanddate.com/eclipse/lunar/2030-june-15 */
 
-    printf("C LunarFractionTest: PASS\n");
-
+    FPASS();
 fail:
     return error;
 }
@@ -4135,7 +4105,7 @@ static int GlobalSolarEclipseTest(void)
 
     infile = fopen(inFileName, "rt");
     if (infile == NULL)
-        FAIL("C GlobalSolarEclipseTest: Cannot open input file: %s\n", inFileName);
+        FFAIL("Cannot open input file: %s\n", inFileName);
 
     eclipse = Astronomy_SearchGlobalSolarEclipse(Astronomy_MakeTime(1701, 1, 1, 0, 0, 0.0));
 
@@ -4253,13 +4223,12 @@ static int GlobalSolarEclipseTest(void)
     }
 
     if (lnum != expected_count)
-        FAIL("C GlobalSolarEclipseTest: WRONG LINE COUNT = %d, expected %d\n", lnum, expected_count);
+        FFAIL("WRONG LINE COUNT = %d, expected %d\n", lnum, expected_count);
 
     if (skip_count > 2)
-        FAIL("C GlobalSolarEclipseTest: EXCESSIVE SKIP COUNT = %d\n", skip_count);
+        FFAIL("EXCESSIVE SKIP COUNT = %d\n", skip_count);
 
-    printf("C GlobalSolarEclipseTest: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf, max angle = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes, max_angle);
-    error = 0;
+    FPASSA("(%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf, max angle = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes, max_angle);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -4334,7 +4303,7 @@ static int LocalSolarEclipseTest1(void)
 
     infile = fopen(inFileName, "rt");
     if (infile == NULL)
-        FAIL("C LocalSolarEclipseTest1: Cannot open input file: %s\n", inFileName);
+        FFAIL("Cannot open input file: %s\n", inFileName);
 
     lnum = 0;
     observer.height = 0.0;
@@ -4405,9 +4374,9 @@ static int LocalSolarEclipseTest1(void)
     }
 
     if (skip_count > 6)
-        FAIL("C LocalSolarEclipseTest1: EXCESSIVE SKIP COUNT %d\n", skip_count);
+        FFAIL("EXCESSIVE SKIP COUNT %d\n", skip_count);
 
-    printf("C LocalSolarEclipseTest1: PASS (%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes);
+    FPASSA("(%d verified, %d skipped, %d CalcMoons, max minutes = %0.3lf)\n", lnum, skip_count, _CalcMoonCount, max_minutes);
     error = 0;
 fail:
     if (infile != NULL) fclose(infile);
@@ -4512,7 +4481,7 @@ static int LocalSolarEclipseTest2(void)
 
     infile = fopen(inFileName, "rt");
     if (infile == NULL)
-        FAIL("C LocalSolarEclipseTest2: Cannot open input file: %s\n", inFileName);
+        FFAIL("Cannot open input file: %s\n", inFileName);
 
     lnum = 0;
     observer.height = 0.0;
@@ -4568,8 +4537,7 @@ static int LocalSolarEclipseTest2(void)
         ++verify_count;
     }
 
-    printf("C LocalSolarEclipseTest2: PASS (%d verified, %d CalcMoons, max minutes = %0.3lf, max alt degrees = %0.3lf)\n", verify_count, _CalcMoonCount, max_minutes, max_degrees);
-    error = 0;
+    FPASSA("(%d verified, %d CalcMoons, max minutes = %0.3lf, max alt degrees = %0.3lf)\n", verify_count, _CalcMoonCount, max_minutes, max_degrees);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -4674,7 +4642,7 @@ static int SolarFractionTest(void)
     CHECK(LocalSolarCase(2030,  6,  1,  40.388,    49.914,  ECLIPSE_PARTIAL, 0.67240, 0.000599));   /* http://xjubier.free.fr/en/site_pages/SolarEclipseCalc_Diagram.html */
     CHECK(LocalSolarCase(2030,  6,  1,  40.3667,   49.8333, ECLIPSE_PARTIAL, 0.6736,  0.001464));   /* http://astro.ukho.gov.uk/eclipse/0132030/Baku_Azerbaijan_2030Jun01.png */
 
-    printf("C SolarFractionTest: PASS\n");
+    FPASS();
 fail:
     return error;
 }
@@ -4725,14 +4693,14 @@ static int TransitFile(astro_body_t body, const char *filename, double limit_min
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C TransitFile: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     transit = Astronomy_SearchTransit(body, Astronomy_MakeTime(START_YEAR, 1, 1, 0, 0, 0.0));
     if (transit.status != ASTRO_SUCCESS)
         FAIL("C TransitFile(%s): SearchTransit returned %d\n", filename, transit.status);
 
     DEBUG("\n----------------------------------------------------------------\n\n");
-    DEBUG("C TransitFile: STARTING %s\n\n", filename);
+    FDEBUG("STARTING %s\n\n", filename);
 
     lnum = 0;
     while (ReadLine(line, sizeof(line), infile, filename, lnum))
@@ -4857,7 +4825,7 @@ static int DistancePlot(astro_body_t body, double ut1, double ut2, const char *f
 
     outfile = fopen(filename, "wt");
     if (outfile == NULL)
-        FAIL("DistancePlot: Cannot open output file: %s\n", filename);
+        FFAIL("Cannot open output file: %s\n", filename);
 
     j2000 = Astronomy_MakeTime(2000, 1, 1, 12, 0, 0.0);
 
@@ -4888,13 +4856,13 @@ static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y
 
     time = Astronomy_TimeFromDays(ut);
 
-    DEBUG("C PlutoCheck: ");
+    DEBUG("C %s: ", __func__);
     if (Verbose) PrintTime(time);
     DEBUG(" = %0.6lf UT = %0.6lf TT\n", time.ut, time.tt);
 
     vector = Astronomy_HelioVector(BODY_PLUTO, time);
     if (vector.status != ASTRO_SUCCESS)
-        FAIL("C PlutoCheck: FAIL - Astronomy_HelioVector returned status = %d\n", vector.status);
+        FFAIL("FAIL - Astronomy_HelioVector returned status = %d\n", vector.status);
 
     dx = V(vector.x) - x;
     dy = V(vector.y) - y;
@@ -4902,14 +4870,14 @@ static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y
     diff = sqrt(dx*dx + dy*dy + dz*dz);
     dist = (sqrt(x*x + y*y + z*z) - 1.0);       /* worst-case distance between Pluto and Earth */
     arcmin = (diff / dist) * (180.0 * 60.0 / PI);
-    DEBUG("C PlutoCheck: calc pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x, vector.y, vector.z);
-    DEBUG("C PlutoCheck: ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
-    DEBUG("C PlutoCheck: del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
-    DEBUG("C PlutoCheck: diff = %le AU, %0.3lf arcmin\n", diff, arcmin);
+    FDEBUG("calc pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x, vector.y, vector.z);
+    FDEBUG("ref  pos = [%20.16lf, %20.16lf, %20.16lf]\n", x, y, z);
+    FDEBUG("del  pos = [%20.16lf, %20.16lf, %20.16lf]\n", vector.x - x, vector.y - y, vector.z - z);
+    FDEBUG("diff = %le AU, %0.3lf arcmin\n", diff, arcmin);
     DEBUG("\n");
 
     if (V(arcmin) > arcmin_tolerance)
-        FAIL("C PlutoCheck: EXCESSIVE ERROR\n");
+        FFAIL("EXCESSIVE ERROR\n");
 
     error = 0;
 fail:
@@ -4926,7 +4894,7 @@ static int PlutoCheck(void)
     CHECK(PlutoCheckDate(       0.0, 8.e-9,  -9.8753673425269000, -27.9789270580402771,  -5.7537127596369588));
     CHECK(PlutoCheckDate( +800916.0, 2.286, -29.5266052645301365, +12.0554287322176474, +12.6878484911631091));
 
-    printf("C PlutoCheck: PASS\n");
+    FPASS();
 fail:
     return error;
 }
@@ -4953,9 +4921,9 @@ static int GeoidTestCase(FILE *outfile, astro_time_t time, astro_observer_t obse
     CHECK_STATUS(state);
 
     /* Verify state vector's position exactly matches the lone position vector. */
-    if (state.x != surface.x) FAIL("C GeoidTestCase: state vector x = %0.16le, but position vector x = %0.16le\n", state.x, surface.x);
-    if (state.y != surface.y) FAIL("C GeoidTestCase: state vector x = %0.16le, but position vector x = %0.16le\n", state.y, surface.y);
-    if (state.z != surface.z) FAIL("C GeoidTestCase: state vector x = %0.16le, but position vector x = %0.16le\n", state.z, surface.z);
+    if (state.x != surface.x) FFAIL("state vector x = %0.16le, but position vector x = %0.16le\n", state.x, surface.x);
+    if (state.y != surface.y) FFAIL("state vector x = %0.16le, but position vector x = %0.16le\n", state.y, surface.y);
+    if (state.z != surface.z) FFAIL("state vector x = %0.16le, but position vector x = %0.16le\n", state.z, surface.z);
 
     if (outfile != NULL)
     {
@@ -4993,7 +4961,7 @@ static int GeoidTestCase(FILE *outfile, astro_time_t time, astro_observer_t obse
     dy = KM_PER_AU * V((geo_moon.y - surface.y) - topo_moon.vec.y);
     dz = KM_PER_AU * V((geo_moon.z - surface.z) - topo_moon.vec.z);
     diff = sqrt(dx*dx + dy*dy + dz*dz);
-    DEBUG("C GeoidTestCase: equ=%d, tt=%14.5lf, lat=%5.1lf, lon=%6.1lf, ht=%6.1lf, surface=(%12.6lf, %12.6lf, %12.6lf), diff = %9.6lf km\n",
+    FDEBUG("equ=%d, tt=%14.5lf, lat=%5.1lf, lon=%6.1lf, ht=%6.1lf, surface=(%12.6lf, %12.6lf, %12.6lf), diff = %9.6lf km\n",
         (int)equdate,
         time.tt,
         observer.latitude,
@@ -5006,7 +4974,7 @@ static int GeoidTestCase(FILE *outfile, astro_time_t time, astro_observer_t obse
 
     /* Require 1 millimeter accuracy! (one millionth of a kilometer). */
     if (diff > 1.0e-6)
-        FAIL("C GeoidTestCase: EXCESSIVE POSITION ERROR.\n");
+        FFAIL("EXCESSIVE POSITION ERROR.\n");
 
     /* Verify that we can convert the surface vector back to an observer. */
     vobs = Astronomy_VectorObserver(&surface, equdate);
@@ -5020,7 +4988,7 @@ static int GeoidTestCase(FILE *outfile, astro_time_t time, astro_observer_t obse
             lon_diff = 360.0 - lon_diff;
         lon_diff = ABS(lon_diff * cos(DEG2RAD * observer.latitude));
         if (lon_diff > 1.0e-6)
-            FAIL("C GeoidTestCase: EXCESSIVE longitude check error = %lf\n", lon_diff);
+            FFAIL("EXCESSIVE longitude check error = %lf\n", lon_diff);
     }
     else
     {
@@ -5028,14 +4996,14 @@ static int GeoidTestCase(FILE *outfile, astro_time_t time, astro_observer_t obse
     }
 
     h_diff = ABS(vobs.height - observer.height);
-    DEBUG("C GeoidTestCase: vobs=(lat=%lf, lon=%lf, height=%lf), lat_diff=%lg, lon_diff=%lg, h_diff=%lg\n",
+    FDEBUG("vobs=(lat=%lf, lon=%lf, height=%lf), lat_diff=%lg, lon_diff=%lg, h_diff=%lg\n",
         vobs.latitude, vobs.longitude, vobs.height, lat_diff, lon_diff, h_diff);
 
     if (lat_diff > 1.0e-6)
-        FAIL("C GeoidTestCase: EXCESSIVE latitude check error = %lf\n", lat_diff);
+        FFAIL("EXCESSIVE latitude check error = %lf\n", lat_diff);
 
     if (h_diff > 0.001)
-        FAIL("C GeoidTestCase: EXCESSIVE height check error = %lf\n", h_diff);
+        FFAIL("EXCESSIVE height check error = %lf\n", h_diff);
 
     error = 0;
 fail:
@@ -5077,14 +5045,14 @@ static int GeoidTest(void)
     time = time_list[0];
     vec = Astronomy_ObserverVector(&time, observer_list[0], (astro_equator_date_t)42);
     if (vec.status != ASTRO_INVALID_PARAMETER)
-        FAIL("C GeoidTest: Expected ASTRO_INVALID_PARAMETER (%d) but found %d\n", (int)ASTRO_INVALID_PARAMETER, (int)vec.status);
-    DEBUG("C GeoidTest: Astronomy_ObserverVector correctly detected invalid astro_equator_date_t parameter.\n");
+        FFAIL("Expected ASTRO_INVALID_PARAMETER (%d) but found %d\n", (int)ASTRO_INVALID_PARAMETER, (int)vec.status);
+    FDEBUG("Astronomy_ObserverVector correctly detected invalid astro_equator_date_t parameter.\n");
 
     /* Test a variety of times and locations, in both supported orientation systems. */
     /* Also write reference data for comparing with other language implementations. */
     outfile = fopen(outFileName, "wt");
     if (outfile == NULL)
-        FAIL("C GeoidTest: FAIL - cannot open output file: %s\n", outFileName);
+        FFAIL("FAIL - cannot open output file: %s\n", outFileName);
 
     for (oindex = 0; oindex < nobs; ++oindex)
     {
@@ -5106,8 +5074,7 @@ static int GeoidTest(void)
         }
     }
 
-    printf("C GeoidTest: PASS\n");
-    error = 0;
+    FPASS();
 fail:
     if (outfile) fclose(outfile);
     return error;
@@ -5144,7 +5111,7 @@ static astro_state_vector_t SelectJupiterMoon(const astro_jupiter_moons_t *jm, i
         case 2: return jm->ganymede;
         case 3: return jm->callisto;
         default:
-            fprintf(stderr, "FATAL(ctest.c ! SelectJupiterMoon): Invalid mindex = %d\n", mindex);
+            fprintf(stderr, "C FATAL(%s): Invalid mindex = %d\n", __func__, mindex);
             exit(1);
     }
 }
@@ -5175,7 +5142,7 @@ static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double ve
     mag = V(sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]));
     diff = V(sqrt(dx*dx + dy*dy + dz*dz) / mag);
     if (diff > pos_tolerance)
-        FAIL("C JupiterMoons_CheckJpl(mindex=%d, tt=%0.1lf): excessive position error %le\n", mindex, tt, diff);
+        FFAIL("(mindex=%d, tt=%0.1lf): excessive position error %le\n", mindex, tt, diff);
 
     dx = V(vel[0] - moon.vx);
     dy = V(vel[1] - moon.vy);
@@ -5183,7 +5150,7 @@ static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double ve
     mag = V(sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]));
     diff = V(sqrt(dx*dx + dy*dy + dz*dz) / mag);
     if (diff > vel_tolerance)
-        FAIL("C JupiterMoons_CheckJpl(mindex=%d, tt=%0.1lf): excessive velocity error %le\n", mindex, tt, diff);
+        FFAIL("(mindex=%d, tt=%0.1lf): excessive velocity error %le\n", mindex, tt, diff);
 
     error = 0;
 fail:
@@ -5206,9 +5173,9 @@ static int JupiterMoonsTest(void)
         snprintf(filename, sizeof(filename), "jupiter_moons/horizons/jm%d.txt", mindex);
         infile = fopen(filename, "rt");
         if (infile == NULL)
-            FAIL("C JupiterMoonsTest: Cannot open input file: %s\n", filename);
+            FFAIL("Cannot open input file: %s\n", filename);
 
-        DEBUG("C JupiterMoonsTest: Comparing against %s\n", filename);
+        FDEBUG("Comparing against %s\n", filename);
 
         lnum = 0;
         found = 0;
@@ -5278,8 +5245,7 @@ static int JupiterMoonsTest(void)
             FAIL("C JupiterMoonsTest(%s): expected %d test cases, found %d\n", filename, expected_count, count);
     }
 
-    printf("C JupiterMoonsTest: PASS\n");
-    error = 0;
+    FPASS();
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -5330,7 +5296,7 @@ static int AberrationTest(void)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C AberrationTest: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     lnum = 0;
     while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
@@ -5528,7 +5494,7 @@ static int VerifyStateBody(
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C VerifyStateBody: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     lnum = 0;
     while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
@@ -5591,7 +5557,7 @@ static int VerifyStateBody(
                 break;
 
             default:
-                FAIL("C VerifyStateBody: INTERNAL ERROR : part=%d\n", part);
+                FFAIL("INTERNAL ERROR : part=%d\n", part);
             }
 
             part = (part + 1) % 3;
@@ -5647,7 +5613,7 @@ static int BaryStateTest(void)
     CHECK(VerifyStateBody(&context, BODY_GEOMOON, "barystate/GeoMoon.txt",   4.086e-05,  5.347e-05));
     CHECK(VerifyStateBody(&context, BODY_GEO_EMB, "barystate/GeoEMB.txt",    4.076e-05,  5.335e-05));
 
-    printf("C BaryStateTest: PASS\n");
+    FPASS();
 fail:
     return error;
 }
@@ -5681,7 +5647,7 @@ static int HelioStateTest(void)
     CHECK(VerifyStateBody(&context, BODY_MOON,    "heliostate/Moon.txt",     1.477e-05,  6.195e-05));
     CHECK(VerifyStateBody(&context, BODY_EMB,     "heliostate/EMB.txt",      1.476e-05,  6.106e-05));
 
-    printf("C HelioStateTest: PASS\n");
+    FPASS();
 fail:
     return error;
 }
@@ -5948,7 +5914,7 @@ static int LagrangeJplGeoMoon(const char *mb_filename, const char *lp_filename, 
     CHECK(LoadStateVectors(&mb, mb_filename));
     CHECK(LoadStateVectors(&lp, lp_filename));
     if (mb.length != lp.length)
-        FAIL("C LagrangeJplGeoMoon: %s has %d states, but %s has %d\n", mb_filename, mb.length, lp_filename, lp.length);
+        FFAIL("%s has %d states, but %s has %d\n", mb_filename, mb.length, lp_filename, lp.length);
 
     for (i = 0; i < mb.length; ++i)
     {
@@ -6010,7 +5976,7 @@ static int LagrangeTest(void)
     CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 4, "lagrange/em_L4.txt",  3.79e-5, 1.59e-3));
     CHECK(VerifyStateLagrange(BODY_EARTH, BODY_MOON, 5, "lagrange/em_L5.txt",  3.79e-5, 1.59e-3));
 
-    printf("C LagrangeTest: PASS\n");
+    FPASS();
 fail:
     return error;
 }
@@ -6034,7 +6000,7 @@ static int LoadStateVectors(
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C LoadStateVectors: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     lnum = 0;
     while (!found_end && ReadLine(line, sizeof(line), infile, filename, lnum))
@@ -6097,7 +6063,7 @@ static int LoadStateVectors(
                 break;
 
             default:
-                FAIL("C LoadStateVectors: INTERNAL ERROR : part=%d\n", part);
+                FFAIL("INTERNAL ERROR : part=%d\n", part);
             }
 
             part = (part + 1) % 3;
@@ -6155,7 +6121,7 @@ static int LagrangeJplAnalyzeFiles(
     CHECK(LoadStateVectors(&mb, mb_filename));
     CHECK(LoadStateVectors(&lp, lp_filename));
     if (mb.length != lp.length)
-        FAIL("C LagrangeJplAnalyzeFiles: %d state vectors in %s, but %d in %s\n", mb.length, mb_filename, lp.length, lp_filename);
+        FFAIL("%d state vectors in %s, but %d in %s\n", mb.length, mb_filename, lp.length, lp_filename);
 
     if (mb.length < 10)
         FAIL("C LagrangeJplAnalyzeFiles(%s): %d state vectors is not enough for statistical analysis.\n", mb_filename, mb.length);
@@ -6499,7 +6465,7 @@ static int TopoStateTest(void)
     CHECK(VerifyStateBody(&context, BODY_EARTH,   "topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04));
     CHECK(VerifyStateBody(&context, BODY_GEO_EMB, "topostate/EMB_N30_W80_1000m.txt",    7.197e-04, 2.497e-04));
 
-    printf("C TopoStateTest: PASS\n");
+    FPASS();
 fail:
     return error;
 }
@@ -6523,7 +6489,7 @@ static int Twilight(void)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C Twilight: Cannot open input file: %s\n", filename);
+        FFAIL("Cannot open input file: %s\n", filename);
 
     lnum = 0;
     observer.height = 0.0;
@@ -6569,8 +6535,7 @@ static int Twilight(void)
         }
     }
 
-    printf("C Twilight: PASS (%d test cases, max error = %0.3lf seconds)\n", lnum, max_diff);
-    error = 0;
+    FPASSA("(%d test cases, max error = %0.3lf seconds)\n", lnum, max_diff);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -6595,7 +6560,7 @@ static int Libration(const char *filename, int *ndata, double *var_lon, double *
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C Libration: cannot open input file: %s\n", filename);
+        FFAIL("cannot open input file: %s\n", filename);
 
     lnum = 0;
     count = 0;
@@ -6715,7 +6680,7 @@ static int DE405_Check(void)
 
     infile = fopen(filename, "rt");
     if (infile == NULL)
-        FAIL("C DE450_Check: cannot open input file: %s\n", filename);
+        FFAIL("cannot open input file: %s\n", filename);
 
     lnum = 0;
     while (ReadLine(line, sizeof(line), infile, filename, 0))
@@ -6730,7 +6695,7 @@ static int DE405_Check(void)
                 FAIL("DE405_Check(%s line %d): cannot scan Julian Date\n", filename, lnum);
             time = Astronomy_TerrestrialTime(jd - JD_2000);
             Astronomy_FormatTime(time, TIME_FORMAT_MILLI, line, sizeof(line));
-            DEBUG("C DE405_Check: time = %s\n", line);
+            FDEBUG("time = %s\n", line);
         }
         else
         {
@@ -6775,17 +6740,16 @@ static int DE405_Check(void)
             dz = vel[2] - state.vz;
             dv = V(sqrt(dx*dx + dy*dy + dz*dz));
 
-            DEBUG("C DE405_Check: %-10s dr=%0.4le dv=%0.4le\n", name, dr, dv);
+            FDEBUG("%-10s dr=%0.4le dv=%0.4le\n", name, dr, dv);
             if (dr > 8.7e-5)
-                FAIL("C DE405_Check(%s line %d): EXCESSIVE POSITION ERROR\n", filename, lnum);
+                FLNFAIL("EXCESSIVE POSITION ERROR\n");
 
             if (dv > 7.3e-6)
-                FAIL("C DE405_Check(%s line %d): EXCESSIVE VELOCITY ERROR\n", filename, lnum);
+                FLNFAIL("EXCESSIVE VELOCITY ERROR\n");
         }
     }
 
-    printf("C DE405_Check: PASS\n");
-    error = 0;
+    FPASS();
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -6884,7 +6848,7 @@ static int AxisTest(void)
     CHECK(AxisTestBody(BODY_URANUS,   "axis/Uranus.txt",    0.0));
     CHECK(AxisTestBody(BODY_NEPTUNE,  "axis/Neptune.txt",   0.000462));
     CHECK(AxisTestBody(BODY_PLUTO,    "axis/Pluto.txt",     0.0));
-    printf("C AxisTest: PASS\n");
+    FPASS();
 fail:
     return error;
 }
@@ -7135,14 +7099,13 @@ static int MoonNodes(void)
     }
 
     if (max_lat > 0.183)
-        FAIL("C MoonNodes: EXCESSIVE ecliptic latitude error = %0.3lf arcmin\n", max_lat);
+        FFAIL("EXCESSIVE ecliptic latitude error = %0.3lf arcmin\n", max_lat);
 
     if (max_minutes > 3.681)
-        FAIL("C MoonNodes: EXCESSIVE time prediction error = %0.3lf minutes\n", max_minutes);
+        FFAIL("EXCESSIVE time prediction error = %0.3lf minutes\n", max_minutes);
 
-    DEBUG("C MoonNodes: min_dt = %0.3lf days, max_dt = %0.3lf days.\n", min_dt, max_dt);
-    printf("C MoonNodes: PASS (%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin, max time error = %0.3lf minutes, max node lat = %0.3le arcmin)\n", lnum, max_lat, max_angle, max_minutes, max_node_lat);
-    error = 0;
+    FDEBUG("min_dt = %0.3lf days, max_dt = %0.3lf days.\n", min_dt, max_dt);
+    FPASSA("(%d nodes, max lat error = %0.3lf arcmin, max equ error = %0.3lf arcmin, max time error = %0.3lf minutes, max node lat = %0.3le arcmin)\n", lnum, max_lat, max_angle, max_minutes, max_node_lat);
 fail:
     if (infile != NULL) fclose(infile);
     return error;
@@ -7160,12 +7123,11 @@ static int SiderealTimeTest(void)
     time = Astronomy_MakeTime(2022, 3, 15, 21, 50, 0.0);
     gast = Astronomy_SiderealTime(&time);
     diff = ABS(gast - correct);
-    printf("C SiderealTimeTest: gast=%0.15f, correct=%0.15lf, diff=%0.3le hours.\n", gast, correct, diff);
+    printf("C %s: gast=%0.15f, correct=%0.15lf, diff=%0.3le hours.\n", __func__, gast, correct, diff);
     if (diff > 1.0e-15)
-        FAIL("C SiderealTimeTest: EXCESSIVE ERROR\n");
+        FFAIL("EXCESSIVE ERROR\n");
 
-    printf("C SiderealTimeTest: PASS\n");
-    error = 0;
+    FPASS();
 fail:
     return error;
 }
@@ -7423,7 +7385,7 @@ static int GravitySimulatorTest(void)
     CHECK(GravSimFile("geostate/Vesta.txt",     BODY_EARTH, nsteps, &rscore, &vscore, 3.2980, 3.8863));
     CHECK(GravSimFile("geostate/Juno.txt",      BODY_EARTH, nsteps, &rscore, &vscore, 6.0962, 7.7147));
 
-    printf("C GravitySimulatorTest: PASS (pos score = %0.4lf arcmin, vel score = %0.4lf arcmin)\n", rscore, vscore);
+    FPASSA("(pos score = %0.4lf arcmin, vel score = %0.4lf arcmin)\n", rscore, vscore);
 fail:
     return error;
 }
@@ -7437,9 +7399,9 @@ static int CheckDecemberSolstice(int year, const char *expected)
     astro_seasons_t si = Astronomy_Seasons(year);
     astro_status_t status = Astronomy_FormatTime(si.dec_solstice, TIME_FORMAT_MILLI, actual, sizeof(actual));
     if (status != ASTRO_SUCCESS)
-        FAIL("C DateIssue250: FAIL: status=%d for year %d.\n", status, year);
+        FFAIL("FAIL: status=%d for year %d.\n", status, year);
     if (strcmp(actual, expected))
-        FAIL("C DatesIssue250: FAIL: year %d, expected [%s], actual [%s]\n", year, expected, actual);
+        FFAIL("FAIL: year %d, expected [%s], actual [%s]\n", year, expected, actual);
     error = 0;
 fail:
     return error;
@@ -7453,7 +7415,7 @@ static int DatesIssue250(void)
     CHECK(CheckDecemberSolstice( 2022, "2022-12-21T21:47:54.455Z"));
     CHECK(CheckDecemberSolstice(-2300, "-002300-12-19T16:22:27.929Z"));
     CHECK(CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.276Z"));
-    printf("C DatesIssue250: PASS\n");
+    FPASS();
 fail:
     return error;
 }
@@ -7535,7 +7497,7 @@ static int StarRiseSetCulm(void)
     CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 21,  4, 17,  7, 44, 11, 11));
     CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56));
 
-    printf("C StarRiseSetCulm: PASS\n");
+    FPASS();
 fail:
     return error;
 }
