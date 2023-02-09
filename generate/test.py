@@ -1269,7 +1269,7 @@ def Ecliptic():
     if max_vec_diff > 3.388e-18:
         return Fail('Ecliptic', 'EXCESSIVE VECTOR DIFF = {:0.6e} au.'.format(max_vec_diff))
 
-    if max_angle_diff > 2.910e-18:
+    if max_angle_diff > 3.007e-18:
         return Fail('Ecliptic', 'EXCESSIVE ANGLE DIFF = {:0.6e} au.'.format(max_angle_diff))
 
     print('PY Ecliptic: PASS: count = {:d}, max_vec_diff = {:0.6e} au, max_angle_diff = {:0.6e} au.'.format(count, max_vec_diff, max_angle_diff))

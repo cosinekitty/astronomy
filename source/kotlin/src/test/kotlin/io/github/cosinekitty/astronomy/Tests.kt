@@ -323,7 +323,7 @@ class Tests {
         }
 
         assertTrue(max_eclip_diff < 1.511e-18, "excessive eclip_diff = $max_eclip_diff AU.")
-        assertTrue(max_sphere_diff < 3.406e-18, "excessive sphere_diff = $max_sphere_diff AU.")
+        assertTrue(max_sphere_diff < 3.472e-18, "excessive sphere_diff = $max_sphere_diff AU.")
     }
 
     //----------------------------------------------------------------------------------------

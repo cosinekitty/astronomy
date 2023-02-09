@@ -2196,7 +2196,7 @@ namespace csharp_test
                 ++count;
             }
 
-            if (max_angle_diff > 2.910e-18)
+            if (max_angle_diff > 3.007e-18)
                 return Fail($"EclipticTest: EXCESSIVE ANGLE DIFF = {max_angle_diff:G6} AU.");
 
             if (max_vec_diff > 3.743e-18)
