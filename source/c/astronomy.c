@@ -7812,6 +7812,55 @@ astro_hour_angle_t Astronomy_SearchHourAngleEx(
     }
 }
 
+
+/**
+ * @brief Finds the hour angle of a body for a given observer and time.
+ *
+ * The *hour angle* of a celestial body indicates its position in the sky with respect
+ * to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
+ * The hour angle is 0 when the body's center reaches its highest angle above the horizon in a given day.
+ * The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
+ * to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
+ * the number of hours that have passed since the most recent time that the body has culminated,
+ * or reached its highest point.
+ *
+ * @param body
+ *      The body whose observed hour angle is to be found.
+ *
+ * @param time
+ *      The time of the observation.
+ *
+ * @param observer
+ *      The location where the observation takes place.
+ *
+ * @return astro_func_result_t
+ *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`
+ *      and `value` holds the hour angle in the half-open range [0, 24).
+ *      Otherwise, `status` is an error code that indicates failure.
+ */
+astro_func_result_t Astronomy_HourAngle(astro_body_t body, astro_time_t *time, astro_observer_t observer)
+{
+    astro_func_result_t result;
+    astro_equatorial_t ofdate;
+    double gast;
+
+    /* Calculate Greenwich Apparent Sidereal Time (GAST) at the given time. */
+    gast = Astronomy_SiderealTime(time);
+
+    /* Obtain equatorial coordinates of date for the body. */
+    ofdate = Astronomy_Equator(body, time, observer, EQUATOR_OF_DATE, ABERRATION);
+    if (ofdate.status != ASTRO_SUCCESS)
+        return FuncError(ofdate.status);
+
+    result.value = fmod(observer.longitude/15 + gast - ofdate.ra, 24.0);
+    if (result.value < 0.0)
+        result.value += 24.0;
+    result.status = ASTRO_SUCCESS;
+
+    return result;
+}
+
+
 /** @cond DOXYGEN_SKIP */
 
 typedef struct

@@ -245,6 +245,7 @@ static int MapPerformanceTest(void);
 static int GeoMoonPerformance(void);
 static int NutationPerformance(void);
 static int EclipticTest(void);
+static int HourAngleTest(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -274,6 +275,7 @@ static unit_test_t UnitTests[] =
     {"global_solar_eclipse",    GlobalSolarEclipseTest},
     {"gravsim",                 GravitySimulatorTest},
     {"heliostate",              HelioStateTest},
+    {"hour_angle",              HourAngleTest},
     {"issue_103",               Issue103},
     {"jupiter_moons",           JupiterMoonsTest},
     {"lagrange",                LagrangeTest},
@@ -7498,6 +7500,57 @@ static int StarRiseSetCulm(void)
     CHECK(StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56));
 
     FPASS();
+fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int HourAngleCase(int year, int month, int day, double latitude, double longitude, double hourAngle, double *maxdiff)
+{
+    int error;
+    astro_hour_angle_t search;
+    astro_observer_t observer;
+    astro_time_t startTime;
+    astro_func_result_t ha;
+    double diff;
+    const double threshold = 0.1 / 3600.0;  /* SearchHourAngleEx search accuracy: 0.1 seconds converted to hours */
+
+    observer = Astronomy_MakeObserver(latitude, longitude, 0.0);
+    startTime = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
+
+    search = Astronomy_SearchHourAngleEx(BODY_SUN, observer, hourAngle, startTime, +1);
+    CHECK_STATUS(search);
+
+    ha = Astronomy_HourAngle(BODY_SUN, &search.time, observer);
+    CHECK_STATUS(ha);
+    diff = ABS(ha.value - hourAngle);
+    if (diff > 12.0)
+        diff = 24.0 - diff;
+
+    if (diff > *maxdiff)
+        *maxdiff = diff;
+
+    if (diff > threshold)
+        FFAIL("EXCESSIVE ERROR = %0.6le, calc HA=%0.16lf for hourAngle=%0.1lf, longitude=%0.1lf\n", diff, ha.value, hourAngle, longitude);
+
+    FDEBUG("Hour angle = %4.1lf, longitude = %6.1lf, diff = %7.4le hours\n", hourAngle, longitude, diff);
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int HourAngleTest(void)
+{
+    int error, hour, longitude;
+    double maxdiff = 0.0;
+    int cases = 0;
+
+    for (longitude = -175; longitude <= 180.0; longitude += 5)
+        for (hour = 0; hour < 24; ++hour, ++cases)
+            CHECK(HourAngleCase(2023, 2, 11, 35.0, (double)longitude, (double)hour, &maxdiff));
+    FPASSA("%d cases, maxdiff = %0.4le hours.\n", cases, maxdiff);
 fail:
     return error;
 }

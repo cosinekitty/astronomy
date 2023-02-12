@@ -1272,6 +1272,11 @@ astro_hour_angle_t Astronomy_SearchHourAngleEx(
     astro_time_t startTime,
     int direction);
 
+astro_func_result_t Astronomy_HourAngle(
+    astro_body_t body,
+    astro_time_t *time,
+    astro_observer_t observer);
+
 /** @cond DOXYGEN_SKIP */
 
 /* The following is provided for backward compatibility. */
