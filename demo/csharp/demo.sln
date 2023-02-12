@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "triangulate", "triangulate\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gravity", "gravity\gravity.csproj", "{7A191544-C532-40F5-AA40-9BD096BF4567}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "solar_time", "solar_time\solar_time.csproj", "{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -184,5 +186,17 @@ Global
 		{7A191544-C532-40F5-AA40-9BD096BF4567}.Release|x64.Build.0 = Release|Any CPU
 		{7A191544-C532-40F5-AA40-9BD096BF4567}.Release|x86.ActiveCfg = Release|Any CPU
 		{7A191544-C532-40F5-AA40-9BD096BF4567}.Release|x86.Build.0 = Release|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Debug|x64.Build.0 = Debug|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Debug|x86.Build.0 = Debug|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Release|x64.ActiveCfg = Release|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Release|x64.Build.0 = Release|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Release|x86.ActiveCfg = Release|Any CPU
+		{E12210A5-9A9C-4EE4-8DEE-2034043BAC7E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -17,6 +17,7 @@ rm -f test/*.txt
 mkdir -p test || exit 1
 dotnet build --output ${PWD}/exe || Fail "Error building ${PWD}/demo.sln"
 
+TestDemo solar_time +38.88 -77.03 2023-02-12T17:00:00Z
 TestDemo camera 29 -81 2021-03-22T02:45:00Z
 TestDemo moonphase 2019-06-15T09:15:32.987Z
 TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z

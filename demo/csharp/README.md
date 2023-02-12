@@ -31,6 +31,9 @@ Shows how to calculate sunrise, sunset, moonrise, and moonset times.
 ### [Seasons](seasons/seasons.cs)
 Calculates the equinoxes and solstices for a given calendar year.
 
+### [Solar Time](solar_time/solar_time.cs)
+An example of how to use the Sun's hour angle to calculate true solar time.
+
 ### [Triangulate](triangulate/triangulate.cs)
 Given the geographic coordinates of two observers, and angular
 directions they are looking in, determines geographic coordinates
