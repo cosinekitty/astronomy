@@ -15,6 +15,7 @@ TestDemo()
 rm -f test/*.txt
 mkdir -p test
 
+TestDemo solar_time +38.88 -77.03 2023-02-12T17:00:00Z
 TestDemo equatorial 38.1256 -89.5544 215.7 23.5 2021-03-27T18:45:00Z
 TestDemo equator_of_date a 12 45 2021-07-06T00:00:00Z
 TestDemo camera 29 -81 2021-03-22T02:45:00Z
