@@ -34,8 +34,8 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.SiderealTime = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.e_tilt = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.PlanetOrbitalPeriod = exports.DefineStar = exports.Body = exports.AngleBetween = exports.MassProduct = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.AU_PER_LY = exports.KM_PER_AU = exports.C_AUDAY = void 0;
-exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.ApsisKind = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = exports.BackdatePosition = exports.CorrectLightTravel = exports.PositionFunction = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = void 0;
-exports.GravitySimulator = exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_EQD_ECT = exports.Rotation_ECT_EQD = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_ECT_EQJ = exports.Rotation_EQJ_ECT = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = void 0;
+exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.ApsisKind = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.HourAngle = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = exports.BackdatePosition = exports.CorrectLightTravel = exports.PositionFunction = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = void 0;
+exports.GravitySimulator = exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_EQD_ECT = exports.Rotation_ECT_EQD = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_ECT_EQJ = exports.Rotation_EQJ_ECT = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -5295,6 +5295,41 @@ function SearchHourAngle(body, observer, hourAngle, dateStart, direction = +1) {
     }
 }
 exports.SearchHourAngle = SearchHourAngle;
+/**
+ * @brief Finds the hour angle of a body for a given observer and time.
+ *
+ * The *hour angle* of a celestial body indicates its position in the sky with respect
+ * to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
+ * The hour angle is 0 when the body's center reaches its highest angle above the horizon in a given day.
+ * The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
+ * to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
+ * the number of hours that have passed since the most recent time that the body has culminated,
+ * or reached its highest point.
+ *
+ * This function returns the hour angle of the body as seen at the given time and geogrpahic location.
+ * The hour angle is a number in the half-open range [0, 24).
+ *
+ * @param {Body} body
+ *      The body whose observed hour angle is to be found.
+ *
+ * @param {FlexibleDateTime} date
+ *      The and and time of the observation.
+ *
+ * @param {Observer} observer
+ *      The geographic location where the observation takes place.
+ *
+ * @returns {number}
+ */
+function HourAngle(body, date, observer) {
+    const time = MakeTime(date);
+    const gast = SiderealTime(time);
+    const ofdate = Equator(body, time, observer, true, true);
+    let hourAngle = (observer.longitude / 15 + gast - ofdate.ra) % 24;
+    if (hourAngle < 0.0)
+        hourAngle += 24.0;
+    return hourAngle;
+}
+exports.HourAngle = HourAngle;
 /**
  * @brief When the seasons change for a given calendar year.
  *

@@ -3470,7 +3470,48 @@ function EclipticTest() {
     if (max_vec_diff > 3.743e-18)
         throw `EclipticTest: EXCESSIVE VECTOR DIFF = ${max_vec_diff.toExponential(6)} AU.`;
 
-    Debug(`JS EclipticTest: PASS: count = ${count}, max_vec_diff = ${max_vec_diff.toExponential(6)} AU., max_angle_diff = ${max_angle_diff.toExponential(6)} AU.`);
+    console.log(`JS EclipticTest: PASS: count = ${count}, max_vec_diff = ${max_vec_diff.toExponential(6)} AU., max_angle_diff = ${max_angle_diff.toExponential(6)} AU.`);
+    return 0;
+}
+
+//-------------------------------------------------------------------------------------------------
+
+function HourAngleCase(latitude, longitude, hourAngle, context) {
+    const threshold = 0.1 / 3600;   // SearchHourAngle() accuracy: 0.1 seconds converted to hours
+    const observer = new Astronomy.Observer(latitude, longitude, 0);
+    const startTime = new Astronomy.AstroTime(new Date('2023-02-11T00:00:00Z'));
+    const search = Astronomy.SearchHourAngle(Astronomy.Body.Sun, observer, hourAngle, startTime, +1);
+    const calc = Astronomy.HourAngle(Astronomy.Body.Sun, search.time, observer);
+    let diff = abs(calc - hourAngle);
+    if (diff > 12.0)
+        diff = 24.0 - diff;
+    if (diff > context.maxdiff)
+        context.maxdiff = diff;
+    ++context.cases;
+    if (diff > threshold) {
+        console.error(`JS HourAngleCase: EXCESSIVE ERROR = ${diff.toExponential(6)}, calc HA = ${calc.toFixed(16)}, for hourAngle=${hourAngle.toFixed(1)}`);
+        return false;
+    }
+    Debug(`JS HourAngleCase: Hour angle = ${hourAngle.toFixed(1)}, longitude = ${longitude.toFixed(1)}, diff = ${diff.toExponential(4)}`);
+    return true;
+}
+
+function HourAngleTest() {
+    const context = {
+        cases: 0,
+        maxdiff: 0.0
+    };
+
+    const latitude = 35.0;
+    for (let longitude = -170; longitude <= 180; longitude += 5) {
+        for (let hour = 0; hour < 24; ++hour) {
+            if (!HourAngleCase(latitude, longitude, hour, context)) {
+                return 1;
+            }
+        }
+    }
+
+    return Pass(`JS HourAngleTest (${context.cases} cases, maxdiff = ${context.maxdiff.toExponential(4)})`);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -3487,6 +3528,7 @@ const UnitTests = {
     global_solar_eclipse:   GlobalSolarEclipse,
     gravsim:                GravSimTest,
     heliostate:             HelioStateTest,
+    hour_angle:             HourAngleTest,
     issue_103:              Issue103,
     jupiter_moons:          JupiterMoons,
     lagrange:               LagrangeTest,
