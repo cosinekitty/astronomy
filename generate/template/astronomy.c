@@ -6670,7 +6670,7 @@ astro_hour_angle_t Astronomy_SearchHourAngleEx(
  *      The time of the observation.
  *
  * @param observer
- *      The location where the observation takes place.
+ *      The geographic location where the observation takes place.
  *
  * @return astro_func_result_t
  *      If successful, the `status` field in the returned structure holds `ASTRO_SUCCESS`

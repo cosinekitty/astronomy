@@ -1222,7 +1222,7 @@ The *hour angle* of a celestial body indicates its position in the sky with resp
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The body whose observed hour angle is to be found. | 
 | <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The time of the observation. | 
-| [`astro_observer_t`](#astro_observer_t) | `observer` |  The location where the observation takes place. | 
+| [`astro_observer_t`](#astro_observer_t) | `observer` |  The geographic location where the observation takes place. | 
 
 
 

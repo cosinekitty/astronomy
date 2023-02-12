@@ -59,6 +59,7 @@ namespace csharp_test
             new Test("dates250", DatesIssue250),
             new Test("ecliptic", EclipticTest),
             new Test("elongation", ElongationTest),
+            new Test("hour_angle", HourAngleTest),
             new Test("global_solar_eclipse", GlobalSolarEclipseTest),
             new Test("gravsim", GravitySimulatorTest),
             new Test("jupiter_moons", JupiterMoonsTest),
@@ -4367,6 +4368,52 @@ namespace csharp_test
                 StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 21,  4, 17,  7, 44, 11, 11) &&
                 StarRiseSetCulmCase("Canopus",  6.3992, -52.6956, 310.0, observer, 2022, 11, 25,  4,  1,  7, 28, 10, 56)
             ) ? Pass("StarRiseSetCulm") : 1;
+        }
+
+        //-----------------------------------------------------------------------------------------
+
+        static bool HourAngleCase(
+            int year,
+            int month,
+            int day,
+            double latitude,
+            double longitude,
+            double hourAngle,
+            ref double maxdiff)
+        {
+            const double threshold = 0.1 / 3600.0;  // SearchHourAngle() accuracy: 0.1 seconds converted to hours
+            var observer = new Observer(latitude, longitude, 0.0);
+            var startTime = new AstroTime(year, month, day, 0, 0, 0.0);
+            HourAngleInfo search = Astronomy.SearchHourAngle(Body.Sun, observer, hourAngle, startTime, +1);
+            double calc = Astronomy.HourAngle(Body.Sun, search.time, observer);
+            double diff = abs(calc - hourAngle);
+            if (diff > 12.0)
+                diff = 24.0 - diff;
+
+            if (diff > maxdiff)
+                maxdiff = diff;
+
+            if (diff > threshold)
+            {
+                Console.WriteLine($"{nameof(HourAngleCase)}: EXCESSIVE ERROR = {diff:G6}, calc HA={calc:F16} for hourAngle={hourAngle:F1}, longitude={longitude:F1}");
+                return false;
+            }
+
+            Debug($"{nameof(HourAngleCase)}: Hour angle = {hourAngle,4:F1}, longitude = {longitude,6:F1}, diff = {diff,9:G4} hours");
+            return true;
+        }
+
+        static int HourAngleTest()
+        {
+            double maxdiff = 0.0;
+            int cases = 0;
+
+            for (int longitude = -170; longitude <= 180; longitude += 5)
+                for (int hour = 0; hour < 24; ++hour, ++cases)
+                    if (!HourAngleCase(2023, 2, 11, 35.0, (double)longitude, (double)hour, ref maxdiff))
+                        return 1;
+
+            return Pass($"{nameof(HourAngleTest)} ({cases} cases, maxdiff = {maxdiff:G4})");
         }
 
         //-----------------------------------------------------------------------------------------

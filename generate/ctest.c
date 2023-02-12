@@ -7514,7 +7514,7 @@ static int HourAngleCase(int year, int month, int day, double latitude, double l
     astro_time_t startTime;
     astro_func_result_t ha;
     double diff;
-    const double threshold = 0.1 / 3600.0;  /* SearchHourAngleEx search accuracy: 0.1 seconds converted to hours */
+    const double threshold = 0.1 / 3600.0;  /* Astronomy_SearchHourAngleEx() accuracy: 0.1 seconds converted to hours */
 
     observer = Astronomy_MakeObserver(latitude, longitude, 0.0);
     startTime = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
@@ -7547,9 +7547,10 @@ static int HourAngleTest(void)
     double maxdiff = 0.0;
     int cases = 0;
 
-    for (longitude = -175; longitude <= 180.0; longitude += 5)
+    for (longitude = -175; longitude <= 180; longitude += 5)
         for (hour = 0; hour < 24; ++hour, ++cases)
             CHECK(HourAngleCase(2023, 2, 11, 35.0, (double)longitude, (double)hour, &maxdiff));
+
     FPASSA("%d cases, maxdiff = %0.4le hours.\n", cases, maxdiff);
 fail:
     return error;
