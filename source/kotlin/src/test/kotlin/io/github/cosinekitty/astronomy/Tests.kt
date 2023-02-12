@@ -2724,4 +2724,32 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    private fun hourAngleCase(latitude: Double, longitude: Double, hour: Double) {
+        val threshold = 0.1 / 3600.0    // searchHourAngle() accuracy: 0.1 seconds converted to hours
+        val observer = Observer(latitude, longitude, 0.0)
+        val startTime = Time(2023, 2, 11, 0, 0, 0.0)
+        val search = searchHourAngle(Body.Sun, observer, hour, startTime, +1)
+        val calc = hourAngle(Body.Sun, search.time, observer)
+        var diff = abs(calc - hour)
+        if (diff > 12.0)
+            diff = 24.0 - diff
+        assertTrue(diff < threshold, "excessive error = $diff, calc = $calc, for hour = $hour")
+    }
+
+    @Test
+    fun `Hour angles for different locations`() {
+        val latitude = 35.0
+        var longitude = 0.0
+        while (longitude <= 180.0) {
+            var hour = 0.0
+            while (hour < 24.0) {
+                hourAngleCase(latitude, longitude, hour)
+                hour += 1.0
+            }
+            longitude += 5.0
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
 }
