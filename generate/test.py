@@ -3131,6 +3131,49 @@ def StarRiseSetCulm():
 
 #-----------------------------------------------------------------------------------------------------------
 
+class HourAngleTester:
+    def __init__(self):
+        self.cases = 0
+        self.maxdiff = 0.0
+
+    def Case(self, latitude, longitude, hourAngle):
+        threshold = 0.1 / 3600   # SearchHourAngle() accuracy: 0.1 seconds converted to hours
+        observer = astronomy.Observer(latitude, longitude, 0)
+        startTime = astronomy.Time.Make(2023, 2, 11, 0, 0, 0)
+        search = astronomy.SearchHourAngle(astronomy.Body.Sun, observer, hourAngle, startTime, +1)
+        calc = astronomy.HourAngle(astronomy.Body.Sun, search.time, observer)
+        diff = vabs(calc - hourAngle)
+        if diff > 12.0:
+            diff = 24.0 - diff;
+        if diff > self.maxdiff:
+            self.maxdiff = diff
+        self.cases += 1
+        if diff > threshold:
+            print('PY HourAngleCase: EXCESSIVE ERROR = {:0.6e}, calc HA = {:0.16f}, for hourAngle={:0.1f}'.format(diff, calc, hourAngle))
+            return False
+        Debug('PY HourAngleCase: Hour angle = {:4.1f}, longitude = {:6.1f}, diff = {:9.4e}'.format(hourAngle, longitude, diff))
+        return True
+
+    def Pass(self):
+        print('PY HourAngle ({:d} cases, maxdiff = {:9.4e}): PASS'.format(self.cases, self.maxdiff))
+        return 0
+
+
+def HourAngle():
+    tester = HourAngleTester()
+    latitude = 35
+    longitude = -170
+    while longitude <= 180:
+        hour = 0
+        while hour < 24:
+            if not tester.Case(latitude, longitude, hour):
+                return 1
+            hour += 1
+        longitude += 5
+    return tester.Pass()
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
     'axis':                     Axis,
@@ -3143,6 +3186,7 @@ UnitTests = {
     'global_solar_eclipse':     GlobalSolarEclipse,
     'gravsim':                  GravSimTest,
     'heliostate':               HelioState,
+    'hour_angle':               HourAngle,
     'issue_103':                Issue103,
     'jupiter_moons':            JupiterMoons,
     'lagrange':                 Lagrange,

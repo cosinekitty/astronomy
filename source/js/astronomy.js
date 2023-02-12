@@ -5313,7 +5313,7 @@ exports.SearchHourAngle = SearchHourAngle;
  *      The body whose observed hour angle is to be found.
  *
  * @param {FlexibleDateTime} date
- *      The and and time of the observation.
+ *      The date and time of the observation.
  *
  * @param {Observer} observer
  *      The geographic location where the observation takes place.

@@ -1721,7 +1721,7 @@ The hour angle is a number in the half-open range [0, 24).
 | Param | Type | Description |
 | --- | --- | --- |
 | body | [<code>Body</code>](#Body) | The body whose observed hour angle is to be found. |
-| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The and and time of the observation. |
+| date | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time of the observation. |
 | observer | [<code>Observer</code>](#Observer) | The geographic location where the observation takes place. |
 
 

@@ -6127,6 +6127,41 @@ def SearchHourAngle(body, observer, hourAngle, startTime, direction = +1):
         delta_days = (delta_sidereal_hours / 24.0) * _SOLAR_DAYS_PER_SIDEREAL_DAY
         time = time.AddDays(delta_days)
 
+
+def HourAngle(body, time, observer):
+    """Finds the hour angle of a body for a given observer and time.
+
+    The *hour angle* of a celestial body indicates its position in the sky with respect
+    to the Earth's rotation. The hour angle depends on the location of the observer on the Earth.
+    The hour angle is 0 when the body's center reaches its highest angle above the horizon in a given day.
+    The hour angle increases by 1 unit for every sidereal hour that passes after that point, up
+    to 24 sidereal hours when it reaches the highest point again. So the hour angle indicates
+    the number of hours that have passed since the most recent time that the body has culminated,
+    or reached its highest point.
+
+    This function returns the hour angle of the body as seen at the given time and geogrpahic location.
+    The hour angle is a number in the half-open range [0, 24).
+
+    Parameters
+    ----------
+    body : Body
+        The body whose observed hour angle is to be found.
+    time : Time
+        The date and time of the observation.
+    observer : Observer
+        The geographic location where the observation takes place.
+
+    Returns
+    -------
+    float
+    """
+    gast = SiderealTime(time)
+    ofdate = Equator(body, time, observer, True, True)
+    hourAngle = math.fmod(observer.longitude/15.0 + gast - ofdate.ra, 24.0)
+    if hourAngle < 0.0:
+        hourAngle += 24.0
+    return hourAngle
+
 @enum.unique
 class Direction(enum.Enum):
     """Indicates whether a body is rising above or setting below the horizon.
