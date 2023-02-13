@@ -12,6 +12,7 @@ call gradlew.bat jar || exit /b 1
 
 REM ----------------------------------------------------------------------------------
 
+call :TestDemo solar_time +38.88 -77.03 2023-02-12T17:00:00Z || exit /b 1
 call :TestDemo constellation 2021-06-01T00:00:00Z || exit /b 1
 call :TestDemo jupiter_moons 2021-04-16T00:26:18Z || exit /b 1
 call :TestDemo lunar_eclipse 1988-01-01T00:00:00Z || exit /b 1

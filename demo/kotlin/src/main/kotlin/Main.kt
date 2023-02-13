@@ -52,6 +52,10 @@ Command line arguments:
         Given an integer year number, displays the solstices and
         equinoxes for that year. The year must be in the range 0000..9999.
 
+    solar_time latitude longitude [yyyy-mm-ddThh:mm:ssZ]
+        Displays the true solar time for the observer at the
+        given geographic coordinates.
+
 """
 
 private fun printUsage(): Int {
@@ -172,5 +176,11 @@ internal val demoList = listOf(
         `Seasons demo`(
             parseYear(args[1])
         )
-    }
+    },
+    Demo("solar_time", 3, 4) { args ->
+        `Solar true time`(
+            parseObserver(args, 1),
+            parseTime(args, 3)
+        )
+    },
 )
