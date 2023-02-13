@@ -362,6 +362,17 @@ def ConstantsMd(inPythonFileName):
     clist = []
     with open(inPythonFileName) as infile:
         for line in infile:
+            # Consider symbols like Union defined in lines like the following:
+            # "from typing import Union"
+            tokens = line.split()
+            if len(tokens) > 3 and tokens[0] == 'from' and tokens[2] == 'import':
+                for name in tokens[3:]:
+                    if name != ',':
+                        documentedSymbolSet.add(name)
+                continue
+
+            # Consider symbols like KM_PER_AU defined in lines like the following:
+            # "KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit."
             parts = line.split('#<const>')
             if len(parts) == 2:
                 code = parts[0].strip()
@@ -373,6 +384,7 @@ def ConstantsMd(inPythonFileName):
                     symbol = tokens[0]
                     clist.append((symbol, codeText, doc))
                     documentedSymbolSet.add(symbol)
+                    continue
 
     for (symbol, code, doc) in sorted(clist):
         md += '\n---\n\n'

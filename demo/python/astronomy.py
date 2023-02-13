@@ -36,6 +36,7 @@ import datetime
 import enum
 import re
 import abc
+from typing import Union
 
 def _cbrt(x):
     if x < 0.0:
@@ -728,7 +729,7 @@ class Time:
         such as the orbits of planets around the Sun, or the Moon around the Earth.
         Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
     """
-    def __init__(self, ut, tt = None):
+    def __init__(self, ut : Union[float, str], tt = None):
         if isinstance(ut, str):
             # Undocumented hack, to make repr(time) reversible.
             other = Time.Parse(ut)
