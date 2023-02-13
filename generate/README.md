@@ -18,7 +18,9 @@ The following tools are required for developers:
 - gcc and g++
 - Node.js
 - npm (needed to install other tools like TypeScript, jsdoc2md, ...)
-- Python 3.7+
+- Python 3.7+ and the following modules:
+    - [mypy](https://pypi.org/project/mypy/)
+    - [pylint](https://pypi.org/project/pylint/)
 - Microsoft .NET 6.0 SDK
 - doxygen
 - xsltproc
@@ -47,7 +49,9 @@ The following tools are required for developers:
 - Microsoft .NET 6.0 SDK
 - Node.js
 - npm (needed to install other tools like TypeScript, jsdoc2md, ...)
-- Python 3.7+
+- Python 3.7+ and the following modules:
+    - [mypy](https://pypi.org/project/mypy/)
+    - [pylint](https://pypi.org/project/pylint/)
 - doxygen
 - xsltproc  (Follow instructions at https://www.zlatkovic.com/libxml.en.html)
 
