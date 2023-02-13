@@ -125,7 +125,7 @@ _PLUTO_GM   = 0.2188699765425970e-11
 _MOON_GM = _EARTH_GM / _EARTH_MOON_MASS_RATIO
 
 
-def MassProduct(body):
+def MassProduct(body: "Body") -> float:
     """Returns the product of mass and universal gravitational constant of a Solar System body.
 
     For problems involving the gravitational interactions of Solar System bodies,
@@ -167,15 +167,15 @@ class _PrecessDir(enum.Enum):
     From2000 = 0
     Into2000 = 1
 
-def _LongitudeOffset(diff):
-    offset = diff
+def _LongitudeOffset(diff: float) -> float:
+    offset: float = diff
     while offset <= -180.0:
         offset += 360.0
     while offset > 180.0:
         offset -= 360.0
     return offset
 
-def _NormalizeLongitude(lon):
+def _NormalizeLongitude(lon: float) -> float:
     while lon < 0.0:
         lon += 360.0
     while lon >= 360.0:
@@ -200,34 +200,34 @@ class Vector:
     t : Time
         The date and time at which the coordinate is valid.
     """
-    def __init__(self, x, y, z, t):
+    def __init__(self, x: float, y: float, z: float, t: "Time") -> None:
         self.x = x
         self.y = y
         self.z = z
         self.t = t
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Vector({}, {}, {}, {})'.format(self.x, self.y, self.z, repr(self.t))
 
-    def Length(self):
+    def Length(self) -> float:
         """Returns the length of the vector in AU."""
         # It would be nice to use math.hypot() here,
         # but before Python 3.8, it only accepts 2 arguments.
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-    def __add__(self, other):
+    def __add__(self, other: "Vector") -> "Vector":
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z, self.t)
 
-    def __sub__(self, other):
+    def __sub__(self, other: "Vector") -> "Vector":
         return Vector(self.x - other.x, self.y - other.y, self.z - other.z, self.t)
 
-    def __neg__(self):
+    def __neg__(self) -> "Vector":
         return Vector(-self.x, -self.y, -self.z, self.t)
 
-    def __truediv__(self, scalar):
+    def __truediv__(self, scalar: float) -> "Vector":
         return Vector(self.x/scalar, self.y/scalar, self.z/scalar, self.t)
 
-    def format(self, coord_format):
+    def format(self, coord_format) -> str:
         """Returns a custom format string representation of the vector."""
         layout = '({:' + coord_format + '}, {:' + coord_format + '}, {:' + coord_format + '}, {})'
         return layout.format(self.x, self.y, self.z, str(self.t))
@@ -257,7 +257,7 @@ class StateVector:
     t : Time
         The date and time at which the position and velocity vectors are valid.
     """
-    def __init__(self, x, y, z, vx, vy, vz, t):
+    def __init__(self, x: float, y: float, z: float, vx: float, vy: float, vz: float, t: "Time") -> None:
         self.x = x
         self.y = y
         self.z = z
@@ -266,13 +266,13 @@ class StateVector:
         self.vz = vz
         self.t = t
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'StateVector(x={}, y={}, z={}, vx={}, vy={}, vz={}, t={})'.format(
             self.x, self.y, self.z,
             self.vx, self.vy, self.vz,
             repr(self.t))
 
-    def __add__(self, other):
+    def __add__(self, other: "StateVector") -> "StateVector":
         return StateVector(
             self.x  + other.x,
             self.y  + other.y,
@@ -283,7 +283,7 @@ class StateVector:
             self.t
         )
 
-    def __sub__(self, other):
+    def __sub__(self, other: "StateVector") -> "StateVector":
         return StateVector(
             self.x  - other.x,
             self.y  - other.y,
@@ -294,11 +294,11 @@ class StateVector:
             self.t
         )
 
-    def Position(self):
+    def Position(self) -> Vector:
         """Extracts a position vector from this state vector."""
         return Vector(self.x, self.y, self.z, self.t)
 
-    def Velocity(self):
+    def Velocity(self) -> Vector:
         """Extracts a velocity vector from this state vector."""
         return Vector(self.vx, self.vy, self.vz, self.t)
 
