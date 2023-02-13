@@ -19,8 +19,8 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: 3.7
-    - name: Install Python linter
-      run: python -m pip install --upgrade pip && pip install pylint
+    - name: Install Python tools
+      run: python -m pip install --upgrade pip && pip install pylint mypy
     - name: Install documentation tools Linux
       if: startsWith(matrix.os, 'ubuntu')
       run: sudo apt install -y doxygen xsltproc
