@@ -60,6 +60,10 @@ public class Main {
         "    seasons year",
         "        Given an integer year number, displays the solstices and equinoxes for that year.",
         "        The year must be in the range 0000..9999.",
+        "",
+        "    solar_time latitude longitude [yyyy-mm-ddThh:mm:ssZ]",
+        "        Displays the true solar time for the observer at the",
+        "        given geographic coordinates.",
         ""
     );
 
@@ -197,6 +201,12 @@ public class Main {
         new Demo("seasons", 2, 2, args ->
             Seasons.run(
                 parseYear(args[1])
+            )
+        ),
+        new Demo("solar_time", 3, 4, args ->
+            SolarTime.run(
+                parseObserver(args, 1),
+                parseTime(args, 3)
             )
         )
     );
