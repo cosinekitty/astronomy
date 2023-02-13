@@ -896,12 +896,12 @@ The state vector also includes a time stamp.
 #### member functions
 
 <a name="StateVector.Position"></a>
-### StateVector.Position(self)
+### StateVector.Position(self) -&gt; astronomy.Vector
 
 Extracts a position vector from this state vector.
 
 <a name="StateVector.Velocity"></a>
-### StateVector.Velocity(self)
+### StateVector.Velocity(self) -&gt; astronomy.Vector
 
 Extracts a velocity vector from this state vector.
 
@@ -1055,12 +1055,12 @@ The vector also includes a time stamp.
 #### member functions
 
 <a name="Vector.Length"></a>
-### Vector.Length(self)
+### Vector.Length(self) -&gt; float
 
 Returns the length of the vector in AU.
 
 <a name="Vector.format"></a>
-### Vector.format(self, coord_format)
+### Vector.format(self, coord_format) -&gt; str
 
 Returns a custom format string representation of the vector.
 
@@ -2102,7 +2102,7 @@ and the apparent angular diameter of the Moon `diam_deg`.
 ---
 
 <a name="MassProduct"></a>
-### MassProduct(body)
+### MassProduct(body: 'Body') -&gt; float
 
 **Returns the product of mass and universal gravitational constant of a Solar System body.**
 
