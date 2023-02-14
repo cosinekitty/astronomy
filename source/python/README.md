@@ -1268,7 +1268,7 @@ Astronomy Engine for everyone! (Thank you in advance from the author.)
 ---
 
 <a name="AngleBetween"></a>
-### AngleBetween(a, b)
+### AngleBetween(a: astronomy.Vector, b: astronomy.Vector) -&gt; float
 
 **Calculates the angle in degrees between two vectors.**
 
@@ -1359,7 +1359,7 @@ An object that contains barycentric position and velocity vectors.
 ---
 
 <a name="BodyCode"></a>
-### BodyCode(name)
+### BodyCode(name: str) -&gt; astronomy.Body
 
 **Finds the Body enumeration value, given the name of a body.**
 
@@ -1454,7 +1454,7 @@ body to arrive at the observer at the observation time.
 ---
 
 <a name="DefineStar"></a>
-### DefineStar(body, ra, dec, distanceLightYears)
+### DefineStar(body: astronomy.Body, ra: float, dec: float, distanceLightYears: float)
 
 **Assign equatorial coordinates to a user-defined star.**
 
@@ -1475,7 +1475,7 @@ definition until re-defined by another call to `DefineStar`.
 ---
 
 <a name="DeltaT_EspenakMeeus"></a>
-### DeltaT_EspenakMeeus(ut)
+### DeltaT_EspenakMeeus(ut: float) -&gt; float
 
 **The default Delta T function used by Astronomy Engine.**
 
@@ -2427,7 +2427,7 @@ A pivoted matrix object.
 ---
 
 <a name="PlanetOrbitalPeriod"></a>
-### PlanetOrbitalPeriod(body)
+### PlanetOrbitalPeriod(body: astronomy.Body) -&gt; float
 
 **Returns the average number of days it takes for a planet to orbit the Sun.**
 

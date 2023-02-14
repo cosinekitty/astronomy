@@ -36,7 +36,7 @@ import datetime
 import enum
 import re
 import abc
-from typing import Union, List
+from typing import Union
 
 def _cbrt(x):
     if x < 0.0:
@@ -374,7 +374,7 @@ def _UserDefinedStar(body):
         return star
     return None
 
-def DefineStar(body, ra, dec, distanceLightYears):
+def DefineStar(body: Body, ra: float, dec: float, distanceLightYears: float):
     """Assign equatorial coordinates to a user-defined star.
 
     Some Astronomy Engine functions allow their `body` parameter to
@@ -413,7 +413,7 @@ def DefineStar(body, ra, dec, distanceLightYears):
     star.dec = dec
     star.dist = distanceLightYears * AU_PER_LY
 
-def BodyCode(name):
+def BodyCode(name: str) -> Body:
     """Finds the Body enumeration value, given the name of a body.
 
     Parameters
@@ -439,7 +439,7 @@ def BodyCode(name):
         return Body.Invalid
     return Body[name]
 
-def _IsSuperiorPlanet(body):
+def _IsSuperiorPlanet(body: Body) -> bool:
     return body in [Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]
 
 _PlanetOrbitalPeriod = [
@@ -456,27 +456,27 @@ _PlanetOrbitalPeriod = [
 
 class Error(Exception):
     """Indicates an error in an astronomical calculation."""
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         Exception.__init__(self, message)
 
 class DateTimeFormatError(Error):
     """The syntax of a UTC date/time string was not valid, or it contains invalid values."""
-    def __init__(self, text):
+    def __init__(self, text: str) -> None:
         Error.__init__(self, 'The date/time string is not valid: "{}"'.format(text))
 
 class EarthNotAllowedError(Error):
     """The Earth is not allowed as the celestial body in this calculation."""
-    def __init__(self):
+    def __init__(self) -> None:
         Error.__init__(self, 'The Earth is not allowed as the body.')
 
 class InvalidBodyError(Error):
     """The celestial body is not allowed for this calculation."""
-    def __init__(self, body):
+    def __init__(self, body: Body) -> None:
         Error.__init__(self, 'This body is not valid, or is not supported for this calculation: {}'.format(body))
 
 class BadVectorError(Error):
     """A vector magnitude is too small to have a direction in space."""
-    def __init__(self):
+    def __init__(self) -> None:
         Error.__init__(self, 'Vector is too small to have a direction.')
 
 class InternalError(Error):
@@ -489,7 +489,7 @@ class InternalError(Error):
     of how to reproduce the error. This will help improve the quality of
     Astronomy Engine for everyone! (Thank you in advance from the author.)
     """
-    def __init__(self):
+    def __init__(self) -> None:
         Error.__init__(self, 'Internal error - please report issue, including stack trace, at https://github.com/cosinekitty/astronomy/issues')
 
 class NoConvergeError(Error):
@@ -502,10 +502,10 @@ class NoConvergeError(Error):
     of how to reproduce the error. This will help improve the quality of
     Astronomy Engine for everyone! (Thank you in advance from the author.)
     """
-    def __init__(self):
+    def __init__(self) -> None:
         Error.__init__(self, 'Numeric solver did not converge - please report issue at https://github.com/cosinekitty/astronomy/issues')
 
-def PlanetOrbitalPeriod(body):
+def PlanetOrbitalPeriod(body: Body) -> float:
     """Returns the average number of days it takes for a planet to orbit the Sun.
 
     Parameters
@@ -522,7 +522,7 @@ def PlanetOrbitalPeriod(body):
         return _PlanetOrbitalPeriod[body.value]
     raise InvalidBodyError(body)
 
-def _SynodicPeriod(body):
+def _SynodicPeriod(body: Body) -> float:
     if body == Body.Earth:
         raise EarthNotAllowedError()
     if body.value < 0 or body.value >= len(_PlanetOrbitalPeriod):
@@ -531,7 +531,7 @@ def _SynodicPeriod(body):
         return _MEAN_SYNODIC_MONTH
     return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
 
-def AngleBetween(a, b):
+def AngleBetween(a: Vector, b: Vector) -> float:
     """Calculates the angle in degrees between two vectors.
 
     Given a pair of vectors, this function returns the angle in degrees
@@ -551,10 +551,10 @@ def AngleBetween(a, b):
         The angle between the two vectors expressed in degrees.
         The value is in the range [0, 180].
     """
-    r = a.Length() * b.Length()
+    r: float = a.Length() * b.Length()
     if r < 1.0e-8:
-        return BadVectorError()
-    dot = (a.x*b.x + a.y*b.y + a.z*b.z) / r
+        raise BadVectorError()
+    dot: float = (a.x*b.x + a.y*b.y + a.z*b.z) / r
     if dot <= -1.0:
         return 180.0
     if dot >= +1.0:
@@ -562,7 +562,7 @@ def AngleBetween(a, b):
     return math.degrees(math.acos(dot))
 
 
-def DeltaT_EspenakMeeus(ut):
+def DeltaT_EspenakMeeus(ut: float) -> float:
     """The default Delta T function used by Astronomy Engine.
 
     Espenak and Meeus use a series of piecewise polynomials to
@@ -666,10 +666,10 @@ def DeltaT_EspenakMeeus(ut):
 _DeltaT = DeltaT_EspenakMeeus
 
 
-def _TerrestrialTime(ut):
+def _TerrestrialTime(ut: float) -> float:
     return ut + _DeltaT(ut) / 86400.0
 
-def _UniversalTime(tt):
+def _UniversalTime(tt: float) -> float:
     # This is the inverse function of _TerrestrialTime.
     # This is an iterative numerical solver, but because
     # the relationship between UT and TT is almost perfectly linear,
