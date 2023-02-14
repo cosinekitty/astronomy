@@ -36,7 +36,7 @@ import datetime
 import enum
 import re
 import abc
-from typing import Union
+from typing import Union, List
 
 def _cbrt(x):
     if x < 0.0:
