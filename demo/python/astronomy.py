@@ -36,7 +36,7 @@ import datetime
 import enum
 import re
 import abc
-from typing import Union
+from typing import List, Optional, Union
 
 def _cbrt(x):
     if x < 0.0:
@@ -729,23 +729,23 @@ class Time:
         such as the orbits of planets around the Sun, or the Moon around the Earth.
         Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
     """
-    def __init__(self, ut : Union[float, str], tt = None):
+    def __init__(self, ut : Union[float, str], tt: Optional[float] = None):
         if isinstance(ut, str):
             # Undocumented hack, to make repr(time) reversible.
             other = Time.Parse(ut)
-            self.ut = other.ut
-            self.tt = other.tt
+            self.ut: float = other.ut
+            self.tt: float = other.tt
         else:
             self.ut = ut
             if tt is None:
                 self.tt = _TerrestrialTime(ut)
             else:
                 self.tt = tt
-        self._et = None     # lazy-cache for earth tilt
-        self._st = None     # lazy-cache for sidereal time
+        self._et: Optional[float] = None     # lazy-cache for earth tilt
+        self._st: Optional[float] = None     # lazy-cache for sidereal time
 
     @staticmethod
-    def FromTerrestrialTime(tt):
+    def FromTerrestrialTime(tt: float) -> "Time":
         """Creates a #Time object from a Terrestrial Time day value.
 
         Parameters
@@ -760,7 +760,7 @@ class Time:
         return Time(_UniversalTime(tt), tt)
 
     @staticmethod
-    def Parse(text):
+    def Parse(text: str) -> "Time":
         """Creates a #Time object from a string of the form 'yyyy-mm-ddThh:mm:ss.sssZ'
 
         Parses a UTC date and time from a string and returns a #Time object.
@@ -805,7 +805,7 @@ class Time:
         return Time.Make(year, month, day, hour, minute, second)
 
     @staticmethod
-    def Make(year, month, day, hour, minute, second):
+    def Make(year: int, month: int, day: int, hour: int, minute: int, second: float) -> "Time":
         """Creates a #Time object from a UTC calendar date and time.
 
         Parameters
@@ -841,7 +841,7 @@ class Time:
         return Time(ut)
 
     @staticmethod
-    def Now():
+    def Now() -> "Time":
         """Returns the computer's current date and time in the form of a #Time object.
 
         Uses the computer's system clock to find the current UTC date and time.
@@ -856,7 +856,7 @@ class Time:
         ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
         return Time(ut)
 
-    def AddDays(self, days):
+    def AddDays(self, days: float) -> "Time":
         """Calculates the sum or difference of a #Time with a specified real-valued number of days.
 
         Sometimes we need to adjust a given #Time value by a certain amount of time.
@@ -883,10 +883,10 @@ class Time:
         """
         return Time(self.ut + days)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Time(\'' + str(self) + '\')'
 
-    def __str__(self):
+    def __str__(self) -> str:
         # Adapted from the NOVAS C 3.1 function cal_date().
         djd = self.ut + 2451545.5
         jd = int(djd)
@@ -924,7 +924,7 @@ class Time:
         text += '-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(month, day, hour, minute, millis // 1000, millis % 1000)
         return text
 
-    def Utc(self):
+    def Utc(self) -> datetime.datetime:
         """Returns the UTC date and time as a `datetime` object.
 
         Uses the standard [`datetime`](https://docs.python.org/3/library/datetime.html) class
@@ -944,22 +944,26 @@ class Time:
             self._et = _e_tilt(self)
         return self._et
 
-    def __lt__(self, other):
+    def __lt__(self, other: "Time") -> bool:
         return self.tt < other.tt
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Time):
+            return NotImplemented
         return self.tt == other.tt
 
-    def __le__(self, other):
+    def __le__(self, other: "Time") -> bool:
         return self.tt <= other.tt
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, Time):
+            return NotImplemented
         return self.tt != other.tt
 
-    def __gt__(self, other):
+    def __gt__(self, other: "Time") -> bool:
         return self.tt > other.tt
 
-    def __ge__(self, other):
+    def __ge__(self, other: "Time") -> bool:
         return self.tt >= other.tt
 
 
@@ -975,15 +979,15 @@ class Observer:
     height : float
         Elevation above sea level in meters.
     """
-    def __init__(self, latitude, longitude, height=0.0):
+    def __init__(self, latitude: float, longitude: float, height: float = 0.0) -> None:
         self.latitude = latitude
         self.longitude = longitude
         self.height = height
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Observer(latitude={}, longitude={}, height={})'.format(self.latitude, self.longitude, self.height)
 
-    def __str__(self):
+    def __str__(self) -> str:
         text = '('
         text += 'S' if (self.latitude < 0) else 'N'
         text += '{:0.8f}, '.format(abs(self.latitude))
@@ -1002,10 +1006,10 @@ class RotationMatrix:
     rot : float[3][3]
         A normalized 3x3 rotation matrix.
     """
-    def __init__(self, rot):
+    def __init__(self, rot: List[List[float]]) -> None:
         self.rot = rot
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'RotationMatrix({})'.format(self.rot)
 
 class Spherical:
@@ -1020,16 +1024,16 @@ class Spherical:
     dist : float
         Distance in AU.
     """
-    def __init__(self, lat, lon, dist):
+    def __init__(self, lat: float, lon: float, dist: float) -> None:
         self.lat = lat
         self.lon = lon
         self.dist = dist
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Spherical(lat={}, lon={}, dist={})'.format(self.lat, self.lon, self.dist)
 
 class _iau2000b:
-    def __init__(self, time):
+    def __init__(self, time: Time) -> None:
         t = time.tt / 36525.0
         elp = math.fmod((1287104.79305 + t*129596581.0481),  _ASEC360) * _ASEC2RAD
         f   = math.fmod((335779.526232 + t*1739527262.8478), _ASEC360) * _ASEC2RAD
@@ -1067,7 +1071,7 @@ class _iau2000b:
         self.dpsi = -0.000135 + (dp * 1.0e-7)
         self.deps = +0.000388 + (de * 1.0e-7)
 
-def _mean_obliq(tt):
+def _mean_obliq(tt: float) -> float:
     t = tt / 36525
     asec = (
         (((( -  0.0000000434   * t
@@ -1079,7 +1083,7 @@ def _mean_obliq(tt):
     return asec / 3600.0
 
 class _e_tilt:
-    def __init__(self, time):
+    def __init__(self, time: Time) -> None:
         e = _iau2000b(time)
         self.dpsi = e.dpsi
         self.deps = e.deps
@@ -1201,17 +1205,17 @@ class Equatorial:
         y = direction of the June solstice,
         z = north.
     """
-    def __init__(self, ra, dec, dist, vec):
+    def __init__(self, ra: float, dec: float, dist: float, vec: Vector) -> None:
         self.ra = ra
         self.dec = dec
         self.dist = dist
         self.vec = vec
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Equatorial(ra={}, dec={}, dist={}, vec={})'.format(self.ra, self.dec, self.dist, repr(self.vec))
 
 
-def _vector2radec(pos, time):
+def _vector2radec(pos, time: Time) -> Equatorial:
     xyproj = pos[0]*pos[0] + pos[1]*pos[1]
     dist = math.sqrt(xyproj + pos[2]*pos[2])
     if xyproj == 0.0:
@@ -1232,7 +1236,7 @@ def _vector2radec(pos, time):
     return Equatorial(ra, dec, dist, vec)
 
 
-def _nutation_rot(time, direction):
+def _nutation_rot(time: Time, direction) -> RotationMatrix:
     tilt = time._etilt()
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
@@ -1288,7 +1292,7 @@ def _era(time):        # Earth Rotation Angle
         theta += 360.0
     return theta
 
-def SiderealTime(time):
+def SiderealTime(time: Time) -> float:
     """Calculates Greenwich Apparent Sidereal Time (GAST).
 
     Given a date and time, this function calculates the rotation of the
@@ -2235,7 +2239,7 @@ def _CalcMoon(time):
         (_ARC * _EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
     )
 
-def GeoMoon(time):
+def GeoMoon(time: Time) -> Vector:
     """Calculates equatorial geocentric position of the Moon at a given time.
 
     Given a time of observation, calculates the Moon's position as a vector.
@@ -2278,7 +2282,7 @@ def GeoMoon(time):
     return Vector(mpos2[0], mpos2[1], mpos2[2], time)
 
 
-def EclipticGeoMoon(time):
+def EclipticGeoMoon(time: Time) -> Spherical:
     """Calculates spherical ecliptic geocentric position of the Moon.
 
     Given a time of observation, calculates the Moon's geocentric position
@@ -2336,7 +2340,7 @@ def EclipticGeoMoon(time):
     return Spherical(eclip.elat, eclip.elon, moon.distance_au)
 
 
-def GeoMoonState(time):
+def GeoMoonState(time: Time) -> StateVector:
     """Calculates equatorial geocentric position and velocity of the Moon at a given time.
 
     Given a time of observation, calculates the Moon's position and velocity vectors.
@@ -2378,7 +2382,7 @@ def GeoMoonState(time):
     )
 
 
-def GeoEmbState(time):
+def GeoEmbState(time: Time) -> StateVector:
     """Calculates the geocentric position and velocity of the Earth/Moon barycenter.
 
     Given a time of observation, calculates the geocentric position and velocity vectors
@@ -3265,45 +3269,45 @@ _PlutoStateTable = [
 
 
 class _TerseVector:
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z) -> None:
         self.x = x
         self.y = y
         self.z = z
 
-    def clone(self):
+    def clone(self) -> "_TerseVector":
         '''Create a copy of this vector.'''
         return _TerseVector(self.x, self.y, self.z)
 
     @staticmethod
-    def zero():
+    def zero() -> "_TerseVector":
         '''Return a zero vector.'''
         return _TerseVector(0.0, 0.0, 0.0)
 
-    def ToAstroVector(self, time):
+    def ToAstroVector(self, time: Time) -> Vector:
         '''Convert _TerseVector object to Vector object.'''
         return Vector(self.x, self.y, self.z, time)
 
-    def quadrature(self):
+    def quadrature(self) -> float:
         '''Return magnitude squared of this vector.'''
         return self.x**2 + self.y**2 + self.z**2
 
-    def mean(self, other):
+    def mean(self, other: "_TerseVector") -> "_TerseVector":
         '''Return the average of this vector and another vector.'''
         return _TerseVector((self.x + other.x)/2.0, (self.y + other.y)/2.0, (self.z + other.z)/2.0)
 
-    def __add__(self, other):
+    def __add__(self, other: "_TerseVector") -> "_TerseVector":
         return _TerseVector(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    def __sub__(self, other):
+    def __sub__(self, other: "_TerseVector") -> "_TerseVector":
         return _TerseVector(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    def __mul__(self, scalar):
+    def __mul__(self, scalar: float) -> "_TerseVector":
         return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
 
-    def __rmul__(self, scalar):
+    def __rmul__(self, scalar: float) -> "_TerseVector":
         return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
 
-    def __truediv__(self, scalar):
+    def __truediv__(self, scalar: float) -> "_TerseVector":
         return _TerseVector(self.x / scalar, self.y / scalar, self.z / scalar)
 
 

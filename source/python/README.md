@@ -927,7 +927,7 @@ dates and times represented by `Time` objects.
 #### member functions
 
 <a name="Time.AddDays"></a>
-### Time.AddDays(self, days)
+### Time.AddDays(self, days: float) -&gt; 'Time'
 
 **Calculates the sum or difference of a [`Time`](#Time) with a specified real-valued number of days.**
 
@@ -948,7 +948,7 @@ The value of the calling object is not modified. This function creates a brand n
 **Returns**: [`Time`](#Time)
 
 <a name="Time.FromTerrestrialTime"></a>
-### Time.FromTerrestrialTime(tt)
+### Time.FromTerrestrialTime(tt: float) -&gt; 'Time'
 
 **Creates a [`Time`](#Time) object from a Terrestrial Time day value.**
 
@@ -959,7 +959,7 @@ The value of the calling object is not modified. This function creates a brand n
 **Returns**: [`Time`](#Time)
 
 <a name="Time.Make"></a>
-### Time.Make(year, month, day, hour, minute, second)
+### Time.Make(year: int, month: int, day: int, hour: int, minute: int, second: float) -&gt; 'Time'
 
 **Creates a [`Time`](#Time) object from a UTC calendar date and time.**
 
@@ -975,7 +975,7 @@ The value of the calling object is not modified. This function creates a brand n
 **Returns**: [`Time`](#Time)
 
 <a name="Time.Now"></a>
-### Time.Now()
+### Time.Now() -&gt; 'Time'
 
 **Returns the computer's current date and time in the form of a [`Time`](#Time) object.**
 
@@ -987,7 +987,7 @@ calculate current observational conditions.
 **Returns**: [`Time`](#Time)
 
 <a name="Time.Parse"></a>
-### Time.Parse(text)
+### Time.Parse(text: str) -&gt; 'Time'
 
 **Creates a [`Time`](#Time) object from a string of the form 'yyyy-mm-ddThh:mm:ss.sssZ'**
 
@@ -1005,7 +1005,7 @@ and a 'Z' at the end of the time.
 **Returns**: [`Time`](#Time)
 
 <a name="Time.Utc"></a>
-### Time.Utc(self)
+### Time.Utc(self) -&gt; datetime.datetime
 
 **Returns the UTC date and time as a `datetime` object.**
 
@@ -1512,7 +1512,7 @@ Spherical and vector coordinates expressed in true ecliptic coordinates of date 
 ---
 
 <a name="EclipticGeoMoon"></a>
-### EclipticGeoMoon(time)
+### EclipticGeoMoon(time: astronomy.Time) -&gt; astronomy.Spherical
 
 **Calculates spherical ecliptic geocentric position of the Moon.**
 
@@ -1631,7 +1631,7 @@ Angular coordinates expressed in the same equatorial system as `vec`.
 ---
 
 <a name="GeoEmbState"></a>
-### GeoEmbState(time)
+### GeoEmbState(time: astronomy.Time) -&gt; astronomy.StateVector
 
 **Calculates the geocentric position and velocity of the Earth/Moon barycenter.**
 
@@ -1650,7 +1650,7 @@ The EMB's position and velocity vectors in J2000 equatorial coordinates.
 ---
 
 <a name="GeoMoon"></a>
-### GeoMoon(time)
+### GeoMoon(time: astronomy.Time) -&gt; astronomy.Vector
 
 **Calculates equatorial geocentric position of the Moon at a given time.**
 
@@ -1675,7 +1675,7 @@ The Moon's position as a vector in J2000 Cartesian equatorial coordinates (EQJ).
 ---
 
 <a name="GeoMoonState"></a>
-### GeoMoonState(time)
+### GeoMoonState(time: astronomy.Time) -&gt; astronomy.StateVector
 
 **Calculates equatorial geocentric position and velocity of the Moon at a given time.**
 
@@ -3394,7 +3394,7 @@ of winter in the southern hemisphere.
 ---
 
 <a name="SiderealTime"></a>
-### SiderealTime(time)
+### SiderealTime(time: astronomy.Time) -&gt; float
 
 **Calculates Greenwich Apparent Sidereal Time (GAST).**
 
