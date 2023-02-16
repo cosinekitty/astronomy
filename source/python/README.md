@@ -820,7 +820,7 @@ that expresses a relative position vector function.
 #### member functions
 
 <a name="PositionFunction.Position"></a>
-### PositionFunction.Position(self, time)
+### PositionFunction.Position(self, time: astronomy.Time) -&gt; astronomy.Vector
 
 **Returns a relative position vector for a given time.**
 
@@ -1308,7 +1308,7 @@ and the specified body as seen from the center of the Earth.
 ---
 
 <a name="BackdatePosition"></a>
-### BackdatePosition(time, observerBody, targetBody, aberration)
+### BackdatePosition(time: astronomy.Time, observerBody: astronomy.Body, targetBody: astronomy.Body, aberration: bool) -&gt; astronomy.Vector
 
 **Solve for light travel time correction of apparent position.**
 
@@ -1340,7 +1340,7 @@ body to arrive at the observer at the observation time.
 ---
 
 <a name="BaryState"></a>
-### BaryState(body, time)
+### BaryState(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.StateVector
 
 **Calculates barycentric position and velocity vectors for the given body.**
 
@@ -1418,7 +1418,7 @@ the converted B1875 (ra,dec) for that point.
 ---
 
 <a name="CorrectLightTravel"></a>
-### CorrectLightTravel(func, time)
+### CorrectLightTravel(func: astronomy.PositionFunction, time: astronomy.Time) -&gt; astronomy.Vector
 
 **Solve for light travel time of a vector function.**
 
@@ -1588,7 +1588,7 @@ information about the given celestial body at the given time:
 ---
 
 <a name="Equator"></a>
-### Equator(body, time, observer, ofdate, aberration)
+### Equator(body: astronomy.Body, time: astronomy.Time, observer: astronomy.Observer, ofdate: bool, aberration: bool) -&gt; astronomy.Equatorial
 
 **Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.**
 
@@ -1698,7 +1698,7 @@ The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
 ---
 
 <a name="GeoVector"></a>
-### GeoVector(body, time, aberration)
+### GeoVector(body: astronomy.Body, time: astronomy.Time, aberration: bool) -&gt; astronomy.Vector
 
 **Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.**
 
@@ -1727,7 +1727,7 @@ A geocentric position vector of the center of the given body.
 ---
 
 <a name="HelioDistance"></a>
-### HelioDistance(body, time)
+### HelioDistance(body: astronomy.Body, time: astronomy.Time) -&gt; float
 
 **Calculates the distance between a body and the Sun at a given time.**
 
@@ -1748,7 +1748,7 @@ The heliocentric distance in AU.
 ---
 
 <a name="HelioState"></a>
-### HelioState(body, time)
+### HelioState(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.StateVector
 
 **Calculates heliocentric position and velocity vectors for the given body.**
 
@@ -1773,7 +1773,7 @@ An object that contains heliocentric position and velocity vectors.
 ---
 
 <a name="HelioVector"></a>
-### HelioVector(body, time)
+### HelioVector(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.Vector
 
 **Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.**
 
@@ -1975,7 +1975,7 @@ The inverse rotation matrix.
 ---
 
 <a name="JupiterMoons"></a>
-### JupiterMoons(time)
+### JupiterMoons(time: astronomy.Time) -&gt; astronomy.JupiterMoonsInfo
 
 **Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.**
 
@@ -2293,7 +2293,7 @@ Keep calling this function as many times as you want to keep finding more transi
 ---
 
 <a name="ObserverGravity"></a>
-### ObserverGravity(latitude, height)
+### ObserverGravity(latitude: float, height: float) -&gt; float
 
 **Calculates the gravitational acceleration experienced by an observer on the Earth.**
 
@@ -2317,7 +2317,7 @@ The effective gravitational acceleration expressed in meters per second squared 
 ---
 
 <a name="ObserverState"></a>
-### ObserverState(time, observer, ofdate)
+### ObserverState(time: astronomy.Time, observer: astronomy.Observer, ofdate: bool) -&gt; astronomy.StateVector
 
 **Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.**
 
@@ -2344,7 +2344,7 @@ An equatorial position vector and velocity vector relative to the center of the 
 ---
 
 <a name="ObserverVector"></a>
-### ObserverVector(time, observer, ofdate)
+### ObserverVector(time: astronomy.Time, observer: astronomy.Observer, ofdate: bool) -&gt; astronomy.Vector
 
 **Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.**
 
@@ -2873,7 +2873,7 @@ A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
 ---
 
 <a name="Search"></a>
-### Search(func, context, t1, t2, dt_tolerance_seconds)
+### Search(func: Callable[[object, astronomy.Time], float], context: object, t1: astronomy.Time, t2: astronomy.Time, dt_tolerance_seconds: float) -&gt; Optional[astronomy.Time]
 
 **Searches for a time at which a function's value increases through zero.**
 
@@ -3501,7 +3501,7 @@ The vector form of the supplied spherical coordinates.
 ---
 
 <a name="VectorObserver"></a>
-### VectorObserver(vector, ofdate)
+### VectorObserver(vector: astronomy.Vector, ofdate: bool) -&gt; astronomy.Observer
 
 **Calculates the geographic location corresponding to an equatorial vector.**
 

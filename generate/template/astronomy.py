@@ -36,7 +36,7 @@ import datetime
 import enum
 import re
 import abc
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Callable
 
 def _cbrt(x):
     if x < 0.0:
@@ -2188,13 +2188,13 @@ class JupiterMoonsInfo:
     callisto : StateVector
         The position and velocity of Jupiter's moon Callisto.
     """
-    def __init__(self, moon):
+    def __init__(self, moon: List[StateVector]) -> None:
         self.io = moon[0]
         self.europa = moon[1]
         self.ganymede = moon[2]
         self.callisto = moon[3]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'JupiterMoonsInfo(io={}, europa={}, ganymede={}, callisto={})'.format(
             repr(self.io),
             repr(self.europa),
@@ -2280,7 +2280,7 @@ def _CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta):
     return RotateState(_Rotation_JUP_EQJ, state)
 
 
-def JupiterMoons(time):
+def JupiterMoons(time: Time) -> JupiterMoonsInfo:
     """Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
 
     Calculates position and velocity vectors for Jupiter's moons
@@ -2350,7 +2350,7 @@ def _QuadInterp(tm, dt, fa, fm, fb):
     df_dt = (2*Q*x + R) / dt
     return (t, df_dt)
 
-def Search(func, context, t1, t2, dt_tolerance_seconds):
+def Search(func: Callable[[object, Time], float], context: object, t1: Time, t2: Time, dt_tolerance_seconds: float) -> Optional[Time]:
     """Searches for a time at which a function's value increases through zero.
 
     Certain astronomy calculations involve finding a time when an event occurs.
@@ -2498,7 +2498,7 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
 #----------------------------------------------------------------------------
 
 
-def HelioVector(body, time):
+def HelioVector(body: Body, time: Time) -> Vector:
     """Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
 
     This function calculates the position of the given celestial body as a vector,
@@ -2557,7 +2557,7 @@ def HelioVector(body, time):
     raise InvalidBodyError(body)
 
 
-def HelioDistance(body, time):
+def HelioDistance(body: Body, time: Time) -> float:
     """Calculates the distance between a body and the Sun at a given time.
 
     Given a date and time, this function calculates the distance between
@@ -2606,11 +2606,11 @@ class PositionFunction(abc.ABC):
     specified time. It is passed an instance of `PositionFunction`
     that expresses a relative position vector function.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abc.abstractmethod
-    def Position(self, time):
+    def Position(self, time: Time) -> Vector:
         """Returns a relative position vector for a given time.
 
         Parameters
@@ -2623,7 +2623,7 @@ class PositionFunction(abc.ABC):
         Vector
         """
 
-def CorrectLightTravel(func, time):
+def CorrectLightTravel(func: PositionFunction, time: Time) -> Vector:
     """Solve for light travel time of a vector function.
 
     When observing a distant object, for example Jupiter as seen from Earth,
@@ -2674,14 +2674,14 @@ def CorrectLightTravel(func, time):
 
 
 class _BodyPosition(PositionFunction):
-    def __init__(self, observerBody, targetBody, aberration, observerPos):
+    def __init__(self, observerBody: Body, targetBody: Body, aberration: bool, observerPos) -> None:
         super().__init__()
         self.observerBody = observerBody
         self.targetBody = targetBody
         self.aberration = aberration
         self.observerPos = observerPos
 
-    def Position(self, time):
+    def Position(self, time: Time) -> Vector:
         if self.aberration:
             # The following discussion is worded with the observer body being the Earth,
             # which is often the case. However, the same reasoning applies to any observer body
@@ -2707,7 +2707,7 @@ class _BodyPosition(PositionFunction):
         return HelioVector(self.targetBody, time) - observerPos
 
 
-def BackdatePosition(time, observerBody, targetBody, aberration):
+def BackdatePosition(time: Time, observerBody: Body, targetBody: Body, aberration: bool) -> Vector:
     """Solve for light travel time correction of apparent position.
 
     When observing a distant object, for example Jupiter as seen from Earth,
@@ -2775,7 +2775,7 @@ def BackdatePosition(time, observerBody, targetBody, aberration):
     return CorrectLightTravel(func, time)
 
 
-def GeoVector(body, time, aberration):
+def GeoVector(body: Body, time: Time, aberration: bool) -> Vector:
     """Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
 
     This function calculates the position of the given celestial body as a vector,
@@ -2822,7 +2822,7 @@ def GeoVector(body, time, aberration):
     return vec
 
 
-def _ExportState(terse, time):
+def _ExportState(terse, time: Time) -> StateVector:
     return StateVector(
         terse.r.x, terse.r.y, terse.r.z,
         terse.v.x, terse.v.y, terse.v.z,
@@ -2830,7 +2830,7 @@ def _ExportState(terse, time):
     )
 
 
-def BaryState(body, time):
+def BaryState(body: Body, time: Time) -> StateVector:
     """Calculates barycentric position and velocity vectors for the given body.
 
     Given a body and a time, calculates the barycentric position and velocity
@@ -2908,7 +2908,7 @@ def BaryState(body, time):
     raise InvalidBodyError(body)
 
 
-def HelioState(body, time):
+def HelioState(body: Body, time: Time) -> StateVector:
     """Calculates heliocentric position and velocity vectors for the given body.
 
     Given a body and a time, calculates the position and velocity
@@ -2982,7 +2982,7 @@ def HelioState(body, time):
     raise InvalidBodyError(body)
 
 
-def Equator(body, time, observer, ofdate, aberration):
+def Equator(body: Body, time: Time, observer: Observer, ofdate: bool, aberration: bool) -> Equatorial:
     """Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
 
     Calculates topocentric equatorial coordinates in one of two different systems:
@@ -3035,7 +3035,7 @@ def Equator(body, time, observer, ofdate, aberration):
     return _vector2radec(datevect, time)
 
 
-def ObserverVector(time, observer, ofdate):
+def ObserverVector(time: Time, observer: Observer, ofdate: bool) -> Vector:
     """Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
 
     This function calculates a vector from the center of the Earth to
@@ -3079,7 +3079,7 @@ def ObserverVector(time, observer, ofdate):
         ovec = _precession(ovec, time, _PrecessDir.Into2000)
     return Vector(ovec[0], ovec[1], ovec[2], time)
 
-def ObserverState(time, observer, ofdate):
+def ObserverState(time: Time, observer: Observer, ofdate: bool) -> StateVector:
     """Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.
 
     This function calculates position and velocity vectors of an observer
@@ -3126,7 +3126,7 @@ def ObserverState(time, observer, ofdate):
         state = _precession_posvel(state, time, _PrecessDir.Into2000)
     return state
 
-def VectorObserver(vector, ofdate):
+def VectorObserver(vector: Vector, ofdate: bool) -> Observer:
     """Calculates the geographic location corresponding to an equatorial vector.
 
     This is the inverse function of #ObserverVector.
@@ -3159,7 +3159,7 @@ def VectorObserver(vector, ofdate):
         ovec = _nutation(ovec, vector.t, _PrecessDir.From2000)
     return _inverse_terra(ovec, gast)
 
-def ObserverGravity(latitude, height):
+def ObserverGravity(latitude: float, height: float) -> float:
     """Calculates the gravitational acceleration experienced by an observer on the Earth.
 
     This function implements the WGS 84 Ellipsoidal Gravity Formula.
