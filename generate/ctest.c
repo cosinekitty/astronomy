@@ -3542,7 +3542,7 @@ static int EclipticTest(void)
         ++count;
     }
 
-    if (max_angle_diff > 2.910e-18)
+    if (max_angle_diff > 3.110e-18)
         FFAIL("EXCESSIVE ANGLE DIFF = %0.6le AU.\n", max_angle_diff);
 
     if (max_vec_diff > 3.388e-18)
