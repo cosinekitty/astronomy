@@ -1519,7 +1519,7 @@ def _CalcMoon(time):
 
         I += 1
 
-
+#
 
     # AddSol(13.902000, 14.060000, -0.001000, 0.260700, 0.000000, 0.000000, 0.000000, 4.000000)
     z = ex[4][4]
@@ -4735,13 +4735,13 @@ class HorizontalCoordinates:
     dec : float
         The declination in degrees.
     """
-    def __init__(self, azimuth, altitude, ra, dec):
+    def __init__(self, azimuth: float, altitude: float, ra: float, dec: float) -> None:
         self.azimuth = azimuth
         self.altitude = altitude
         self.ra = ra
         self.dec = dec
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'HorizontalCoordinates(azimuth={}, altitude={}, ra={}, dec={})'.format(
             self.azimuth,
             self.altitude,
@@ -4749,7 +4749,7 @@ class HorizontalCoordinates:
             self.dec
         )
 
-def Horizon(time, observer, ra, dec, refraction):
+def Horizon(time: Time, observer: Observer, ra: float, dec: float, refraction: Refraction) -> HorizontalCoordinates:
     """Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
 
     Given a date and time, the geographic location of an observer on the Earth, and
@@ -4912,7 +4912,7 @@ def Horizon(time, observer, ra, dec, refraction):
 
     return HorizontalCoordinates(az, 90.0 - zd, hor_ra, hor_dec)
 
-def RefractionAngle(refraction, altitude):
+def RefractionAngle(refraction: Refraction, altitude: float) -> float:
     """Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
 
     Given an altitude angle and a refraction option, calculates
@@ -4968,7 +4968,7 @@ def RefractionAngle(refraction, altitude):
         raise Error('Inalid refraction option')
     return refr
 
-def InverseRefractionAngle(refraction, bent_altitude):
+def InverseRefractionAngle(refraction: Refraction, bent_altitude: float) -> float:
     """Calculates the inverse of an atmospheric refraction angle.
 
     Given an observed altitude angle that includes atmospheric refraction,
@@ -5022,12 +5022,12 @@ class EclipticCoordinates:
     elon : float
         Longitude in degrees around the ecliptic plane prograde from the equinox.
     """
-    def __init__(self, vec, elat, elon):
+    def __init__(self, vec: Vector, elat: float, elon: float) -> None:
         self.vec = vec
         self.elat = elat
         self.elon = elon
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'EclipticCoordinates({}, elat={}, elon={})'.format(repr(self.vec), self.elat, self.elon)
 
 def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
@@ -5047,7 +5047,7 @@ def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
     vec = Vector(ex, ey, ez, time)
     return EclipticCoordinates(vec, elat, elon)
 
-def SunPosition(time):
+def SunPosition(time: Time) -> EclipticCoordinates:
     """Calculates geocentric ecliptic coordinates for the Sun.
 
     This function calculates the position of the Sun as seen from the Earth.
@@ -5089,7 +5089,7 @@ def SunPosition(time):
     true_obliq = math.radians(adjusted_time._etilt().tobl)
     return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq, time)
 
-def Ecliptic(eqj):
+def Ecliptic(eqj: Vector) -> EclipticCoordinates:
     """Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
 
     Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
@@ -5098,7 +5098,7 @@ def Ecliptic(eqj):
 
     Parameters
     ----------
-    eqj : Equatorial
+    eqj : Vector
         Equatorial coordinates in the J2000 frame of reference.
         You can call #GeoVector to obtain suitable equatorial coordinates.
 
@@ -5120,7 +5120,7 @@ def Ecliptic(eqj):
     return _RotateEquatorialToEcliptic(eqd_pos, math.radians(et.tobl), eqj.t)
 
 
-def EclipticLongitude(body, time):
+def EclipticLongitude(body: Body, time: Time) -> float:
     """Calculates heliocentric ecliptic longitude of a body.
 
     This function calculates the angle around the plane of the Earth's orbit
@@ -5146,7 +5146,7 @@ def EclipticLongitude(body, time):
     eclip = Ecliptic(hv)
     return eclip.elon
 
-def AngleFromSun(body, time):
+def AngleFromSun(body: Body, time: Time) -> float:
     """Returns the angle between the given body and the Sun, as seen from the Earth.
 
     This function calculates the angular separation between the given body and the Sun,
@@ -5173,7 +5173,7 @@ def AngleFromSun(body, time):
     bv = GeoVector(body, time, True)
     return AngleBetween(sv, bv)
 
-def PairLongitude(body1, body2, time):
+def PairLongitude(body1: Body, body2: Body, time: Time) -> float:
     """Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
 
     This function determines where one body appears around the ecliptic plane
@@ -5232,13 +5232,13 @@ class ElongationEvent:
     ecliptic_separation : float
         The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.
     """
-    def __init__(self, time, visibility, elongation, ecliptic_separation):
+    def __init__(self, time: Time, visibility: "Visibility", elongation: float, ecliptic_separation: float) -> None:
         self.time = time
         self.visibility = visibility
         self.elongation = elongation
         self.ecliptic_separation = ecliptic_separation
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'ElongationEvent({}, {}, elongation={}, ecliptic_separation={})'.format(
             repr(self.time),
             self.visibility,
@@ -5258,7 +5258,7 @@ class Visibility(enum.Enum):
     Morning = 0
     Evening = 1
 
-def Elongation(body, time):
+def Elongation(body: Body, time: Time) -> ElongationEvent:
     """Determines visibility of a celestial body relative to the Sun, as seen from the Earth.
 
     This function returns an #ElongationEvent object, which provides the following
@@ -5305,7 +5305,7 @@ def _rlon_offset(body, time, direction, targetRelLon):
     diff = direction * (elon - plon)
     return _LongitudeOffset(diff - targetRelLon)
 
-def SearchRelativeLongitude(body, targetRelLon, startTime):
+def SearchRelativeLongitude(body: Body, targetRelLon:float, startTime: Time) -> Time:
     """Searches for when the Earth and another planet are separated by a certain ecliptic longitude.
 
     Searches for the time when the Earth and another planet are separated by a specified angle
@@ -5397,7 +5397,7 @@ def _neg_elong_slope(body, time):
     e2 = AngleFromSun(body, t2)
     return (e1 - e2)/dt
 
-def SearchMaxElongation(body, startTime):
+def SearchMaxElongation(body: Body, startTime: Time) -> Optional[ElongationEvent]:
     """Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.
 
     Mercury and Venus are are often difficult to observe because they are closer to the Sun than the Earth is.
@@ -5511,7 +5511,7 @@ def _sun_offset(targetLon, time):
     ecl = SunPosition(time)
     return _LongitudeOffset(ecl.elon - targetLon)
 
-def SearchSunLongitude(targetLon, startTime, limitDays):
+def SearchSunLongitude(targetLon: float, startTime: Time, limitDays: float) -> Optional[Time]:
     """Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.
 
     This function finds the moment in time, if any exists in the given time window,
@@ -5548,7 +5548,7 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
     t2 = startTime.AddDays(limitDays)
     return Search(_sun_offset, targetLon, startTime, t2, 0.01)
 
-def MoonPhase(time):
+def MoonPhase(time: Time) -> float:
     """Returns the Moon's phase as an angle from 0 to 360 degrees.
 
     This function determines the phase of the Moon using its apparent
@@ -5575,7 +5575,7 @@ def _moon_offset(targetLon, time):
     angle = MoonPhase(time)
     return _LongitudeOffset(angle - targetLon)
 
-def SearchMoonPhase(targetLon, startTime, limitDays):
+def SearchMoonPhase(targetLon: float, startTime: Time, limitDays: float):
     """Searches for the time that the Moon reaches a specified phase.
 
     Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
@@ -5666,7 +5666,7 @@ class MoonQuarter:
     def __repr__(self):
         return 'MoonQuarter({}, {})'.format(self.quarter, repr(self.time))
 
-def SearchMoonQuarter(startTime):
+def SearchMoonQuarter(startTime: Time):
     """Finds the first lunar quarter after the specified date and time.
 
     A lunar quarter is one of the following four lunar phase events:
@@ -5694,7 +5694,7 @@ def SearchMoonQuarter(startTime):
         raise InternalError()
     return MoonQuarter(quarter, time)
 
-def NextMoonQuarter(mq):
+def NextMoonQuarter(mq: MoonQuarter):
     """Continues searching for lunar quarters from a previous search.
 
     After calling #SearchMoonQuarter, this function can be called
@@ -5755,7 +5755,7 @@ class IlluminationInfo:
         as seen from observers on the Earth, and are thus very difficult to see.
         For bodies other than Saturn, `ring_tilt` is `None`.
     """
-    def __init__(self, time, mag, phase, helio_dist, geo_dist, hc, gc, ring_tilt):
+    def __init__(self, time: Time, mag: float, phase: float, helio_dist: float, geo_dist: float, hc: Vector, gc: Vector, ring_tilt: Optional[float]) -> None:
         self.time = time
         self.mag = mag
         self.phase_angle = phase
@@ -5766,7 +5766,7 @@ class IlluminationInfo:
         self.gc = gc
         self.ring_tilt = ring_tilt
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'IlluminationInfo({}, mag={}, phase_angle={}, helio_dist={}, geo_dist={}, hc={}, gc={}, ring_tilt={})'.format(
             repr(self.time),
             self.mag,
@@ -5838,7 +5838,7 @@ def _VisualMagnitude(body, phase, helio_dist, geo_dist):
     mag += 5.0 * math.log10(helio_dist * geo_dist)
     return mag
 
-def Illumination(body, time):
+def Illumination(body: Body, time: Time) -> IlluminationInfo:
     """Finds visual magnitude, phase angle, and other illumination information about a celestial body.
 
     This function calculates information about how bright a celestial body appears from the Earth,
@@ -5914,7 +5914,7 @@ def _mag_slope(body, time):
     y2 = Illumination(body, t2)
     return (y2.mag - y1.mag) / dt
 
-def SearchPeakMagnitude(body, startTime):
+def SearchPeakMagnitude(body: Body, startTime: Time) -> IlluminationInfo:
     """Searches for the date and time Venus will next appear brightest as seen from the Earth.
 
     This function searches for the date and time Venus appears brightest as seen from the Earth.
@@ -6032,14 +6032,14 @@ class HourAngleEvent:
     hor : HorizontalCoordinates
         Apparent coordinates of the body at the time it crosses the specified hour angle.
     """
-    def __init__(self, time, hor):
+    def __init__(self, time: Time, hor: HorizontalCoordinates):
         self.time = time
         self.hor = hor
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'HourAngleEvent({}, {})'.format(repr(self.time), repr(self.hor))
 
-def SearchHourAngle(body, observer, hourAngle, startTime, direction = +1):
+def SearchHourAngle(body: Body, observer: Observer, hourAngle: float, startTime: Time, direction: int = +1) -> HourAngleEvent:
     """Searches for the time when the center of a body reaches a specified hour angle as seen by an observer on the Earth.
 
     The *hour angle* of a celestial body indicates its position in the sky with respect
@@ -6133,7 +6133,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime, direction = +1):
         time = time.AddDays(delta_days)
 
 
-def HourAngle(body, time, observer):
+def HourAngle(body: Body, time: Time, observer: Observer) -> float:
     """Finds the hour angle of a body for a given observer and time.
 
     The *hour angle* of a celestial body indicates its position in the sky with respect
@@ -6365,7 +6365,7 @@ def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bod
             a1 = a2
 
 
-def SearchRiseSet(body, observer, direction, startTime, limitDays):
+def SearchRiseSet(body: Body, observer: Observer, direction: Direction, startTime: Time, limitDays: float) -> Optional[Time]:
     """Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
 
     This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
@@ -6426,7 +6426,7 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
     return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, -_REFRACTION_NEAR_HORIZON)
 
 
-def SearchAltitude(body, observer, direction, startTime, limitDays, altitude):
+def SearchAltitude(body: Body, observer: Observer, direction: Direction, startTime: Time, limitDays: float, altitude: float) -> Optional[Time]:
     """Finds the next time the center of a body passes through a given altitude.
 
     Finds when the center of the given body ascends or descends through a given

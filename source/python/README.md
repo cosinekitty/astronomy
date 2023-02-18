@@ -1288,7 +1288,7 @@ The value is in the range [0, 180].
 ---
 
 <a name="AngleFromSun"></a>
-### AngleFromSun(body, time)
+### AngleFromSun(body: astronomy.Body, time: astronomy.Time) -&gt; float
 
 **Returns the angle between the given body and the Sun, as seen from the Earth.**
 
@@ -1494,7 +1494,7 @@ The estimated difference TT-UT on the given date, expressed in seconds.
 ---
 
 <a name="Ecliptic"></a>
-### Ecliptic(eqj)
+### Ecliptic(eqj: astronomy.Vector) -&gt; astronomy.EclipticCoordinates
 
 **Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.**
 
@@ -1504,7 +1504,7 @@ which are relative to the plane of the Earth's orbit around the Sun.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Equatorial`](#Equatorial) | `eqj` | Equatorial coordinates in the J2000 frame of reference. You can call [`GeoVector`](#GeoVector) to obtain suitable equatorial coordinates. |
+| [`Vector`](#Vector) | `eqj` | Equatorial coordinates in the J2000 frame of reference. You can call [`GeoVector`](#GeoVector) to obtain suitable equatorial coordinates. |
 
 **Returns**: [`EclipticCoordinates`](#EclipticCoordinates)
 Spherical and vector coordinates expressed in true ecliptic coordinates of date (ECT).
@@ -1540,7 +1540,7 @@ The Moon's position as a distance, ecliptic latitude, and ecliptic longitude.
 ---
 
 <a name="EclipticLongitude"></a>
-### EclipticLongitude(body, time)
+### EclipticLongitude(body: astronomy.Body, time: astronomy.Time) -&gt; float
 
 **Calculates heliocentric ecliptic longitude of a body.**
 
@@ -1560,7 +1560,7 @@ An angular value in degrees indicating the ecliptic longitude of the body.
 ---
 
 <a name="Elongation"></a>
-### Elongation(body, time)
+### Elongation(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.ElongationEvent
 
 **Determines visibility of a celestial body relative to the Sun, as seen from the Earth.**
 
@@ -1797,7 +1797,7 @@ at the given time.
 ---
 
 <a name="Horizon"></a>
-### Horizon(time, observer, ra, dec, refraction)
+### Horizon(time: astronomy.Time, observer: astronomy.Observer, ra: float, dec: float, refraction: astronomy.Refraction) -&gt; astronomy.HorizontalCoordinates
 
 **Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.**
 
@@ -1865,7 +1865,7 @@ and is expressed in astronomical units (AU).
 ---
 
 <a name="HourAngle"></a>
-### HourAngle(body, time, observer)
+### HourAngle(body: astronomy.Body, time: astronomy.Time, observer: astronomy.Observer) -&gt; float
 
 **Finds the hour angle of a body for a given observer and time.**
 
@@ -1905,7 +1905,7 @@ The identity rotation matrix.
 ---
 
 <a name="Illumination"></a>
-### Illumination(body, time)
+### Illumination(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.IlluminationInfo
 
 **Finds visual magnitude, phase angle, and other illumination information about a celestial body.**
 
@@ -1935,7 +1935,7 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 ---
 
 <a name="InverseRefractionAngle"></a>
-### InverseRefractionAngle(refraction, bent_altitude)
+### InverseRefractionAngle(refraction: astronomy.Refraction, bent_altitude: float) -&gt; float
 
 **Calculates the inverse of an atmospheric refraction angle.**
 
@@ -2124,7 +2124,7 @@ The mass product of the given body in au^3/day^2.
 ---
 
 <a name="MoonPhase"></a>
-### MoonPhase(time)
+### MoonPhase(time: astronomy.Time) -&gt; float
 
 **Returns the Moon's phase as an angle from 0 to 360 degrees.**
 
@@ -2238,7 +2238,7 @@ Then call `NextMoonNode` to find as many more consecutive nodes as desired.
 ---
 
 <a name="NextMoonQuarter"></a>
-### NextMoonQuarter(mq)
+### NextMoonQuarter(mq: astronomy.MoonQuarter)
 
 **Continues searching for lunar quarters from a previous search.**
 
@@ -2372,7 +2372,7 @@ on (or near) the Earth's surface.
 ---
 
 <a name="PairLongitude"></a>
-### PairLongitude(body1, body2, time)
+### PairLongitude(body1: astronomy.Body, body2: astronomy.Body, time: astronomy.Time) -&gt; float
 
 **Returns one body's ecliptic longitude with respect to another, as seen from the Earth.**
 
@@ -2441,7 +2441,7 @@ The mean orbital period of the body in days.
 ---
 
 <a name="RefractionAngle"></a>
-### RefractionAngle(refraction, altitude)
+### RefractionAngle(refraction: astronomy.Refraction, altitude: float) -&gt; float
 
 **Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.**
 
@@ -2930,7 +2930,7 @@ the function returns `None`.
 ---
 
 <a name="SearchAltitude"></a>
-### SearchAltitude(body, observer, direction, startTime, limitDays, altitude)
+### SearchAltitude(body: astronomy.Body, observer: astronomy.Observer, direction: astronomy.Direction, startTime: astronomy.Time, limitDays: float, altitude: float) -&gt; Optional[astronomy.Time]
 
 **Finds the next time the center of a body passes through a given altitude.**
 
@@ -2993,7 +2993,7 @@ passing in the `peak` value returned from the previous call.
 ---
 
 <a name="SearchHourAngle"></a>
-### SearchHourAngle(body, observer, hourAngle, startTime, direction=1)
+### SearchHourAngle(body: astronomy.Body, observer: astronomy.Observer, hourAngle: float, startTime: astronomy.Time, direction: int = 1) -&gt; astronomy.HourAngleEvent
 
 **Searches for the time when the center of a body reaches a specified hour angle as seen by an observer on the Earth.**
 
@@ -3096,7 +3096,7 @@ passing in the `peak` value returned from the previous call.
 ---
 
 <a name="SearchMaxElongation"></a>
-### SearchMaxElongation(body, startTime)
+### SearchMaxElongation(body: astronomy.Body, startTime: astronomy.Time) -&gt; Optional[astronomy.ElongationEvent]
 
 **Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.**
 
@@ -3141,7 +3141,7 @@ Then call [`NextMoonNode`](#NextMoonNode) to find as many more consecutive nodes
 ---
 
 <a name="SearchMoonPhase"></a>
-### SearchMoonPhase(targetLon, startTime, limitDays)
+### SearchMoonPhase(targetLon: float, startTime: astronomy.Time, limitDays: float)
 
 **Searches for the time that the Moon reaches a specified phase.**
 
@@ -3166,7 +3166,7 @@ This function is useful for finding general phase angles outside those four quar
 ---
 
 <a name="SearchMoonQuarter"></a>
-### SearchMoonQuarter(startTime)
+### SearchMoonQuarter(startTime: astronomy.Time)
 
 **Finds the first lunar quarter after the specified date and time.**
 
@@ -3186,7 +3186,7 @@ followed by calls to [`NextMoonQuarter`](#NextMoonQuarter) as many times as desi
 ---
 
 <a name="SearchPeakMagnitude"></a>
-### SearchPeakMagnitude(body, startTime)
+### SearchPeakMagnitude(body: astronomy.Body, startTime: astronomy.Time) -&gt; astronomy.IlluminationInfo
 
 **Searches for the date and time Venus will next appear brightest as seen from the Earth.**
 
@@ -3235,7 +3235,7 @@ into another call of `NextPlanetApsis` as many times as desired.
 ---
 
 <a name="SearchRelativeLongitude"></a>
-### SearchRelativeLongitude(body, targetRelLon, startTime)
+### SearchRelativeLongitude(body: astronomy.Body, targetRelLon: float, startTime: astronomy.Time) -&gt; astronomy.Time
 
 **Searches for when the Earth and another planet are separated by a certain ecliptic longitude.**
 
@@ -3279,7 +3279,7 @@ The date and time of the relative longitude event.
 ---
 
 <a name="SearchRiseSet"></a>
-### SearchRiseSet(body, observer, direction, startTime, limitDays)
+### SearchRiseSet(body: astronomy.Body, observer: astronomy.Observer, direction: astronomy.Direction, startTime: astronomy.Time, limitDays: float) -&gt; Optional[astronomy.Time]
 
 **Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.**
 
@@ -3318,7 +3318,7 @@ this function returns that time. Otherwise, it returns `None`.
 ---
 
 <a name="SearchSunLongitude"></a>
-### SearchSunLongitude(targetLon, startTime, limitDays)
+### SearchSunLongitude(targetLon: float, startTime: astronomy.Time, limitDays: float) -&gt; Optional[astronomy.Time]
 
 **Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.**
 
@@ -3439,7 +3439,7 @@ Spherical coordinates that are equivalent to the given vector.
 ---
 
 <a name="SunPosition"></a>
-### SunPosition(time)
+### SunPosition(time: astronomy.Time) -&gt; astronomy.EclipticCoordinates
 
 **Calculates geocentric ecliptic coordinates for the Sun.**
 
