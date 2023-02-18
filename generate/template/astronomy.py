@@ -5003,13 +5003,13 @@ class SeasonInfo:
     dec_solstice : Time
         The date and time of the December solstice for the specified year.
     """
-    def __init__(self, mar_equinox, jun_solstice, sep_equinox, dec_solstice):
+    def __init__(self, mar_equinox: Time, jun_solstice: Time, sep_equinox: Time, dec_solstice: Time) -> None:
         self.mar_equinox = mar_equinox
         self.jun_solstice = jun_solstice
         self.sep_equinox = sep_equinox
         self.dec_solstice = dec_solstice
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'SeasonInfo(mar_equinox={}, jun_solstice={}, sep_equinox={}, dec_solstice={})'.format(
             repr(self.mar_equinox),
             repr(self.jun_solstice),
@@ -5025,7 +5025,7 @@ def _FindSeasonChange(targetLon, year, month, day):
         raise InternalError()
     return time
 
-def Seasons(year):
+def Seasons(year: int) -> SeasonInfo:
     """Finds both equinoxes and both solstices for a given calendar year.
 
     The changes of seasons are defined by solstices and equinoxes.
@@ -5130,20 +5130,20 @@ class Apsis:
     dist_km : float
         The distance between the centers of the bodies in kilometers.
     """
-    def __init__(self, time, kind, dist_au):
+    def __init__(self, time: Time, kind: ApsisKind, dist_au: float) -> None:
         self.time = time
         self.kind = kind
         self.dist_au = dist_au
         self.dist_km = dist_au * KM_PER_AU
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Apsis({}, {}, dist_au={})'.format(
             repr(self.time),
             self.kind,
             self.dist_au
         )
 
-def SearchLunarApsis(startTime):
+def SearchLunarApsis(startTime: Time) -> Apsis:
     """Finds the time of the first lunar apogee or perigee after the given time.
 
     Given a date and time to start the search in `startTime`, this function finds
@@ -5210,7 +5210,7 @@ def SearchLunarApsis(startTime):
     raise InternalError()
 
 
-def NextLunarApsis(apsis):
+def NextLunarApsis(apsis: Apsis) -> Apsis:
     """Finds the next lunar perigee or apogee in a series.
 
     This function requires an #Apsis value obtained from a call to
@@ -5249,7 +5249,7 @@ def _planet_distance_slope(context, time):
     return direction * (dist2 - dist1) / dt
 
 
-def SearchPlanetApsis(body, startTime):
+def SearchPlanetApsis(body: Body, startTime: Time) -> Apsis:
     """Finds the next planet perihelion or aphelion, after a given time.
 
     Given a date and time to start the search in `startTime`, this function finds the
@@ -5316,7 +5316,7 @@ def SearchPlanetApsis(body, startTime):
     raise InternalError()   # should have found planet apsis within 2 planet orbits
 
 
-def NextPlanetApsis(body, apsis):
+def NextPlanetApsis(body: Body, apsis: Apsis) -> Apsis:
     """Finds the next planetary perihelion or aphelion event in a series.
 
     This function requires an #Apsis value obtained from a call
@@ -5423,7 +5423,7 @@ def _BruteSearchPlanetApsis(body, startTime):
     raise InternalError()   # failed to find Neptune apsis
 
 
-def VectorFromSphere(sphere, time):
+def VectorFromSphere(sphere: Spherical, time: Time) -> Vector:
     """Converts spherical coordinates to Cartesian coordinates.
 
     Given spherical coordinates and a time at which they are valid,
@@ -5453,7 +5453,7 @@ def VectorFromSphere(sphere, time):
     )
 
 
-def EquatorFromVector(vec):
+def EquatorFromVector(vec: Vector) -> Equatorial:
     """Given an equatorial vector, calculates equatorial angular coordinates.
 
     Parameters
@@ -5470,7 +5470,7 @@ def EquatorFromVector(vec):
     return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vec)
 
 
-def SphereFromVector(vector):
+def SphereFromVector(vector: Vector) -> Spherical:
     """Converts Cartesian coordinates to spherical coordinates.
 
     Given a Cartesian vector, returns latitude, longitude, and distance.
@@ -5512,7 +5512,7 @@ def _ToggleAzimuthDirection(az):
     return az
 
 
-def VectorFromHorizon(sphere, time, refraction):
+def VectorFromHorizon(sphere: Spherical, time: Time, refraction: Refraction):
     """Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
 
     Parameters
@@ -5539,7 +5539,7 @@ def VectorFromHorizon(sphere, time, refraction):
     return VectorFromSphere(xsphere, time)
 
 
-def HorizonFromVector(vector, refraction):
+def HorizonFromVector(vector: Vector, refraction: Refraction) -> Spherical:
     """Converts Cartesian coordinates to horizontal coordinates.
 
     Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
@@ -5573,7 +5573,7 @@ def HorizonFromVector(vector, refraction):
     return sphere
 
 
-def InverseRotation(rotation):
+def InverseRotation(rotation: RotationMatrix) -> RotationMatrix:
     """Calculates the inverse of a rotation matrix.
 
     Given a rotation matrix that performs some coordinate transform,
@@ -5596,7 +5596,7 @@ def InverseRotation(rotation):
     ])
 
 
-def CombineRotation(a, b):
+def CombineRotation(a: RotationMatrix, b: RotationMatrix) -> RotationMatrix:
     """Creates a rotation based on applying one rotation followed by another.
 
     Given two rotation matrices, returns a combined rotation matrix that is
@@ -5639,7 +5639,7 @@ def CombineRotation(a, b):
     ])
 
 
-def IdentityMatrix():
+def IdentityMatrix() -> RotationMatrix:
     """Creates an identity rotation matrix.
 
     Returns a rotation matrix that has no effect on orientation.
@@ -5659,7 +5659,7 @@ def IdentityMatrix():
     ])
 
 
-def Pivot(rotation, axis, angle):
+def Pivot(rotation: RotationMatrix, axis: int, angle: float) -> RotationMatrix:
     """Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
 
     Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
@@ -5707,7 +5707,7 @@ def Pivot(rotation, axis, angle):
     j = (axis + 2) % 3
     k = axis
 
-    rot = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    rot: List[List[float]] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
     rot[i][i] = c*rotation.rot[i][i] - s*rotation.rot[i][j]
     rot[i][j] = s*rotation.rot[i][i] + c*rotation.rot[i][j]
@@ -5724,7 +5724,7 @@ def Pivot(rotation, axis, angle):
     return RotationMatrix(rot)
 
 
-def RotateVector(rotation, vector):
+def RotateVector(rotation: RotationMatrix, vector: Vector) -> Vector:
     """Applies a rotation to a vector, yielding a rotated vector.
 
     This function transforms a vector in one orientation to a vector
@@ -5750,7 +5750,7 @@ def RotateVector(rotation, vector):
     )
 
 
-def RotateState(rotation, state):
+def RotateState(rotation: RotationMatrix, state: StateVector) -> StateVector:
     """Applies a rotation to a state vector, yielding a rotated state vector.
 
     This function transforms a state vector in one orientation to a
@@ -5780,7 +5780,7 @@ def RotateState(rotation, state):
     )
 
 
-def Rotation_EQJ_ECL():
+def Rotation_EQJ_ECL() -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
@@ -5803,7 +5803,7 @@ def Rotation_EQJ_ECL():
     ])
 
 
-def Rotation_ECL_EQJ():
+def Rotation_ECL_EQJ() -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -5825,7 +5825,7 @@ def Rotation_ECL_EQJ():
         [ 0, -s, +c]
     ])
 
-def Rotation_EQJ_EQD(time):
+def Rotation_EQJ_EQD(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
@@ -5848,7 +5848,7 @@ def Rotation_EQJ_EQD(time):
     return CombineRotation(prec, nut)
 
 
-def Rotation_EQJ_ECT(time):
+def Rotation_EQJ_ECT(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
 
     This is one of the family of functions that returns a rotation matrix
@@ -5871,7 +5871,7 @@ def Rotation_EQJ_ECT(time):
     return CombineRotation(rot, step)
 
 
-def Rotation_ECT_EQJ(time):
+def Rotation_ECT_EQJ(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -5894,7 +5894,7 @@ def Rotation_ECT_EQJ(time):
     return CombineRotation(rot, step)
 
 
-def Rotation_EQD_EQJ(time):
+def Rotation_EQD_EQJ(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -5917,7 +5917,7 @@ def Rotation_EQD_EQJ(time):
     return CombineRotation(nut, prec)
 
 
-def Rotation_EQD_HOR(time, observer):
+def Rotation_EQD_HOR(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
 
     This is one of the family of functions that returns a rotation matrix
@@ -5962,7 +5962,7 @@ def Rotation_EQD_HOR(time, observer):
     ])
 
 
-def Rotation_HOR_EQD(time, observer):
+def Rotation_HOR_EQD(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
@@ -5986,7 +5986,7 @@ def Rotation_HOR_EQD(time, observer):
     return InverseRotation(rot)
 
 
-def Rotation_HOR_EQJ(time, observer):
+def Rotation_HOR_EQJ(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6011,7 +6011,7 @@ def Rotation_HOR_EQJ(time, observer):
     return CombineRotation(hor_eqd, eqd_eqj)
 
 
-def Rotation_EQJ_HOR(time, observer):
+def Rotation_EQJ_HOR(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6042,7 +6042,7 @@ def Rotation_EQJ_HOR(time, observer):
     return InverseRotation(rot)
 
 
-def Rotation_EQD_ECL(time):
+def Rotation_EQD_ECL(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6065,7 +6065,7 @@ def Rotation_EQD_ECL(time):
     return CombineRotation(eqd_eqj, eqj_ecl)
 
 
-def Rotation_ECL_EQD(time):
+def Rotation_ECL_EQD(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6087,7 +6087,7 @@ def Rotation_ECL_EQD(time):
     return InverseRotation(rot)
 
 
-def Rotation_ECL_HOR(time, observer):
+def Rotation_ECL_HOR(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6119,7 +6119,7 @@ def Rotation_ECL_HOR(time, observer):
     return CombineRotation(ecl_eqd, eqd_hor)
 
 
-def Rotation_HOR_ECL(time, observer):
+def Rotation_HOR_ECL(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6142,7 +6142,7 @@ def Rotation_HOR_ECL(time, observer):
     rot = Rotation_ECL_HOR(time, observer)
     return InverseRotation(rot)
 
-def Rotation_EQJ_GAL():
+def Rotation_EQJ_GAL() -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6164,7 +6164,7 @@ def Rotation_EQJ_GAL():
         [-0.4838000529948520, +0.7470034631630423, +0.4559861124470794]
     ])
 
-def Rotation_GAL_EQJ():
+def Rotation_GAL_EQJ() -> RotationMatrix:
     """Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6186,7 +6186,7 @@ def Rotation_GAL_EQJ():
         [-0.8676668813529025, -0.1980677870294097, +0.4559861124470794]
     ])
 
-def Rotation_ECT_EQD(time):
+def Rotation_ECT_EQD(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6214,7 +6214,7 @@ def Rotation_ECT_EQD(time):
         [0.0,  -s,  +c]
     ])
 
-def Rotation_EQD_ECT(time):
+def Rotation_EQD_ECT(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).
 
     This is one of the family of functions that returns a rotation matrix
@@ -6263,13 +6263,13 @@ class ConstellationInfo:
     dec1875 : float
         Declination expressed in B1875 coordinates.
     """
-    def __init__(self, symbol, name, ra1875, dec1875):
+    def __init__(self, symbol: str, name: str, ra1875: float, dec1875: float) -> None:
         self.symbol = symbol
         self.name = name
         self.ra1875 = ra1875
         self.dec1875 = dec1875
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'ConstellationInfo(symbol={}, name={}, ra1875={}, dec1875={})'.format(
             repr(self.symbol),
             repr(self.name),
@@ -6283,7 +6283,7 @@ _Epoch2000 = None
 $ASTRO_CONSTEL()
 
 
-def Constellation(ra, dec):
+def Constellation(ra: float, dec: float) -> ConstellationInfo:
     """Determines the constellation that contains the given point in the sky.
 
     Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
@@ -6530,7 +6530,7 @@ class LunarEclipseInfo:
     sd_total : float
          The semi-duration of the penumbral phase in minutes, or 0.0 if none.
     """
-    def __init__(self, kind, obscuration, peak, sd_penum, sd_partial, sd_total):
+    def __init__(self, kind: EclipseKind, obscuration: float, peak: Time, sd_penum: float, sd_partial: float, sd_total: float) -> None:
         self.kind = kind
         self.obscuration = obscuration
         self.peak = peak
@@ -6538,7 +6538,7 @@ class LunarEclipseInfo:
         self.sd_partial = sd_partial
         self.sd_total = sd_total
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'LunarEclipseInfo({}, obscuration={}, peak={}, sd_penum={}, sd_partial={}, sd_total={})'.format(
             self.kind,
             self.obscuration,
@@ -6599,7 +6599,7 @@ class GlobalSolarEclipseInfo:
     longitude : float
         The geographic longitude at the center of the peak eclipse shadow.
     """
-    def __init__(self, kind, obscuration, peak, distance, latitude, longitude):
+    def __init__(self, kind: EclipseKind, obscuration: float, peak: Time, distance: float, latitude: float, longitude: float) -> None:
         self.kind = kind
         self.obscuration = obscuration
         self.peak = peak
@@ -6607,7 +6607,7 @@ class GlobalSolarEclipseInfo:
         self.latitude = latitude
         self.longitude = longitude
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'GlobalSolarEclipseInfo({}, obscuration={}, peak={}, distance={}, latitude={}, longitude={})'.format(
             self.kind,
             self.obscuration,
@@ -6640,11 +6640,11 @@ class EclipseEvent:
         The angular altitude of the center of the Sun above/below the horizon, at `time`,
         corrected for atmospheric refraction and expressed in degrees.
     """
-    def __init__(self, time, altitude):
+    def __init__(self, time: Time, altitude: float) -> None:
         self.time = time
         self.altitude = altitude
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'EclipseEvent({}, altitude={})'.format(
             repr(self.time),
             self.altitude
@@ -6700,7 +6700,7 @@ class LocalSolarEclipseInfo:
     partial_end : EclipseEvent
         The time and Sun altitude at the end of the eclipse.
     """
-    def __init__(self, kind, obscuration, partial_begin, total_begin, peak, total_end, partial_end):
+    def __init__(self, kind: EclipseKind, obscuration: float, partial_begin: EclipseEvent, total_begin: EclipseEvent, peak: EclipseEvent, total_end: EclipseEvent, partial_end: EclipseEvent) -> None:
         self.kind = kind
         self.obscuration = obscuration
         self.partial_begin = partial_begin
@@ -6709,7 +6709,7 @@ class LocalSolarEclipseInfo:
         self.total_end = total_end
         self.partial_end = partial_end
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'LocalSolarEclipseInfo({}, obscuration={}, partial_begin={}, total_begin={}, peak={}, total_end={}, partial_end={})'.format(
             self.kind,
             self.obscuration,
@@ -6968,7 +6968,7 @@ def _SolarEclipseObscuration(hm, lo):
     return min(0.9999, obscuration)
 
 
-def SearchLunarEclipse(startTime):
+def SearchLunarEclipse(startTime: Time) -> LunarEclipseInfo:
     """Searches for a lunar eclipse.
 
     This function finds the first lunar eclipse that occurs after `startTime`.
@@ -7033,7 +7033,7 @@ def SearchLunarEclipse(startTime):
     raise Error('Failed to find lunar eclipse within 12 full moons.')
 
 
-def NextLunarEclipse(prevEclipseTime):
+def NextLunarEclipse(prevEclipseTime: Time) -> LunarEclipseInfo:
     """Searches for the next lunar eclipse in a series.
 
      After using #SearchLunarEclipse to find the first lunar eclipse
@@ -7055,7 +7055,7 @@ def NextLunarEclipse(prevEclipseTime):
     return SearchLunarEclipse(startTime)
 
 
-def SearchGlobalSolarEclipse(startTime):
+def SearchGlobalSolarEclipse(startTime: Time) -> GlobalSolarEclipseInfo:
     """Searches for a solar eclipse visible anywhere on the Earth's surface.
 
     This function finds the first solar eclipse that occurs after `startTime`.
@@ -7102,7 +7102,7 @@ def SearchGlobalSolarEclipse(startTime):
     raise Error('Failed to find solar eclipse within 12 full moons.')
 
 
-def NextGlobalSolarEclipse(prevEclipseTime):
+def NextGlobalSolarEclipse(prevEclipseTime: Time) -> GlobalSolarEclipseInfo:
     """Searches for the next global solar eclipse in a series.
 
     After using #SearchGlobalSolarEclipse to find the first solar eclipse
@@ -7124,7 +7124,7 @@ def NextGlobalSolarEclipse(prevEclipseTime):
     return SearchGlobalSolarEclipse(startTime)
 
 
-def SearchLocalSolarEclipse(startTime, observer):
+def SearchLocalSolarEclipse(startTime: Time, observer: Observer) -> LocalSolarEclipseInfo:
     """Searches for a solar eclipse visible at a specific location on the Earth's surface.
     This function finds the first solar eclipse that occurs after `startTime`.
     A solar eclipse may be partial, annular, or total.
@@ -7179,7 +7179,7 @@ def SearchLocalSolarEclipse(startTime, observer):
         nmtime = newmoon.AddDays(10.0)
 
 
-def NextLocalSolarEclipse(prevEclipseTime, observer):
+def NextLocalSolarEclipse(prevEclipseTime: Time, observer: Observer) -> LocalSolarEclipseInfo:
     """Searches for the next local solar eclipse in a series.
 
     After using #SearchLocalSolarEclipse to find the first solar eclipse
@@ -7227,13 +7227,13 @@ class TransitInfo:
         The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.
         This angle pertains to the time stored in `peak`.
     """
-    def __init__(self, start, peak, finish, separation):
+    def __init__(self, start: Time, peak: Time, finish: Time, separation: float) -> None:
         self.start = start
         self.peak = peak
         self.finish = finish
         self.separation = separation
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'TransitInfo(start={}, peak={}, finish={}, separation={})'.format(
             repr(self.start),
             repr(self.peak),
@@ -7257,7 +7257,7 @@ def _PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction):
     return tx
 
 
-def SearchTransit(body, startTime):
+def SearchTransit(body: Body, startTime: Time) -> TransitInfo:
     """Searches for the first transit of Mercury or Venus after a given date.
 
     Finds the first transit of Mercury or Venus after a specified date.
