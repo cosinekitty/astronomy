@@ -487,7 +487,7 @@ time steps.
 #### member functions
 
 <a name="GravitySimulator.__init__"></a>
-### GravitySimulator.__init__(self, originBody, time, bodyStates)
+### GravitySimulator.__init__(self, originBody: astronomy.Body, time: 'Time', bodyStates: List[astronomy.StateVector]) -&gt; None
 
 **Creates a gravity simulation object.**
 
@@ -498,14 +498,14 @@ time steps.
 | [`StateVector`](#StateVector)`[]` | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using J2000 mean equator orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
 
 <a name="GravitySimulator.OriginBody"></a>
-### GravitySimulator.OriginBody(self)
+### GravitySimulator.OriginBody(self) -&gt; astronomy.Body
 
 **The origin of the reference frame. See constructor for more info.**
 
 **Returns**: [`Body`](#Body)
 
 <a name="GravitySimulator.SolarSystemBodyState"></a>
-### GravitySimulator.SolarSystemBodyState(self, body)
+### GravitySimulator.SolarSystemBodyState(self, body: astronomy.Body) -&gt; astronomy.StateVector
 
 **Get the position and velocity of a Solar System body included in the simulation.**
 
@@ -526,7 +526,7 @@ of the `originBody` parameter that was passed to this object's constructor.
 The state vector of the requested Solar System body.
 
 <a name="GravitySimulator.Swap"></a>
-### GravitySimulator.Swap(self)
+### GravitySimulator.Swap(self) -&gt; None
 
 **Exchange the current time step with the previous time step.**
 
@@ -556,7 +556,7 @@ that has not yet been updated by a call to [`GravitySimulator.Update`](#GravityS
 **Returns**: [`Time`](#Time)
 
 <a name="GravitySimulator.Update"></a>
-### GravitySimulator.Update(self, time)
+### GravitySimulator.Update(self, time) -&gt; List[astronomy.StateVector]
 
 **Advances the gravity simulation by a small time step.**
 
@@ -2000,7 +2000,7 @@ The positions and velocities of Jupiter's 4 largest moons.
 ---
 
 <a name="LagrangePoint"></a>
-### LagrangePoint(point, time, major_body, minor_body)
+### LagrangePoint(point: int, time: astronomy.Time, major_body: astronomy.Body, minor_body: astronomy.Body) -&gt; astronomy.StateVector
 
 **Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.**
 
@@ -2039,7 +2039,7 @@ The position and velocity of the selected Lagrange point with respect to the maj
 ---
 
 <a name="LagrangePointFast"></a>
-### LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass)
+### LagrangePointFast(point: int, major_state: astronomy.StateVector, major_mass: float, minor_state: astronomy.StateVector, minor_mass: float) -&gt; astronomy.StateVector
 
 **Calculates one of the 5 Lagrange points from body masses and state vectors.**
 
@@ -2077,7 +2077,7 @@ The position and velocity of the selected Lagrange point with respect to the maj
 ---
 
 <a name="Libration"></a>
-### Libration(time)
+### Libration(time: astronomy.Time) -&gt; astronomy.LibrationInfo
 
 **Calculates the Moon's libration angles at a given moment in time.**
 
@@ -2222,7 +2222,7 @@ See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 ---
 
 <a name="NextMoonNode"></a>
-### NextMoonNode(prevNode)
+### NextMoonNode(prevNode: astronomy.NodeEventInfo) -&gt; astronomy.NodeEventInfo
 
 **Searches for the next time when the Moon's center crosses through the ecliptic plane.**
 
@@ -2275,7 +2275,7 @@ See [`SearchPlanetApsis`](#SearchPlanetApsis) for more details.
 ---
 
 <a name="NextTransit"></a>
-### NextTransit(body, prevTransitTime)
+### NextTransit(body: astronomy.Body, prevTransitTime: astronomy.Time) -&gt; astronomy.TransitInfo
 
 **Searches for another transit of Mercury or Venus.**
 
@@ -2500,7 +2500,7 @@ A vector in the orientation specified by `rotation`.
 ---
 
 <a name="RotationAxis"></a>
-### RotationAxis(body, time)
+### RotationAxis(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.AxisInfo
 
 **Calculates information about a body's rotation axis at a given time.**
 
@@ -3119,7 +3119,7 @@ observed in the morning or evening. See [`ElongationEvent`](#ElongationEvent) fo
 ---
 
 <a name="SearchMoonNode"></a>
-### SearchMoonNode(startTime)
+### SearchMoonNode(startTime: astronomy.Time) -&gt; astronomy.NodeEventInfo
 
 **Searches for a time when the Moon's center crosses through the ecliptic plane.**
 

@@ -1519,7 +1519,7 @@ def _CalcMoon(time):
 
         I += 1
 
-# $ASTRO_ADDSOL()
+$ASTRO_ADDSOL()
 
     def ADDN(coeffn, p, q, r, s):
         return coeffn * (ex[p][1] * ex[q][2] * ex[r][3] * ex[s][4]).imag
@@ -7317,7 +7317,7 @@ def SearchTransit(body: Body, startTime: Time) -> TransitInfo:
         search_time = conj.AddDays(10.0)
 
 
-def NextTransit(body, prevTransitTime):
+def NextTransit(body: Body, prevTransitTime: Time) -> TransitInfo:
     """Searches for another transit of Mercury or Venus.
 
     After calling #SearchTransit to find a transit of Mercury or Venus,
@@ -7366,11 +7366,11 @@ class NodeEventInfo:
     time : Time
         The time when the body passes through the ecliptic plane.
     """
-    def __init__(self, kind, time):
+    def __init__(self, kind: NodeEventKind, time: Time) -> None:
         self.kind = kind
         self.time = time
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'NodeEventInfo({}, {})'.format(self.kind, repr(self.time))
 
 _MoonNodeStepDays = +10.0   # a safe number of days to step without missing a Moon node
@@ -7378,7 +7378,7 @@ _MoonNodeStepDays = +10.0   # a safe number of days to step without missing a Mo
 def _MoonNodeSearchFunc(direction, time):
     return direction * EclipticGeoMoon(time).lat
 
-def SearchMoonNode(startTime):
+def SearchMoonNode(startTime: Time) -> NodeEventInfo:
     """Searches for a time when the Moon's center crosses through the ecliptic plane.
 
     Searches for the first ascending or descending node of the Moon after `startTime`.
@@ -7418,7 +7418,7 @@ def SearchMoonNode(startTime):
         eclip1 = eclip2
 
 
-def NextMoonNode(prevNode):
+def NextMoonNode(prevNode: NodeEventInfo) -> NodeEventInfo:
     """Searches for the next time when the Moon's center crosses through the ecliptic plane.
 
     Call #SearchMoonNode to find the first of a series of nodes.
@@ -7467,7 +7467,7 @@ class LibrationInfo:
     diam_deg : float
         The apparent angular diameter of the Moon as seen from the center of the Earth.
     """
-    def __init__(self, elat, elon, mlat, mlon, dist_km, diam_deg):
+    def __init__(self, elat: float, elon: float, mlat: float, mlon: float, dist_km: float, diam_deg: float) -> None:
         self.elat = elat
         self.elon = elon
         self.mlat = mlat
@@ -7475,7 +7475,7 @@ class LibrationInfo:
         self.dist_km = dist_km
         self.diam_deg = diam_deg
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'LibrationInfo(elat={}, elon={}, mlat={}, mlon={}, dist_km={}, diam_deg={})'.format(
             self.elat,
             self.elon,
@@ -7486,7 +7486,7 @@ class LibrationInfo:
         )
 
 
-def Libration(time):
+def Libration(time: Time) -> LibrationInfo:
     """Calculates the Moon's libration angles at a given moment in time.
 
     Libration is an observed back-and-forth wobble of the portion of the
@@ -7646,13 +7646,13 @@ class AxisInfo:
     north : Vector
         A J2000 dimensionless unit vector pointing in the direction of the body's north pole.
     """
-    def __init__(self, ra, dec, spin, north):
+    def __init__(self, ra: float, dec: float, spin: float, north: Vector) -> None:
         self.ra = ra
         self.dec = dec
         self.spin = spin
         self.north = north
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'AxisInfo(ra={}, dec={}, spin={}, north={})'.format(
             self.ra,
             self.dec,
@@ -7682,7 +7682,7 @@ def _EarthRotationAxis(time):
     return AxisInfo(equ.ra, equ.dec, spin, north)
 
 
-def RotationAxis(body, time):
+def RotationAxis(body: Body, time: Time) -> AxisInfo:
     """Calculates information about a body's rotation axis at a given time.
 
     Calculates the orientation of a body's rotation axis, along with
@@ -7883,7 +7883,7 @@ def RotationAxis(body, time):
     return AxisInfo(ra/15.0, dec, w, north)
 
 
-def LagrangePoint(point, time, major_body, minor_body):
+def LagrangePoint(point: int, time: Time, major_body: Body, minor_body: Body) -> StateVector:
     """Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
 
     Given a more massive "major" body and a much less massive "minor" body,
@@ -7949,7 +7949,7 @@ def LagrangePoint(point, time, major_body, minor_body):
     )
 
 
-def LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass):
+def LagrangePointFast(point: int, major_state: StateVector, major_mass: float, minor_state: StateVector, minor_mass: float) -> StateVector:
     """Calculates one of the 5 Lagrange points from body masses and state vectors.
 
     Given a more massive "major" body and a much less massive "minor" body,
@@ -8137,7 +8137,7 @@ class GravitySimulator:
     time steps.
     """
 
-    def __init__(self, originBody, time, bodyStates):
+    def __init__(self, originBody: Body, time: "Time", bodyStates: List[StateVector]) -> None:
         """Creates a gravity simulation object.
 
         Parameters
@@ -8176,7 +8176,7 @@ class GravitySimulator:
 
         # Create a stub list of small body states that we will append to later.
         # We just need the stub to put into `self.curr`
-        smallBodyList = []
+        smallBodyList: List = []
 
         # Calculate the states of the Sun and planets at the initial time.
         largeBodyDict = _CalcSolarSystem(time)
@@ -8207,7 +8207,7 @@ class GravitySimulator:
         """
         return self.curr.time
 
-    def OriginBody(self):
+    def OriginBody(self) -> Body:
         """The origin of the reference frame. See constructor for more info.
 
         Returns
@@ -8216,7 +8216,7 @@ class GravitySimulator:
         """
         return self._originBody
 
-    def Update(self, time):
+    def Update(self, time) -> List[StateVector]:
         """Advances the gravity simulation by a small time step.
 
         Updates the simulation of the user-supplied small bodies
@@ -8316,7 +8316,7 @@ class GravitySimulator:
         return bodyStates
 
 
-    def Swap(self):
+    def Swap(self) -> None:
         """Exchange the current time step with the previous time step.
 
         Sometimes it is helpful to "explore" various times near a given
@@ -8342,7 +8342,7 @@ class GravitySimulator:
         """
         (self.curr, self.prev) = (self.prev, self.curr)
 
-    def SolarSystemBodyState(self, body):
+    def SolarSystemBodyState(self, body: Body) -> StateVector:
         """Get the position and velocity of a Solar System body included in the simulation.
 
         In order to simulate the movement of small bodies through the Solar System,
