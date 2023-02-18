@@ -374,7 +374,7 @@ def _UserDefinedStar(body):
         return star
     return None
 
-def DefineStar(body: Body, ra: float, dec: float, distanceLightYears: float):
+def DefineStar(body: Body, ra: float, dec: float, distanceLightYears: float) -> None:
     """Assign equatorial coordinates to a user-defined star.
 
     Some Astronomy Engine functions allow their `body` parameter to
@@ -5666,7 +5666,7 @@ class MoonQuarter:
     def __repr__(self):
         return 'MoonQuarter({}, {})'.format(self.quarter, repr(self.time))
 
-def SearchMoonQuarter(startTime: Time):
+def SearchMoonQuarter(startTime: Time) -> MoonQuarter:
     """Finds the first lunar quarter after the specified date and time.
 
     A lunar quarter is one of the following four lunar phase events:
@@ -5694,7 +5694,7 @@ def SearchMoonQuarter(startTime: Time):
         raise InternalError()
     return MoonQuarter(quarter, time)
 
-def NextMoonQuarter(mq: MoonQuarter):
+def NextMoonQuarter(mq: MoonQuarter) -> MoonQuarter:
     """Continues searching for lunar quarters from a previous search.
 
     After calling #SearchMoonQuarter, this function can be called
@@ -7018,7 +7018,7 @@ def _ToggleAzimuthDirection(az):
     return az
 
 
-def VectorFromHorizon(sphere: Spherical, time: Time, refraction: Refraction):
+def VectorFromHorizon(sphere: Spherical, time: Time, refraction: Refraction) -> Vector:
     """Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
 
     Parameters

@@ -1454,7 +1454,7 @@ body to arrive at the observer at the observation time.
 ---
 
 <a name="DefineStar"></a>
-### DefineStar(body: astronomy.Body, ra: float, dec: float, distanceLightYears: float)
+### DefineStar(body: astronomy.Body, ra: float, dec: float, distanceLightYears: float) -&gt; None
 
 **Assign equatorial coordinates to a user-defined star.**
 
@@ -2238,7 +2238,7 @@ Then call `NextMoonNode` to find as many more consecutive nodes as desired.
 ---
 
 <a name="NextMoonQuarter"></a>
-### NextMoonQuarter(mq: astronomy.MoonQuarter)
+### NextMoonQuarter(mq: astronomy.MoonQuarter) -&gt; astronomy.MoonQuarter
 
 **Continues searching for lunar quarters from a previous search.**
 
@@ -3166,7 +3166,7 @@ This function is useful for finding general phase angles outside those four quar
 ---
 
 <a name="SearchMoonQuarter"></a>
-### SearchMoonQuarter(startTime: astronomy.Time)
+### SearchMoonQuarter(startTime: astronomy.Time) -&gt; astronomy.MoonQuarter
 
 **Finds the first lunar quarter after the specified date and time.**
 
@@ -3466,7 +3466,7 @@ The ecliptic coordinates of the Sun using the Earth's true equator of date.
 ---
 
 <a name="VectorFromHorizon"></a>
-### VectorFromHorizon(sphere: astronomy.Spherical, time: astronomy.Time, refraction: astronomy.Refraction)
+### VectorFromHorizon(sphere: astronomy.Spherical, time: astronomy.Time, refraction: astronomy.Refraction) -&gt; astronomy.Vector
 
 **Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.**
 
