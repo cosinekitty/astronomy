@@ -365,7 +365,13 @@ def ConstantsMd(inPythonFileName):
             # Consider symbols like Union defined in lines like the following:
             # "from typing import Union"
             tokens = line.split()
+            
             if len(tokens) > 3 and tokens[0] == 'from' and tokens[2] == 'import':
+                # from typing import Optional, Union are currently split as
+                # ["from", "typing", "import", "Optional,", "Union"]
+                # Removing the commas within the strings to properly identify as tokens
+                tokens = [token.replace(",", "") for token in tokens]
+                
                 for name in tokens[3:]:
                     if name != ',':
                         documentedSymbolSet.add(name)
