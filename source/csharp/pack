@@ -6,5 +6,5 @@ Fail()
 }
 
 rm -rf nuget
-dotnet pack --configuration=Release --output nuget astronomy.csproj || Fail "dotnet pack"
+dotnet pack --configuration=Release --property:OutputPath=nuget astronomy.csproj || Fail "dotnet pack"
 exit 0

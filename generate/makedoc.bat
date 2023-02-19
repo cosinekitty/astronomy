@@ -35,7 +35,7 @@ for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\a
 REM   C# is a special case. We have to compile the code to get the documentation.
 echo.Building C# code to get documentation.
 cd dotnet\csharp_test
-dotnet build --output !CD!\exe
+dotnet build --property:OutputPath=!CD!\exe
 if errorlevel 1 (exit /b 1)
 cd ..\..\csdown
 call build.bat

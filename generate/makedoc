@@ -23,7 +23,7 @@ done
 # C# is a special case: we have to compile the code to get its documentation.
 echo "Building C# code to get documentation XML."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
-dotnet build --output ${PWD}/exe || Fail "Error building C# source code"
+dotnet build --property:OutputPath=${PWD}/exe || Fail "Error building C# source code"
 cd ../../csdown || Fail "Error changing to csdown directory"
 ./build || exit 1
 

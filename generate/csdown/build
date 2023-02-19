@@ -5,4 +5,5 @@ Fail()
     exit 1
 }
 
-dotnet build --output ${PWD}/exe || Fail "Error building csdown"
+# https://github.com/dotnet/sdk/issues/30624#issuecomment-1432118204
+dotnet build --property:OutputPath="${PWD}/exe" || Fail "Error building csdown"
