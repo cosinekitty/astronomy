@@ -363,19 +363,14 @@ def ConstantsMd(inPythonFileName):
     with open(inPythonFileName) as infile:
         for line in infile:
             # Consider symbols like Union defined in lines like the following:
-            # "from typing import Union"
+            # "from typing import List, Optional, Union, Callable"
             tokens = line.split()
-            
             if len(tokens) > 3 and tokens[0] == 'from' and tokens[2] == 'import':
-                # from typing import Optional, Union are currently split as
-                # ["from", "typing", "import", "Optional,", "Union"]
-                # Removing the commas within the strings to properly identify as tokens
-                tokens = [token.replace(",", "") for token in tokens]
-                
-                for name in tokens[3:]:
-                    if name != ',':
+                tokens = re.findall(r'[A-Za-z_][A-Za-z0-9_]*', line)
+                if len(tokens) > 3 and tokens[0] == 'from' and tokens[2] == 'import':
+                    for name in tokens[3:]:
                         documentedSymbolSet.add(name)
-                continue
+                    continue
 
             # Consider symbols like KM_PER_AU defined in lines like the following:
             # "KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit."
