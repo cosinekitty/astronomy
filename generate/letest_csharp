@@ -8,6 +8,6 @@ Fail()
 ./generate source || Fail "Problem generating target code."
 
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
-dotnet build --output ${PWD}/exe || Fail "Error building C# source code"
+dotnet build --property:OutputPath="${PWD}/exe" || Fail "Error building C# source code"
 time dotnet ${PWD}/exe/csharp_test.dll lunar_eclipse || Fail "Error running lunar eclipse test."
 cd ../.. || Fail "Error changing back to generate directory"

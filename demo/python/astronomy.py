@@ -36,6 +36,7 @@ import datetime
 import enum
 import re
 import abc
+from typing import List, Optional, Union, Callable
 
 def _cbrt(x):
     if x < 0.0:
@@ -125,7 +126,7 @@ _PLUTO_GM   = 0.2188699765425970e-11
 _MOON_GM = _EARTH_GM / _EARTH_MOON_MASS_RATIO
 
 
-def MassProduct(body):
+def MassProduct(body: "Body") -> float:
     """Returns the product of mass and universal gravitational constant of a Solar System body.
 
     For problems involving the gravitational interactions of Solar System bodies,
@@ -167,15 +168,15 @@ class _PrecessDir(enum.Enum):
     From2000 = 0
     Into2000 = 1
 
-def _LongitudeOffset(diff):
-    offset = diff
+def _LongitudeOffset(diff: float) -> float:
+    offset: float = diff
     while offset <= -180.0:
         offset += 360.0
     while offset > 180.0:
         offset -= 360.0
     return offset
 
-def _NormalizeLongitude(lon):
+def _NormalizeLongitude(lon: float) -> float:
     while lon < 0.0:
         lon += 360.0
     while lon >= 360.0:
@@ -200,34 +201,34 @@ class Vector:
     t : Time
         The date and time at which the coordinate is valid.
     """
-    def __init__(self, x, y, z, t):
+    def __init__(self, x: float, y: float, z: float, t: "Time") -> None:
         self.x = x
         self.y = y
         self.z = z
         self.t = t
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Vector({}, {}, {}, {})'.format(self.x, self.y, self.z, repr(self.t))
 
-    def Length(self):
+    def Length(self) -> float:
         """Returns the length of the vector in AU."""
         # It would be nice to use math.hypot() here,
         # but before Python 3.8, it only accepts 2 arguments.
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-    def __add__(self, other):
+    def __add__(self, other: "Vector") -> "Vector":
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z, self.t)
 
-    def __sub__(self, other):
+    def __sub__(self, other: "Vector") -> "Vector":
         return Vector(self.x - other.x, self.y - other.y, self.z - other.z, self.t)
 
-    def __neg__(self):
+    def __neg__(self) -> "Vector":
         return Vector(-self.x, -self.y, -self.z, self.t)
 
-    def __truediv__(self, scalar):
+    def __truediv__(self, scalar: float) -> "Vector":
         return Vector(self.x/scalar, self.y/scalar, self.z/scalar, self.t)
 
-    def format(self, coord_format):
+    def format(self, coord_format) -> str:
         """Returns a custom format string representation of the vector."""
         layout = '({:' + coord_format + '}, {:' + coord_format + '}, {:' + coord_format + '}, {})'
         return layout.format(self.x, self.y, self.z, str(self.t))
@@ -257,7 +258,7 @@ class StateVector:
     t : Time
         The date and time at which the position and velocity vectors are valid.
     """
-    def __init__(self, x, y, z, vx, vy, vz, t):
+    def __init__(self, x: float, y: float, z: float, vx: float, vy: float, vz: float, t: "Time") -> None:
         self.x = x
         self.y = y
         self.z = z
@@ -266,13 +267,13 @@ class StateVector:
         self.vz = vz
         self.t = t
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'StateVector(x={}, y={}, z={}, vx={}, vy={}, vz={}, t={})'.format(
             self.x, self.y, self.z,
             self.vx, self.vy, self.vz,
             repr(self.t))
 
-    def __add__(self, other):
+    def __add__(self, other: "StateVector") -> "StateVector":
         return StateVector(
             self.x  + other.x,
             self.y  + other.y,
@@ -283,7 +284,7 @@ class StateVector:
             self.t
         )
 
-    def __sub__(self, other):
+    def __sub__(self, other: "StateVector") -> "StateVector":
         return StateVector(
             self.x  - other.x,
             self.y  - other.y,
@@ -294,11 +295,11 @@ class StateVector:
             self.t
         )
 
-    def Position(self):
+    def Position(self) -> Vector:
         """Extracts a position vector from this state vector."""
         return Vector(self.x, self.y, self.z, self.t)
 
-    def Velocity(self):
+    def Velocity(self) -> Vector:
         """Extracts a velocity vector from this state vector."""
         return Vector(self.vx, self.vy, self.vz, self.t)
 
@@ -373,7 +374,7 @@ def _UserDefinedStar(body):
         return star
     return None
 
-def DefineStar(body, ra, dec, distanceLightYears):
+def DefineStar(body: Body, ra: float, dec: float, distanceLightYears: float) -> None:
     """Assign equatorial coordinates to a user-defined star.
 
     Some Astronomy Engine functions allow their `body` parameter to
@@ -412,7 +413,7 @@ def DefineStar(body, ra, dec, distanceLightYears):
     star.dec = dec
     star.dist = distanceLightYears * AU_PER_LY
 
-def BodyCode(name):
+def BodyCode(name: str) -> Body:
     """Finds the Body enumeration value, given the name of a body.
 
     Parameters
@@ -438,7 +439,7 @@ def BodyCode(name):
         return Body.Invalid
     return Body[name]
 
-def _IsSuperiorPlanet(body):
+def _IsSuperiorPlanet(body: Body) -> bool:
     return body in [Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]
 
 _PlanetOrbitalPeriod = [
@@ -455,27 +456,27 @@ _PlanetOrbitalPeriod = [
 
 class Error(Exception):
     """Indicates an error in an astronomical calculation."""
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         Exception.__init__(self, message)
 
 class DateTimeFormatError(Error):
     """The syntax of a UTC date/time string was not valid, or it contains invalid values."""
-    def __init__(self, text):
+    def __init__(self, text: str) -> None:
         Error.__init__(self, 'The date/time string is not valid: "{}"'.format(text))
 
 class EarthNotAllowedError(Error):
     """The Earth is not allowed as the celestial body in this calculation."""
-    def __init__(self):
+    def __init__(self) -> None:
         Error.__init__(self, 'The Earth is not allowed as the body.')
 
 class InvalidBodyError(Error):
     """The celestial body is not allowed for this calculation."""
-    def __init__(self, body):
+    def __init__(self, body: Body) -> None:
         Error.__init__(self, 'This body is not valid, or is not supported for this calculation: {}'.format(body))
 
 class BadVectorError(Error):
     """A vector magnitude is too small to have a direction in space."""
-    def __init__(self):
+    def __init__(self) -> None:
         Error.__init__(self, 'Vector is too small to have a direction.')
 
 class InternalError(Error):
@@ -488,7 +489,7 @@ class InternalError(Error):
     of how to reproduce the error. This will help improve the quality of
     Astronomy Engine for everyone! (Thank you in advance from the author.)
     """
-    def __init__(self):
+    def __init__(self) -> None:
         Error.__init__(self, 'Internal error - please report issue, including stack trace, at https://github.com/cosinekitty/astronomy/issues')
 
 class NoConvergeError(Error):
@@ -501,10 +502,10 @@ class NoConvergeError(Error):
     of how to reproduce the error. This will help improve the quality of
     Astronomy Engine for everyone! (Thank you in advance from the author.)
     """
-    def __init__(self):
+    def __init__(self) -> None:
         Error.__init__(self, 'Numeric solver did not converge - please report issue at https://github.com/cosinekitty/astronomy/issues')
 
-def PlanetOrbitalPeriod(body):
+def PlanetOrbitalPeriod(body: Body) -> float:
     """Returns the average number of days it takes for a planet to orbit the Sun.
 
     Parameters
@@ -521,7 +522,7 @@ def PlanetOrbitalPeriod(body):
         return _PlanetOrbitalPeriod[body.value]
     raise InvalidBodyError(body)
 
-def _SynodicPeriod(body):
+def _SynodicPeriod(body: Body) -> float:
     if body == Body.Earth:
         raise EarthNotAllowedError()
     if body.value < 0 or body.value >= len(_PlanetOrbitalPeriod):
@@ -530,7 +531,7 @@ def _SynodicPeriod(body):
         return _MEAN_SYNODIC_MONTH
     return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
 
-def AngleBetween(a, b):
+def AngleBetween(a: Vector, b: Vector) -> float:
     """Calculates the angle in degrees between two vectors.
 
     Given a pair of vectors, this function returns the angle in degrees
@@ -550,10 +551,10 @@ def AngleBetween(a, b):
         The angle between the two vectors expressed in degrees.
         The value is in the range [0, 180].
     """
-    r = a.Length() * b.Length()
+    r: float = a.Length() * b.Length()
     if r < 1.0e-8:
-        return BadVectorError()
-    dot = (a.x*b.x + a.y*b.y + a.z*b.z) / r
+        raise BadVectorError()
+    dot: float = (a.x*b.x + a.y*b.y + a.z*b.z) / r
     if dot <= -1.0:
         return 180.0
     if dot >= +1.0:
@@ -561,7 +562,7 @@ def AngleBetween(a, b):
     return math.degrees(math.acos(dot))
 
 
-def DeltaT_EspenakMeeus(ut):
+def DeltaT_EspenakMeeus(ut: float) -> float:
     """The default Delta T function used by Astronomy Engine.
 
     Espenak and Meeus use a series of piecewise polynomials to
@@ -665,10 +666,10 @@ def DeltaT_EspenakMeeus(ut):
 _DeltaT = DeltaT_EspenakMeeus
 
 
-def _TerrestrialTime(ut):
+def _TerrestrialTime(ut: float) -> float:
     return ut + _DeltaT(ut) / 86400.0
 
-def _UniversalTime(tt):
+def _UniversalTime(tt: float) -> float:
     # This is the inverse function of _TerrestrialTime.
     # This is an iterative numerical solver, but because
     # the relationship between UT and TT is almost perfectly linear,
@@ -728,23 +729,23 @@ class Time:
         such as the orbits of planets around the Sun, or the Moon around the Earth.
         Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
     """
-    def __init__(self, ut, tt = None):
+    def __init__(self, ut : Union[float, str], tt: Optional[float] = None):
         if isinstance(ut, str):
             # Undocumented hack, to make repr(time) reversible.
             other = Time.Parse(ut)
-            self.ut = other.ut
-            self.tt = other.tt
+            self.ut: float = other.ut
+            self.tt: float = other.tt
         else:
             self.ut = ut
             if tt is None:
                 self.tt = _TerrestrialTime(ut)
             else:
                 self.tt = tt
-        self._et = None     # lazy-cache for earth tilt
-        self._st = None     # lazy-cache for sidereal time
+        self._et: Optional[float] = None     # lazy-cache for earth tilt
+        self._st: Optional[float] = None     # lazy-cache for sidereal time
 
     @staticmethod
-    def FromTerrestrialTime(tt):
+    def FromTerrestrialTime(tt: float) -> "Time":
         """Creates a #Time object from a Terrestrial Time day value.
 
         Parameters
@@ -759,7 +760,7 @@ class Time:
         return Time(_UniversalTime(tt), tt)
 
     @staticmethod
-    def Parse(text):
+    def Parse(text: str) -> "Time":
         """Creates a #Time object from a string of the form 'yyyy-mm-ddThh:mm:ss.sssZ'
 
         Parses a UTC date and time from a string and returns a #Time object.
@@ -804,7 +805,7 @@ class Time:
         return Time.Make(year, month, day, hour, minute, second)
 
     @staticmethod
-    def Make(year, month, day, hour, minute, second):
+    def Make(year: int, month: int, day: int, hour: int, minute: int, second: float) -> "Time":
         """Creates a #Time object from a UTC calendar date and time.
 
         Parameters
@@ -840,7 +841,7 @@ class Time:
         return Time(ut)
 
     @staticmethod
-    def Now():
+    def Now() -> "Time":
         """Returns the computer's current date and time in the form of a #Time object.
 
         Uses the computer's system clock to find the current UTC date and time.
@@ -855,7 +856,7 @@ class Time:
         ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
         return Time(ut)
 
-    def AddDays(self, days):
+    def AddDays(self, days: float) -> "Time":
         """Calculates the sum or difference of a #Time with a specified real-valued number of days.
 
         Sometimes we need to adjust a given #Time value by a certain amount of time.
@@ -882,10 +883,10 @@ class Time:
         """
         return Time(self.ut + days)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Time(\'' + str(self) + '\')'
 
-    def __str__(self):
+    def __str__(self) -> str:
         # Adapted from the NOVAS C 3.1 function cal_date().
         djd = self.ut + 2451545.5
         jd = int(djd)
@@ -923,7 +924,7 @@ class Time:
         text += '-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(month, day, hour, minute, millis // 1000, millis % 1000)
         return text
 
-    def Utc(self):
+    def Utc(self) -> datetime.datetime:
         """Returns the UTC date and time as a `datetime` object.
 
         Uses the standard [`datetime`](https://docs.python.org/3/library/datetime.html) class
@@ -943,22 +944,26 @@ class Time:
             self._et = _e_tilt(self)
         return self._et
 
-    def __lt__(self, other):
+    def __lt__(self, other: "Time") -> bool:
         return self.tt < other.tt
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Time):
+            return NotImplemented
         return self.tt == other.tt
 
-    def __le__(self, other):
+    def __le__(self, other: "Time") -> bool:
         return self.tt <= other.tt
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, Time):
+            return NotImplemented
         return self.tt != other.tt
 
-    def __gt__(self, other):
+    def __gt__(self, other: "Time") -> bool:
         return self.tt > other.tt
 
-    def __ge__(self, other):
+    def __ge__(self, other: "Time") -> bool:
         return self.tt >= other.tt
 
 
@@ -974,15 +979,15 @@ class Observer:
     height : float
         Elevation above sea level in meters.
     """
-    def __init__(self, latitude, longitude, height=0.0):
+    def __init__(self, latitude: float, longitude: float, height: float = 0.0) -> None:
         self.latitude = latitude
         self.longitude = longitude
         self.height = height
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Observer(latitude={}, longitude={}, height={})'.format(self.latitude, self.longitude, self.height)
 
-    def __str__(self):
+    def __str__(self) -> str:
         text = '('
         text += 'S' if (self.latitude < 0) else 'N'
         text += '{:0.8f}, '.format(abs(self.latitude))
@@ -1001,10 +1006,10 @@ class RotationMatrix:
     rot : float[3][3]
         A normalized 3x3 rotation matrix.
     """
-    def __init__(self, rot):
+    def __init__(self, rot: List[List[float]]) -> None:
         self.rot = rot
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'RotationMatrix({})'.format(self.rot)
 
 class Spherical:
@@ -1019,16 +1024,16 @@ class Spherical:
     dist : float
         Distance in AU.
     """
-    def __init__(self, lat, lon, dist):
+    def __init__(self, lat: float, lon: float, dist: float) -> None:
         self.lat = lat
         self.lon = lon
         self.dist = dist
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Spherical(lat={}, lon={}, dist={})'.format(self.lat, self.lon, self.dist)
 
 class _iau2000b:
-    def __init__(self, time):
+    def __init__(self, time: Time) -> None:
         t = time.tt / 36525.0
         elp = math.fmod((1287104.79305 + t*129596581.0481),  _ASEC360) * _ASEC2RAD
         f   = math.fmod((335779.526232 + t*1739527262.8478), _ASEC360) * _ASEC2RAD
@@ -1066,7 +1071,7 @@ class _iau2000b:
         self.dpsi = -0.000135 + (dp * 1.0e-7)
         self.deps = +0.000388 + (de * 1.0e-7)
 
-def _mean_obliq(tt):
+def _mean_obliq(tt: float) -> float:
     t = tt / 36525
     asec = (
         (((( -  0.0000000434   * t
@@ -1078,7 +1083,7 @@ def _mean_obliq(tt):
     return asec / 3600.0
 
 class _e_tilt:
-    def __init__(self, time):
+    def __init__(self, time: Time) -> None:
         e = _iau2000b(time)
         self.dpsi = e.dpsi
         self.deps = e.deps
@@ -1200,17 +1205,17 @@ class Equatorial:
         y = direction of the June solstice,
         z = north.
     """
-    def __init__(self, ra, dec, dist, vec):
+    def __init__(self, ra: float, dec: float, dist: float, vec: Vector) -> None:
         self.ra = ra
         self.dec = dec
         self.dist = dist
         self.vec = vec
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Equatorial(ra={}, dec={}, dist={}, vec={})'.format(self.ra, self.dec, self.dist, repr(self.vec))
 
 
-def _vector2radec(pos, time):
+def _vector2radec(pos, time: Time) -> Equatorial:
     xyproj = pos[0]*pos[0] + pos[1]*pos[1]
     dist = math.sqrt(xyproj + pos[2]*pos[2])
     if xyproj == 0.0:
@@ -1231,7 +1236,7 @@ def _vector2radec(pos, time):
     return Equatorial(ra, dec, dist, vec)
 
 
-def _nutation_rot(time, direction):
+def _nutation_rot(time: Time, direction) -> RotationMatrix:
     tilt = time._etilt()
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
@@ -1287,7 +1292,7 @@ def _era(time):        # Earth Rotation Angle
         theta += 360.0
     return theta
 
-def SiderealTime(time):
+def SiderealTime(time: Time) -> float:
     """Calculates Greenwich Apparent Sidereal Time (GAST).
 
     Given a date and time, this function calculates the rotation of the
@@ -2234,7 +2239,7 @@ def _CalcMoon(time):
         (_ARC * _EARTH_EQUATORIAL_RADIUS_AU) / (0.999953253 * SINPI)
     )
 
-def GeoMoon(time):
+def GeoMoon(time: Time) -> Vector:
     """Calculates equatorial geocentric position of the Moon at a given time.
 
     Given a time of observation, calculates the Moon's position as a vector.
@@ -2277,7 +2282,7 @@ def GeoMoon(time):
     return Vector(mpos2[0], mpos2[1], mpos2[2], time)
 
 
-def EclipticGeoMoon(time):
+def EclipticGeoMoon(time: Time) -> Spherical:
     """Calculates spherical ecliptic geocentric position of the Moon.
 
     Given a time of observation, calculates the Moon's geocentric position
@@ -2335,7 +2340,7 @@ def EclipticGeoMoon(time):
     return Spherical(eclip.elat, eclip.elon, moon.distance_au)
 
 
-def GeoMoonState(time):
+def GeoMoonState(time: Time) -> StateVector:
     """Calculates equatorial geocentric position and velocity of the Moon at a given time.
 
     Given a time of observation, calculates the Moon's position and velocity vectors.
@@ -2377,7 +2382,7 @@ def GeoMoonState(time):
     )
 
 
-def GeoEmbState(time):
+def GeoEmbState(time: Time) -> StateVector:
     """Calculates the geocentric position and velocity of the Earth/Moon barycenter.
 
     Given a time of observation, calculates the geocentric position and velocity vectors
@@ -3264,45 +3269,45 @@ _PlutoStateTable = [
 
 
 class _TerseVector:
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z) -> None:
         self.x = x
         self.y = y
         self.z = z
 
-    def clone(self):
+    def clone(self) -> "_TerseVector":
         '''Create a copy of this vector.'''
         return _TerseVector(self.x, self.y, self.z)
 
     @staticmethod
-    def zero():
+    def zero() -> "_TerseVector":
         '''Return a zero vector.'''
         return _TerseVector(0.0, 0.0, 0.0)
 
-    def ToAstroVector(self, time):
+    def ToAstroVector(self, time: Time) -> Vector:
         '''Convert _TerseVector object to Vector object.'''
         return Vector(self.x, self.y, self.z, time)
 
-    def quadrature(self):
+    def quadrature(self) -> float:
         '''Return magnitude squared of this vector.'''
         return self.x**2 + self.y**2 + self.z**2
 
-    def mean(self, other):
+    def mean(self, other: "_TerseVector") -> "_TerseVector":
         '''Return the average of this vector and another vector.'''
         return _TerseVector((self.x + other.x)/2.0, (self.y + other.y)/2.0, (self.z + other.z)/2.0)
 
-    def __add__(self, other):
+    def __add__(self, other: "_TerseVector") -> "_TerseVector":
         return _TerseVector(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    def __sub__(self, other):
+    def __sub__(self, other: "_TerseVector") -> "_TerseVector":
         return _TerseVector(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    def __mul__(self, scalar):
+    def __mul__(self, scalar: float) -> "_TerseVector":
         return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
 
-    def __rmul__(self, scalar):
+    def __rmul__(self, scalar: float) -> "_TerseVector":
         return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
 
-    def __truediv__(self, scalar):
+    def __truediv__(self, scalar: float) -> "_TerseVector":
         return _TerseVector(self.x / scalar, self.y / scalar, self.z / scalar)
 
 
@@ -3689,13 +3694,13 @@ class JupiterMoonsInfo:
     callisto : StateVector
         The position and velocity of Jupiter's moon Callisto.
     """
-    def __init__(self, moon):
+    def __init__(self, moon: List[StateVector]) -> None:
         self.io = moon[0]
         self.europa = moon[1]
         self.ganymede = moon[2]
         self.callisto = moon[3]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'JupiterMoonsInfo(io={}, europa={}, ganymede={}, callisto={})'.format(
             repr(self.io),
             repr(self.europa),
@@ -3781,7 +3786,7 @@ def _CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta):
     return RotateState(_Rotation_JUP_EQJ, state)
 
 
-def JupiterMoons(time):
+def JupiterMoons(time: Time) -> JupiterMoonsInfo:
     """Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.
 
     Calculates position and velocity vectors for Jupiter's moons
@@ -3851,7 +3856,7 @@ def _QuadInterp(tm, dt, fa, fm, fb):
     df_dt = (2*Q*x + R) / dt
     return (t, df_dt)
 
-def Search(func, context, t1, t2, dt_tolerance_seconds):
+def Search(func: Callable[[object, Time], float], context: object, t1: Time, t2: Time, dt_tolerance_seconds: float) -> Optional[Time]:
     """Searches for a time at which a function's value increases through zero.
 
     Certain astronomy calculations involve finding a time when an event occurs.
@@ -3999,7 +4004,7 @@ def Search(func, context, t1, t2, dt_tolerance_seconds):
 #----------------------------------------------------------------------------
 
 
-def HelioVector(body, time):
+def HelioVector(body: Body, time: Time) -> Vector:
     """Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.
 
     This function calculates the position of the given celestial body as a vector,
@@ -4058,7 +4063,7 @@ def HelioVector(body, time):
     raise InvalidBodyError(body)
 
 
-def HelioDistance(body, time):
+def HelioDistance(body: Body, time: Time) -> float:
     """Calculates the distance between a body and the Sun at a given time.
 
     Given a date and time, this function calculates the distance between
@@ -4107,11 +4112,11 @@ class PositionFunction(abc.ABC):
     specified time. It is passed an instance of `PositionFunction`
     that expresses a relative position vector function.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abc.abstractmethod
-    def Position(self, time):
+    def Position(self, time: Time) -> Vector:
         """Returns a relative position vector for a given time.
 
         Parameters
@@ -4124,7 +4129,7 @@ class PositionFunction(abc.ABC):
         Vector
         """
 
-def CorrectLightTravel(func, time):
+def CorrectLightTravel(func: PositionFunction, time: Time) -> Vector:
     """Solve for light travel time of a vector function.
 
     When observing a distant object, for example Jupiter as seen from Earth,
@@ -4175,14 +4180,14 @@ def CorrectLightTravel(func, time):
 
 
 class _BodyPosition(PositionFunction):
-    def __init__(self, observerBody, targetBody, aberration, observerPos):
+    def __init__(self, observerBody: Body, targetBody: Body, aberration: bool, observerPos) -> None:
         super().__init__()
         self.observerBody = observerBody
         self.targetBody = targetBody
         self.aberration = aberration
         self.observerPos = observerPos
 
-    def Position(self, time):
+    def Position(self, time: Time) -> Vector:
         if self.aberration:
             # The following discussion is worded with the observer body being the Earth,
             # which is often the case. However, the same reasoning applies to any observer body
@@ -4208,7 +4213,7 @@ class _BodyPosition(PositionFunction):
         return HelioVector(self.targetBody, time) - observerPos
 
 
-def BackdatePosition(time, observerBody, targetBody, aberration):
+def BackdatePosition(time: Time, observerBody: Body, targetBody: Body, aberration: bool) -> Vector:
     """Solve for light travel time correction of apparent position.
 
     When observing a distant object, for example Jupiter as seen from Earth,
@@ -4276,7 +4281,7 @@ def BackdatePosition(time, observerBody, targetBody, aberration):
     return CorrectLightTravel(func, time)
 
 
-def GeoVector(body, time, aberration):
+def GeoVector(body: Body, time: Time, aberration: bool) -> Vector:
     """Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.
 
     This function calculates the position of the given celestial body as a vector,
@@ -4323,7 +4328,7 @@ def GeoVector(body, time, aberration):
     return vec
 
 
-def _ExportState(terse, time):
+def _ExportState(terse, time: Time) -> StateVector:
     return StateVector(
         terse.r.x, terse.r.y, terse.r.z,
         terse.v.x, terse.v.y, terse.v.z,
@@ -4331,7 +4336,7 @@ def _ExportState(terse, time):
     )
 
 
-def BaryState(body, time):
+def BaryState(body: Body, time: Time) -> StateVector:
     """Calculates barycentric position and velocity vectors for the given body.
 
     Given a body and a time, calculates the barycentric position and velocity
@@ -4409,7 +4414,7 @@ def BaryState(body, time):
     raise InvalidBodyError(body)
 
 
-def HelioState(body, time):
+def HelioState(body: Body, time: Time) -> StateVector:
     """Calculates heliocentric position and velocity vectors for the given body.
 
     Given a body and a time, calculates the position and velocity
@@ -4483,7 +4488,7 @@ def HelioState(body, time):
     raise InvalidBodyError(body)
 
 
-def Equator(body, time, observer, ofdate, aberration):
+def Equator(body: Body, time: Time, observer: Observer, ofdate: bool, aberration: bool) -> Equatorial:
     """Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.
 
     Calculates topocentric equatorial coordinates in one of two different systems:
@@ -4536,7 +4541,7 @@ def Equator(body, time, observer, ofdate, aberration):
     return _vector2radec(datevect, time)
 
 
-def ObserverVector(time, observer, ofdate):
+def ObserverVector(time: Time, observer: Observer, ofdate: bool) -> Vector:
     """Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.
 
     This function calculates a vector from the center of the Earth to
@@ -4580,7 +4585,7 @@ def ObserverVector(time, observer, ofdate):
         ovec = _precession(ovec, time, _PrecessDir.Into2000)
     return Vector(ovec[0], ovec[1], ovec[2], time)
 
-def ObserverState(time, observer, ofdate):
+def ObserverState(time: Time, observer: Observer, ofdate: bool) -> StateVector:
     """Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.
 
     This function calculates position and velocity vectors of an observer
@@ -4627,7 +4632,7 @@ def ObserverState(time, observer, ofdate):
         state = _precession_posvel(state, time, _PrecessDir.Into2000)
     return state
 
-def VectorObserver(vector, ofdate):
+def VectorObserver(vector: Vector, ofdate: bool) -> Observer:
     """Calculates the geographic location corresponding to an equatorial vector.
 
     This is the inverse function of #ObserverVector.
@@ -4660,7 +4665,7 @@ def VectorObserver(vector, ofdate):
         ovec = _nutation(ovec, vector.t, _PrecessDir.From2000)
     return _inverse_terra(ovec, gast)
 
-def ObserverGravity(latitude, height):
+def ObserverGravity(latitude: float, height: float) -> float:
     """Calculates the gravitational acceleration experienced by an observer on the Earth.
 
     This function implements the WGS 84 Ellipsoidal Gravity Formula.
@@ -4730,13 +4735,13 @@ class HorizontalCoordinates:
     dec : float
         The declination in degrees.
     """
-    def __init__(self, azimuth, altitude, ra, dec):
+    def __init__(self, azimuth: float, altitude: float, ra: float, dec: float) -> None:
         self.azimuth = azimuth
         self.altitude = altitude
         self.ra = ra
         self.dec = dec
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'HorizontalCoordinates(azimuth={}, altitude={}, ra={}, dec={})'.format(
             self.azimuth,
             self.altitude,
@@ -4744,7 +4749,7 @@ class HorizontalCoordinates:
             self.dec
         )
 
-def Horizon(time, observer, ra, dec, refraction):
+def Horizon(time: Time, observer: Observer, ra: float, dec: float, refraction: Refraction) -> HorizontalCoordinates:
     """Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.
 
     Given a date and time, the geographic location of an observer on the Earth, and
@@ -4907,7 +4912,7 @@ def Horizon(time, observer, ra, dec, refraction):
 
     return HorizontalCoordinates(az, 90.0 - zd, hor_ra, hor_dec)
 
-def RefractionAngle(refraction, altitude):
+def RefractionAngle(refraction: Refraction, altitude: float) -> float:
     """Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
 
     Given an altitude angle and a refraction option, calculates
@@ -4963,7 +4968,7 @@ def RefractionAngle(refraction, altitude):
         raise Error('Inalid refraction option')
     return refr
 
-def InverseRefractionAngle(refraction, bent_altitude):
+def InverseRefractionAngle(refraction: Refraction, bent_altitude: float) -> float:
     """Calculates the inverse of an atmospheric refraction angle.
 
     Given an observed altitude angle that includes atmospheric refraction,
@@ -5017,12 +5022,12 @@ class EclipticCoordinates:
     elon : float
         Longitude in degrees around the ecliptic plane prograde from the equinox.
     """
-    def __init__(self, vec, elat, elon):
+    def __init__(self, vec: Vector, elat: float, elon: float) -> None:
         self.vec = vec
         self.elat = elat
         self.elon = elon
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'EclipticCoordinates({}, elat={}, elon={})'.format(repr(self.vec), self.elat, self.elon)
 
 def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
@@ -5042,7 +5047,7 @@ def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
     vec = Vector(ex, ey, ez, time)
     return EclipticCoordinates(vec, elat, elon)
 
-def SunPosition(time):
+def SunPosition(time: Time) -> EclipticCoordinates:
     """Calculates geocentric ecliptic coordinates for the Sun.
 
     This function calculates the position of the Sun as seen from the Earth.
@@ -5084,7 +5089,7 @@ def SunPosition(time):
     true_obliq = math.radians(adjusted_time._etilt().tobl)
     return _RotateEquatorialToEcliptic(sun_ofdate, true_obliq, time)
 
-def Ecliptic(eqj):
+def Ecliptic(eqj: Vector) -> EclipticCoordinates:
     """Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.
 
     Given coordinates relative to the Earth's equator at J2000 (the instant of noon UTC
@@ -5093,7 +5098,7 @@ def Ecliptic(eqj):
 
     Parameters
     ----------
-    eqj : Equatorial
+    eqj : Vector
         Equatorial coordinates in the J2000 frame of reference.
         You can call #GeoVector to obtain suitable equatorial coordinates.
 
@@ -5115,7 +5120,7 @@ def Ecliptic(eqj):
     return _RotateEquatorialToEcliptic(eqd_pos, math.radians(et.tobl), eqj.t)
 
 
-def EclipticLongitude(body, time):
+def EclipticLongitude(body: Body, time: Time) -> float:
     """Calculates heliocentric ecliptic longitude of a body.
 
     This function calculates the angle around the plane of the Earth's orbit
@@ -5141,7 +5146,7 @@ def EclipticLongitude(body, time):
     eclip = Ecliptic(hv)
     return eclip.elon
 
-def AngleFromSun(body, time):
+def AngleFromSun(body: Body, time: Time) -> float:
     """Returns the angle between the given body and the Sun, as seen from the Earth.
 
     This function calculates the angular separation between the given body and the Sun,
@@ -5168,7 +5173,7 @@ def AngleFromSun(body, time):
     bv = GeoVector(body, time, True)
     return AngleBetween(sv, bv)
 
-def PairLongitude(body1, body2, time):
+def PairLongitude(body1: Body, body2: Body, time: Time) -> float:
     """Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
 
     This function determines where one body appears around the ecliptic plane
@@ -5227,13 +5232,13 @@ class ElongationEvent:
     ecliptic_separation : float
         The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.
     """
-    def __init__(self, time, visibility, elongation, ecliptic_separation):
+    def __init__(self, time: Time, visibility: "Visibility", elongation: float, ecliptic_separation: float) -> None:
         self.time = time
         self.visibility = visibility
         self.elongation = elongation
         self.ecliptic_separation = ecliptic_separation
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'ElongationEvent({}, {}, elongation={}, ecliptic_separation={})'.format(
             repr(self.time),
             self.visibility,
@@ -5253,7 +5258,7 @@ class Visibility(enum.Enum):
     Morning = 0
     Evening = 1
 
-def Elongation(body, time):
+def Elongation(body: Body, time: Time) -> ElongationEvent:
     """Determines visibility of a celestial body relative to the Sun, as seen from the Earth.
 
     This function returns an #ElongationEvent object, which provides the following
@@ -5300,7 +5305,7 @@ def _rlon_offset(body, time, direction, targetRelLon):
     diff = direction * (elon - plon)
     return _LongitudeOffset(diff - targetRelLon)
 
-def SearchRelativeLongitude(body, targetRelLon, startTime):
+def SearchRelativeLongitude(body: Body, targetRelLon:float, startTime: Time) -> Time:
     """Searches for when the Earth and another planet are separated by a certain ecliptic longitude.
 
     Searches for the time when the Earth and another planet are separated by a specified angle
@@ -5392,7 +5397,7 @@ def _neg_elong_slope(body, time):
     e2 = AngleFromSun(body, t2)
     return (e1 - e2)/dt
 
-def SearchMaxElongation(body, startTime):
+def SearchMaxElongation(body: Body, startTime: Time) -> Optional[ElongationEvent]:
     """Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.
 
     Mercury and Venus are are often difficult to observe because they are closer to the Sun than the Earth is.
@@ -5506,7 +5511,7 @@ def _sun_offset(targetLon, time):
     ecl = SunPosition(time)
     return _LongitudeOffset(ecl.elon - targetLon)
 
-def SearchSunLongitude(targetLon, startTime, limitDays):
+def SearchSunLongitude(targetLon: float, startTime: Time, limitDays: float) -> Optional[Time]:
     """Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.
 
     This function finds the moment in time, if any exists in the given time window,
@@ -5543,7 +5548,7 @@ def SearchSunLongitude(targetLon, startTime, limitDays):
     t2 = startTime.AddDays(limitDays)
     return Search(_sun_offset, targetLon, startTime, t2, 0.01)
 
-def MoonPhase(time):
+def MoonPhase(time: Time) -> float:
     """Returns the Moon's phase as an angle from 0 to 360 degrees.
 
     This function determines the phase of the Moon using its apparent
@@ -5570,7 +5575,7 @@ def _moon_offset(targetLon, time):
     angle = MoonPhase(time)
     return _LongitudeOffset(angle - targetLon)
 
-def SearchMoonPhase(targetLon, startTime, limitDays):
+def SearchMoonPhase(targetLon: float, startTime: Time, limitDays: float):
     """Searches for the time that the Moon reaches a specified phase.
 
     Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
@@ -5661,7 +5666,7 @@ class MoonQuarter:
     def __repr__(self):
         return 'MoonQuarter({}, {})'.format(self.quarter, repr(self.time))
 
-def SearchMoonQuarter(startTime):
+def SearchMoonQuarter(startTime: Time) -> MoonQuarter:
     """Finds the first lunar quarter after the specified date and time.
 
     A lunar quarter is one of the following four lunar phase events:
@@ -5689,7 +5694,7 @@ def SearchMoonQuarter(startTime):
         raise InternalError()
     return MoonQuarter(quarter, time)
 
-def NextMoonQuarter(mq):
+def NextMoonQuarter(mq: MoonQuarter) -> MoonQuarter:
     """Continues searching for lunar quarters from a previous search.
 
     After calling #SearchMoonQuarter, this function can be called
@@ -5750,7 +5755,7 @@ class IlluminationInfo:
         as seen from observers on the Earth, and are thus very difficult to see.
         For bodies other than Saturn, `ring_tilt` is `None`.
     """
-    def __init__(self, time, mag, phase, helio_dist, geo_dist, hc, gc, ring_tilt):
+    def __init__(self, time: Time, mag: float, phase: float, helio_dist: float, geo_dist: float, hc: Vector, gc: Vector, ring_tilt: Optional[float]) -> None:
         self.time = time
         self.mag = mag
         self.phase_angle = phase
@@ -5761,7 +5766,7 @@ class IlluminationInfo:
         self.gc = gc
         self.ring_tilt = ring_tilt
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'IlluminationInfo({}, mag={}, phase_angle={}, helio_dist={}, geo_dist={}, hc={}, gc={}, ring_tilt={})'.format(
             repr(self.time),
             self.mag,
@@ -5833,7 +5838,7 @@ def _VisualMagnitude(body, phase, helio_dist, geo_dist):
     mag += 5.0 * math.log10(helio_dist * geo_dist)
     return mag
 
-def Illumination(body, time):
+def Illumination(body: Body, time: Time) -> IlluminationInfo:
     """Finds visual magnitude, phase angle, and other illumination information about a celestial body.
 
     This function calculates information about how bright a celestial body appears from the Earth,
@@ -5909,7 +5914,7 @@ def _mag_slope(body, time):
     y2 = Illumination(body, t2)
     return (y2.mag - y1.mag) / dt
 
-def SearchPeakMagnitude(body, startTime):
+def SearchPeakMagnitude(body: Body, startTime: Time) -> IlluminationInfo:
     """Searches for the date and time Venus will next appear brightest as seen from the Earth.
 
     This function searches for the date and time Venus appears brightest as seen from the Earth.
@@ -6027,14 +6032,14 @@ class HourAngleEvent:
     hor : HorizontalCoordinates
         Apparent coordinates of the body at the time it crosses the specified hour angle.
     """
-    def __init__(self, time, hor):
+    def __init__(self, time: Time, hor: HorizontalCoordinates):
         self.time = time
         self.hor = hor
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'HourAngleEvent({}, {})'.format(repr(self.time), repr(self.hor))
 
-def SearchHourAngle(body, observer, hourAngle, startTime, direction = +1):
+def SearchHourAngle(body: Body, observer: Observer, hourAngle: float, startTime: Time, direction: int = +1) -> HourAngleEvent:
     """Searches for the time when the center of a body reaches a specified hour angle as seen by an observer on the Earth.
 
     The *hour angle* of a celestial body indicates its position in the sky with respect
@@ -6128,7 +6133,7 @@ def SearchHourAngle(body, observer, hourAngle, startTime, direction = +1):
         time = time.AddDays(delta_days)
 
 
-def HourAngle(body, time, observer):
+def HourAngle(body: Body, time: Time, observer: Observer) -> float:
     """Finds the hour angle of a body for a given observer and time.
 
     The *hour angle* of a celestial body indicates its position in the sky with respect
@@ -6360,7 +6365,7 @@ def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bod
             a1 = a2
 
 
-def SearchRiseSet(body, observer, direction, startTime, limitDays):
+def SearchRiseSet(body: Body, observer: Observer, direction: Direction, startTime: Time, limitDays: float) -> Optional[Time]:
     """Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
 
     This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
@@ -6421,7 +6426,7 @@ def SearchRiseSet(body, observer, direction, startTime, limitDays):
     return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, -_REFRACTION_NEAR_HORIZON)
 
 
-def SearchAltitude(body, observer, direction, startTime, limitDays, altitude):
+def SearchAltitude(body: Body, observer: Observer, direction: Direction, startTime: Time, limitDays: float, altitude: float) -> Optional[Time]:
     """Finds the next time the center of a body passes through a given altitude.
 
     Finds when the center of the given body ascends or descends through a given
@@ -6504,13 +6509,13 @@ class SeasonInfo:
     dec_solstice : Time
         The date and time of the December solstice for the specified year.
     """
-    def __init__(self, mar_equinox, jun_solstice, sep_equinox, dec_solstice):
+    def __init__(self, mar_equinox: Time, jun_solstice: Time, sep_equinox: Time, dec_solstice: Time) -> None:
         self.mar_equinox = mar_equinox
         self.jun_solstice = jun_solstice
         self.sep_equinox = sep_equinox
         self.dec_solstice = dec_solstice
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'SeasonInfo(mar_equinox={}, jun_solstice={}, sep_equinox={}, dec_solstice={})'.format(
             repr(self.mar_equinox),
             repr(self.jun_solstice),
@@ -6526,7 +6531,7 @@ def _FindSeasonChange(targetLon, year, month, day):
         raise InternalError()
     return time
 
-def Seasons(year):
+def Seasons(year: int) -> SeasonInfo:
     """Finds both equinoxes and both solstices for a given calendar year.
 
     The changes of seasons are defined by solstices and equinoxes.
@@ -6631,20 +6636,20 @@ class Apsis:
     dist_km : float
         The distance between the centers of the bodies in kilometers.
     """
-    def __init__(self, time, kind, dist_au):
+    def __init__(self, time: Time, kind: ApsisKind, dist_au: float) -> None:
         self.time = time
         self.kind = kind
         self.dist_au = dist_au
         self.dist_km = dist_au * KM_PER_AU
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Apsis({}, {}, dist_au={})'.format(
             repr(self.time),
             self.kind,
             self.dist_au
         )
 
-def SearchLunarApsis(startTime):
+def SearchLunarApsis(startTime: Time) -> Apsis:
     """Finds the time of the first lunar apogee or perigee after the given time.
 
     Given a date and time to start the search in `startTime`, this function finds
@@ -6711,7 +6716,7 @@ def SearchLunarApsis(startTime):
     raise InternalError()
 
 
-def NextLunarApsis(apsis):
+def NextLunarApsis(apsis: Apsis) -> Apsis:
     """Finds the next lunar perigee or apogee in a series.
 
     This function requires an #Apsis value obtained from a call to
@@ -6750,7 +6755,7 @@ def _planet_distance_slope(context, time):
     return direction * (dist2 - dist1) / dt
 
 
-def SearchPlanetApsis(body, startTime):
+def SearchPlanetApsis(body: Body, startTime: Time) -> Apsis:
     """Finds the next planet perihelion or aphelion, after a given time.
 
     Given a date and time to start the search in `startTime`, this function finds the
@@ -6817,7 +6822,7 @@ def SearchPlanetApsis(body, startTime):
     raise InternalError()   # should have found planet apsis within 2 planet orbits
 
 
-def NextPlanetApsis(body, apsis):
+def NextPlanetApsis(body: Body, apsis: Apsis) -> Apsis:
     """Finds the next planetary perihelion or aphelion event in a series.
 
     This function requires an #Apsis value obtained from a call
@@ -6924,7 +6929,7 @@ def _BruteSearchPlanetApsis(body, startTime):
     raise InternalError()   # failed to find Neptune apsis
 
 
-def VectorFromSphere(sphere, time):
+def VectorFromSphere(sphere: Spherical, time: Time) -> Vector:
     """Converts spherical coordinates to Cartesian coordinates.
 
     Given spherical coordinates and a time at which they are valid,
@@ -6954,7 +6959,7 @@ def VectorFromSphere(sphere, time):
     )
 
 
-def EquatorFromVector(vec):
+def EquatorFromVector(vec: Vector) -> Equatorial:
     """Given an equatorial vector, calculates equatorial angular coordinates.
 
     Parameters
@@ -6971,7 +6976,7 @@ def EquatorFromVector(vec):
     return Equatorial(sphere.lon / 15.0, sphere.lat, sphere.dist, vec)
 
 
-def SphereFromVector(vector):
+def SphereFromVector(vector: Vector) -> Spherical:
     """Converts Cartesian coordinates to spherical coordinates.
 
     Given a Cartesian vector, returns latitude, longitude, and distance.
@@ -7013,7 +7018,7 @@ def _ToggleAzimuthDirection(az):
     return az
 
 
-def VectorFromHorizon(sphere, time, refraction):
+def VectorFromHorizon(sphere: Spherical, time: Time, refraction: Refraction) -> Vector:
     """Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.
 
     Parameters
@@ -7040,7 +7045,7 @@ def VectorFromHorizon(sphere, time, refraction):
     return VectorFromSphere(xsphere, time)
 
 
-def HorizonFromVector(vector, refraction):
+def HorizonFromVector(vector: Vector, refraction: Refraction) -> Spherical:
     """Converts Cartesian coordinates to horizontal coordinates.
 
     Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
@@ -7074,7 +7079,7 @@ def HorizonFromVector(vector, refraction):
     return sphere
 
 
-def InverseRotation(rotation):
+def InverseRotation(rotation: RotationMatrix) -> RotationMatrix:
     """Calculates the inverse of a rotation matrix.
 
     Given a rotation matrix that performs some coordinate transform,
@@ -7097,7 +7102,7 @@ def InverseRotation(rotation):
     ])
 
 
-def CombineRotation(a, b):
+def CombineRotation(a: RotationMatrix, b: RotationMatrix) -> RotationMatrix:
     """Creates a rotation based on applying one rotation followed by another.
 
     Given two rotation matrices, returns a combined rotation matrix that is
@@ -7140,7 +7145,7 @@ def CombineRotation(a, b):
     ])
 
 
-def IdentityMatrix():
+def IdentityMatrix() -> RotationMatrix:
     """Creates an identity rotation matrix.
 
     Returns a rotation matrix that has no effect on orientation.
@@ -7160,7 +7165,7 @@ def IdentityMatrix():
     ])
 
 
-def Pivot(rotation, axis, angle):
+def Pivot(rotation: RotationMatrix, axis: int, angle: float) -> RotationMatrix:
     """Re-orients a rotation matrix by pivoting it by an angle around one of its axes.
 
     Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
@@ -7208,7 +7213,7 @@ def Pivot(rotation, axis, angle):
     j = (axis + 2) % 3
     k = axis
 
-    rot = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    rot: List[List[float]] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
     rot[i][i] = c*rotation.rot[i][i] - s*rotation.rot[i][j]
     rot[i][j] = s*rotation.rot[i][i] + c*rotation.rot[i][j]
@@ -7225,7 +7230,7 @@ def Pivot(rotation, axis, angle):
     return RotationMatrix(rot)
 
 
-def RotateVector(rotation, vector):
+def RotateVector(rotation: RotationMatrix, vector: Vector) -> Vector:
     """Applies a rotation to a vector, yielding a rotated vector.
 
     This function transforms a vector in one orientation to a vector
@@ -7251,7 +7256,7 @@ def RotateVector(rotation, vector):
     )
 
 
-def RotateState(rotation, state):
+def RotateState(rotation: RotationMatrix, state: StateVector) -> StateVector:
     """Applies a rotation to a state vector, yielding a rotated state vector.
 
     This function transforms a state vector in one orientation to a
@@ -7281,7 +7286,7 @@ def RotateState(rotation, state):
     )
 
 
-def Rotation_EQJ_ECL():
+def Rotation_EQJ_ECL() -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7304,7 +7309,7 @@ def Rotation_EQJ_ECL():
     ])
 
 
-def Rotation_ECL_EQJ():
+def Rotation_ECL_EQJ() -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7326,7 +7331,7 @@ def Rotation_ECL_EQJ():
         [ 0, -s, +c]
     ])
 
-def Rotation_EQJ_EQD(time):
+def Rotation_EQJ_EQD(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7349,7 +7354,7 @@ def Rotation_EQJ_EQD(time):
     return CombineRotation(prec, nut)
 
 
-def Rotation_EQJ_ECT(time):
+def Rotation_EQJ_ECT(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7372,7 +7377,7 @@ def Rotation_EQJ_ECT(time):
     return CombineRotation(rot, step)
 
 
-def Rotation_ECT_EQJ(time):
+def Rotation_ECT_EQJ(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7395,7 +7400,7 @@ def Rotation_ECT_EQJ(time):
     return CombineRotation(rot, step)
 
 
-def Rotation_EQD_EQJ(time):
+def Rotation_EQD_EQJ(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7418,7 +7423,7 @@ def Rotation_EQD_EQJ(time):
     return CombineRotation(nut, prec)
 
 
-def Rotation_EQD_HOR(time, observer):
+def Rotation_EQD_HOR(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7463,7 +7468,7 @@ def Rotation_EQD_HOR(time, observer):
     ])
 
 
-def Rotation_HOR_EQD(time, observer):
+def Rotation_HOR_EQD(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7487,7 +7492,7 @@ def Rotation_HOR_EQD(time, observer):
     return InverseRotation(rot)
 
 
-def Rotation_HOR_EQJ(time, observer):
+def Rotation_HOR_EQJ(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7512,7 +7517,7 @@ def Rotation_HOR_EQJ(time, observer):
     return CombineRotation(hor_eqd, eqd_eqj)
 
 
-def Rotation_EQJ_HOR(time, observer):
+def Rotation_EQJ_HOR(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7543,7 +7548,7 @@ def Rotation_EQJ_HOR(time, observer):
     return InverseRotation(rot)
 
 
-def Rotation_EQD_ECL(time):
+def Rotation_EQD_ECL(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7566,7 +7571,7 @@ def Rotation_EQD_ECL(time):
     return CombineRotation(eqd_eqj, eqj_ecl)
 
 
-def Rotation_ECL_EQD(time):
+def Rotation_ECL_EQD(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7588,7 +7593,7 @@ def Rotation_ECL_EQD(time):
     return InverseRotation(rot)
 
 
-def Rotation_ECL_HOR(time, observer):
+def Rotation_ECL_HOR(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7620,7 +7625,7 @@ def Rotation_ECL_HOR(time, observer):
     return CombineRotation(ecl_eqd, eqd_hor)
 
 
-def Rotation_HOR_ECL(time, observer):
+def Rotation_HOR_ECL(time: Time, observer: Observer) -> RotationMatrix:
     """Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7643,7 +7648,7 @@ def Rotation_HOR_ECL(time, observer):
     rot = Rotation_ECL_HOR(time, observer)
     return InverseRotation(rot)
 
-def Rotation_EQJ_GAL():
+def Rotation_EQJ_GAL() -> RotationMatrix:
     """Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7665,7 +7670,7 @@ def Rotation_EQJ_GAL():
         [-0.4838000529948520, +0.7470034631630423, +0.4559861124470794]
     ])
 
-def Rotation_GAL_EQJ():
+def Rotation_GAL_EQJ() -> RotationMatrix:
     """Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7687,7 +7692,7 @@ def Rotation_GAL_EQJ():
         [-0.8676668813529025, -0.1980677870294097, +0.4559861124470794]
     ])
 
-def Rotation_ECT_EQD(time):
+def Rotation_ECT_EQD(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7715,7 +7720,7 @@ def Rotation_ECT_EQD(time):
         [0.0,  -s,  +c]
     ])
 
-def Rotation_EQD_ECT(time):
+def Rotation_EQD_ECT(time: Time) -> RotationMatrix:
     """Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).
 
     This is one of the family of functions that returns a rotation matrix
@@ -7764,13 +7769,13 @@ class ConstellationInfo:
     dec1875 : float
         Declination expressed in B1875 coordinates.
     """
-    def __init__(self, symbol, name, ra1875, dec1875):
+    def __init__(self, symbol: str, name: str, ra1875: float, dec1875: float) -> None:
         self.symbol = symbol
         self.name = name
         self.ra1875 = ra1875
         self.dec1875 = dec1875
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'ConstellationInfo(symbol={}, name={}, ra1875={}, dec1875={})'.format(
             repr(self.symbol),
             repr(self.name),
@@ -8235,7 +8240,7 @@ _ConstelBounds = (
 
 
 
-def Constellation(ra, dec):
+def Constellation(ra: float, dec: float) -> ConstellationInfo:
     """Determines the constellation that contains the given point in the sky.
 
     Given J2000 equatorial (EQJ) coordinates of a point in the sky, determines the
@@ -8482,7 +8487,7 @@ class LunarEclipseInfo:
     sd_total : float
          The semi-duration of the penumbral phase in minutes, or 0.0 if none.
     """
-    def __init__(self, kind, obscuration, peak, sd_penum, sd_partial, sd_total):
+    def __init__(self, kind: EclipseKind, obscuration: float, peak: Time, sd_penum: float, sd_partial: float, sd_total: float) -> None:
         self.kind = kind
         self.obscuration = obscuration
         self.peak = peak
@@ -8490,7 +8495,7 @@ class LunarEclipseInfo:
         self.sd_partial = sd_partial
         self.sd_total = sd_total
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'LunarEclipseInfo({}, obscuration={}, peak={}, sd_penum={}, sd_partial={}, sd_total={})'.format(
             self.kind,
             self.obscuration,
@@ -8551,7 +8556,7 @@ class GlobalSolarEclipseInfo:
     longitude : float
         The geographic longitude at the center of the peak eclipse shadow.
     """
-    def __init__(self, kind, obscuration, peak, distance, latitude, longitude):
+    def __init__(self, kind: EclipseKind, obscuration: float, peak: Time, distance: float, latitude: float, longitude: float) -> None:
         self.kind = kind
         self.obscuration = obscuration
         self.peak = peak
@@ -8559,7 +8564,7 @@ class GlobalSolarEclipseInfo:
         self.latitude = latitude
         self.longitude = longitude
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'GlobalSolarEclipseInfo({}, obscuration={}, peak={}, distance={}, latitude={}, longitude={})'.format(
             self.kind,
             self.obscuration,
@@ -8592,11 +8597,11 @@ class EclipseEvent:
         The angular altitude of the center of the Sun above/below the horizon, at `time`,
         corrected for atmospheric refraction and expressed in degrees.
     """
-    def __init__(self, time, altitude):
+    def __init__(self, time: Time, altitude: float) -> None:
         self.time = time
         self.altitude = altitude
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'EclipseEvent({}, altitude={})'.format(
             repr(self.time),
             self.altitude
@@ -8652,7 +8657,7 @@ class LocalSolarEclipseInfo:
     partial_end : EclipseEvent
         The time and Sun altitude at the end of the eclipse.
     """
-    def __init__(self, kind, obscuration, partial_begin, total_begin, peak, total_end, partial_end):
+    def __init__(self, kind: EclipseKind, obscuration: float, partial_begin: EclipseEvent, total_begin: EclipseEvent, peak: EclipseEvent, total_end: EclipseEvent, partial_end: EclipseEvent) -> None:
         self.kind = kind
         self.obscuration = obscuration
         self.partial_begin = partial_begin
@@ -8661,7 +8666,7 @@ class LocalSolarEclipseInfo:
         self.total_end = total_end
         self.partial_end = partial_end
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'LocalSolarEclipseInfo({}, obscuration={}, partial_begin={}, total_begin={}, peak={}, total_end={}, partial_end={})'.format(
             self.kind,
             self.obscuration,
@@ -8920,7 +8925,7 @@ def _SolarEclipseObscuration(hm, lo):
     return min(0.9999, obscuration)
 
 
-def SearchLunarEclipse(startTime):
+def SearchLunarEclipse(startTime: Time) -> LunarEclipseInfo:
     """Searches for a lunar eclipse.
 
     This function finds the first lunar eclipse that occurs after `startTime`.
@@ -8985,7 +8990,7 @@ def SearchLunarEclipse(startTime):
     raise Error('Failed to find lunar eclipse within 12 full moons.')
 
 
-def NextLunarEclipse(prevEclipseTime):
+def NextLunarEclipse(prevEclipseTime: Time) -> LunarEclipseInfo:
     """Searches for the next lunar eclipse in a series.
 
      After using #SearchLunarEclipse to find the first lunar eclipse
@@ -9007,7 +9012,7 @@ def NextLunarEclipse(prevEclipseTime):
     return SearchLunarEclipse(startTime)
 
 
-def SearchGlobalSolarEclipse(startTime):
+def SearchGlobalSolarEclipse(startTime: Time) -> GlobalSolarEclipseInfo:
     """Searches for a solar eclipse visible anywhere on the Earth's surface.
 
     This function finds the first solar eclipse that occurs after `startTime`.
@@ -9054,7 +9059,7 @@ def SearchGlobalSolarEclipse(startTime):
     raise Error('Failed to find solar eclipse within 12 full moons.')
 
 
-def NextGlobalSolarEclipse(prevEclipseTime):
+def NextGlobalSolarEclipse(prevEclipseTime: Time) -> GlobalSolarEclipseInfo:
     """Searches for the next global solar eclipse in a series.
 
     After using #SearchGlobalSolarEclipse to find the first solar eclipse
@@ -9076,7 +9081,7 @@ def NextGlobalSolarEclipse(prevEclipseTime):
     return SearchGlobalSolarEclipse(startTime)
 
 
-def SearchLocalSolarEclipse(startTime, observer):
+def SearchLocalSolarEclipse(startTime: Time, observer: Observer) -> LocalSolarEclipseInfo:
     """Searches for a solar eclipse visible at a specific location on the Earth's surface.
     This function finds the first solar eclipse that occurs after `startTime`.
     A solar eclipse may be partial, annular, or total.
@@ -9131,7 +9136,7 @@ def SearchLocalSolarEclipse(startTime, observer):
         nmtime = newmoon.AddDays(10.0)
 
 
-def NextLocalSolarEclipse(prevEclipseTime, observer):
+def NextLocalSolarEclipse(prevEclipseTime: Time, observer: Observer) -> LocalSolarEclipseInfo:
     """Searches for the next local solar eclipse in a series.
 
     After using #SearchLocalSolarEclipse to find the first solar eclipse
@@ -9179,13 +9184,13 @@ class TransitInfo:
         The minimum angular separation, in arcminutes, between the centers of the Sun and the planet.
         This angle pertains to the time stored in `peak`.
     """
-    def __init__(self, start, peak, finish, separation):
+    def __init__(self, start: Time, peak: Time, finish: Time, separation: float) -> None:
         self.start = start
         self.peak = peak
         self.finish = finish
         self.separation = separation
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'TransitInfo(start={}, peak={}, finish={}, separation={})'.format(
             repr(self.start),
             repr(self.peak),
@@ -9209,7 +9214,7 @@ def _PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction):
     return tx
 
 
-def SearchTransit(body, startTime):
+def SearchTransit(body: Body, startTime: Time) -> TransitInfo:
     """Searches for the first transit of Mercury or Venus after a given date.
 
     Finds the first transit of Mercury or Venus after a specified date.
@@ -9269,7 +9274,7 @@ def SearchTransit(body, startTime):
         search_time = conj.AddDays(10.0)
 
 
-def NextTransit(body, prevTransitTime):
+def NextTransit(body: Body, prevTransitTime: Time) -> TransitInfo:
     """Searches for another transit of Mercury or Venus.
 
     After calling #SearchTransit to find a transit of Mercury or Venus,
@@ -9318,11 +9323,11 @@ class NodeEventInfo:
     time : Time
         The time when the body passes through the ecliptic plane.
     """
-    def __init__(self, kind, time):
+    def __init__(self, kind: NodeEventKind, time: Time) -> None:
         self.kind = kind
         self.time = time
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'NodeEventInfo({}, {})'.format(self.kind, repr(self.time))
 
 _MoonNodeStepDays = +10.0   # a safe number of days to step without missing a Moon node
@@ -9330,7 +9335,7 @@ _MoonNodeStepDays = +10.0   # a safe number of days to step without missing a Mo
 def _MoonNodeSearchFunc(direction, time):
     return direction * EclipticGeoMoon(time).lat
 
-def SearchMoonNode(startTime):
+def SearchMoonNode(startTime: Time) -> NodeEventInfo:
     """Searches for a time when the Moon's center crosses through the ecliptic plane.
 
     Searches for the first ascending or descending node of the Moon after `startTime`.
@@ -9370,7 +9375,7 @@ def SearchMoonNode(startTime):
         eclip1 = eclip2
 
 
-def NextMoonNode(prevNode):
+def NextMoonNode(prevNode: NodeEventInfo) -> NodeEventInfo:
     """Searches for the next time when the Moon's center crosses through the ecliptic plane.
 
     Call #SearchMoonNode to find the first of a series of nodes.
@@ -9419,7 +9424,7 @@ class LibrationInfo:
     diam_deg : float
         The apparent angular diameter of the Moon as seen from the center of the Earth.
     """
-    def __init__(self, elat, elon, mlat, mlon, dist_km, diam_deg):
+    def __init__(self, elat: float, elon: float, mlat: float, mlon: float, dist_km: float, diam_deg: float) -> None:
         self.elat = elat
         self.elon = elon
         self.mlat = mlat
@@ -9427,7 +9432,7 @@ class LibrationInfo:
         self.dist_km = dist_km
         self.diam_deg = diam_deg
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'LibrationInfo(elat={}, elon={}, mlat={}, mlon={}, dist_km={}, diam_deg={})'.format(
             self.elat,
             self.elon,
@@ -9438,7 +9443,7 @@ class LibrationInfo:
         )
 
 
-def Libration(time):
+def Libration(time: Time) -> LibrationInfo:
     """Calculates the Moon's libration angles at a given moment in time.
 
     Libration is an observed back-and-forth wobble of the portion of the
@@ -9598,13 +9603,13 @@ class AxisInfo:
     north : Vector
         A J2000 dimensionless unit vector pointing in the direction of the body's north pole.
     """
-    def __init__(self, ra, dec, spin, north):
+    def __init__(self, ra: float, dec: float, spin: float, north: Vector) -> None:
         self.ra = ra
         self.dec = dec
         self.spin = spin
         self.north = north
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'AxisInfo(ra={}, dec={}, spin={}, north={})'.format(
             self.ra,
             self.dec,
@@ -9634,7 +9639,7 @@ def _EarthRotationAxis(time):
     return AxisInfo(equ.ra, equ.dec, spin, north)
 
 
-def RotationAxis(body, time):
+def RotationAxis(body: Body, time: Time) -> AxisInfo:
     """Calculates information about a body's rotation axis at a given time.
 
     Calculates the orientation of a body's rotation axis, along with
@@ -9835,7 +9840,7 @@ def RotationAxis(body, time):
     return AxisInfo(ra/15.0, dec, w, north)
 
 
-def LagrangePoint(point, time, major_body, minor_body):
+def LagrangePoint(point: int, time: Time, major_body: Body, minor_body: Body) -> StateVector:
     """Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.
 
     Given a more massive "major" body and a much less massive "minor" body,
@@ -9901,7 +9906,7 @@ def LagrangePoint(point, time, major_body, minor_body):
     )
 
 
-def LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass):
+def LagrangePointFast(point: int, major_state: StateVector, major_mass: float, minor_state: StateVector, minor_mass: float) -> StateVector:
     """Calculates one of the 5 Lagrange points from body masses and state vectors.
 
     Given a more massive "major" body and a much less massive "minor" body,
@@ -10089,7 +10094,7 @@ class GravitySimulator:
     time steps.
     """
 
-    def __init__(self, originBody, time, bodyStates):
+    def __init__(self, originBody: Body, time: "Time", bodyStates: List[StateVector]) -> None:
         """Creates a gravity simulation object.
 
         Parameters
@@ -10128,7 +10133,7 @@ class GravitySimulator:
 
         # Create a stub list of small body states that we will append to later.
         # We just need the stub to put into `self.curr`
-        smallBodyList = []
+        smallBodyList: List = []
 
         # Calculate the states of the Sun and planets at the initial time.
         largeBodyDict = _CalcSolarSystem(time)
@@ -10159,7 +10164,7 @@ class GravitySimulator:
         """
         return self.curr.time
 
-    def OriginBody(self):
+    def OriginBody(self) -> Body:
         """The origin of the reference frame. See constructor for more info.
 
         Returns
@@ -10168,7 +10173,7 @@ class GravitySimulator:
         """
         return self._originBody
 
-    def Update(self, time):
+    def Update(self, time) -> List[StateVector]:
         """Advances the gravity simulation by a small time step.
 
         Updates the simulation of the user-supplied small bodies
@@ -10268,7 +10273,7 @@ class GravitySimulator:
         return bodyStates
 
 
-    def Swap(self):
+    def Swap(self) -> None:
         """Exchange the current time step with the previous time step.
 
         Sometimes it is helpful to "explore" various times near a given
@@ -10294,7 +10299,7 @@ class GravitySimulator:
         """
         (self.curr, self.prev) = (self.prev, self.curr)
 
-    def SolarSystemBodyState(self, body):
+    def SolarSystemBodyState(self, body: Body) -> StateVector:
         """Get the position and velocity of a Solar System body included in the simulation.
 
         In order to simulate the movement of small bodies through the Solar System,

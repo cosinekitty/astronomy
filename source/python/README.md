@@ -487,7 +487,7 @@ time steps.
 #### member functions
 
 <a name="GravitySimulator.__init__"></a>
-### GravitySimulator.__init__(self, originBody, time, bodyStates)
+### GravitySimulator.__init__(self, originBody: astronomy.Body, time: 'Time', bodyStates: List[astronomy.StateVector]) -&gt; None
 
 **Creates a gravity simulation object.**
 
@@ -498,14 +498,14 @@ time steps.
 | [`StateVector`](#StateVector)`[]` | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using J2000 mean equator orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
 
 <a name="GravitySimulator.OriginBody"></a>
-### GravitySimulator.OriginBody(self)
+### GravitySimulator.OriginBody(self) -&gt; astronomy.Body
 
 **The origin of the reference frame. See constructor for more info.**
 
 **Returns**: [`Body`](#Body)
 
 <a name="GravitySimulator.SolarSystemBodyState"></a>
-### GravitySimulator.SolarSystemBodyState(self, body)
+### GravitySimulator.SolarSystemBodyState(self, body: astronomy.Body) -&gt; astronomy.StateVector
 
 **Get the position and velocity of a Solar System body included in the simulation.**
 
@@ -526,7 +526,7 @@ of the `originBody` parameter that was passed to this object's constructor.
 The state vector of the requested Solar System body.
 
 <a name="GravitySimulator.Swap"></a>
-### GravitySimulator.Swap(self)
+### GravitySimulator.Swap(self) -&gt; None
 
 **Exchange the current time step with the previous time step.**
 
@@ -556,7 +556,7 @@ that has not yet been updated by a call to [`GravitySimulator.Update`](#GravityS
 **Returns**: [`Time`](#Time)
 
 <a name="GravitySimulator.Update"></a>
-### GravitySimulator.Update(self, time)
+### GravitySimulator.Update(self, time) -&gt; List[astronomy.StateVector]
 
 **Advances the gravity simulation by a small time step.**
 
@@ -820,7 +820,7 @@ that expresses a relative position vector function.
 #### member functions
 
 <a name="PositionFunction.Position"></a>
-### PositionFunction.Position(self, time)
+### PositionFunction.Position(self, time: astronomy.Time) -&gt; astronomy.Vector
 
 **Returns a relative position vector for a given time.**
 
@@ -896,12 +896,12 @@ The state vector also includes a time stamp.
 #### member functions
 
 <a name="StateVector.Position"></a>
-### StateVector.Position(self)
+### StateVector.Position(self) -&gt; astronomy.Vector
 
 Extracts a position vector from this state vector.
 
 <a name="StateVector.Velocity"></a>
-### StateVector.Velocity(self)
+### StateVector.Velocity(self) -&gt; astronomy.Vector
 
 Extracts a velocity vector from this state vector.
 
@@ -927,7 +927,7 @@ dates and times represented by `Time` objects.
 #### member functions
 
 <a name="Time.AddDays"></a>
-### Time.AddDays(self, days)
+### Time.AddDays(self, days: float) -&gt; 'Time'
 
 **Calculates the sum or difference of a [`Time`](#Time) with a specified real-valued number of days.**
 
@@ -948,7 +948,7 @@ The value of the calling object is not modified. This function creates a brand n
 **Returns**: [`Time`](#Time)
 
 <a name="Time.FromTerrestrialTime"></a>
-### Time.FromTerrestrialTime(tt)
+### Time.FromTerrestrialTime(tt: float) -&gt; 'Time'
 
 **Creates a [`Time`](#Time) object from a Terrestrial Time day value.**
 
@@ -959,7 +959,7 @@ The value of the calling object is not modified. This function creates a brand n
 **Returns**: [`Time`](#Time)
 
 <a name="Time.Make"></a>
-### Time.Make(year, month, day, hour, minute, second)
+### Time.Make(year: int, month: int, day: int, hour: int, minute: int, second: float) -&gt; 'Time'
 
 **Creates a [`Time`](#Time) object from a UTC calendar date and time.**
 
@@ -975,7 +975,7 @@ The value of the calling object is not modified. This function creates a brand n
 **Returns**: [`Time`](#Time)
 
 <a name="Time.Now"></a>
-### Time.Now()
+### Time.Now() -&gt; 'Time'
 
 **Returns the computer's current date and time in the form of a [`Time`](#Time) object.**
 
@@ -987,7 +987,7 @@ calculate current observational conditions.
 **Returns**: [`Time`](#Time)
 
 <a name="Time.Parse"></a>
-### Time.Parse(text)
+### Time.Parse(text: str) -&gt; 'Time'
 
 **Creates a [`Time`](#Time) object from a string of the form 'yyyy-mm-ddThh:mm:ss.sssZ'**
 
@@ -1005,7 +1005,7 @@ and a 'Z' at the end of the time.
 **Returns**: [`Time`](#Time)
 
 <a name="Time.Utc"></a>
-### Time.Utc(self)
+### Time.Utc(self) -&gt; datetime.datetime
 
 **Returns the UTC date and time as a `datetime` object.**
 
@@ -1055,12 +1055,12 @@ The vector also includes a time stamp.
 #### member functions
 
 <a name="Vector.Length"></a>
-### Vector.Length(self)
+### Vector.Length(self) -&gt; float
 
 Returns the length of the vector in AU.
 
 <a name="Vector.format"></a>
-### Vector.format(self, coord_format)
+### Vector.format(self, coord_format) -&gt; str
 
 Returns a custom format string representation of the vector.
 
@@ -1268,7 +1268,7 @@ Astronomy Engine for everyone! (Thank you in advance from the author.)
 ---
 
 <a name="AngleBetween"></a>
-### AngleBetween(a, b)
+### AngleBetween(a: astronomy.Vector, b: astronomy.Vector) -&gt; float
 
 **Calculates the angle in degrees between two vectors.**
 
@@ -1288,7 +1288,7 @@ The value is in the range [0, 180].
 ---
 
 <a name="AngleFromSun"></a>
-### AngleFromSun(body, time)
+### AngleFromSun(body: astronomy.Body, time: astronomy.Time) -&gt; float
 
 **Returns the angle between the given body and the Sun, as seen from the Earth.**
 
@@ -1308,7 +1308,7 @@ and the specified body as seen from the center of the Earth.
 ---
 
 <a name="BackdatePosition"></a>
-### BackdatePosition(time, observerBody, targetBody, aberration)
+### BackdatePosition(time: astronomy.Time, observerBody: astronomy.Body, targetBody: astronomy.Body, aberration: bool) -&gt; astronomy.Vector
 
 **Solve for light travel time correction of apparent position.**
 
@@ -1340,7 +1340,7 @@ body to arrive at the observer at the observation time.
 ---
 
 <a name="BaryState"></a>
-### BaryState(body, time)
+### BaryState(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.StateVector
 
 **Calculates barycentric position and velocity vectors for the given body.**
 
@@ -1359,7 +1359,7 @@ An object that contains barycentric position and velocity vectors.
 ---
 
 <a name="BodyCode"></a>
-### BodyCode(name)
+### BodyCode(name: str) -&gt; astronomy.Body
 
 **Finds the Body enumeration value, given the name of a body.**
 
@@ -1380,7 +1380,7 @@ Otherwise, returns `Body.Invalid`.
 ---
 
 <a name="CombineRotation"></a>
-### CombineRotation(a, b)
+### CombineRotation(a: astronomy.RotationMatrix, b: astronomy.RotationMatrix) -&gt; astronomy.RotationMatrix
 
 **Creates a rotation based on applying one rotation followed by another.**
 
@@ -1398,7 +1398,7 @@ The combined rotation matrix.
 ---
 
 <a name="Constellation"></a>
-### Constellation(ra, dec)
+### Constellation(ra: float, dec: float) -&gt; astronomy.ConstellationInfo
 
 **Determines the constellation that contains the given point in the sky.**
 
@@ -1418,7 +1418,7 @@ the converted B1875 (ra,dec) for that point.
 ---
 
 <a name="CorrectLightTravel"></a>
-### CorrectLightTravel(func, time)
+### CorrectLightTravel(func: astronomy.PositionFunction, time: astronomy.Time) -&gt; astronomy.Vector
 
 **Solve for light travel time of a vector function.**
 
@@ -1454,7 +1454,7 @@ body to arrive at the observer at the observation time.
 ---
 
 <a name="DefineStar"></a>
-### DefineStar(body, ra, dec, distanceLightYears)
+### DefineStar(body: astronomy.Body, ra: float, dec: float, distanceLightYears: float) -&gt; None
 
 **Assign equatorial coordinates to a user-defined star.**
 
@@ -1475,7 +1475,7 @@ definition until re-defined by another call to `DefineStar`.
 ---
 
 <a name="DeltaT_EspenakMeeus"></a>
-### DeltaT_EspenakMeeus(ut)
+### DeltaT_EspenakMeeus(ut: float) -&gt; float
 
 **The default Delta T function used by Astronomy Engine.**
 
@@ -1494,7 +1494,7 @@ The estimated difference TT-UT on the given date, expressed in seconds.
 ---
 
 <a name="Ecliptic"></a>
-### Ecliptic(eqj)
+### Ecliptic(eqj: astronomy.Vector) -&gt; astronomy.EclipticCoordinates
 
 **Converts a J2000 mean equator (EQJ) vector to a true ecliptic of date (ETC) vector and angles.**
 
@@ -1504,7 +1504,7 @@ which are relative to the plane of the Earth's orbit around the Sun.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`Equatorial`](#Equatorial) | `eqj` | Equatorial coordinates in the J2000 frame of reference. You can call [`GeoVector`](#GeoVector) to obtain suitable equatorial coordinates. |
+| [`Vector`](#Vector) | `eqj` | Equatorial coordinates in the J2000 frame of reference. You can call [`GeoVector`](#GeoVector) to obtain suitable equatorial coordinates. |
 
 **Returns**: [`EclipticCoordinates`](#EclipticCoordinates)
 Spherical and vector coordinates expressed in true ecliptic coordinates of date (ECT).
@@ -1512,7 +1512,7 @@ Spherical and vector coordinates expressed in true ecliptic coordinates of date 
 ---
 
 <a name="EclipticGeoMoon"></a>
-### EclipticGeoMoon(time)
+### EclipticGeoMoon(time: astronomy.Time) -&gt; astronomy.Spherical
 
 **Calculates spherical ecliptic geocentric position of the Moon.**
 
@@ -1540,7 +1540,7 @@ The Moon's position as a distance, ecliptic latitude, and ecliptic longitude.
 ---
 
 <a name="EclipticLongitude"></a>
-### EclipticLongitude(body, time)
+### EclipticLongitude(body: astronomy.Body, time: astronomy.Time) -&gt; float
 
 **Calculates heliocentric ecliptic longitude of a body.**
 
@@ -1560,7 +1560,7 @@ An angular value in degrees indicating the ecliptic longitude of the body.
 ---
 
 <a name="Elongation"></a>
-### Elongation(body, time)
+### Elongation(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.ElongationEvent
 
 **Determines visibility of a celestial body relative to the Sun, as seen from the Earth.**
 
@@ -1588,7 +1588,7 @@ information about the given celestial body at the given time:
 ---
 
 <a name="Equator"></a>
-### Equator(body, time, observer, ofdate, aberration)
+### Equator(body: astronomy.Body, time: astronomy.Time, observer: astronomy.Observer, ofdate: bool, aberration: bool) -&gt; astronomy.Equatorial
 
 **Calculates equatorial coordinates of a celestial body as seen by an observer on the Earth's surface.**
 
@@ -1617,7 +1617,7 @@ Equatorial coordinates in the specified frame of reference.
 ---
 
 <a name="EquatorFromVector"></a>
-### EquatorFromVector(vec)
+### EquatorFromVector(vec: astronomy.Vector) -&gt; astronomy.Equatorial
 
 **Given an equatorial vector, calculates equatorial angular coordinates.**
 
@@ -1631,7 +1631,7 @@ Angular coordinates expressed in the same equatorial system as `vec`.
 ---
 
 <a name="GeoEmbState"></a>
-### GeoEmbState(time)
+### GeoEmbState(time: astronomy.Time) -&gt; astronomy.StateVector
 
 **Calculates the geocentric position and velocity of the Earth/Moon barycenter.**
 
@@ -1650,7 +1650,7 @@ The EMB's position and velocity vectors in J2000 equatorial coordinates.
 ---
 
 <a name="GeoMoon"></a>
-### GeoMoon(time)
+### GeoMoon(time: astronomy.Time) -&gt; astronomy.Vector
 
 **Calculates equatorial geocentric position of the Moon at a given time.**
 
@@ -1675,7 +1675,7 @@ The Moon's position as a vector in J2000 Cartesian equatorial coordinates (EQJ).
 ---
 
 <a name="GeoMoonState"></a>
-### GeoMoonState(time)
+### GeoMoonState(time: astronomy.Time) -&gt; astronomy.StateVector
 
 **Calculates equatorial geocentric position and velocity of the Moon at a given time.**
 
@@ -1698,7 +1698,7 @@ The Moon's position and velocity vectors in J2000 equatorial coordinates (EQJ).
 ---
 
 <a name="GeoVector"></a>
-### GeoVector(body, time, aberration)
+### GeoVector(body: astronomy.Body, time: astronomy.Time, aberration: bool) -&gt; astronomy.Vector
 
 **Calculates geocentric Cartesian coordinates of a body in the J2000 equatorial system.**
 
@@ -1727,7 +1727,7 @@ A geocentric position vector of the center of the given body.
 ---
 
 <a name="HelioDistance"></a>
-### HelioDistance(body, time)
+### HelioDistance(body: astronomy.Body, time: astronomy.Time) -&gt; float
 
 **Calculates the distance between a body and the Sun at a given time.**
 
@@ -1748,7 +1748,7 @@ The heliocentric distance in AU.
 ---
 
 <a name="HelioState"></a>
-### HelioState(body, time)
+### HelioState(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.StateVector
 
 **Calculates heliocentric position and velocity vectors for the given body.**
 
@@ -1773,7 +1773,7 @@ An object that contains heliocentric position and velocity vectors.
 ---
 
 <a name="HelioVector"></a>
-### HelioVector(body, time)
+### HelioVector(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.Vector
 
 **Calculates heliocentric Cartesian coordinates of a body in the J2000 equatorial system.**
 
@@ -1797,7 +1797,7 @@ at the given time.
 ---
 
 <a name="Horizon"></a>
-### Horizon(time, observer, ra, dec, refraction)
+### Horizon(time: astronomy.Time, observer: astronomy.Observer, ra: float, dec: float, refraction: astronomy.Refraction) -&gt; astronomy.HorizontalCoordinates
 
 **Calculates the apparent location of a body relative to the local horizon of an observer on the Earth.**
 
@@ -1839,7 +1839,7 @@ for more details.
 ---
 
 <a name="HorizonFromVector"></a>
-### HorizonFromVector(vector, refraction)
+### HorizonFromVector(vector: astronomy.Vector, refraction: astronomy.Refraction) -&gt; astronomy.Spherical
 
 **Converts Cartesian coordinates to horizontal coordinates.**
 
@@ -1865,7 +1865,7 @@ and is expressed in astronomical units (AU).
 ---
 
 <a name="HourAngle"></a>
-### HourAngle(body, time, observer)
+### HourAngle(body: astronomy.Body, time: astronomy.Time, observer: astronomy.Observer) -&gt; float
 
 **Finds the hour angle of a body for a given observer and time.**
 
@@ -1890,7 +1890,7 @@ The hour angle is a number in the half-open range [0, 24).
 ---
 
 <a name="IdentityMatrix"></a>
-### IdentityMatrix()
+### IdentityMatrix() -&gt; astronomy.RotationMatrix
 
 **Creates an identity rotation matrix.**
 
@@ -1905,7 +1905,7 @@ The identity rotation matrix.
 ---
 
 <a name="Illumination"></a>
-### Illumination(body, time)
+### Illumination(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.IlluminationInfo
 
 **Finds visual magnitude, phase angle, and other illumination information about a celestial body.**
 
@@ -1935,7 +1935,7 @@ the rings appear edge-on, and are thus nearly invisible from the Earth. The `rin
 ---
 
 <a name="InverseRefractionAngle"></a>
-### InverseRefractionAngle(refraction, bent_altitude)
+### InverseRefractionAngle(refraction: astronomy.Refraction, bent_altitude: float) -&gt; float
 
 **Calculates the inverse of an atmospheric refraction angle.**
 
@@ -1958,7 +1958,7 @@ This will be less than or equal to zero.
 ---
 
 <a name="InverseRotation"></a>
-### InverseRotation(rotation)
+### InverseRotation(rotation: astronomy.RotationMatrix) -&gt; astronomy.RotationMatrix
 
 **Calculates the inverse of a rotation matrix.**
 
@@ -1975,7 +1975,7 @@ The inverse rotation matrix.
 ---
 
 <a name="JupiterMoons"></a>
-### JupiterMoons(time)
+### JupiterMoons(time: astronomy.Time) -&gt; astronomy.JupiterMoonsInfo
 
 **Calculates jovicentric positions and velocities of Jupiter's largest 4 moons.**
 
@@ -2000,7 +2000,7 @@ The positions and velocities of Jupiter's 4 largest moons.
 ---
 
 <a name="LagrangePoint"></a>
-### LagrangePoint(point, time, major_body, minor_body)
+### LagrangePoint(point: int, time: astronomy.Time, major_body: astronomy.Body, minor_body: astronomy.Body) -&gt; astronomy.StateVector
 
 **Calculates one of the 5 Lagrange points for a pair of co-orbiting bodies.**
 
@@ -2039,7 +2039,7 @@ The position and velocity of the selected Lagrange point with respect to the maj
 ---
 
 <a name="LagrangePointFast"></a>
-### LagrangePointFast(point, major_state, major_mass, minor_state, minor_mass)
+### LagrangePointFast(point: int, major_state: astronomy.StateVector, major_mass: float, minor_state: astronomy.StateVector, minor_mass: float) -&gt; astronomy.StateVector
 
 **Calculates one of the 5 Lagrange points from body masses and state vectors.**
 
@@ -2077,7 +2077,7 @@ The position and velocity of the selected Lagrange point with respect to the maj
 ---
 
 <a name="Libration"></a>
-### Libration(time)
+### Libration(time: astronomy.Time) -&gt; astronomy.LibrationInfo
 
 **Calculates the Moon's libration angles at a given moment in time.**
 
@@ -2102,7 +2102,7 @@ and the apparent angular diameter of the Moon `diam_deg`.
 ---
 
 <a name="MassProduct"></a>
-### MassProduct(body)
+### MassProduct(body: 'Body') -&gt; float
 
 **Returns the product of mass and universal gravitational constant of a Solar System body.**
 
@@ -2124,7 +2124,7 @@ The mass product of the given body in au^3/day^2.
 ---
 
 <a name="MoonPhase"></a>
-### MoonPhase(time)
+### MoonPhase(time: astronomy.Time) -&gt; float
 
 **Returns the Moon's phase as an angle from 0 to 360 degrees.**
 
@@ -2145,7 +2145,7 @@ Certain values of the angle have conventional definitions:
 ---
 
 <a name="NextGlobalSolarEclipse"></a>
-### NextGlobalSolarEclipse(prevEclipseTime)
+### NextGlobalSolarEclipse(prevEclipseTime: astronomy.Time) -&gt; astronomy.GlobalSolarEclipseInfo
 
 **Searches for the next global solar eclipse in a series.**
 
@@ -2164,7 +2164,7 @@ to find the next solar eclipse.
 ---
 
 <a name="NextLocalSolarEclipse"></a>
-### NextLocalSolarEclipse(prevEclipseTime, observer)
+### NextLocalSolarEclipse(prevEclipseTime: astronomy.Time, observer: astronomy.Observer) -&gt; astronomy.LocalSolarEclipseInfo
 
 **Searches for the next local solar eclipse in a series.**
 
@@ -2184,7 +2184,7 @@ to find the next solar eclipse.
 ---
 
 <a name="NextLunarApsis"></a>
-### NextLunarApsis(apsis)
+### NextLunarApsis(apsis: astronomy.Apsis) -&gt; astronomy.Apsis
 
 **Finds the next lunar perigee or apogee in a series.**
 
@@ -2203,7 +2203,7 @@ See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 ---
 
 <a name="NextLunarEclipse"></a>
-### NextLunarEclipse(prevEclipseTime)
+### NextLunarEclipse(prevEclipseTime: astronomy.Time) -&gt; astronomy.LunarEclipseInfo
 
 **Searches for the next lunar eclipse in a series.**
 
@@ -2222,7 +2222,7 @@ See [`SearchLunarApsis`](#SearchLunarApsis) for more details.
 ---
 
 <a name="NextMoonNode"></a>
-### NextMoonNode(prevNode)
+### NextMoonNode(prevNode: astronomy.NodeEventInfo) -&gt; astronomy.NodeEventInfo
 
 **Searches for the next time when the Moon's center crosses through the ecliptic plane.**
 
@@ -2238,7 +2238,7 @@ Then call `NextMoonNode` to find as many more consecutive nodes as desired.
 ---
 
 <a name="NextMoonQuarter"></a>
-### NextMoonQuarter(mq)
+### NextMoonQuarter(mq: astronomy.MoonQuarter) -&gt; astronomy.MoonQuarter
 
 **Continues searching for lunar quarters from a previous search.**
 
@@ -2256,7 +2256,7 @@ the one passed in as the parameter `mq`.
 ---
 
 <a name="NextPlanetApsis"></a>
-### NextPlanetApsis(body, apsis)
+### NextPlanetApsis(body: astronomy.Body, apsis: astronomy.Apsis) -&gt; astronomy.Apsis
 
 **Finds the next planetary perihelion or aphelion event in a series.**
 
@@ -2275,7 +2275,7 @@ See [`SearchPlanetApsis`](#SearchPlanetApsis) for more details.
 ---
 
 <a name="NextTransit"></a>
-### NextTransit(body, prevTransitTime)
+### NextTransit(body: astronomy.Body, prevTransitTime: astronomy.Time) -&gt; astronomy.TransitInfo
 
 **Searches for another transit of Mercury or Venus.**
 
@@ -2293,7 +2293,7 @@ Keep calling this function as many times as you want to keep finding more transi
 ---
 
 <a name="ObserverGravity"></a>
-### ObserverGravity(latitude, height)
+### ObserverGravity(latitude: float, height: float) -&gt; float
 
 **Calculates the gravitational acceleration experienced by an observer on the Earth.**
 
@@ -2317,7 +2317,7 @@ The effective gravitational acceleration expressed in meters per second squared 
 ---
 
 <a name="ObserverState"></a>
-### ObserverState(time, observer, ofdate)
+### ObserverState(time: astronomy.Time, observer: astronomy.Observer, ofdate: bool) -&gt; astronomy.StateVector
 
 **Calculates geocentric equatorial position and velocity of an observer on the surface of the Earth.**
 
@@ -2344,7 +2344,7 @@ An equatorial position vector and velocity vector relative to the center of the 
 ---
 
 <a name="ObserverVector"></a>
-### ObserverVector(time, observer, ofdate)
+### ObserverVector(time: astronomy.Time, observer: astronomy.Observer, ofdate: bool) -&gt; astronomy.Vector
 
 **Calculates geocentric equatorial coordinates of an observer on the surface of the Earth.**
 
@@ -2372,7 +2372,7 @@ on (or near) the Earth's surface.
 ---
 
 <a name="PairLongitude"></a>
-### PairLongitude(body1, body2, time)
+### PairLongitude(body1: astronomy.Body, body2: astronomy.Body, time: astronomy.Time) -&gt; float
 
 **Returns one body's ecliptic longitude with respect to another, as seen from the Earth.**
 
@@ -2402,7 +2402,7 @@ An angle in degrees in the range [0, 360).
 ---
 
 <a name="Pivot"></a>
-### Pivot(rotation, axis, angle)
+### Pivot(rotation: astronomy.RotationMatrix, axis: int, angle: float) -&gt; astronomy.RotationMatrix
 
 **Re-orients a rotation matrix by pivoting it by an angle around one of its axes.**
 
@@ -2427,7 +2427,7 @@ A pivoted matrix object.
 ---
 
 <a name="PlanetOrbitalPeriod"></a>
-### PlanetOrbitalPeriod(body)
+### PlanetOrbitalPeriod(body: astronomy.Body) -&gt; float
 
 **Returns the average number of days it takes for a planet to orbit the Sun.**
 
@@ -2441,7 +2441,7 @@ The mean orbital period of the body in days.
 ---
 
 <a name="RefractionAngle"></a>
-### RefractionAngle(refraction, altitude)
+### RefractionAngle(refraction: astronomy.Refraction, altitude: float) -&gt; float
 
 **Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.**
 
@@ -2463,7 +2463,7 @@ option selected by the `refraction` parameter.
 ---
 
 <a name="RotateState"></a>
-### RotateState(rotation, state)
+### RotateState(rotation: astronomy.RotationMatrix, state: astronomy.StateVector) -&gt; astronomy.StateVector
 
 **Applies a rotation to a state vector, yielding a rotated state vector.**
 
@@ -2482,7 +2482,7 @@ A state vector in the orientation specified by `rotation`.
 ---
 
 <a name="RotateVector"></a>
-### RotateVector(rotation, vector)
+### RotateVector(rotation: astronomy.RotationMatrix, vector: astronomy.Vector) -&gt; astronomy.Vector
 
 **Applies a rotation to a vector, yielding a rotated vector.**
 
@@ -2500,7 +2500,7 @@ A vector in the orientation specified by `rotation`.
 ---
 
 <a name="RotationAxis"></a>
-### RotationAxis(body, time)
+### RotationAxis(body: astronomy.Body, time: astronomy.Time) -&gt; astronomy.AxisInfo
 
 **Calculates information about a body's rotation axis at a given time.**
 
@@ -2523,7 +2523,7 @@ The body's north pole direction and angle of its prime meridian.
 ---
 
 <a name="Rotation_ECL_EQD"></a>
-### Rotation_ECL_EQD(time)
+### Rotation_ECL_EQD(time: astronomy.Time) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from J2000 mean ecliptic (ECL) to equatorial of-date (EQD).**
 
@@ -2542,7 +2542,7 @@ A rotation matrix that converts ECL to EQD.
 ---
 
 <a name="Rotation_ECL_EQJ"></a>
-### Rotation_ECL_EQJ()
+### Rotation_ECL_EQJ() -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from J2000 mean ecliptic (ECL) to J2000 mean equator (EQJ).**
 
@@ -2557,7 +2557,7 @@ A rotation matrix that converts ECL to EQJ.
 ---
 
 <a name="Rotation_ECL_HOR"></a>
-### Rotation_ECL_HOR(time, observer)
+### Rotation_ECL_HOR(time: astronomy.Time, observer: astronomy.Observer) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from J2000 mean ecliptic (ECL) to horizontal (HOR).**
 
@@ -2583,7 +2583,7 @@ and so that north represents the direction where azimuth = 0.
 ---
 
 <a name="Rotation_ECT_EQD"></a>
-### Rotation_ECT_EQD(time)
+### Rotation_ECT_EQD(time: astronomy.Time) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from true ecliptic of date (ECT) to equator of date (EQD).**
 
@@ -2602,7 +2602,7 @@ A rotation matrix that converts ECT to EQD.
 ---
 
 <a name="Rotation_ECT_EQJ"></a>
-### Rotation_ECT_EQJ(time)
+### Rotation_ECT_EQJ(time: astronomy.Time) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from true ecliptic of date (ECT) to J2000 mean equator (EQJ).**
 
@@ -2621,7 +2621,7 @@ A rotation matrix that converts ECT to EQJ at `time`.
 ---
 
 <a name="Rotation_EQD_ECL"></a>
-### Rotation_EQD_ECL(time)
+### Rotation_EQD_ECL(time: astronomy.Time) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean ecliptic (ECL).**
 
@@ -2640,7 +2640,7 @@ A rotation matrix that converts EQD to ECL.
 ---
 
 <a name="Rotation_EQD_ECT"></a>
-### Rotation_EQD_ECT(time)
+### Rotation_EQD_ECT(time: astronomy.Time) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from equator of date (EQD) to true ecliptic of date (ECT).**
 
@@ -2659,7 +2659,7 @@ A rotation matrix that converts EQD to ECT.
 ---
 
 <a name="Rotation_EQD_EQJ"></a>
-### Rotation_EQD_EQJ(time)
+### Rotation_EQD_EQJ(time: astronomy.Time) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from equatorial of-date (EQD) to J2000 mean equator (EQJ).**
 
@@ -2678,7 +2678,7 @@ A rotation matrix that converts EQD at `time` to EQJ.
 ---
 
 <a name="Rotation_EQD_HOR"></a>
-### Rotation_EQD_HOR(time, observer)
+### Rotation_EQD_HOR(time: astronomy.Time, observer: astronomy.Observer) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).**
 
@@ -2704,7 +2704,7 @@ and so that north represents the direction where azimuth = 0.
 ---
 
 <a name="Rotation_EQJ_ECL"></a>
-### Rotation_EQJ_ECL()
+### Rotation_EQJ_ECL() -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).**
 
@@ -2719,7 +2719,7 @@ A rotation matrix that converts EQJ to ECL.
 ---
 
 <a name="Rotation_EQJ_ECT"></a>
-### Rotation_EQJ_ECT(time)
+### Rotation_EQJ_ECT(time: astronomy.Time) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT).**
 
@@ -2738,7 +2738,7 @@ A rotation matrix that converts EQJ to ECT at `time`.
 ---
 
 <a name="Rotation_EQJ_EQD"></a>
-### Rotation_EQJ_EQD(time)
+### Rotation_EQJ_EQD(time: astronomy.Time) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from J2000 mean equator (EQJ) to equatorial of-date (EQD).**
 
@@ -2757,7 +2757,7 @@ A rotation matrix that converts EQJ to EQD at `time`.
 ---
 
 <a name="Rotation_EQJ_GAL"></a>
-### Rotation_EQJ_GAL()
+### Rotation_EQJ_GAL() -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from J2000 mean equator (EQJ) to galactic (GAL).**
 
@@ -2772,7 +2772,7 @@ A rotation matrix that converts EQJ to GAL.
 ---
 
 <a name="Rotation_EQJ_HOR"></a>
-### Rotation_EQJ_HOR(time, observer)
+### Rotation_EQJ_HOR(time: astronomy.Time, observer: astronomy.Observer) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR).**
 
@@ -2798,7 +2798,7 @@ and so that north represents the direction where azimuth = 0.
 ---
 
 <a name="Rotation_GAL_EQJ"></a>
-### Rotation_GAL_EQJ()
+### Rotation_GAL_EQJ() -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from galactic (GAL) to J2000 mean equator (EQJ).**
 
@@ -2813,7 +2813,7 @@ A rotation matrix that converts GAL to EQJ.
 ---
 
 <a name="Rotation_HOR_ECL"></a>
-### Rotation_HOR_ECL(time, observer)
+### Rotation_HOR_ECL(time: astronomy.Time, observer: astronomy.Observer) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from horizontal (HOR) to J2000 mean ecliptic (ECL).**
 
@@ -2833,7 +2833,7 @@ A rotation matrix that converts HOR to ECL.
 ---
 
 <a name="Rotation_HOR_EQD"></a>
-### Rotation_HOR_EQD(time, observer)
+### Rotation_HOR_EQD(time: astronomy.Time, observer: astronomy.Observer) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from horizontal (HOR) to equatorial of-date (EQD).**
 
@@ -2853,7 +2853,7 @@ A rotation matrix that converts HOR to EQD at `time` and for `observer`.
 ---
 
 <a name="Rotation_HOR_EQJ"></a>
-### Rotation_HOR_EQJ(time, observer)
+### Rotation_HOR_EQJ(time: astronomy.Time, observer: astronomy.Observer) -&gt; astronomy.RotationMatrix
 
 **Calculates a rotation matrix from horizontal (HOR) to J2000 equatorial (EQJ).**
 
@@ -2873,7 +2873,7 @@ A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
 ---
 
 <a name="Search"></a>
-### Search(func, context, t1, t2, dt_tolerance_seconds)
+### Search(func: Callable[[object, astronomy.Time], float], context: object, t1: astronomy.Time, t2: astronomy.Time, dt_tolerance_seconds: float) -&gt; Optional[astronomy.Time]
 
 **Searches for a time at which a function's value increases through zero.**
 
@@ -2930,7 +2930,7 @@ the function returns `None`.
 ---
 
 <a name="SearchAltitude"></a>
-### SearchAltitude(body, observer, direction, startTime, limitDays, altitude)
+### SearchAltitude(body: astronomy.Body, observer: astronomy.Observer, direction: astronomy.Direction, startTime: astronomy.Time, limitDays: float, altitude: float) -&gt; Optional[astronomy.Time]
 
 **Finds the next time the center of a body passes through a given altitude.**
 
@@ -2973,7 +2973,7 @@ this function returns that time. Otherwise, it returns `None`.
 ---
 
 <a name="SearchGlobalSolarEclipse"></a>
-### SearchGlobalSolarEclipse(startTime)
+### SearchGlobalSolarEclipse(startTime: astronomy.Time) -&gt; astronomy.GlobalSolarEclipseInfo
 
 **Searches for a solar eclipse visible anywhere on the Earth's surface.**
 
@@ -2993,7 +2993,7 @@ passing in the `peak` value returned from the previous call.
 ---
 
 <a name="SearchHourAngle"></a>
-### SearchHourAngle(body, observer, hourAngle, startTime, direction=1)
+### SearchHourAngle(body: astronomy.Body, observer: astronomy.Observer, hourAngle: float, startTime: astronomy.Time, direction: int = 1) -&gt; astronomy.HourAngleEvent
 
 **Searches for the time when the center of a body reaches a specified hour angle as seen by an observer on the Earth.**
 
@@ -3028,7 +3028,7 @@ of the body at that time, as seen by the given observer.
 ---
 
 <a name="SearchLocalSolarEclipse"></a>
-### SearchLocalSolarEclipse(startTime, observer)
+### SearchLocalSolarEclipse(startTime: astronomy.Time, observer: astronomy.Observer) -&gt; astronomy.LocalSolarEclipseInfo
 
 Searches for a solar eclipse visible at a specific location on the Earth's surface.
 This function finds the first solar eclipse that occurs after `startTime`.
@@ -3051,7 +3051,7 @@ See [`LocalSolarEclipseInfo`](#LocalSolarEclipseInfo) for more information about
 ---
 
 <a name="SearchLunarApsis"></a>
-### SearchLunarApsis(startTime)
+### SearchLunarApsis(startTime: astronomy.Time) -&gt; astronomy.Apsis
 
 **Finds the time of the first lunar apogee or perigee after the given time.**
 
@@ -3076,7 +3076,7 @@ another call of `NextLunarApsis` as many times as desired.
 ---
 
 <a name="SearchLunarEclipse"></a>
-### SearchLunarEclipse(startTime)
+### SearchLunarEclipse(startTime: astronomy.Time) -&gt; astronomy.LunarEclipseInfo
 
 **Searches for a lunar eclipse.**
 
@@ -3096,7 +3096,7 @@ passing in the `peak` value returned from the previous call.
 ---
 
 <a name="SearchMaxElongation"></a>
-### SearchMaxElongation(body, startTime)
+### SearchMaxElongation(body: astronomy.Body, startTime: astronomy.Time) -&gt; Optional[astronomy.ElongationEvent]
 
 **Finds a date and time when Mercury or Venus reaches its maximum angle from the Sun as seen from the Earth.**
 
@@ -3119,7 +3119,7 @@ observed in the morning or evening. See [`ElongationEvent`](#ElongationEvent) fo
 ---
 
 <a name="SearchMoonNode"></a>
-### SearchMoonNode(startTime)
+### SearchMoonNode(startTime: astronomy.Time) -&gt; astronomy.NodeEventInfo
 
 **Searches for a time when the Moon's center crosses through the ecliptic plane.**
 
@@ -3141,7 +3141,7 @@ Then call [`NextMoonNode`](#NextMoonNode) to find as many more consecutive nodes
 ---
 
 <a name="SearchMoonPhase"></a>
-### SearchMoonPhase(targetLon, startTime, limitDays)
+### SearchMoonPhase(targetLon: float, startTime: astronomy.Time, limitDays: float)
 
 **Searches for the time that the Moon reaches a specified phase.**
 
@@ -3166,7 +3166,7 @@ This function is useful for finding general phase angles outside those four quar
 ---
 
 <a name="SearchMoonQuarter"></a>
-### SearchMoonQuarter(startTime)
+### SearchMoonQuarter(startTime: astronomy.Time) -&gt; astronomy.MoonQuarter
 
 **Finds the first lunar quarter after the specified date and time.**
 
@@ -3186,7 +3186,7 @@ followed by calls to [`NextMoonQuarter`](#NextMoonQuarter) as many times as desi
 ---
 
 <a name="SearchPeakMagnitude"></a>
-### SearchPeakMagnitude(body, startTime)
+### SearchPeakMagnitude(body: astronomy.Body, startTime: astronomy.Time) -&gt; astronomy.IlluminationInfo
 
 **Searches for the date and time Venus will next appear brightest as seen from the Earth.**
 
@@ -3211,7 +3211,7 @@ However, the difference is minor and has little practical value.
 ---
 
 <a name="SearchPlanetApsis"></a>
-### SearchPlanetApsis(body, startTime)
+### SearchPlanetApsis(body: astronomy.Body, startTime: astronomy.Time) -&gt; astronomy.Apsis
 
 **Finds the next planet perihelion or aphelion, after a given time.**
 
@@ -3235,7 +3235,7 @@ into another call of `NextPlanetApsis` as many times as desired.
 ---
 
 <a name="SearchRelativeLongitude"></a>
-### SearchRelativeLongitude(body, targetRelLon, startTime)
+### SearchRelativeLongitude(body: astronomy.Body, targetRelLon: float, startTime: astronomy.Time) -&gt; astronomy.Time
 
 **Searches for when the Earth and another planet are separated by a certain ecliptic longitude.**
 
@@ -3279,7 +3279,7 @@ The date and time of the relative longitude event.
 ---
 
 <a name="SearchRiseSet"></a>
-### SearchRiseSet(body, observer, direction, startTime, limitDays)
+### SearchRiseSet(body: astronomy.Body, observer: astronomy.Observer, direction: astronomy.Direction, startTime: astronomy.Time, limitDays: float) -&gt; Optional[astronomy.Time]
 
 **Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.**
 
@@ -3318,7 +3318,7 @@ this function returns that time. Otherwise, it returns `None`.
 ---
 
 <a name="SearchSunLongitude"></a>
-### SearchSunLongitude(targetLon, startTime, limitDays)
+### SearchSunLongitude(targetLon: float, startTime: astronomy.Time, limitDays: float) -&gt; Optional[astronomy.Time]
 
 **Searches for the time when the Sun reaches an apparent ecliptic longitude as seen from the Earth.**
 
@@ -3343,7 +3343,7 @@ It is recommended to keep the window smaller than 10 days when possible.
 ---
 
 <a name="SearchTransit"></a>
-### SearchTransit(body, startTime)
+### SearchTransit(body: astronomy.Body, startTime: astronomy.Time) -&gt; astronomy.TransitInfo
 
 **Searches for the first transit of Mercury or Venus after a given date.**
 
@@ -3363,7 +3363,7 @@ To continue the search, pass the `finish` time in the returned structure to
 ---
 
 <a name="Seasons"></a>
-### Seasons(year)
+### Seasons(year: int) -&gt; astronomy.SeasonInfo
 
 **Finds both equinoxes and both solstices for a given calendar year.**
 
@@ -3394,7 +3394,7 @@ of winter in the southern hemisphere.
 ---
 
 <a name="SiderealTime"></a>
-### SiderealTime(time)
+### SiderealTime(time: astronomy.Time) -&gt; float
 
 **Calculates Greenwich Apparent Sidereal Time (GAST).**
 
@@ -3423,7 +3423,7 @@ GAST expressed in sidereal hours.
 ---
 
 <a name="SphereFromVector"></a>
-### SphereFromVector(vector)
+### SphereFromVector(vector: astronomy.Vector) -&gt; astronomy.Spherical
 
 **Converts Cartesian coordinates to spherical coordinates.**
 
@@ -3439,7 +3439,7 @@ Spherical coordinates that are equivalent to the given vector.
 ---
 
 <a name="SunPosition"></a>
-### SunPosition(time)
+### SunPosition(time: astronomy.Time) -&gt; astronomy.EclipticCoordinates
 
 **Calculates geocentric ecliptic coordinates for the Sun.**
 
@@ -3466,7 +3466,7 @@ The ecliptic coordinates of the Sun using the Earth's true equator of date.
 ---
 
 <a name="VectorFromHorizon"></a>
-### VectorFromHorizon(sphere, time, refraction)
+### VectorFromHorizon(sphere: astronomy.Spherical, time: astronomy.Time, refraction: astronomy.Refraction) -&gt; astronomy.Vector
 
 **Given apparent angular horizontal coordinates in `sphere`, calculate horizontal vector.**
 
@@ -3482,7 +3482,7 @@ A vector in the horizontal system: `x` = north, `y` = west, and `z` = zenith (up
 ---
 
 <a name="VectorFromSphere"></a>
-### VectorFromSphere(sphere, time)
+### VectorFromSphere(sphere: astronomy.Spherical, time: astronomy.Time) -&gt; astronomy.Vector
 
 **Converts spherical coordinates to Cartesian coordinates.**
 
@@ -3501,7 +3501,7 @@ The vector form of the supplied spherical coordinates.
 ---
 
 <a name="VectorObserver"></a>
-### VectorObserver(vector, ofdate)
+### VectorObserver(vector: astronomy.Vector, ofdate: bool) -&gt; astronomy.Observer
 
 **Calculates the geographic location corresponding to an equatorial vector.**
 

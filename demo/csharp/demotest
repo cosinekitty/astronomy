@@ -15,7 +15,9 @@ TestDemo()
 rm -rf exe
 rm -f test/*.txt
 mkdir -p test || exit 1
-dotnet build --output ${PWD}/exe || Fail "Error building ${PWD}/demo.sln"
+
+# https://github.com/dotnet/sdk/issues/30624#issuecomment-1432118204
+dotnet build --property:OutputPath="${PWD}/exe" || Fail "Error building ${PWD}/demo.sln"
 
 TestDemo solar_time +38.88 -77.03 2023-02-12T17:00:00Z
 TestDemo camera 29 -81 2021-03-22T02:45:00Z
