@@ -191,7 +191,16 @@ class DocInfo:
             raise Exception('Documented enums do not match actual enums.')
 
 def MdSignature(sig):
+    # Convert the type signature from inspect.signature() into a string.
     text = str(sig)
+    # Now that we have type hints, we get inconsistent return values from
+    # inspect.signature() for functions that return either a given type value or None.
+    # On older Pythons we see "Optional[astronomy.Time]".
+    # On newer Pythons we see "Union[astronomy.Time, NoneType]".
+    # This causes unit test failures on GitHub Actions when I check in changes.
+    # I prefer the older syntax because it's clearer what my intention is.
+    text = re.sub(r'Union\[([A-Za-z_][A-Za-z_0-9\.]*),\s*NoneType\]', r'Optional[\1]', text)
+    # Escape characters as needed for Markdown/HTML.
     text = HtmlEscape(text)
     return text
 
