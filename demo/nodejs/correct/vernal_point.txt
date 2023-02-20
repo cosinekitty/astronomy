@@ -1,0 +1,3 @@
+time1 = 1900-01-01T00:00:00.000Z
+time2 = 2000-01-01T00:00:00.000Z
+The vernal point's ecliptic longitude changed by 1.3878 degrees.

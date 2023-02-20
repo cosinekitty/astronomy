@@ -27,6 +27,7 @@ TestDemo culminate +30 -90 2015-02-28T00:00Z
 TestDemo horizon +25.5 -85.3 2016-12-25T12:30:45Z
 TestDemo lunar_eclipse 1988-01-01
 TestDemo triangulate 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12
+TestDemo vernal_point 1900-01-01 2000-01-01
 
 echo "Testing Node.js demo: gravity"
 for latitude in {0..90}; do
