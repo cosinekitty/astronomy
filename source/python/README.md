@@ -487,7 +487,7 @@ time steps.
 #### member functions
 
 <a name="GravitySimulator.__init__"></a>
-### GravitySimulator.__init__(self, originBody: astronomy.Body, time: 'Time', bodyStates: List[astronomy.StateVector]) -&gt; None
+### GravitySimulator.__init__(self, originBody: astronomy.Body, time: astronomy.Time, bodyStates: List[astronomy.StateVector]) -&gt; None
 
 **Creates a gravity simulation object.**
 
@@ -2102,7 +2102,7 @@ and the apparent angular diameter of the Moon `diam_deg`.
 ---
 
 <a name="MassProduct"></a>
-### MassProduct(body: 'Body') -&gt; float
+### MassProduct(body: astronomy.Body) -&gt; float
 
 **Returns the product of mass and universal gravitational constant of a Solar System body.**
 

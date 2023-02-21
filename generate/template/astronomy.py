@@ -43,50 +43,6 @@ def _cbrt(x: float) -> float:
         return -((-x) ** (1.0 / 3.0))
     return x ** (1.0 / 3.0)
 
-class _TerseVector:
-    '''A 3D vector that is not attached to a time. Used privately inside this module for conciseness.'''
-
-    def __init__(self, x: float, y: float, z: float) -> None:
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def clone(self) -> "_TerseVector":
-        '''Create a copy of this vector.'''
-        return _TerseVector(self.x, self.y, self.z)
-
-    @staticmethod
-    def zero() -> "_TerseVector":
-        '''Return a zero vector.'''
-        return _TerseVector(0.0, 0.0, 0.0)
-
-    def ToAstroVector(self, time: "Time") -> "Vector":
-        '''Convert _TerseVector object to Vector object.'''
-        return Vector(self.x, self.y, self.z, time)
-
-    def quadrature(self) -> float:
-        '''Return magnitude squared of this vector.'''
-        return self.x**2 + self.y**2 + self.z**2
-
-    def mean(self, other: "_TerseVector") -> "_TerseVector":
-        '''Return the average of this vector and another vector.'''
-        return _TerseVector((self.x + other.x)/2.0, (self.y + other.y)/2.0, (self.z + other.z)/2.0)
-
-    def __add__(self, other: "_TerseVector") -> "_TerseVector":
-        return _TerseVector(self.x + other.x, self.y + other.y, self.z + other.z)
-
-    def __sub__(self, other: "_TerseVector") -> "_TerseVector":
-        return _TerseVector(self.x - other.x, self.y - other.y, self.z - other.z)
-
-    def __mul__(self, scalar: float) -> "_TerseVector":
-        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
-
-    def __rmul__(self, scalar: float) -> "_TerseVector":
-        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
-
-    def __truediv__(self, scalar: float) -> "_TerseVector":
-        return _TerseVector(self.x / scalar, self.y / scalar, self.z / scalar)
-
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
 AU_PER_LY = 63241.07708807546       #<const> The number of astronomical units in one light-year.
@@ -170,43 +126,6 @@ _PLUTO_GM   = 0.2188699765425970e-11
 _MOON_GM = _EARTH_GM / _EARTH_MOON_MASS_RATIO
 
 
-def MassProduct(body: "Body") -> float:
-    """Returns the product of mass and universal gravitational constant of a Solar System body.
-
-    For problems involving the gravitational interactions of Solar System bodies,
-    it is helpful to know the product GM, where G = the universal gravitational constant
-    and M = the mass of the body. In practice, GM is known to a higher precision than
-    either G or M alone, and thus using the product results in the most accurate results.
-    This function returns the product GM in the units au^3/day^2.
-    The values come from page 10 of a
-    [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
-
-    Parameters
-    ----------
-    body : Body
-        The body for which to find the GM product.
-        Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
-        Any other value will cause an exception to be thrown.
-
-    Returns
-    -------
-    float
-        The mass product of the given body in au^3/day^2.
-    """
-    if body == Body.Sun:      return _SUN_GM
-    if body == Body.Mercury:  return _MERCURY_GM
-    if body == Body.Venus:    return _VENUS_GM
-    if body == Body.Earth:    return _EARTH_GM
-    if body == Body.Moon:     return _MOON_GM
-    if body == Body.EMB:      return _EARTH_GM + _MOON_GM
-    if body == Body.Mars:     return _MARS_GM
-    if body == Body.Jupiter:  return _JUPITER_GM
-    if body == Body.Saturn:   return _SATURN_GM
-    if body == Body.Uranus:   return _URANUS_GM
-    if body == Body.Neptune:  return _NEPTUNE_GM
-    if body == Body.Pluto:    return _PLUTO_GM
-    raise InvalidBodyError(body)
-
 @enum.unique
 class _PrecessDir(enum.Enum):
     From2000 = 0
@@ -226,384 +145,6 @@ def _NormalizeLongitude(lon: float) -> float:
     while lon >= 360.0:
         lon -= 360.0
     return lon
-
-class Vector:
-    """A Cartesian vector with 3 space coordinates and 1 time coordinate.
-
-    The vector's space coordinates are measured in astronomical units (AU).
-    The coordinate system varies and depends on context.
-    The vector also includes a time stamp.
-
-    Attributes
-    ----------
-    x : float
-        The x-coordinate of the vector, measured in AU.
-    y : float
-        The y-coordinate of the vector, measured in AU.
-    z : float
-        The z-coordinate of the vector, measured in AU.
-    t : Time
-        The date and time at which the coordinate is valid.
-    """
-    def __init__(self, x: float, y: float, z: float, t: "Time") -> None:
-        self.x = x
-        self.y = y
-        self.z = z
-        self.t = t
-
-    def __repr__(self) -> str:
-        return 'Vector({}, {}, {}, {})'.format(self.x, self.y, self.z, repr(self.t))
-
-    def Length(self) -> float:
-        """Returns the length of the vector in AU."""
-        # It would be nice to use math.hypot() here,
-        # but before Python 3.8, it only accepts 2 arguments.
-        return math.sqrt(self.x**2 + self.y**2 + self.z**2)
-
-    def __add__(self, other: "Vector") -> "Vector":
-        return Vector(self.x + other.x, self.y + other.y, self.z + other.z, self.t)
-
-    def __sub__(self, other: "Vector") -> "Vector":
-        return Vector(self.x - other.x, self.y - other.y, self.z - other.z, self.t)
-
-    def __neg__(self) -> "Vector":
-        return Vector(-self.x, -self.y, -self.z, self.t)
-
-    def __truediv__(self, scalar: float) -> "Vector":
-        return Vector(self.x/scalar, self.y/scalar, self.z/scalar, self.t)
-
-    def format(self, coord_format: str) -> str:
-        """Returns a custom format string representation of the vector."""
-        layout = '({:' + coord_format + '}, {:' + coord_format + '}, {:' + coord_format + '}, {})'
-        return layout.format(self.x, self.y, self.z, str(self.t))
-
-class StateVector:
-    """A combination of a position vector, a velocity vector, and a time.
-
-    The position (x, y, z) is measured in astronomical units (AU).
-    The velocity (vx, vy, vz) is measured in AU/day.
-    The coordinate system varies and depends on context.
-    The state vector also includes a time stamp.
-
-    Attributes
-    ----------
-    x : float
-        The x-coordinate of the position, measured in AU.
-    y : float
-        The y-coordinate of the position, measured in AU.
-    z : float
-        The z-coordinate of the position, measured in AU.
-    vx : float
-        The x-component of the velocity, measured in AU/day.
-    vy : float
-        The y-component of the velocity, measured in AU/day.
-    vz : float
-        The z-component of the velocity, measured in AU/day.
-    t : Time
-        The date and time at which the position and velocity vectors are valid.
-    """
-    def __init__(self, x: float, y: float, z: float, vx: float, vy: float, vz: float, t: "Time") -> None:
-        self.x = x
-        self.y = y
-        self.z = z
-        self.vx = vx
-        self.vy = vy
-        self.vz = vz
-        self.t = t
-
-    def __repr__(self) -> str:
-        return 'StateVector(x={}, y={}, z={}, vx={}, vy={}, vz={}, t={})'.format(
-            self.x, self.y, self.z,
-            self.vx, self.vy, self.vz,
-            repr(self.t))
-
-    def __add__(self, other: "StateVector") -> "StateVector":
-        return StateVector(
-            self.x  + other.x,
-            self.y  + other.y,
-            self.z  + other.z,
-            self.vx + other.vx,
-            self.vy + other.vy,
-            self.vz + other.vz,
-            self.t
-        )
-
-    def __sub__(self, other: "StateVector") -> "StateVector":
-        return StateVector(
-            self.x  - other.x,
-            self.y  - other.y,
-            self.z  - other.z,
-            self.vx - other.vx,
-            self.vy - other.vy,
-            self.vz - other.vz,
-            self.t
-        )
-
-    def Position(self) -> Vector:
-        """Extracts a position vector from this state vector."""
-        return Vector(self.x, self.y, self.z, self.t)
-
-    def Velocity(self) -> Vector:
-        """Extracts a velocity vector from this state vector."""
-        return Vector(self.vx, self.vy, self.vz, self.t)
-
-@enum.unique
-class Body(enum.Enum):
-    """The celestial bodies supported by Astronomy Engine calculations.
-
-    Values
-    ------
-    Invalid: An unknown, invalid, or undefined celestial body.
-    Mercury: The planet Mercury.
-    Venus: The planet Venus.
-    Earth: The planet Earth.
-    Mars: The planet Mars.
-    Jupiter: The planet Jupiter.
-    Saturn: The planet Saturn.
-    Uranus: The planet Uranus.
-    Neptune: The planet Neptune.
-    Pluto: The planet Pluto.
-    Sun: The Sun.
-    Moon: The Earth's moon.
-    EMB: The Earth/Moon Barycenter.
-    SSB: The Solar System Barycenter.
-    Star1: User-defined star 1.
-    Star2: User-defined star 2.
-    Star3: User-defined star 3.
-    Star4: User-defined star 4.
-    Star5: User-defined star 5.
-    Star6: User-defined star 6.
-    Star7: User-defined star 7.
-    Star8: User-defined star 8.
-    """
-    Invalid = -1
-    Mercury = 0
-    Venus = 1
-    Earth = 2
-    Mars = 3
-    Jupiter = 4
-    Saturn = 5
-    Uranus = 6
-    Neptune = 7
-    Pluto = 8
-    Sun = 9
-    Moon = 10
-    EMB = 11
-    SSB = 12
-    Star1 = 101
-    Star2 = 102
-    Star3 = 103
-    Star4 = 104
-    Star5 = 105
-    Star6 = 106
-    Star7 = 107
-    Star8 = 108
-
-class _StarDef:
-    def __init__(self) -> None:
-        self.ra = 0.0
-        self.dec = 0.0
-        self.dist = 0.0     # signals that the star has not yet been defined
-
-_StarTable = [_StarDef() for _ in range(8)]
-
-def _GetStar(body: Body) -> Optional[_StarDef]:
-    if Body.Star1.value <= body.value <= Body.Star8.value:
-        return _StarTable[body.value - Body.Star1.value]
-    return None
-
-def _UserDefinedStar(body: Body) -> Optional[_StarDef]:
-    star = _GetStar(body)
-    if star and (star.dist > 0.0):
-        return star
-    return None
-
-def DefineStar(body: Body, ra: float, dec: float, distanceLightYears: float) -> None:
-    """Assign equatorial coordinates to a user-defined star.
-
-    Some Astronomy Engine functions allow their `body` parameter to
-    be a user-defined fixed point in the sky, loosely called a "star".
-    This function assigns a right ascension, declination, and distance
-    to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
-
-    Stars are not valid until defined. Once defined, they retain their
-    definition until re-defined by another call to `DefineStar`.
-
-    Parameters
-    ----------
-    body: Body
-        One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`.
-    ra: float
-        The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
-        The value is in units of sidereal hours, and must be within the half-open range [0, 24).
-    dec: float
-        The declination to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
-        The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
-        and must be within the closed range [-90, +90].
-    distanceLightYears: float
-        The distance between the star and the Sun, expressed in light-years.
-        This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
-        If you don't know the distance to the star, using a large value like 1000 will generally work well.
-        The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
-    """
-    star = _GetStar(body)
-    if star is None:
-        raise InvalidBodyError(body)
-    if not (0.0 <= ra < 24.0):
-        raise Error('Invalid right ascension: {}'.format(ra))
-    if not (-90.0 <= dec <= +90.0):
-        raise Error('Invalid declination: {}'.format(dec))
-    star.ra = ra
-    star.dec = dec
-    star.dist = distanceLightYears * AU_PER_LY
-
-def BodyCode(name: str) -> Body:
-    """Finds the Body enumeration value, given the name of a body.
-
-    Parameters
-    ----------
-    name: str
-        The common English name of a supported celestial body.
-
-    Returns
-    -------
-    Body
-        If `name` is a valid body name, returns the enumeration
-        value associated with that body.
-        Otherwise, returns `Body.Invalid`.
-
-    Example
-    -------
-
-    >>> astronomy.BodyCode('Mars')
-    <Body.Mars: 3>
-
-    """
-    if name not in Body.__members__:
-        return Body.Invalid
-    return Body[name]
-
-def _IsSuperiorPlanet(body: Body) -> bool:
-    return body in [Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]
-
-_PlanetOrbitalPeriod = [
-    87.969,
-    224.701,
-    _EARTH_ORBITAL_PERIOD,
-    686.980,
-    4332.589,
-    10759.22,
-    30685.4,
-    _NEPTUNE_ORBITAL_PERIOD,
-    90560.0
-]
-
-class Error(Exception):
-    """Indicates an error in an astronomical calculation."""
-    def __init__(self, message: str) -> None:
-        Exception.__init__(self, message)
-
-class DateTimeFormatError(Error):
-    """The syntax of a UTC date/time string was not valid, or it contains invalid values."""
-    def __init__(self, text: str) -> None:
-        Error.__init__(self, 'The date/time string is not valid: "{}"'.format(text))
-
-class EarthNotAllowedError(Error):
-    """The Earth is not allowed as the celestial body in this calculation."""
-    def __init__(self) -> None:
-        Error.__init__(self, 'The Earth is not allowed as the body.')
-
-class InvalidBodyError(Error):
-    """The celestial body is not allowed for this calculation."""
-    def __init__(self, body: Body) -> None:
-        Error.__init__(self, 'This body is not valid, or is not supported for this calculation: {}'.format(body))
-
-class BadVectorError(Error):
-    """A vector magnitude is too small to have a direction in space."""
-    def __init__(self) -> None:
-        Error.__init__(self, 'Vector is too small to have a direction.')
-
-class InternalError(Error):
-    """An internal error occured that should be reported as a bug.
-
-    Indicates an unexpected and unrecoverable condition occurred.
-    If you encounter this error using Astronomy Engine, it would be very
-    helpful to report it at the [Issues](https://github.com/cosinekitty/astronomy/issues)
-    page on GitHub. Please include a copy of the stack trace, along with a description
-    of how to reproduce the error. This will help improve the quality of
-    Astronomy Engine for everyone! (Thank you in advance from the author.)
-    """
-    def __init__(self) -> None:
-        Error.__init__(self, 'Internal error - please report issue, including stack trace, at https://github.com/cosinekitty/astronomy/issues')
-
-class NoConvergeError(Error):
-    """A numeric solver did not converge.
-
-    Indicates that there was a failure of a numeric solver to converge.
-    If you encounter this error using Astronomy Engine, it would be very
-    helpful to report it at the [Issues](https://github.com/cosinekitty/astronomy/issues)
-    page on GitHub. Please include a copy of the stack trace, along with a description
-    of how to reproduce the error. This will help improve the quality of
-    Astronomy Engine for everyone! (Thank you in advance from the author.)
-    """
-    def __init__(self) -> None:
-        Error.__init__(self, 'Numeric solver did not converge - please report issue at https://github.com/cosinekitty/astronomy/issues')
-
-def PlanetOrbitalPeriod(body: Body) -> float:
-    """Returns the average number of days it takes for a planet to orbit the Sun.
-
-    Parameters
-    ----------
-    body : Body
-        One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.
-
-    Returns
-    -------
-    float
-        The mean orbital period of the body in days.
-    """
-    if isinstance(body, Body) and (0 <= body.value < len(_PlanetOrbitalPeriod)):
-        return _PlanetOrbitalPeriod[body.value]
-    raise InvalidBodyError(body)
-
-def _SynodicPeriod(body: Body) -> float:
-    if body == Body.Earth:
-        raise EarthNotAllowedError()
-    if body.value < 0 or body.value >= len(_PlanetOrbitalPeriod):
-        raise InvalidBodyError(body)
-    if body == Body.Moon:
-        return _MEAN_SYNODIC_MONTH
-    return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
-
-def AngleBetween(a: Vector, b: Vector) -> float:
-    """Calculates the angle in degrees between two vectors.
-
-    Given a pair of vectors, this function returns the angle in degrees
-    between the two vectors in 3D space.
-    The angle is measured in the plane that contains both vectors.
-
-    Parameters
-    ----------
-    a : Vector
-        The first of a pair of vectors between which to measure an angle.
-    b : Vector
-        The second of a pair of vectors between which to measure an angle.
-
-    Returns
-    -------
-    float
-        The angle between the two vectors expressed in degrees.
-        The value is in the range [0, 180].
-    """
-    r: float = a.Length() * b.Length()
-    if r < 1.0e-8:
-        raise BadVectorError()
-    dot: float = (a.x*b.x + a.y*b.y + a.z*b.z) / r
-    if dot <= -1.0:
-        return 180.0
-    if dot >= +1.0:
-        return 0.0
-    return math.degrees(math.acos(dot))
 
 
 def DeltaT_EspenakMeeus(ut: float) -> float:
@@ -1011,6 +552,424 @@ class Time:
         return self.tt >= other.tt
 
 
+class Vector:
+    """A Cartesian vector with 3 space coordinates and 1 time coordinate.
+
+    The vector's space coordinates are measured in astronomical units (AU).
+    The coordinate system varies and depends on context.
+    The vector also includes a time stamp.
+
+    Attributes
+    ----------
+    x : float
+        The x-coordinate of the vector, measured in AU.
+    y : float
+        The y-coordinate of the vector, measured in AU.
+    z : float
+        The z-coordinate of the vector, measured in AU.
+    t : Time
+        The date and time at which the coordinate is valid.
+    """
+    def __init__(self, x: float, y: float, z: float, t: Time) -> None:
+        self.x = x
+        self.y = y
+        self.z = z
+        self.t = t
+
+    def __repr__(self) -> str:
+        return 'Vector({}, {}, {}, {})'.format(self.x, self.y, self.z, repr(self.t))
+
+    def Length(self) -> float:
+        """Returns the length of the vector in AU."""
+        # It would be nice to use math.hypot() here,
+        # but before Python 3.8, it only accepts 2 arguments.
+        return math.sqrt(self.x**2 + self.y**2 + self.z**2)
+
+    def __add__(self, other: "Vector") -> "Vector":
+        return Vector(self.x + other.x, self.y + other.y, self.z + other.z, self.t)
+
+    def __sub__(self, other: "Vector") -> "Vector":
+        return Vector(self.x - other.x, self.y - other.y, self.z - other.z, self.t)
+
+    def __neg__(self) -> "Vector":
+        return Vector(-self.x, -self.y, -self.z, self.t)
+
+    def __truediv__(self, scalar: float) -> "Vector":
+        return Vector(self.x/scalar, self.y/scalar, self.z/scalar, self.t)
+
+    def format(self, coord_format: str) -> str:
+        """Returns a custom format string representation of the vector."""
+        layout = '({:' + coord_format + '}, {:' + coord_format + '}, {:' + coord_format + '}, {})'
+        return layout.format(self.x, self.y, self.z, str(self.t))
+
+class StateVector:
+    """A combination of a position vector, a velocity vector, and a time.
+
+    The position (x, y, z) is measured in astronomical units (AU).
+    The velocity (vx, vy, vz) is measured in AU/day.
+    The coordinate system varies and depends on context.
+    The state vector also includes a time stamp.
+
+    Attributes
+    ----------
+    x : float
+        The x-coordinate of the position, measured in AU.
+    y : float
+        The y-coordinate of the position, measured in AU.
+    z : float
+        The z-coordinate of the position, measured in AU.
+    vx : float
+        The x-component of the velocity, measured in AU/day.
+    vy : float
+        The y-component of the velocity, measured in AU/day.
+    vz : float
+        The z-component of the velocity, measured in AU/day.
+    t : Time
+        The date and time at which the position and velocity vectors are valid.
+    """
+    def __init__(self, x: float, y: float, z: float, vx: float, vy: float, vz: float, t: Time) -> None:
+        self.x = x
+        self.y = y
+        self.z = z
+        self.vx = vx
+        self.vy = vy
+        self.vz = vz
+        self.t = t
+
+    def __repr__(self) -> str:
+        return 'StateVector(x={}, y={}, z={}, vx={}, vy={}, vz={}, t={})'.format(
+            self.x, self.y, self.z,
+            self.vx, self.vy, self.vz,
+            repr(self.t))
+
+    def __add__(self, other: "StateVector") -> "StateVector":
+        return StateVector(
+            self.x  + other.x,
+            self.y  + other.y,
+            self.z  + other.z,
+            self.vx + other.vx,
+            self.vy + other.vy,
+            self.vz + other.vz,
+            self.t
+        )
+
+    def __sub__(self, other: "StateVector") -> "StateVector":
+        return StateVector(
+            self.x  - other.x,
+            self.y  - other.y,
+            self.z  - other.z,
+            self.vx - other.vx,
+            self.vy - other.vy,
+            self.vz - other.vz,
+            self.t
+        )
+
+    def Position(self) -> Vector:
+        """Extracts a position vector from this state vector."""
+        return Vector(self.x, self.y, self.z, self.t)
+
+    def Velocity(self) -> Vector:
+        """Extracts a velocity vector from this state vector."""
+        return Vector(self.vx, self.vy, self.vz, self.t)
+
+@enum.unique
+class Body(enum.Enum):
+    """The celestial bodies supported by Astronomy Engine calculations.
+
+    Values
+    ------
+    Invalid: An unknown, invalid, or undefined celestial body.
+    Mercury: The planet Mercury.
+    Venus: The planet Venus.
+    Earth: The planet Earth.
+    Mars: The planet Mars.
+    Jupiter: The planet Jupiter.
+    Saturn: The planet Saturn.
+    Uranus: The planet Uranus.
+    Neptune: The planet Neptune.
+    Pluto: The planet Pluto.
+    Sun: The Sun.
+    Moon: The Earth's moon.
+    EMB: The Earth/Moon Barycenter.
+    SSB: The Solar System Barycenter.
+    Star1: User-defined star 1.
+    Star2: User-defined star 2.
+    Star3: User-defined star 3.
+    Star4: User-defined star 4.
+    Star5: User-defined star 5.
+    Star6: User-defined star 6.
+    Star7: User-defined star 7.
+    Star8: User-defined star 8.
+    """
+    Invalid = -1
+    Mercury = 0
+    Venus = 1
+    Earth = 2
+    Mars = 3
+    Jupiter = 4
+    Saturn = 5
+    Uranus = 6
+    Neptune = 7
+    Pluto = 8
+    Sun = 9
+    Moon = 10
+    EMB = 11
+    SSB = 12
+    Star1 = 101
+    Star2 = 102
+    Star3 = 103
+    Star4 = 104
+    Star5 = 105
+    Star6 = 106
+    Star7 = 107
+    Star8 = 108
+
+
+def MassProduct(body: Body) -> float:
+    """Returns the product of mass and universal gravitational constant of a Solar System body.
+
+    For problems involving the gravitational interactions of Solar System bodies,
+    it is helpful to know the product GM, where G = the universal gravitational constant
+    and M = the mass of the body. In practice, GM is known to a higher precision than
+    either G or M alone, and thus using the product results in the most accurate results.
+    This function returns the product GM in the units au^3/day^2.
+    The values come from page 10 of a
+    [JPL memorandum regarding the DE405/LE405 ephemeris](https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf).
+
+    Parameters
+    ----------
+    body : Body
+        The body for which to find the GM product.
+        Allowed to be the Sun, Moon, EMB (Earth/Moon Barycenter), or any planet.
+        Any other value will cause an exception to be thrown.
+
+    Returns
+    -------
+    float
+        The mass product of the given body in au^3/day^2.
+    """
+    if body == Body.Sun:      return _SUN_GM
+    if body == Body.Mercury:  return _MERCURY_GM
+    if body == Body.Venus:    return _VENUS_GM
+    if body == Body.Earth:    return _EARTH_GM
+    if body == Body.Moon:     return _MOON_GM
+    if body == Body.EMB:      return _EARTH_GM + _MOON_GM
+    if body == Body.Mars:     return _MARS_GM
+    if body == Body.Jupiter:  return _JUPITER_GM
+    if body == Body.Saturn:   return _SATURN_GM
+    if body == Body.Uranus:   return _URANUS_GM
+    if body == Body.Neptune:  return _NEPTUNE_GM
+    if body == Body.Pluto:    return _PLUTO_GM
+    raise InvalidBodyError(body)
+
+
+class _StarDef:
+    def __init__(self) -> None:
+        self.ra = 0.0
+        self.dec = 0.0
+        self.dist = 0.0     # signals that the star has not yet been defined
+
+_StarTable = [_StarDef() for _ in range(8)]
+
+def _GetStar(body: Body) -> Optional[_StarDef]:
+    if Body.Star1.value <= body.value <= Body.Star8.value:
+        return _StarTable[body.value - Body.Star1.value]
+    return None
+
+def _UserDefinedStar(body: Body) -> Optional[_StarDef]:
+    star = _GetStar(body)
+    if star and (star.dist > 0.0):
+        return star
+    return None
+
+def DefineStar(body: Body, ra: float, dec: float, distanceLightYears: float) -> None:
+    """Assign equatorial coordinates to a user-defined star.
+
+    Some Astronomy Engine functions allow their `body` parameter to
+    be a user-defined fixed point in the sky, loosely called a "star".
+    This function assigns a right ascension, declination, and distance
+    to one of the eight user-defined stars `Body.Star1`..`Body.Star8`.
+
+    Stars are not valid until defined. Once defined, they retain their
+    definition until re-defined by another call to `DefineStar`.
+
+    Parameters
+    ----------
+    body: Body
+        One of the eight user-defined star identifiers: `Body.Star1`, `Body.Star2`, ..., `Body.Star8`.
+    ra: float
+        The right ascension to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+        The value is in units of sidereal hours, and must be within the half-open range [0, 24).
+    dec: float
+        The declination to be assigned to the star, expressed in J2000 equatorial coordinates (EQJ).
+        The value is in units of degrees north (positive) or south (negative) of the J2000 equator,
+        and must be within the closed range [-90, +90].
+    distanceLightYears: float
+        The distance between the star and the Sun, expressed in light-years.
+        This value is used to calculate the tiny parallax shift as seen by an observer on Earth.
+        If you don't know the distance to the star, using a large value like 1000 will generally work well.
+        The minimum allowed distance is 1 light-year, which is required to provide certain internal optimizations.
+    """
+    star = _GetStar(body)
+    if star is None:
+        raise InvalidBodyError(body)
+    if not (0.0 <= ra < 24.0):
+        raise Error('Invalid right ascension: {}'.format(ra))
+    if not (-90.0 <= dec <= +90.0):
+        raise Error('Invalid declination: {}'.format(dec))
+    star.ra = ra
+    star.dec = dec
+    star.dist = distanceLightYears * AU_PER_LY
+
+def BodyCode(name: str) -> Body:
+    """Finds the Body enumeration value, given the name of a body.
+
+    Parameters
+    ----------
+    name: str
+        The common English name of a supported celestial body.
+
+    Returns
+    -------
+    Body
+        If `name` is a valid body name, returns the enumeration
+        value associated with that body.
+        Otherwise, returns `Body.Invalid`.
+
+    Example
+    -------
+
+    >>> astronomy.BodyCode('Mars')
+    <Body.Mars: 3>
+
+    """
+    if name not in Body.__members__:
+        return Body.Invalid
+    return Body[name]
+
+def _IsSuperiorPlanet(body: Body) -> bool:
+    return body in [Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]
+
+_PlanetOrbitalPeriod = [
+    87.969,
+    224.701,
+    _EARTH_ORBITAL_PERIOD,
+    686.980,
+    4332.589,
+    10759.22,
+    30685.4,
+    _NEPTUNE_ORBITAL_PERIOD,
+    90560.0
+]
+
+class Error(Exception):
+    """Indicates an error in an astronomical calculation."""
+    def __init__(self, message: str) -> None:
+        Exception.__init__(self, message)
+
+class DateTimeFormatError(Error):
+    """The syntax of a UTC date/time string was not valid, or it contains invalid values."""
+    def __init__(self, text: str) -> None:
+        Error.__init__(self, 'The date/time string is not valid: "{}"'.format(text))
+
+class EarthNotAllowedError(Error):
+    """The Earth is not allowed as the celestial body in this calculation."""
+    def __init__(self) -> None:
+        Error.__init__(self, 'The Earth is not allowed as the body.')
+
+class InvalidBodyError(Error):
+    """The celestial body is not allowed for this calculation."""
+    def __init__(self, body: Body) -> None:
+        Error.__init__(self, 'This body is not valid, or is not supported for this calculation: {}'.format(body))
+
+class BadVectorError(Error):
+    """A vector magnitude is too small to have a direction in space."""
+    def __init__(self) -> None:
+        Error.__init__(self, 'Vector is too small to have a direction.')
+
+class InternalError(Error):
+    """An internal error occured that should be reported as a bug.
+
+    Indicates an unexpected and unrecoverable condition occurred.
+    If you encounter this error using Astronomy Engine, it would be very
+    helpful to report it at the [Issues](https://github.com/cosinekitty/astronomy/issues)
+    page on GitHub. Please include a copy of the stack trace, along with a description
+    of how to reproduce the error. This will help improve the quality of
+    Astronomy Engine for everyone! (Thank you in advance from the author.)
+    """
+    def __init__(self) -> None:
+        Error.__init__(self, 'Internal error - please report issue, including stack trace, at https://github.com/cosinekitty/astronomy/issues')
+
+class NoConvergeError(Error):
+    """A numeric solver did not converge.
+
+    Indicates that there was a failure of a numeric solver to converge.
+    If you encounter this error using Astronomy Engine, it would be very
+    helpful to report it at the [Issues](https://github.com/cosinekitty/astronomy/issues)
+    page on GitHub. Please include a copy of the stack trace, along with a description
+    of how to reproduce the error. This will help improve the quality of
+    Astronomy Engine for everyone! (Thank you in advance from the author.)
+    """
+    def __init__(self) -> None:
+        Error.__init__(self, 'Numeric solver did not converge - please report issue at https://github.com/cosinekitty/astronomy/issues')
+
+def PlanetOrbitalPeriod(body: Body) -> float:
+    """Returns the average number of days it takes for a planet to orbit the Sun.
+
+    Parameters
+    ----------
+    body : Body
+        One of the planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, or Pluto.
+
+    Returns
+    -------
+    float
+        The mean orbital period of the body in days.
+    """
+    if isinstance(body, Body) and (0 <= body.value < len(_PlanetOrbitalPeriod)):
+        return _PlanetOrbitalPeriod[body.value]
+    raise InvalidBodyError(body)
+
+def _SynodicPeriod(body: Body) -> float:
+    if body == Body.Earth:
+        raise EarthNotAllowedError()
+    if body.value < 0 or body.value >= len(_PlanetOrbitalPeriod):
+        raise InvalidBodyError(body)
+    if body == Body.Moon:
+        return _MEAN_SYNODIC_MONTH
+    return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
+
+def AngleBetween(a: Vector, b: Vector) -> float:
+    """Calculates the angle in degrees between two vectors.
+
+    Given a pair of vectors, this function returns the angle in degrees
+    between the two vectors in 3D space.
+    The angle is measured in the plane that contains both vectors.
+
+    Parameters
+    ----------
+    a : Vector
+        The first of a pair of vectors between which to measure an angle.
+    b : Vector
+        The second of a pair of vectors between which to measure an angle.
+
+    Returns
+    -------
+    float
+        The angle between the two vectors expressed in degrees.
+        The value is in the range [0, 180].
+    """
+    r: float = a.Length() * b.Length()
+    if r < 1.0e-8:
+        raise BadVectorError()
+    dot: float = (a.x*b.x + a.y*b.y + a.z*b.z) / r
+    if dot <= -1.0:
+        return 180.0
+    if dot >= +1.0:
+        return 0.0
+    return math.degrees(math.acos(dot))
+
+
 class Observer:
     """Represents the geographic location of an observer on the surface of the Earth.
 
@@ -1226,6 +1185,53 @@ def _precession(pos: List[float], time: Time, direction: _PrecessDir) -> List[fl
 def _precession_posvel(state: StateVector, time: Time, direction: _PrecessDir) -> StateVector:
     r = _precession_rot(time, direction)
     return RotateState(r, state)
+
+
+class _TerseVector:
+    '''A 3D vector that is not attached to a time. Used privately inside this module for conciseness.'''
+
+    def __init__(self, x: float, y: float, z: float) -> None:
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def clone(self) -> "_TerseVector":
+        '''Create a copy of this vector.'''
+        return _TerseVector(self.x, self.y, self.z)
+
+    @staticmethod
+    def zero() -> "_TerseVector":
+        '''Return a zero vector.'''
+        return _TerseVector(0.0, 0.0, 0.0)
+
+    def ToAstroVector(self, time: Time) -> "Vector":
+        '''Convert _TerseVector object to Vector object.'''
+        return Vector(self.x, self.y, self.z, time)
+
+    def quadrature(self) -> float:
+        '''Return magnitude squared of this vector.'''
+        return self.x**2 + self.y**2 + self.z**2
+
+    def mean(self, other: "_TerseVector") -> "_TerseVector":
+        '''Return the average of this vector and another vector.'''
+        return _TerseVector((self.x + other.x)/2.0, (self.y + other.y)/2.0, (self.z + other.z)/2.0)
+
+    def __add__(self, other: "_TerseVector") -> "_TerseVector":
+        return _TerseVector(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __sub__(self, other: "_TerseVector") -> "_TerseVector":
+        return _TerseVector(self.x - other.x, self.y - other.y, self.z - other.z)
+
+    def __mul__(self, scalar: float) -> "_TerseVector":
+        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
+
+    def __rmul__(self, scalar: float) -> "_TerseVector":
+        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
+
+    def __truediv__(self, scalar: float) -> "_TerseVector":
+        return _TerseVector(self.x / scalar, self.y / scalar, self.z / scalar)
+
+
 
 class Equatorial:
     """Equatorial angular coordinates
@@ -3725,6 +3731,18 @@ def PairLongitude(body1: Body, body2: Body, time: Time) -> float:
     eclip2 = Ecliptic(vector2)
     return _NormalizeLongitude(eclip1.elon - eclip2.elon)
 
+@enum.unique
+class Visibility(enum.Enum):
+    """Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.
+
+    Values
+    ------
+    Morning : The body is best visible in the morning, before sunrise.
+    Evening : The body is best visible in the evening, after sunset.
+    """
+    Morning = 0
+    Evening = 1
+
 class ElongationEvent:
     """Contains information about the visibility of a celestial body at a given date and time.
 
@@ -3742,7 +3760,7 @@ class ElongationEvent:
     ecliptic_separation : float
         The difference between the ecliptic longitudes of the body and the Sun, as seen from the Earth.
     """
-    def __init__(self, time: Time, visibility: "Visibility", elongation: float, ecliptic_separation: float) -> None:
+    def __init__(self, time: Time, visibility: Visibility, elongation: float, ecliptic_separation: float) -> None:
         self.time = time
         self.visibility = visibility
         self.elongation = elongation
@@ -3755,18 +3773,6 @@ class ElongationEvent:
             self.elongation,
             self.ecliptic_separation
         )
-
-@enum.unique
-class Visibility(enum.Enum):
-    """Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.
-
-    Values
-    ------
-    Morning : The body is best visible in the morning, before sunrise.
-    Evening : The body is best visible in the evening, after sunset.
-    """
-    Morning = 0
-    Evening = 1
 
 def Elongation(body: Body, time: Time) -> ElongationEvent:
     """Determines visibility of a celestial body relative to the Sun, as seen from the Earth.
@@ -8162,7 +8168,7 @@ class GravitySimulator:
     time steps.
     """
 
-    def __init__(self, originBody: Body, time: "Time", bodyStates: List[StateVector]) -> None:
+    def __init__(self, originBody: Body, time: Time, bodyStates: List[StateVector]) -> None:
         """Creates a gravity simulation object.
 
         Parameters
