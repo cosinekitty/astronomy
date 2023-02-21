@@ -200,6 +200,12 @@ def MdSignature(sig):
     # This causes unit test failures on GitHub Actions when I check in changes.
     # I prefer the older syntax because it's clearer what my intention is.
     text = re.sub(r'Union\[([A-Za-z_][A-Za-z_0-9\.]*),\s*NoneType\]', r'Optional[\1]', text)
+    # Escape square brackets as in Optional[X] to Optional\[X\] for Markdown safety.
+    text = text.replace('[', r'\[').replace(']', r'\]')
+    # Convert 'astronomy.X' to a link to the type X.
+    text = re.sub(r'\bastronomy\.([A-Za-z_][A-Za-z_0-9]*)', lambda m : SymbolLink(m.group(1)), text)
+    # Replace quoted forward declarations 'X' with links to the type X.
+    text = re.sub(r"'([A-Za-z_][A-Za-z_0-9]*)'", lambda m : SymbolLink(m.group(1)), text)
     # Escape characters as needed for Markdown/HTML.
     text = HtmlEscape(text)
     return text
