@@ -3539,44 +3539,60 @@ def _CalcPluto(time: Time, helio: bool) -> StateVector:
 #----------------------------------------------------------------------------
 # BEGIN Jupiter Moons
 
+class _js:
+    '''A trigonometric series inside a Jovian moon model.'''
+    def __init__(self, series: List[Tuple[float, float, float]]) -> None:
+        self.series = series
+
+class _jm:
+    '''A Keplerian model for one of Jupiter's moons.'''
+    def __init__(self, mu: float, al0: float, al1: float, a: _js, l: _js, z: _js, zeta: _js) -> None:
+        self.mu = mu
+        self.al0 = al0
+        self.al1 = al1
+        self.a = a
+        self.l = l
+        self.z = z
+        self.zeta = zeta
+
 _Rotation_JUP_EQJ = RotationMatrix([
     [  9.99432765338654e-01, -3.36771074697641e-02,  0.00000000000000e+00 ],
     [  3.03959428906285e-02,  9.02057912352809e-01,  4.30543388542295e-01 ],
     [ -1.44994559663353e-02, -4.30299169409101e-01,  9.02569881273754e-01 ]
 ])
 
-_JupiterMoonModel: List[Tuple[float, float, float, List[Tuple[float, float, float]], List[Tuple[float, float, float]], List[Tuple[float, float, float]], List[Tuple[float, float, float]]]] = [
+_JupiterMoonModel: List[_jm] = [
     # [0] Io
-    (
+    _jm(
          2.8248942843381399e-07,  1.4462132960212239e+00,  3.5515522861824000e+00, # mu, al0, al1
-        [   # a
+        _js([   # a
             (  0.0028210960212903,  0.0000000000000000e+00,  0.0000000000000000e+00 )
-        ],
-        [   # l
+        ]),
+        _js([   # l
             ( -0.0001925258348666,  4.9369589722644998e+00,  1.3584836583050000e-02 ),
             ( -0.0000970803596076,  4.3188796477322002e+00,  1.3034138432430000e-02 ),
             ( -0.0000898817416500,  1.9080016428616999e+00,  3.0506486715799999e-03 ),
             ( -0.0000553101050262,  1.4936156681568999e+00,  1.2938928911549999e-02 )
-        ],
-        [   # z
+        ]),
+        _js([   # z
             (  0.0041510849668155,  4.0899396355450000e+00, -1.2906864146660001e-02 ),
             (  0.0006260521444113,  1.4461888986270000e+00,  3.5515522949801999e+00 ),
             (  0.0000352747346169,  2.1256287034577999e+00,  1.2727416566999999e-04 )
-        ],
-        [   # zeta
+        ]),
+        _js([   # zeta
             (  0.0003142172466014,  2.7964219722923001e+00, -2.3150960980000000e-03 ),
             (  0.0000904169207946,  1.0477061879627001e+00, -5.6920638196000003e-04 )
-        ]
+        ])
     ),
 
     # [1] Europa
-    (
+    _jm(
          2.8248327439289299e-07, -3.7352634374713622e-01,  1.7693227111234699e+00, # mu, al0, al1
-        [   # a
+        _js([   # a
             (  0.0044871037804314,  0.0000000000000000e+00,  0.0000000000000000e+00 ),
             (  0.0000004324367498,  1.8196456062910000e+00,  1.7822295777568000e+00 )
-        ],
-        [   # l
+        ]),
+        _js([   # l
             (  0.0008576433172936,  4.3188693178264002e+00,  1.3034138308049999e-02 ),
             (  0.0004549582875086,  1.4936531751079001e+00,  1.2938928819619999e-02 ),
             (  0.0003248939825174,  1.8196494533458001e+00,  1.7822295777568000e+00 ),
@@ -3585,8 +3601,8 @@ _JupiterMoonModel: List[Tuple[float, float, float, List[Tuple[float, float, floa
             (  0.0001834063551804,  2.1402853388529000e+00,  1.4500978933800000e-03 ),
             ( -0.0001434383188452,  5.6222140366630002e+00,  8.9111478887838003e-01 ),
             ( -0.0000771939140944,  4.3002724372349999e+00,  2.6733443704265998e+00 )
-        ],
-        [   # z
+        ]),
+        _js([   # z
             ( -0.0093589104136341,  4.0899396509038999e+00, -1.2906864146660001e-02 ),
             (  0.0002988994545555,  5.9097265185595003e+00,  1.7693227079461999e+00 ),
             (  0.0002139036390350,  2.1256289300016000e+00,  1.2727418406999999e-04 ),
@@ -3594,23 +3610,23 @@ _JupiterMoonModel: List[Tuple[float, float, float, List[Tuple[float, float, floa
             (  0.0001210388158965,  5.5839943711203004e+00,  3.2056614899999997e-05 ),
             (  0.0000837042048393,  1.6094538368039000e+00, -9.0402165808846002e-01 ),
             (  0.0000823525166369,  1.4461887708689001e+00,  3.5515522949801999e+00 )
-        ],
-        [   # zeta
+        ]),
+        _js([   # zeta
             (  0.0040404917832303,  1.0477063169425000e+00, -5.6920640539999997e-04 ),
             (  0.0002200421034564,  3.3368857864364001e+00, -1.2491307306999999e-04 ),
             (  0.0001662544744719,  2.4134862374710999e+00,  0.0000000000000000e+00 ),
             (  0.0000590282470983,  5.9719930968366004e+00, -3.0561602250000000e-05 )
-        ]
+        ])
     ),
 
     # [2] Ganymede
-    (
+    _jm(
          2.8249818418472298e-07,  2.8740893911433479e-01,  8.7820792358932798e-01, # mu, al0, al1
-        [   # a
+        _js([   # a
             (  0.0071566594572575,  0.0000000000000000e+00,  0.0000000000000000e+00 ),
             (  0.0000013930299110,  1.1586745884981000e+00,  2.6733443704265998e+00 )
-        ],
-        [   # l
+        ]),
+        _js([   # l
             (  0.0002310797886226,  2.1402987195941998e+00,  1.4500978438400001e-03 ),
             ( -0.0001828635964118,  4.3188672736968003e+00,  1.3034138282630000e-02 ),
             (  0.0001512378778204,  4.9373102372298003e+00,  1.3584834812520000e-02 ),
@@ -3619,8 +3635,8 @@ _JupiterMoonModel: List[Tuple[float, float, float, List[Tuple[float, float, floa
             (  0.0000815246854464,  5.6222137132535002e+00,  8.9111478887838003e-01 ),
             ( -0.0000801219679602,  1.2995922951532000e+00,  1.0034433456728999e+00 ),
             ( -0.0000607017260182,  6.4978769669238001e-01,  5.0172167043264004e-01 )
-        ],
-        [   # z
+        ]),
+        _js([   # z
             (  0.0014289811307319,  2.1256295942738999e+00,  1.2727413029000001e-04 ),
             (  0.0007710931226760,  5.5836330003496002e+00,  3.2064341100000001e-05 ),
             (  0.0005925911780766,  4.0899396636447998e+00, -1.2906864146660001e-02 ),
@@ -3629,32 +3645,32 @@ _JupiterMoonModel: List[Tuple[float, float, float, List[Tuple[float, float, floa
             (  0.0001131999784893,  1.4462127277818000e+00,  3.5515522949801999e+00 ),
             ( -0.0000658778169210,  2.2702423990985001e+00, -1.7951364394536999e+00 ),
             (  0.0000497058888328,  5.9096792204858000e+00,  1.7693227129285001e+00 )
-        ],
-        [   # zeta
+        ]),
+        _js([   # zeta
             (  0.0015932721570848,  3.3368862796665000e+00, -1.2491307058000000e-04 ),
             (  0.0008533093128905,  2.4133881688166001e+00,  0.0000000000000000e+00 ),
             (  0.0003513347911037,  5.9720789850126996e+00, -3.0561017709999999e-05 ),
             ( -0.0001441929255483,  1.0477061764435001e+00, -5.6920632124000004e-04 )
-        ]
+        ])
     ),
 
     # [3] Callisto
-    (
+    _jm(
          2.8249214488990899e-07, -3.6203412913757038e-01,  3.7648623343382798e-01, # mu, al0, al1
-        [   # a
+        _js([   # a
             (  0.0125879701715314,  0.0000000000000000e+00,  0.0000000000000000e+00 ),
             (  0.0000035952049470,  6.4965776007116005e-01,  5.0172168165034003e-01 ),
             (  0.0000027580210652,  1.8084235781510001e+00,  3.1750660413359002e+00 )
-        ],
-        [   # l
+        ]),
+        _js([   # l
             (  0.0005586040123824,  2.1404207189814999e+00,  1.4500979323100001e-03 ),
             ( -0.0003805813868176,  2.7358844897852999e+00,  2.9729650620000000e-05 ),
             (  0.0002205152863262,  6.4979652596399995e-01,  5.0172167243580001e-01 ),
             (  0.0001877895151158,  1.8084787604004999e+00,  3.1750660413359002e+00 ),
             (  0.0000766916975242,  6.2720114319754998e+00,  1.3928364636651001e+00 ),
             (  0.0000747056855106,  1.2995916202344000e+00,  1.0034433456728999e+00 )
-        ],
-        [   # z
+        ]),
+        _js([   # z
             (  0.0073755808467977,  5.5836071576083999e+00,  3.2065099140000001e-05 ),
             (  0.0002065924169942,  5.9209831565786004e+00,  3.7648624194703001e-01 ),
             (  0.0001589869764021,  2.8744006242622999e-01,  8.7820792442520001e-01 ),
@@ -3664,13 +3680,13 @@ _JupiterMoonModel: List[Tuple[float, float, float, List[Tuple[float, float, floa
             (  0.0000599351698525,  4.1125517584797997e+00, -2.7985797954588998e+00 ),
             (  0.0000540660842731,  5.5390350845569003e+00,  2.8683408228299999e-03 ),
             ( -0.0000489596900866,  4.6218149483337996e+00, -6.2695712529518999e-01 )
-        ],
-        [   # zeta
+        ]),
+        _js([   # zeta
             (  0.0038422977898495,  2.4133922085556998e+00,  0.0000000000000000e+00 ),
             (  0.0022453891791894,  5.9721736773277003e+00, -3.0561255249999997e-05 ),
             ( -0.0002604479450559,  3.3368746306408998e+00, -1.2491309972000001e-04 ),
             (  0.0000332112143230,  5.5604137742336999e+00,  2.9003768850700000e-03 )
-        ]
+        ])
     )
 ]
 
@@ -3748,16 +3764,7 @@ def _JupiterMoon_elem2pv(time: Time, mu: float, A: float, AL: float, K: float, H
     )
 
 
-def _CalcJupiterMoon(
-        time: Time,
-        mu: float,
-        al0: float,
-        al1: float,
-        a: List[Tuple[float, float, float]],
-        l: List[Tuple[float, float, float]],
-        z: List[Tuple[float, float, float]],
-        zeta: List[Tuple[float, float, float]]) -> StateVector:
-
+def _CalcJupiterMoon(time: Time, model: _jm) -> StateVector:
     # This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
     # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
 
@@ -3765,11 +3772,11 @@ def _CalcJupiterMoon(
 
     # Calculate 6 orbital elements at the given time t.
     elem0 = 0.0
-    for (amplitude, phase, frequency) in a:
+    for (amplitude, phase, frequency) in model.a.series:
         elem0 += amplitude * math.cos(phase + (t * frequency))
 
-    elem1 = al0 + (t * al1)
-    for (amplitude, phase, frequency) in l:
+    elem1 = model.al0 + (t * model.al1)
+    for (amplitude, phase, frequency) in model.l.series:
         elem1 += amplitude * math.sin(phase + (t * frequency))
 
     elem1 = math.fmod(elem1, _PI2)
@@ -3778,20 +3785,20 @@ def _CalcJupiterMoon(
 
     elem2 = 0.0
     elem3 = 0.0
-    for (amplitude, phase, frequency) in z:
+    for (amplitude, phase, frequency) in model.z.series:
         arg = phase + (t * frequency)
         elem2 += amplitude * math.cos(arg)
         elem3 += amplitude * math.sin(arg)
 
     elem4 = 0.0
     elem5 = 0.0
-    for (amplitude, phase, frequency) in zeta:
+    for (amplitude, phase, frequency) in model.zeta.series:
         arg = phase + (t * frequency)
         elem4 += amplitude * math.cos(arg)
         elem5 += amplitude * math.sin(arg)
 
     # Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
-    state = _JupiterMoon_elem2pv(time, mu, elem0, elem1, elem2, elem3, elem4, elem5)
+    state = _JupiterMoon_elem2pv(time, model.mu, elem0, elem1, elem2, elem3, elem4, elem5)
 
     # Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
     return RotateState(_Rotation_JUP_EQJ, state)
@@ -3822,10 +3829,7 @@ def JupiterMoons(time: Time) -> JupiterMoonsInfo:
     JupiterMoonsInfo
         The positions and velocities of Jupiter's 4 largest moons.
     """
-    infolist = []
-    for (mu, al0, al1, a, l, z, zeta) in _JupiterMoonModel:
-        infolist.append(_CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta))
-    return JupiterMoonsInfo(infolist)
+    return JupiterMoonsInfo([_CalcJupiterMoon(time, model) for model in _JupiterMoonModel])
 
 # END Jupiter Moons
 #----------------------------------------------------------------------------

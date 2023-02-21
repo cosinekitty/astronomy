@@ -2166,6 +2166,22 @@ def _CalcPluto(time: Time, helio: bool) -> StateVector:
 #----------------------------------------------------------------------------
 # BEGIN Jupiter Moons
 
+class _js:
+    '''A trigonometric series inside a Jovian moon model.'''
+    def __init__(self, series: List[Tuple[float, float, float]]) -> None:
+        self.series = series
+
+class _jm:
+    '''A Keplerian model for one of Jupiter's moons.'''
+    def __init__(self, mu: float, al0: float, al1: float, a: _js, l: _js, z: _js, zeta: _js) -> None:
+        self.mu = mu
+        self.al0 = al0
+        self.al1 = al1
+        self.a = a
+        self.l = l
+        self.z = z
+        self.zeta = zeta
+
 $ASTRO_JUPITER_MOONS()
 
 class JupiterMoonsInfo:
@@ -2242,16 +2258,7 @@ def _JupiterMoon_elem2pv(time: Time, mu: float, A: float, AL: float, K: float, H
     )
 
 
-def _CalcJupiterMoon(
-        time: Time,
-        mu: float,
-        al0: float,
-        al1: float,
-        a: List[Tuple[float, float, float]],
-        l: List[Tuple[float, float, float]],
-        z: List[Tuple[float, float, float]],
-        zeta: List[Tuple[float, float, float]]) -> StateVector:
-
+def _CalcJupiterMoon(time: Time, model: _jm) -> StateVector:
     # This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
     # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
 
@@ -2259,11 +2266,11 @@ def _CalcJupiterMoon(
 
     # Calculate 6 orbital elements at the given time t.
     elem0 = 0.0
-    for (amplitude, phase, frequency) in a:
+    for (amplitude, phase, frequency) in model.a.series:
         elem0 += amplitude * math.cos(phase + (t * frequency))
 
-    elem1 = al0 + (t * al1)
-    for (amplitude, phase, frequency) in l:
+    elem1 = model.al0 + (t * model.al1)
+    for (amplitude, phase, frequency) in model.l.series:
         elem1 += amplitude * math.sin(phase + (t * frequency))
 
     elem1 = math.fmod(elem1, _PI2)
@@ -2272,20 +2279,20 @@ def _CalcJupiterMoon(
 
     elem2 = 0.0
     elem3 = 0.0
-    for (amplitude, phase, frequency) in z:
+    for (amplitude, phase, frequency) in model.z.series:
         arg = phase + (t * frequency)
         elem2 += amplitude * math.cos(arg)
         elem3 += amplitude * math.sin(arg)
 
     elem4 = 0.0
     elem5 = 0.0
-    for (amplitude, phase, frequency) in zeta:
+    for (amplitude, phase, frequency) in model.zeta.series:
         arg = phase + (t * frequency)
         elem4 += amplitude * math.cos(arg)
         elem5 += amplitude * math.sin(arg)
 
     # Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
-    state = _JupiterMoon_elem2pv(time, mu, elem0, elem1, elem2, elem3, elem4, elem5)
+    state = _JupiterMoon_elem2pv(time, model.mu, elem0, elem1, elem2, elem3, elem4, elem5)
 
     # Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
     return RotateState(_Rotation_JUP_EQJ, state)
@@ -2316,10 +2323,7 @@ def JupiterMoons(time: Time) -> JupiterMoonsInfo:
     JupiterMoonsInfo
         The positions and velocities of Jupiter's 4 largest moons.
     """
-    infolist = []
-    for (mu, al0, al1, a, l, z, zeta) in _JupiterMoonModel:
-        infolist.append(_CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta))
-    return JupiterMoonsInfo(infolist)
+    return JupiterMoonsInfo([_CalcJupiterMoon(time, model) for model in _JupiterMoonModel])
 
 # END Jupiter Moons
 #----------------------------------------------------------------------------

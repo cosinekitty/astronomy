@@ -2069,7 +2069,7 @@ static int JupiterMoons_Python(cg_context_t *context, const jupiter_moon_model_t
     fprintf(context->outfile, "    [ %21.14le, %21.14le, %21.14le ]\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
     fprintf(context->outfile, "])\n\n");
 
-    fprintf(context->outfile, "_JupiterMoonModel: List[Tuple[float, float, float, List[Tuple[float, float, float]], List[Tuple[float, float, float]], List[Tuple[float, float, float]], List[Tuple[float, float, float]]]] = [\n");
+    fprintf(context->outfile, "_JupiterMoonModel: List[_jm] = [\n");
     for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
     {
         series[0] = model->moon[mindex].a;
@@ -2077,12 +2077,12 @@ static int JupiterMoons_Python(cg_context_t *context, const jupiter_moon_model_t
         series[2] = model->moon[mindex].z;
         series[3] = model->moon[mindex].zeta;
         fprintf(context->outfile, "    # [%d] %s\n", mindex, moon_name[mindex]);
-        fprintf(context->outfile, "    (\n");
+        fprintf(context->outfile, "    _jm(\n");
         fprintf(context->outfile, "        %23.16le, %23.16le, %23.16le, # mu, al0, al1\n", model->moon[mindex].mu, model->moon[mindex].al[0], model->moon[mindex].al[1]);
         for (var = 0; var < NUM_JM_VARS; ++var)
         {
             int nterms = series[var].nterms_total;
-            fprintf(context->outfile, "        [   # %s\n", var_name[var]);
+            fprintf(context->outfile, "        _js([   # %s\n", var_name[var]);
             for (i = 0; i < nterms; ++i)
             {
                 const vsop_term_t *term = &series[var].term[i];
@@ -2092,7 +2092,7 @@ static int JupiterMoons_Python(cg_context_t *context, const jupiter_moon_model_t
                     term->frequency,
                     (i+1 < nterms) ? "," : "");
             }
-            fprintf(context->outfile, "        ]%s\n", ((var+1 < NUM_JM_VARS) ? "," : ""));
+            fprintf(context->outfile, "        ])%s\n", ((var+1 < NUM_JM_VARS) ? "," : ""));
         }
         fprintf(context->outfile, "    )%s\n", ((mindex+1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
     }
