@@ -272,6 +272,64 @@ fail:
     return error;
 }
 
+
+static int PythonVsop(cg_context_t *context)
+{
+    int error;
+    const char *name;
+    vsop_body_t body;
+    vsop_model_t model;
+    int check_length;
+    int k, s, i;
+    char filename[100];
+
+    VsopInit(&model);
+
+    name = context->args;
+    error = ParseVsopBodyName(context, name, &body);
+    if (error) goto fail;
+
+    check_length = snprintf(filename, sizeof(filename), "%s/vsop_%d.txt", context->datapath, (int)body);
+    if (check_length < 0 || check_length != (int)strlen(filename))
+    {
+        error = LogError(context, "VSOP model filename is too long!");
+        goto fail;
+    }
+
+    error = VsopReadTrunc(&model, filename);
+    if (error) goto fail;
+
+    fprintf(context->outfile, "_vsop_model_t(    # %s\n", name);
+    for (k=0; k < model.ncoords; ++k)
+    {
+        const vsop_formula_t *formula = &model.formula[k];
+
+        fprintf(context->outfile, "  _vsop_formula_t([\n");
+        for (s=0; s < formula->nseries_total; ++s)
+        {
+            const vsop_series_t *series = &formula->series[s];
+            fprintf(context->outfile, "    _vsop_series_t([\n");
+            for (i=0; i < series->nterms_total; ++i)
+            {
+                const vsop_term_t *term = &series->term[i];
+                fprintf(context->outfile, "      (%0.11lf, %0.11lf, %0.11lf)%s\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    (i+1 < series->nterms_total) ? "," : "");
+            }
+            fprintf(context->outfile, "    ])%s\n", (s+1 < formula->nseries_total) ? "," : "");
+        }
+        fprintf(context->outfile, "  ])%s\n", (k+1 < model.ncoords) ? "," : "");
+    }
+    fprintf(context->outfile, ")");
+
+fail:
+    VsopFreeModel(&model);
+    return error;
+}
+
+
 static int CVsop_Series(cg_context_t *context, const vsop_series_t *series, const char *varprefix, int s)
 {
     int i;
@@ -2107,6 +2165,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "CSHARP_VSOP",        CsharpVsop          },
     { "KOTLIN_VSOP",        KotlinVsop          },
     { "LIST_VSOP",          ListVsop            },
+    { "PYTHON_VSOP",        PythonVsop          },
     { "IAU_DATA",           OptIauData          },
     { "ADDSOL",             OptAddSol           },
     { "CONSTEL",            ConstellationData   },

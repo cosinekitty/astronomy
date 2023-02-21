@@ -1722,46 +1722,36 @@ def GeoEmbState(time: Time) -> StateVector:
 #----------------------------------------------------------------------------
 # BEGIN VSOP
 
-# The list of list of list of list of list of floats in _vsop gets confusing!
-# Here is the cheat sheet:
-# _vsop [body_index] [model] [formula] [series] [coord]
-# body_index: 0=Mercury, 1=Venus, ..., 7=Neptune.
-# model: 0=longitude, 1=latitude, 2=radius
-# formula: a list of series for each power of t
-# series: a trigonometric series for a particular power of t
-# coord: a list of exactly 3 floats [A, B, C] defining the trig term (A * cos(B + C*t)).
+class _vsop_series_t:
+    def __init__(self, termList: List[Tuple[float, float, float]]) -> None:
+        self.termList = termList
 
-_vsop: List[List[List[List[List[float]]]]] = [
-    # Mercury
-    $ASTRO_LIST_VSOP(Mercury),
+class _vsop_formula_t:
+    def __init__(self, seriesList: List[_vsop_series_t]) -> None:
+        self.seriesList = seriesList
 
-    # Venus
-    $ASTRO_LIST_VSOP(Venus),
+class _vsop_model_t:
+    def __init__(self, lon: _vsop_formula_t, lat: _vsop_formula_t, rad: _vsop_formula_t) -> None:
+        self.lon = lon
+        self.lat = lat
+        self.rad = rad
 
-    # Earth
-    $ASTRO_LIST_VSOP(Earth),
-
-    # Mars
-    $ASTRO_LIST_VSOP(Mars),
-
-    # Jupiter
-    $ASTRO_LIST_VSOP(Jupiter),
-
-    # Saturn
-    $ASTRO_LIST_VSOP(Saturn),
-
-    # Uranus
-    $ASTRO_LIST_VSOP(Uranus),
-
-    # Neptune
-    $ASTRO_LIST_VSOP(Neptune),
+_vsop: List[_vsop_model_t] = [
+$ASTRO_PYTHON_VSOP(Mercury),
+$ASTRO_PYTHON_VSOP(Venus),
+$ASTRO_PYTHON_VSOP(Earth),
+$ASTRO_PYTHON_VSOP(Mars),
+$ASTRO_PYTHON_VSOP(Jupiter),
+$ASTRO_PYTHON_VSOP(Saturn),
+$ASTRO_PYTHON_VSOP(Uranus),
+$ASTRO_PYTHON_VSOP(Neptune),
 ]
 
-def _VsopFormula(formula: List[List[List[float]]], t: float, clamp_angle: bool) -> float:
+def _VsopFormula(formula: _vsop_formula_t, t: float, clamp_angle: bool) -> float:
     tpower = 1.0
     coord = 0.0
-    for series in formula:
-        incr = tpower * sum(A * math.cos(B + C*t) for (A, B, C) in series)
+    for series in formula.seriesList:
+        incr = tpower * sum((ampl * math.cos(phas + freq*t)) for (ampl, phas, freq) in series.termList)
         if clamp_angle:
             # Longitude angles can be hundreds of radians.
             # Improve precision by keeping each increment within [-2*pi, +2*pi].
@@ -1770,15 +1760,15 @@ def _VsopFormula(formula: List[List[List[float]]], t: float, clamp_angle: bool) 
         tpower *= t
     return coord
 
-def _VsopDeriv(formula: List[List[List[float]]], t: float) -> float:
+def _VsopDeriv(formula: _vsop_formula_t, t: float) -> float:
     tpower = 1.0      # t**s
     dpower = 0.0      # t**(s-1)
     deriv = 0.0
     s = 0
-    for series in formula:
+    for series in formula.seriesList:
         sin_sum = 0.0
         cos_sum = 0.0
-        for (ampl, phas, freq) in series:
+        for (ampl, phas, freq) in series.termList:
             angle = phas + (t * freq)
             sin_sum += ampl * freq * math.sin(angle)
             if s > 0:
@@ -1807,11 +1797,11 @@ def _VsopSphereToRect(lon: float, lat: float, rad: float) -> "_TerseVector":
         rad * math.sin(lat)
     )
 
-def _CalcVsop(model: List[List[List[List[float]]]], time: Time) -> Vector:
+def _CalcVsop(model: _vsop_model_t, time: Time) -> Vector:
     t = time.tt / _DAYS_PER_MILLENNIUM
-    lon = _VsopFormula(model[0], t, True)
-    lat = _VsopFormula(model[1], t, False)
-    rad = _VsopFormula(model[2], t, False)
+    lon = _VsopFormula(model.lon, t, True)
+    lat = _VsopFormula(model.lat, t, False)
+    rad = _VsopFormula(model.rad, t, False)
     eclip = _VsopSphereToRect(lon, lat, rad)
     return _VsopRotate(eclip).ToAstroVector(time)
 
@@ -1828,14 +1818,16 @@ class _body_state_t:
     def __sub__(self, other: "_body_state_t") -> "_body_state_t":
         return _body_state_t(self.tt, self.r - other.r, self.v - other.v)
 
-def _CalcVsopPosVel(model: List[List[List[List[float]]]], tt: float) -> _body_state_t:
+def _CalcVsopPosVel(model: _vsop_model_t, tt: float) -> _body_state_t:
     t = tt / _DAYS_PER_MILLENNIUM
 
-    lon = _VsopFormula(model[0], t, True)
-    lat = _VsopFormula(model[1], t, False)
-    rad = _VsopFormula(model[2], t, False)
+    lon = _VsopFormula(model.lon, t, True)
+    lat = _VsopFormula(model.lat, t, False)
+    rad = _VsopFormula(model.rad, t, False)
 
-    (dlon_dt, dlat_dt, drad_dt) = [_VsopDeriv(formula, t) for formula in model]
+    dlon_dt = _VsopDeriv(model.lon, t)
+    dlat_dt = _VsopDeriv(model.lat, t)
+    drad_dt = _VsopDeriv(model.rad, t)
 
     # Use spherical coords and spherical derivatives to calculate
     # the velocity vector in rectangular coordinates.
@@ -1890,11 +1882,11 @@ def _CalcSolarSystemBarycenter(time: Time) -> Vector:
     return ssb
 
 
-def _VsopHelioDistance(model: List[List[List[List[float]]]], time: Time) -> float:
+def _VsopHelioDistance(model: _vsop_model_t, time: Time) -> float:
     # The caller only wants to know the distance between the planet and the Sun.
     # So we only need to calculate the radial component of the spherical coordinates.
     # There is no need to translate coordinates.
-    return _VsopFormula(model[2], time.tt / _DAYS_PER_MILLENNIUM, False)
+    return _VsopFormula(model.rad, time.tt / _DAYS_PER_MILLENNIUM, False)
 
 def _CalcEarth(time: Time) -> Vector:
     return _CalcVsop(_vsop[Body.Earth.value], time)
