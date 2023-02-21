@@ -1572,7 +1572,7 @@ static int PlutoStateTable_Python(cg_context_t *context, const top_model_t *mode
     fprintf(context->outfile, "_PLUTO_DT         = %d\n", PLUTO_DT);
     fprintf(context->outfile, "_PLUTO_NSTEPS     = %d\n", PLUTO_NSTEPS);
     fprintf(context->outfile, "\n");
-    fprintf(context->outfile, "_PlutoStateTable: List[Tuple[float, Tuple[float, float, float], Tuple[float, float, float]]] = [\n");
+    fprintf(context->outfile, "_PlutoStateTable: List[_pstate] = [\n");
 
     for (i=0; i < PLUTO_NUM_STATES; ++i)
     {
@@ -1580,7 +1580,7 @@ static int PlutoStateTable_Python(cg_context_t *context, const top_model_t *mode
         CHECK(TopPosition(model, tt, &equ));
 
         fprintf(context->outfile,
-            "%c   (%10.1lf, (%16.12lf, %16.12lf, %16.12lf), (%20.13le, %20.13le, %20.13le))\n",
+            "%c   _pstate(%10.1lf, (%16.12lf, %16.12lf, %16.12lf), (%20.13le, %20.13le, %20.13le))\n",
             (i==0 ? ' ' : ','),
             tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
     }

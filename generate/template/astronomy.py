@@ -43,6 +43,50 @@ def _cbrt(x: float) -> float:
         return -((-x) ** (1.0 / 3.0))
     return x ** (1.0 / 3.0)
 
+class _TerseVector:
+    '''A 3D vector that is not attached to a time. Used privately inside this module for conciseness.'''
+
+    def __init__(self, x: float, y: float, z: float) -> None:
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def clone(self) -> "_TerseVector":
+        '''Create a copy of this vector.'''
+        return _TerseVector(self.x, self.y, self.z)
+
+    @staticmethod
+    def zero() -> "_TerseVector":
+        '''Return a zero vector.'''
+        return _TerseVector(0.0, 0.0, 0.0)
+
+    def ToAstroVector(self, time: "Time") -> "Vector":
+        '''Convert _TerseVector object to Vector object.'''
+        return Vector(self.x, self.y, self.z, time)
+
+    def quadrature(self) -> float:
+        '''Return magnitude squared of this vector.'''
+        return self.x**2 + self.y**2 + self.z**2
+
+    def mean(self, other: "_TerseVector") -> "_TerseVector":
+        '''Return the average of this vector and another vector.'''
+        return _TerseVector((self.x + other.x)/2.0, (self.y + other.y)/2.0, (self.z + other.z)/2.0)
+
+    def __add__(self, other: "_TerseVector") -> "_TerseVector":
+        return _TerseVector(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __sub__(self, other: "_TerseVector") -> "_TerseVector":
+        return _TerseVector(self.x - other.x, self.y - other.y, self.z - other.z)
+
+    def __mul__(self, scalar: float) -> "_TerseVector":
+        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
+
+    def __rmul__(self, scalar: float) -> "_TerseVector":
+        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
+
+    def __truediv__(self, scalar: float) -> "_TerseVector":
+        return _TerseVector(self.x / scalar, self.y / scalar, self.z / scalar)
+
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
 AU_PER_LY = 63241.07708807546       #<const> The number of astronomical units in one light-year.
@@ -1781,14 +1825,14 @@ def _VsopDeriv(formula: _vsop_formula_t, t: float) -> float:
 
 _DAYS_PER_MILLENNIUM = 365250.0
 
-def _VsopRotate(eclip: "_TerseVector") -> "_TerseVector":
+def _VsopRotate(eclip: _TerseVector) -> _TerseVector:
     # Convert ecliptic cartesian coordinates to equatorial cartesian coordinates.
     x = eclip.x + 0.000000440360*eclip.y - 0.000000190919*eclip.z
     y = -0.000000479966*eclip.x + 0.917482137087*eclip.y - 0.397776982902*eclip.z
     z = 0.397776982902*eclip.y + 0.917482137087*eclip.z
     return _TerseVector(x, y, z)
 
-def _VsopSphereToRect(lon: float, lat: float, rad: float) -> "_TerseVector":
+def _VsopSphereToRect(lon: float, lat: float, rad: float) -> _TerseVector:
     # Convert spherical coordinates to cartesian coordinates.
     r_coslat = rad * math.cos(lat)
     return _TerseVector(
@@ -1806,7 +1850,7 @@ def _CalcVsop(model: _vsop_model_t, time: Time) -> Vector:
     return _VsopRotate(eclip).ToAstroVector(time)
 
 class _body_state_t:
-    def __init__(self, tt: float, r: "_TerseVector", v: "_TerseVector") -> None:
+    def __init__(self, tt: float, r: _TerseVector, v: _TerseVector) -> None:
         self.tt  = tt
         self.r = r
         self.v = v
@@ -1895,55 +1939,13 @@ def _CalcEarth(time: Time) -> Vector:
 #----------------------------------------------------------------------------
 # BEGIN Pluto Integrator
 
+class _pstate:
+    def __init__(self, tt: float, pos: Tuple[float, float, float], vel: Tuple[float, float, float]) -> None:
+        self.tt = tt
+        self.pos = _TerseVector(pos[0], pos[1], pos[2])
+        self.vel = _TerseVector(vel[0], vel[1], vel[2])
+
 $ASTRO_PLUTO_TABLE()
-
-class _TerseVector:
-    def __init__(self, x: float, y: float, z: float) -> None:
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def clone(self) -> "_TerseVector":
-        '''Create a copy of this vector.'''
-        return _TerseVector(self.x, self.y, self.z)
-
-    @staticmethod
-    def zero() -> "_TerseVector":
-        '''Return a zero vector.'''
-        return _TerseVector(0.0, 0.0, 0.0)
-
-    def ToAstroVector(self, time: Time) -> Vector:
-        '''Convert _TerseVector object to Vector object.'''
-        return Vector(self.x, self.y, self.z, time)
-
-    def quadrature(self) -> float:
-        '''Return magnitude squared of this vector.'''
-        return self.x**2 + self.y**2 + self.z**2
-
-    def mean(self, other: "_TerseVector") -> "_TerseVector":
-        '''Return the average of this vector and another vector.'''
-        return _TerseVector((self.x + other.x)/2.0, (self.y + other.y)/2.0, (self.z + other.z)/2.0)
-
-    def __add__(self, other: "_TerseVector") -> "_TerseVector":
-        return _TerseVector(self.x + other.x, self.y + other.y, self.z + other.z)
-
-    def __sub__(self, other: "_TerseVector") -> "_TerseVector":
-        return _TerseVector(self.x - other.x, self.y - other.y, self.z - other.z)
-
-    def __mul__(self, scalar: float) -> "_TerseVector":
-        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
-
-    def __rmul__(self, scalar: float) -> "_TerseVector":
-        return _TerseVector(scalar * self.x, scalar * self.y, scalar * self.z)
-
-    def __truediv__(self, scalar: float) -> "_TerseVector":
-        return _TerseVector(self.x / scalar, self.y / scalar, self.z / scalar)
-
-
-def _BodyStateFromTable(entry: Tuple[float, Tuple[float, float, float], Tuple[float, float, float]]) -> _body_state_t:
-    ( tt, (rx, ry, rz), (vx, vy, vz) ) = entry
-    return _body_state_t(tt, _TerseVector(rx, ry, rz), _TerseVector(vx, vy, vz))
-
 
 def _AdjustBarycenterPosVel(ssb: _body_state_t, tt: float, body: Body, planet_gm: float) -> _body_state_t:
     shift = planet_gm / (planet_gm + _SUN_GM)
@@ -2056,22 +2058,21 @@ def _ClampIndex(frac: float, nsteps: int) -> int:
     return index
 
 
-def _GravFromState(entry: Tuple[float, Tuple[float, float, float], Tuple[float, float, float]]) -> _grav_sim_t:
-    state = _BodyStateFromTable(entry)
-    bary = _major_bodies_t(state.tt)
-    r = state.r + bary.Sun.r
-    v = state.v + bary.Sun.v
+def _GravFromState(entry: _pstate) -> _grav_sim_t:
+    bary = _major_bodies_t(entry.tt)
+    r = entry.pos + bary.Sun.r
+    v = entry.vel + bary.Sun.v
     a = bary.Acceleration(r)
-    grav = _body_grav_calc_t(state.tt, r, v, a)
+    grav = _body_grav_calc_t(entry.tt, r, v, a)
     return _grav_sim_t(bary, grav)
 
 
 def _GetSegment(cache: List[Optional[List[_body_grav_calc_t]]], tt: float) -> Optional[List[_body_grav_calc_t]]:
-    if (tt < _PlutoStateTable[0][0]) or (tt > _PlutoStateTable[_PLUTO_NUM_STATES-1][0]):
+    if (tt < _PlutoStateTable[0].tt) or (tt > _PlutoStateTable[_PLUTO_NUM_STATES-1].tt):
         # Don't bother calculating a segment. Let the caller crawl backward/forward to this time.
         return None
 
-    seg_index = _ClampIndex((tt - _PlutoStateTable[0][0]) / _PLUTO_TIME_STEP, _PLUTO_NUM_STATES-1)
+    seg_index = _ClampIndex((tt - _PlutoStateTable[0].tt) / _PLUTO_TIME_STEP, _PLUTO_NUM_STATES-1)
     if cache[seg_index] is None:
         seg = cache[seg_index] = [ _GravFromState(_PlutoStateTable[seg_index]).grav ]
 
@@ -2108,7 +2109,7 @@ def _GetSegment(cache: List[Optional[List[_body_grav_calc_t]]], tt: float) -> Op
     return cache[seg_index]
 
 
-def _CalcPlutoOneWay(entry: Tuple[float, Tuple[float, float, float], Tuple[float, float, float]], target_tt: float, dt: float) -> _grav_sim_t:
+def _CalcPlutoOneWay(entry: _pstate, target_tt: float, dt: float) -> _grav_sim_t:
     sim = _GravFromState(entry)
     n = math.ceil((target_tt - sim.grav.tt) / dt)
     for i in range(n):
@@ -2123,7 +2124,7 @@ def _CalcPluto(time: Time, helio: bool) -> StateVector:
         # The target time is outside the year range 0000..4000.
         # Calculate it by crawling backward from 0000 or forward from 4000.
         # FIXFIXFIX - This is super slow. Could optimize this with extra caching if needed.
-        if time.tt < _PlutoStateTable[0][0]:
+        if time.tt < _PlutoStateTable[0].tt:
             sim = _CalcPlutoOneWay(_PlutoStateTable[0], time.tt, -_PLUTO_DT)
         else:
             sim = _CalcPlutoOneWay(_PlutoStateTable[_PLUTO_NUM_STATES-1], time.tt, +_PLUTO_DT)
