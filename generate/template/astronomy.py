@@ -39,9 +39,14 @@ import abc
 from typing import Any, List, Tuple, Optional, Union, Callable, Dict
 
 def _cbrt(x: float) -> float:
-    if x < 0.0:
-        return -((-x) ** (1.0 / 3.0))
-    return x ** (1.0 / 3.0)
+    '''Returns the cube root of x.'''
+    y = (x ** (1.0 / 3.0)) if (x >= 0.0) else -((-x) ** (1.0 / 3.0))
+    # mypy knows that the exponentiation operator '**' can return
+    # complex values in some cases. It doesn't realize that can't
+    # happen here. To prevent type errors, explicitly check the type.
+    if isinstance(y, float):
+        return y
+    raise InternalError()
 
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
@@ -8207,7 +8212,7 @@ class GravitySimulator:
 
         # Create a stub list of small body states that we will append to later.
         # We just need the stub to put into `self.curr`
-        smallBodyList: List = []
+        smallBodyList: List[_body_grav_calc_t] = []
 
         # Calculate the states of the Sun and planets at the initial time.
         largeBodyDict = _CalcSolarSystem(time)

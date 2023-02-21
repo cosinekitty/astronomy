@@ -14,7 +14,7 @@ python3 -m pylint  --init-hook="import sys; sys.setrecursionlimit(2000)" ../sour
 
 echo "$0: running mypy"
 cd ../source/python/astronomy || Fail "error changing to Python source directory"
-mypy --disallow-untyped-defs --module astronomy || Fail "error checking types using mypy"
+mypy --strict --module astronomy || Fail "error checking types using mypy"
 cd ../../../generate || Fail "error changing back to generate directory"
 echo ""
 
