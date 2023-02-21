@@ -208,6 +208,8 @@ def MdSignature(sig):
     text = re.sub(r"'([A-Za-z_][A-Za-z_0-9]*)'", lambda m : SymbolLink(m.group(1)), text)
     # Escape characters as needed for Markdown/HTML.
     text = HtmlEscape(text)
+    # Replace clumsy '->' symbols with HTML right-arrow character.
+    text = text.replace('-&gt;', '&#8594;')
     return text
 
 def MdFunction(func, parent=None):
