@@ -2963,8 +2963,8 @@ def GravSimFile(filename, originBody, nsteps, rthresh, vthresh):
                 if len(smallBodyArray) != 1:
                     print('PY GravSimFile({} line {}): unexpected smallBodyArray.length = {}'.format(filename, rec.lnum, len(smallBodyArray)))
                     return 1
-                if time.tt != sim.Time().tt:
-                    print('PY GravSimFile({} line {}): expected {} but simulator reports {}'.format(filename, rec.lnum, time, sim.Time()))
+                if time.tt != sim.GetTime().tt:
+                    print('PY GravSimFile({} line {}): expected {} but simulator reports {}'.format(filename, rec.lnum, time, sim.GetTime()))
                     return 1
         rdiff = ArcminPosError(rec.state, smallBodyArray[0])
         if rdiff > rthresh:

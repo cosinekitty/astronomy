@@ -36,9 +36,9 @@ import datetime
 import enum
 import re
 import abc
-from typing import List, Optional, Union, Callable
+from typing import Any, List, Tuple, Optional, Union, Callable, Dict
 
-def _cbrt(x):
+def _cbrt(x: float) -> float:
     if x < 0.0:
         return -((-x) ** (1.0 / 3.0))
     return x ** (1.0 / 3.0)
@@ -228,7 +228,7 @@ class Vector:
     def __truediv__(self, scalar: float) -> "Vector":
         return Vector(self.x/scalar, self.y/scalar, self.z/scalar, self.t)
 
-    def format(self, coord_format) -> str:
+    def format(self, coord_format: str) -> str:
         """Returns a custom format string representation of the vector."""
         layout = '({:' + coord_format + '}, {:' + coord_format + '}, {:' + coord_format + '}, {})'
         return layout.format(self.x, self.y, self.z, str(self.t))
@@ -356,19 +356,19 @@ class Body(enum.Enum):
     Star8 = 108
 
 class _StarDef:
-    def __init__(self):
+    def __init__(self) -> None:
         self.ra = 0.0
         self.dec = 0.0
         self.dist = 0.0     # signals that the star has not yet been defined
 
 _StarTable = [_StarDef() for _ in range(8)]
 
-def _GetStar(body):
+def _GetStar(body: Body) -> Optional[_StarDef]:
     if Body.Star1.value <= body.value <= Body.Star8.value:
         return _StarTable[body.value - Body.Star1.value]
     return None
 
-def _UserDefinedStar(body):
+def _UserDefinedStar(body: Body) -> Optional[_StarDef]:
     star = _GetStar(body)
     if star and (star.dist > 0.0):
         return star
@@ -741,8 +741,8 @@ class Time:
                 self.tt = _TerrestrialTime(ut)
             else:
                 self.tt = tt
-        self._et: Optional[float] = None     # lazy-cache for earth tilt
-        self._st: Optional[float] = None     # lazy-cache for sidereal time
+        self._et: Optional[_e_tilt] = None     # lazy-cache for earth tilt
+        self._st: Optional[float] = None       # lazy-cache for sidereal time
 
     @staticmethod
     def FromTerrestrialTime(tt: float) -> "Time":
@@ -936,7 +936,7 @@ class Time:
         """
         return _EPOCH + datetime.timedelta(days=self.ut)
 
-    def _etilt(self):
+    def _etilt(self) -> "_e_tilt":
         # Calculates precession and nutation of the Earth's axis.
         # The calculations are very expensive, so lazy-evaluate and cache
         # the result inside this Time object.
@@ -1092,7 +1092,7 @@ class _e_tilt:
         self.tt = time.tt
         self.ee = e.dpsi * math.cos(math.radians(self.mobl)) / 15.0
 
-def _obl_ecl2equ_vec(obl_deg, ecl):
+def _obl_ecl2equ_vec(obl_deg: float, ecl: List[float]) -> List[float]:
     obl_rad = math.radians(obl_deg)
     cos_obl = math.cos(obl_rad)
     sin_obl = math.sin(obl_rad)
@@ -1102,10 +1102,10 @@ def _obl_ecl2equ_vec(obl_deg, ecl):
         ecl[1]*sin_obl + ecl[2]*cos_obl
     ]
 
-def _ecl2equ_vec(time, ecl):
+def _ecl2equ_vec(time: Time, ecl: List[float]) -> List[float]:
     return _obl_ecl2equ_vec(_mean_obliq(time.tt), ecl)
 
-def _precession_rot(time, direction):
+def _precession_rot(time: Time, direction: _PrecessDir) -> RotationMatrix:
     eps0 = 84381.406
     t = time.tt / 36525
 
@@ -1168,18 +1168,18 @@ def _precession_rot(time, direction):
 
     raise Error('Inalid precession direction')
 
-def _rotate(rot, vec):
+def _rotate(rot: RotationMatrix, vec: List[float]) -> List[float]:
     return [
         rot.rot[0][0]*vec[0] + rot.rot[1][0]*vec[1] + rot.rot[2][0]*vec[2],
         rot.rot[0][1]*vec[0] + rot.rot[1][1]*vec[1] + rot.rot[2][1]*vec[2],
         rot.rot[0][2]*vec[0] + rot.rot[1][2]*vec[1] + rot.rot[2][2]*vec[2]
     ]
 
-def _precession(pos, time, direction):
+def _precession(pos: List[float], time: Time, direction: _PrecessDir) -> List[float]:
     r = _precession_rot(time, direction)
     return _rotate(r, pos)
 
-def _precession_posvel(state, time, direction):
+def _precession_posvel(state: StateVector, time: Time, direction: _PrecessDir) -> StateVector:
     r = _precession_rot(time, direction)
     return RotateState(r, state)
 
@@ -1215,7 +1215,7 @@ class Equatorial:
         return 'Equatorial(ra={}, dec={}, dist={}, vec={})'.format(self.ra, self.dec, self.dist, repr(self.vec))
 
 
-def _vector2radec(pos, time: Time) -> Equatorial:
+def _vector2radec(pos: List[float], time: Time) -> Equatorial:
     xyproj = pos[0]*pos[0] + pos[1]*pos[1]
     dist = math.sqrt(xyproj + pos[2]*pos[2])
     if xyproj == 0.0:
@@ -1236,7 +1236,7 @@ def _vector2radec(pos, time: Time) -> Equatorial:
     return Equatorial(ra, dec, dist, vec)
 
 
-def _nutation_rot(time: Time, direction) -> RotationMatrix:
+def _nutation_rot(time: Time, direction: _PrecessDir) -> RotationMatrix:
     tilt = time._etilt()
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
@@ -1276,15 +1276,15 @@ def _nutation_rot(time: Time, direction) -> RotationMatrix:
 
     raise Error('Invalid nutation direction')
 
-def _nutation(pos, time, direction):
+def _nutation(pos: List[float], time: Time, direction: _PrecessDir) -> List[float]:
     r = _nutation_rot(time, direction)
     return _rotate(r, pos)
 
-def _nutation_posvel(state, time, direction):
+def _nutation_posvel(state: StateVector, time: Time, direction: _PrecessDir) -> StateVector:
     r = _nutation_rot(time, direction)
     return RotateState(r, state)
 
-def _era(time):        # Earth Rotation Angle
+def _era(time: Time) -> float:        # Earth Rotation Angle
     thet1 = 0.7790572732640 + 0.00273781191135448 * time.ut
     thet3 = math.fmod(time.ut, 1.0)
     theta = 360.0 * math.fmod((thet1 + thet3), 1.0)
@@ -1339,7 +1339,7 @@ def SiderealTime(time: Time) -> float:
     # return sidereal hours in the half-open range [0, 24).
     return time._st
 
-def _inverse_terra(ovec, st):
+def _inverse_terra(ovec: List[float], st: float) -> Observer:
     # Convert from AU to kilometers
     x = ovec[0] * KM_PER_AU
     y = ovec[1] * KM_PER_AU
@@ -1400,7 +1400,7 @@ def _inverse_terra(ovec, st):
             height_km = p/cos - adjust
     return Observer(lat_deg, lon_deg, 1000*height_km)
 
-def _terra_posvel(observer, st):
+def _terra_posvel(observer: Observer, st: float) -> List[float]:
     phi = math.radians(observer.latitude)
     sinphi = math.sin(phi)
     cosphi = math.cos(phi)
@@ -1421,17 +1421,17 @@ def _terra_posvel(observer, st):
         0.0
     ]
 
-def _terra(observer, st):
+def _terra(observer: Observer, st: float) -> List[float]:
     return _terra_posvel(observer, st)[0:3]
 
-def _geo_pos(time, observer):
+def _geo_pos(time: Time, observer: Observer) -> List[float]:
     gast = SiderealTime(time)
     pos1 = _terra(observer, gast)
     pos2 = _nutation(pos1, time, _PrecessDir.Into2000)
     outpos = _precession(pos2, time, _PrecessDir.Into2000)
     return outpos
 
-def _spin(angle, pos1):
+def _spin(angle: float, pos1: List[float]) -> List[float]:
     angr = math.radians(angle)
     cosang = math.cos(angr)
     sinang = math.sin(angr)
@@ -1444,32 +1444,32 @@ def _spin(angle, pos1):
 #----------------------------------------------------------------------------
 # BEGIN CalcMoon
 
-def _Array1(xmin, xmax):
+def _Array1(xmin: int, xmax: int) -> Dict[int, complex]:
     return dict((key, 0j) for key in range(xmin, 1+xmax))
 
-def _Array2(xmin, xmax, ymin, ymax):
+def _Array2(xmin: int, xmax: int, ymin: int, ymax: int) -> Dict[int, Dict[int, complex]]:
     return dict((key, _Array1(ymin, ymax)) for key in range(xmin, 1+xmax))
 
 class _moonpos:
-    def __init__(self, lon, lat, dist):
+    def __init__(self, lon: float, lat: float, dist: float) -> None:
         self.geo_eclip_lon = lon
         self.geo_eclip_lat = lat
         self.distance_au = dist
 
-def _CalcMoon(time):
+def _CalcMoon(time: Time) -> _moonpos:
     T = time.tt / 36525
     ex = _Array2(-6, 6, 1, 4)
 
-    def Sine(phi):
+    def Sine(phi: float) -> float:
         return math.sin(_PI2 * phi)
 
-    def Frac(x):
+    def Frac(x: float) -> float:
         return x - math.floor(x)
 
     T2 = T*T
-    DLAM = 0
-    DS = 0
-    GAM1C = 0
+    DLAM = 0.0
+    DS = 0.0
+    GAM1C = 0.0
     SINPI = 3422.7000
     S1 = Sine(0.19833+0.05611*T)
     S2 = Sine(0.27869+0.04508*T)
@@ -1521,20 +1521,21 @@ def _CalcMoon(time):
 
 $ASTRO_ADDSOL()
 
-    def ADDN(coeffn, p, q, r, s):
+    def ADDN(coeffn: float, p: int, q: int, r: int, s: int) -> float:
         return coeffn * (ex[p][1] * ex[q][2] * ex[r][3] * ex[s][4]).imag
 
-    N = 0
-    N += ADDN(-526.069, 0, 0,1,-2)
-    N += ADDN(  -3.352, 0, 0,1,-4)
-    N += ADDN( +44.297,+1, 0,1,-2)
-    N += ADDN(  -6.000,+1, 0,1,-4)
-    N += ADDN( +20.599,-1, 0,1, 0)
-    N += ADDN( -30.598,-1, 0,1,-2)
-    N += ADDN( -24.649,-2, 0,1, 0)
-    N += ADDN(  -2.000,-2, 0,1,-2)
-    N += ADDN( -22.571, 0,+1,1,-2)
-    N += ADDN( +10.985, 0,-1,1,-2)
+    N = (
+        ADDN(-526.069, 0, 0,1,-2) +
+        ADDN(  -3.352, 0, 0,1,-4) +
+        ADDN( +44.297,+1, 0,1,-2) +
+        ADDN(  -6.000,+1, 0,1,-4) +
+        ADDN( +20.599,-1, 0,1, 0) +
+        ADDN( -30.598,-1, 0,1,-2) +
+        ADDN( -24.649,-2, 0,1, 0) +
+        ADDN(  -2.000,-2, 0,1,-2) +
+        ADDN( -22.571, 0,+1,1,-2) +
+        ADDN( +10.985, 0,-1,1,-2)
+    )
 
     DLAM += (
         +0.82*Sine(0.7736  -62.5512*T)+0.31*Sine(0.0466 -125.1025*T)
@@ -1721,7 +1722,16 @@ def GeoEmbState(time: Time) -> StateVector:
 #----------------------------------------------------------------------------
 # BEGIN VSOP
 
-_vsop = [
+# The list of list of list of list of list of floats in _vsop gets confusing!
+# Here is the cheat sheet:
+# _vsop [body_index] [model] [formula] [series] [coord]
+# body_index: 0=Mercury, 1=Venus, ..., 7=Neptune.
+# model: 0=longitude, 1=latitude, 2=radius
+# formula: a list of series for each power of t
+# series: a trigonometric series for a particular power of t
+# coord: a list of exactly 3 floats [A, B, C] defining the trig term (A * cos(B + C*t)).
+
+_vsop: List[List[List[List[List[float]]]]] = [
     # Mercury
     $ASTRO_LIST_VSOP(Mercury),
 
@@ -1747,7 +1757,7 @@ _vsop = [
     $ASTRO_LIST_VSOP(Neptune),
 ]
 
-def _VsopFormula(formula, t, clamp_angle):
+def _VsopFormula(formula: List[List[List[float]]], t: float, clamp_angle: bool) -> float:
     tpower = 1.0
     coord = 0.0
     for series in formula:
@@ -1760,14 +1770,14 @@ def _VsopFormula(formula, t, clamp_angle):
         tpower *= t
     return coord
 
-def _VsopDeriv(formula, t):
-    tpower = 1      # t**s
-    dpower = 0      # t**(s-1)
-    deriv = 0
+def _VsopDeriv(formula: List[List[List[float]]], t: float) -> float:
+    tpower = 1.0      # t**s
+    dpower = 0.0      # t**(s-1)
+    deriv = 0.0
     s = 0
     for series in formula:
-        sin_sum = 0
-        cos_sum = 0
+        sin_sum = 0.0
+        cos_sum = 0.0
         for (ampl, phas, freq) in series:
             angle = phas + (t * freq)
             sin_sum += ampl * freq * math.sin(angle)
@@ -1781,14 +1791,14 @@ def _VsopDeriv(formula, t):
 
 _DAYS_PER_MILLENNIUM = 365250.0
 
-def _VsopRotate(eclip):
+def _VsopRotate(eclip: "_TerseVector") -> "_TerseVector":
     # Convert ecliptic cartesian coordinates to equatorial cartesian coordinates.
     x = eclip.x + 0.000000440360*eclip.y - 0.000000190919*eclip.z
     y = -0.000000479966*eclip.x + 0.917482137087*eclip.y - 0.397776982902*eclip.z
     z = 0.397776982902*eclip.y + 0.917482137087*eclip.z
     return _TerseVector(x, y, z)
 
-def _VsopSphereToRect(lon, lat, rad):
+def _VsopSphereToRect(lon: float, lat: float, rad: float) -> "_TerseVector":
     # Convert spherical coordinates to cartesian coordinates.
     r_coslat = rad * math.cos(lat)
     return _TerseVector(
@@ -1797,7 +1807,7 @@ def _VsopSphereToRect(lon, lat, rad):
         rad * math.sin(lat)
     )
 
-def _CalcVsop(model, time):
+def _CalcVsop(model: List[List[List[List[float]]]], time: Time) -> Vector:
     t = time.tt / _DAYS_PER_MILLENNIUM
     lon = _VsopFormula(model[0], t, True)
     lat = _VsopFormula(model[1], t, False)
@@ -1806,19 +1816,19 @@ def _CalcVsop(model, time):
     return _VsopRotate(eclip).ToAstroVector(time)
 
 class _body_state_t:
-    def __init__(self, tt, r, v):
+    def __init__(self, tt: float, r: "_TerseVector", v: "_TerseVector") -> None:
         self.tt  = tt
         self.r = r
         self.v = v
 
-    def clone(self):
+    def clone(self) -> "_body_state_t":
         '''Make a copy of this body state.'''
         return _body_state_t(self.tt, self.r.clone(), self.v.clone())
 
-    def __sub__(self, other):
+    def __sub__(self, other: "_body_state_t") -> "_body_state_t":
         return _body_state_t(self.tt, self.r - other.r, self.v - other.v)
 
-def _CalcVsopPosVel(model, tt):
+def _CalcVsopPosVel(model: List[List[List[List[float]]]], tt: float) -> _body_state_t:
     t = tt / _DAYS_PER_MILLENNIUM
 
     lon = _VsopFormula(model[0], t, True)
@@ -1863,7 +1873,7 @@ def _CalcVsopPosVel(model, tt):
     return _body_state_t(tt, equ_pos, equ_vel)
 
 
-def _AdjustBarycenter(ssb, time, body, pmass):
+def _AdjustBarycenter(ssb: Vector, time: Time, body: Body, pmass: float) -> None:
     shift = pmass / (pmass + _SUN_GM)
     planet = _CalcVsop(_vsop[body.value], time)
     ssb.x += shift * planet.x
@@ -1871,7 +1881,7 @@ def _AdjustBarycenter(ssb, time, body, pmass):
     ssb.z += shift * planet.z
 
 
-def _CalcSolarSystemBarycenter(time):
+def _CalcSolarSystemBarycenter(time: Time) -> Vector:
     ssb = Vector(0.0, 0.0, 0.0, time)
     _AdjustBarycenter(ssb, time, Body.Jupiter, _JUPITER_GM)
     _AdjustBarycenter(ssb, time, Body.Saturn,  _SATURN_GM)
@@ -1880,13 +1890,13 @@ def _CalcSolarSystemBarycenter(time):
     return ssb
 
 
-def _VsopHelioDistance(model, time):
+def _VsopHelioDistance(model: List[List[List[List[float]]]], time: Time) -> float:
     # The caller only wants to know the distance between the planet and the Sun.
     # So we only need to calculate the radial component of the spherical coordinates.
     # There is no need to translate coordinates.
     return _VsopFormula(model[2], time.tt / _DAYS_PER_MILLENNIUM, False)
 
-def _CalcEarth(time):
+def _CalcEarth(time: Time) -> Vector:
     return _CalcVsop(_vsop[Body.Earth.value], time)
 
 # END VSOP
@@ -1896,7 +1906,7 @@ def _CalcEarth(time):
 $ASTRO_PLUTO_TABLE()
 
 class _TerseVector:
-    def __init__(self, x, y, z) -> None:
+    def __init__(self, x: float, y: float, z: float) -> None:
         self.x = x
         self.y = y
         self.z = z
@@ -1938,26 +1948,26 @@ class _TerseVector:
         return _TerseVector(self.x / scalar, self.y / scalar, self.z / scalar)
 
 
-def _BodyStateFromTable(entry):
-    [ tt, [rx, ry, rz], [vx, vy, vz] ] = entry
+def _BodyStateFromTable(entry: Tuple[float, Tuple[float, float, float], Tuple[float, float, float]]) -> _body_state_t:
+    ( tt, (rx, ry, rz), (vx, vy, vz) ) = entry
     return _body_state_t(tt, _TerseVector(rx, ry, rz), _TerseVector(vx, vy, vz))
 
 
-def _AdjustBarycenterPosVel(ssb, tt, body, planet_gm):
+def _AdjustBarycenterPosVel(ssb: _body_state_t, tt: float, body: Body, planet_gm: float) -> _body_state_t:
     shift = planet_gm / (planet_gm + _SUN_GM)
     planet = _CalcVsopPosVel(_vsop[body.value], tt)
     ssb.r += shift * planet.r
     ssb.v += shift * planet.v
     return planet
 
-def _AccelerationIncrement(small_pos, gm, major_pos):
+def _AccelerationIncrement(small_pos: _TerseVector, gm: float, major_pos: _TerseVector) -> _TerseVector:
     delta = major_pos - small_pos
     r2 = delta.quadrature()
     return (gm / (r2 * math.sqrt(r2))) * delta
 
 
 class _major_bodies_t:
-    def __init__(self, tt):
+    def __init__(self, tt: float) -> None:
         # Accumulate the Solar System Barycenter position.
         ssb = _body_state_t(tt, _TerseVector(0,0,0), _TerseVector(0,0,0))
         # Calculate the position and velocity vectors of the 4 major planets.
@@ -1977,7 +1987,7 @@ class _major_bodies_t:
         # Convert heliocentric SSB to barycentric Sun.
         self.Sun = _body_state_t(tt, -1*ssb.r, -1*ssb.v)
 
-    def Acceleration(self, pos):
+    def Acceleration(self, pos: _TerseVector) -> _TerseVector:
         '''Use barycentric coordinates of the Sun and major planets to calculate
         the gravitational acceleration vector experienced at location 'pos'.'''
         acc  = _AccelerationIncrement(pos, _SUN_GM,     self.Sun.r)
@@ -1989,31 +1999,31 @@ class _major_bodies_t:
 
 
 class _body_grav_calc_t:
-    def __init__(self, tt, r, v, a):
+    def __init__(self, tt: float, r: _TerseVector, v: _TerseVector, a: _TerseVector) -> None:
         self.tt = tt    # J2000 terrestrial time [days]
         self.r = r      # position [au]
         self.v = v      # velocity [au/day]
         self.a = a      # acceleration [au/day^2]
 
-    def clone(self):
+    def clone(self) -> "_body_grav_calc_t":
         '''Creates a copy of this gravity simulation state.'''
         return _body_grav_calc_t(self.tt, self.r.clone(), self.v.clone(), self.a.clone())
 
 
 class _grav_sim_t:
-    def __init__(self, bary, grav):
+    def __init__(self, bary: _major_bodies_t, grav: _body_grav_calc_t) -> None:
         self.bary = bary
         self.grav = grav
 
 
-def _UpdatePosition(dt, r, v, a):
+def _UpdatePosition(dt: float, r: _TerseVector, v: _TerseVector, a: _TerseVector) -> _TerseVector:
     return _TerseVector(
         r.x + dt*(v.x + dt*a.x/2.0),
         r.y + dt*(v.y + dt*a.y/2.0),
         r.z + dt*(v.z + dt*a.z/2.0)
     )
 
-def _UpdateVelocity(dt, v, a):
+def _UpdateVelocity(dt: float, v: _TerseVector, a: _TerseVector) -> _TerseVector:
     return _TerseVector(
         v.x + dt*a.x,
         v.y + dt*a.y,
@@ -2021,7 +2031,7 @@ def _UpdateVelocity(dt, v, a):
     )
 
 
-def _GravSim(tt2, calc1):
+def _GravSim(tt2: float, calc1: _body_grav_calc_t) -> _grav_sim_t:
     dt = tt2 - calc1.tt
 
     # Calculate where the major bodies (Sun, Jupiter...Neptune) will be at tt2.
@@ -2042,10 +2052,10 @@ def _GravSim(tt2, calc1):
     return _grav_sim_t(bary2, grav)
 
 
-_pluto_cache = [None] * (_PLUTO_NUM_STATES - 1)
+_pluto_cache: List[Optional[List[_body_grav_calc_t]]] = [None] * (_PLUTO_NUM_STATES - 1)
 
 
-def _ClampIndex(frac, nsteps):
+def _ClampIndex(frac: float, nsteps: int) -> int:
     index = math.floor(frac)
     if index < 0:
         return 0
@@ -2054,7 +2064,7 @@ def _ClampIndex(frac, nsteps):
     return index
 
 
-def _GravFromState(entry):
+def _GravFromState(entry: Tuple[float, Tuple[float, float, float], Tuple[float, float, float]]) -> _grav_sim_t:
     state = _BodyStateFromTable(entry)
     bary = _major_bodies_t(state.tt)
     r = state.r + bary.Sun.r
@@ -2064,50 +2074,49 @@ def _GravFromState(entry):
     return _grav_sim_t(bary, grav)
 
 
-def _GetSegment(cache, tt):
+def _GetSegment(cache: List[Optional[List[_body_grav_calc_t]]], tt: float) -> Optional[List[_body_grav_calc_t]]:
     if (tt < _PlutoStateTable[0][0]) or (tt > _PlutoStateTable[_PLUTO_NUM_STATES-1][0]):
         # Don't bother calculating a segment. Let the caller crawl backward/forward to this time.
         return None
 
     seg_index = _ClampIndex((tt - _PlutoStateTable[0][0]) / _PLUTO_TIME_STEP, _PLUTO_NUM_STATES-1)
     if cache[seg_index] is None:
-        seg = cache[seg_index] = [None] * _PLUTO_NSTEPS
-
-        # Each endpoint is exact.
-        seg[0] = _GravFromState(_PlutoStateTable[seg_index]).grav
-        seg[_PLUTO_NSTEPS-1] = _GravFromState(_PlutoStateTable[seg_index + 1]).grav
+        seg = cache[seg_index] = [ _GravFromState(_PlutoStateTable[seg_index]).grav ]
 
         # Simulate forwards from the lower time bound.
         step_tt = seg[0].tt
         i = 1
         while i < _PLUTO_NSTEPS-1:
             step_tt += _PLUTO_DT
-            seg[i] = _GravSim(step_tt, seg[i-1]).grav
+            seg.append(_GravSim(step_tt, seg[i-1]).grav)
             i += 1
+        seg.append(_GravFromState(_PlutoStateTable[seg_index + 1]).grav)
 
         # Simulate backwards from the upper time bound.
+        # Tricky: the reverse list will be one element shorter than `seg`,
+        # because we don't need to fade-mix the first time slot in reverse.
         step_tt = seg[_PLUTO_NSTEPS-1].tt
-        reverse = [None] * _PLUTO_NSTEPS
-        reverse[_PLUTO_NSTEPS-1] = seg[_PLUTO_NSTEPS-1]
+        reverse = [ seg[-1] ]
         i = _PLUTO_NSTEPS - 2
         while i > 0:
             step_tt -= _PLUTO_DT
-            reverse[i] = _GravSim(step_tt, reverse[i+1]).grav
+            reverse.append(_GravSim(step_tt, reverse[-1]).grav)
             i -= 1
+        reverse.reverse()
 
         # Fade-mix the two series so that there are no discontinuities.
         i = _PLUTO_NSTEPS - 2
         while i > 0:
             ramp = i / (_PLUTO_NSTEPS-1)
-            seg[i].r = seg[i].r*(1 - ramp) + reverse[i].r*ramp
-            seg[i].v = seg[i].v*(1 - ramp) + reverse[i].v*ramp
-            seg[i].a = seg[i].a*(1 - ramp) + reverse[i].a*ramp
+            seg[i].r = seg[i].r*(1 - ramp) + reverse[i-1].r*ramp
+            seg[i].v = seg[i].v*(1 - ramp) + reverse[i-1].v*ramp
+            seg[i].a = seg[i].a*(1 - ramp) + reverse[i-1].a*ramp
             i -= 1
 
     return cache[seg_index]
 
 
-def _CalcPlutoOneWay(entry, target_tt, dt):
+def _CalcPlutoOneWay(entry: Tuple[float, Tuple[float, float, float], Tuple[float, float, float]], target_tt: float, dt: float) -> _grav_sim_t:
     sim = _GravFromState(entry)
     n = math.ceil((target_tt - sim.grav.tt) / dt)
     for i in range(n):
@@ -2115,7 +2124,7 @@ def _CalcPlutoOneWay(entry, target_tt, dt):
     return sim
 
 
-def _CalcPluto(time, helio):
+def _CalcPluto(time: Time, helio: bool) -> StateVector:
     bary = None
     seg = _GetSegment(_pluto_cache, time.tt)
     if seg is None:
@@ -2203,12 +2212,12 @@ class JupiterMoonsInfo:
         )
 
 
-def _JupiterMoon_elem2pv(time, mu, A, AL, K, H, Q, P):
+def _JupiterMoon_elem2pv(time: Time, mu: float, A: float, AL: float, K: float, H: float, Q: float, P: float) -> StateVector:
     # Translation of FORTRAN subroutine ELEM2PV from:
     # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
     AN = math.sqrt(mu / (A*A*A))
     EE = AL + K*math.sin(AL) - H*math.cos(AL)
-    DE = 1
+    DE = 1.0
     while abs(DE) >= 1.0e-12:
         CE = math.cos(EE)
         SE = math.sin(EE)
@@ -2240,7 +2249,16 @@ def _JupiterMoon_elem2pv(time, mu, A, AL, K, H, Q, P):
     )
 
 
-def _CalcJupiterMoon(time, mu, al0, al1, a, l, z, zeta):
+def _CalcJupiterMoon(
+        time: Time,
+        mu: float,
+        al0: float,
+        al1: float,
+        a: List[Tuple[float, float, float]],
+        l: List[Tuple[float, float, float]],
+        z: List[Tuple[float, float, float]],
+        zeta: List[Tuple[float, float, float]]) -> StateVector:
+
     # This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
     # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
 
@@ -2314,30 +2332,30 @@ def JupiterMoons(time: Time) -> JupiterMoonsInfo:
 #----------------------------------------------------------------------------
 # BEGIN Search
 
-def _QuadInterp(tm, dt, fa, fm, fb):
+def _QuadInterp(tm: float, dt: float, fa: float, fm: float, fb: float) -> Optional[Tuple[float, float]]:
     Q = (fb + fa)/2 - fm
     R = (fb - fa)/2
     S = fm
 
-    if Q == 0:
+    if Q == 0.0:
         # This is a line, not a parabola.
-        if R == 0:
+        if R == 0.0:
             # This is a HORIZONTAL line... can't make progress!
             return None
         x = -S / R
-        if not (-1 <= x <= +1):
+        if not (-1.0 <= x <= +1.0):
             return None  # out of bounds
     else:
         # It really is a parabola. Find roots x1, x2.
         u = R*R - 4*Q*S
-        if u <= 0:
+        if u <= 0.0:
             return None
         ru = math.sqrt(u)
-        x1 = (-R + ru) / (2 * Q)
-        x2 = (-R - ru) / (2 * Q)
+        x1 = (-R + ru) / (2.0 * Q)
+        x2 = (-R - ru) / (2.0 * Q)
 
-        if -1 <= x1 <= +1:
-            if -1 <= x2 <= +1:
+        if -1.0 <= x1 <= +1.0:
+            if -1.0 <= x2 <= +1.0:
                 # Two solutions... so parabola intersects twice.
                 return None
             x = x1
@@ -2350,7 +2368,7 @@ def _QuadInterp(tm, dt, fa, fm, fb):
     df_dt = (2*Q*x + R) / dt
     return (t, df_dt)
 
-def Search(func: Callable[[object, Time], float], context: object, t1: Time, t2: Time, dt_tolerance_seconds: float) -> Optional[Time]:
+def Search(func: Callable[[Any, Time], float], context: object, t1: Time, t2: Time, dt_tolerance_seconds: float) -> Optional[Time]:
     """Searches for a time at which a function's value increases through zero.
 
     Certain astronomy calculations involve finding a time when an event occurs.
@@ -2674,7 +2692,7 @@ def CorrectLightTravel(func: PositionFunction, time: Time) -> Vector:
 
 
 class _BodyPosition(PositionFunction):
-    def __init__(self, observerBody: Body, targetBody: Body, aberration: bool, observerPos) -> None:
+    def __init__(self, observerBody: Body, targetBody: Body, aberration: bool, observerPos: Optional[Vector]) -> None:
         super().__init__()
         self.observerBody = observerBody
         self.targetBody = targetBody
@@ -2702,6 +2720,7 @@ class _BodyPosition(PositionFunction):
         else:
             # No aberration, so use the pre-calculated initial position of
             # the observer body that is already stored in this object.
+            assert self.observerPos is not None
             observerPos = self.observerPos
         # Subtract the bodies' heliocentric positions to obtain a relative position vector.
         return HelioVector(self.targetBody, time) - observerPos
@@ -2822,7 +2841,7 @@ def GeoVector(body: Body, time: Time, aberration: bool) -> Vector:
     return vec
 
 
-def _ExportState(terse, time: Time) -> StateVector:
+def _ExportState(terse: _body_state_t, time: Time) -> StateVector:
     return StateVector(
         terse.r.x, terse.r.y, terse.r.z,
         terse.v.x, terse.v.y, terse.v.z,
@@ -3524,7 +3543,7 @@ class EclipticCoordinates:
     def __repr__(self) -> str:
         return 'EclipticCoordinates({}, elat={}, elon={})'.format(repr(self.vec), self.elat, self.elon)
 
-def _RotateEquatorialToEcliptic(pos, obliq_radians, time):
+def _RotateEquatorialToEcliptic(pos: List[float], obliq_radians: float, time: Time) -> EclipticCoordinates:
     cos_ob = math.cos(obliq_radians)
     sin_ob = math.sin(obliq_radians)
     ex = +pos[0]
@@ -3793,7 +3812,7 @@ def Elongation(body: Body, time: Time) -> ElongationEvent:
     angle = AngleFromSun(body, time)
     return ElongationEvent(time, visibility, angle, esep)
 
-def _rlon_offset(body, time, direction, targetRelLon):
+def _rlon_offset(body: Body, time: Time, direction: float, targetRelLon: float) -> float:
     plon = EclipticLongitude(body, time)
     elon = EclipticLongitude(Body.Earth, time)
     diff = direction * (elon - plon)
@@ -3855,7 +3874,7 @@ def SearchRelativeLongitude(body: Body, targetRelLon:float, startTime: Time) -> 
     if body in (Body.Moon, Body.Sun):
         raise InvalidBodyError(body)
     syn = _SynodicPeriod(body)
-    direction = +1 if _IsSuperiorPlanet(body) else -1
+    direction = +1.0 if _IsSuperiorPlanet(body) else -1.0
     # Iterate until we converge on the desired event.
     # Calculate the error angle, which will be a negative number of degrees,
     # meaning we are "behind" the target relative longitude.
@@ -3883,7 +3902,7 @@ def SearchRelativeLongitude(body: Body, targetRelLon:float, startTime: Time) -> 
         iter_count += 1
     raise NoConvergeError()
 
-def _neg_elong_slope(body, time):
+def _neg_elong_slope(body: Body, time: Time) -> float:
     dt = 0.1
     t1 = time.AddDays(-dt/2.0)
     t2 = time.AddDays(+dt/2.0)
@@ -4001,7 +4020,7 @@ def SearchMaxElongation(body: Body, startTime: Time) -> Optional[ElongationEvent
     raise InternalError()   # should never take more than 2 iterations
 
 
-def _sun_offset(targetLon, time):
+def _sun_offset(targetLon: float, time: Time) -> float:
     ecl = SunPosition(time)
     return _LongitudeOffset(ecl.elon - targetLon)
 
@@ -4065,11 +4084,11 @@ def MoonPhase(time: Time) -> float:
     """
     return PairLongitude(Body.Moon, Body.Sun, time)
 
-def _moon_offset(targetLon, time):
+def _moon_offset(targetLon: float, time: Time) -> float:
     angle = MoonPhase(time)
     return _LongitudeOffset(angle - targetLon)
 
-def SearchMoonPhase(targetLon: float, startTime: Time, limitDays: float):
+def SearchMoonPhase(targetLon: float, startTime: Time, limitDays: float) -> Optional[Time]:
     """Searches for the time that the Moon reaches a specified phase.
 
     Lunar phases are conventionally defined in terms of the Moon's geocentric ecliptic
@@ -4153,11 +4172,11 @@ class MoonQuarter:
     time : Time
         The date and time of the lunar quarter.
     """
-    def __init__(self, quarter, time):
+    def __init__(self, quarter: int, time: Time) -> None:
         self.quarter = quarter
         self.time = time
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'MoonQuarter({}, {})'.format(self.quarter, repr(self.time))
 
 def SearchMoonQuarter(startTime: Time) -> MoonQuarter:
@@ -4272,7 +4291,7 @@ class IlluminationInfo:
             repr(self.ring_tilt)
         )
 
-def _MoonMagnitude(phase, helio_dist, geo_dist):
+def _MoonMagnitude(phase: float, helio_dist: float, geo_dist: float) -> float:
     # https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
     rad = math.radians(phase)
     mag = -12.717 + 1.49*abs(rad) + 0.0431*(rad**4)
@@ -4281,7 +4300,7 @@ def _MoonMagnitude(phase, helio_dist, geo_dist):
     mag += 5.0 * math.log10(helio_dist * geo_au)
     return mag
 
-def _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time):
+def _SaturnMagnitude(phase: float, helio_dist: float, geo_dist: float, gc: Vector, time: Time) -> Tuple[float, float]:
     # Based on formulas by Paul Schlyter found here:
     # http://www.stjarnhimlen.se/comp/ppcomp.html#15
 
@@ -4304,9 +4323,9 @@ def _SaturnMagnitude(phase, helio_dist, geo_dist, gc, time):
     ring_tilt = math.degrees(tilt)
     return (mag, ring_tilt)
 
-def _VisualMagnitude(body, phase, helio_dist, geo_dist):
+def _VisualMagnitude(body: Body, phase: float, helio_dist: float, geo_dist: float) -> float:
     # For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
-    c0 = c1 = c2 = c3 = 0
+    c0 = c1 = c2 = c3 = 0.0
     if body == Body.Mercury:
         c0 = -0.60; c1 = +4.98; c2 = -4.88; c3 = +3.02
     elif body == Body.Venus:
@@ -4395,7 +4414,7 @@ def Illumination(body: Body, time: Time) -> IlluminationInfo:
         mag = _VisualMagnitude(body, phase, helio_dist, geo_dist)
     return IlluminationInfo(time, mag, phase, helio_dist, geo_dist, hc, gc, ring_tilt)
 
-def _mag_slope(body, time):
+def _mag_slope(body: Body, time: Time) -> float:
     # The Search() function finds a transition from negative to positive values.
     # The derivative of magnitude y with respect to time t (dy/dt)
     # is negative as an object gets brighter, because the magnitude numbers
@@ -4678,30 +4697,30 @@ class Direction(enum.Enum):
     Set  = -1
 
 class _AscentInfo:
-    def __init__(self, tx, ty, ax, ay):
+    def __init__(self, tx: Time, ty: Time, ax: float, ay: float) -> None:
         self.tx = tx
         self.ty = ty
         self.ax = ax
         self.ay = ay
 
-    def __str__(self):
+    def __str__(self) -> str:
         return 'AscentInfo(tx={}, ty={}, ax={}, ay={})'.format(self.tx, self.ty, self.ax, self.ay)
 
 class _altitude_context:
-    def __init__(self, body, direction, observer, bodyRadiusAu, targetAltitude):
+    def __init__(self, body: Body, direction: Direction, observer: Observer, bodyRadiusAu: float, targetAltitude: float) -> None:
         self.body = body
         self.direction = direction
         self.observer = observer
         self.bodyRadiusAu = bodyRadiusAu
         self.targetAltitude = targetAltitude
 
-def _altdiff(context, time):
+def _altdiff(context: _altitude_context, time: Time) -> float:
     ofdate = Equator(context.body, time, context.observer, True, True)
     hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
     altitude = hor.altitude + math.degrees(math.asin(context.bodyRadiusAu / ofdate.dist))
     return context.direction.value*(altitude - context.targetAltitude)
 
-def _MaxAltitudeSlope(body, latitude):
+def _MaxAltitudeSlope(body: Body, latitude: float) -> float:
     # Calculate the maximum possible rate that this body's altitude
     # could change [degrees/day] as seen by this observer.
     # First use experimentally determined extreme bounds for this body
@@ -4747,7 +4766,7 @@ def _MaxAltitudeSlope(body, latitude):
     return abs(((360.0 / _SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra)*math.cos(latrad)) + abs(deriv_dec*math.sin(latrad))
 
 
-def _FindAscent(depth, context, max_deriv_alt, t1, t2, a1, a2):
+def _FindAscent(depth: int, context: _altitude_context, max_deriv_alt: float, t1: Time, t2: Time, a1: float, a2: float) -> Optional[_AscentInfo]:
     # See if we can find any time interval where the altitude-diff function
     # rises from non-positive to positive.
 
@@ -4804,7 +4823,7 @@ def _FindAscent(depth, context, max_deriv_alt, t1, t2, a1, a2):
     )
 
 
-def _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, targetAltitude):
+def _InternalSearchAltitude(body: Body, observer: Observer, direction: Direction, startTime: Time, limitDays: float, bodyRadiusAu: float, targetAltitude: float) -> Optional[Time]:
     if not (-90.0 <= targetAltitude <= +90.0):
         raise Error('Invalid target altitude angle: {}'.format(targetAltitude))
 
@@ -5017,7 +5036,7 @@ class SeasonInfo:
             repr(self.dec_solstice)
         )
 
-def _FindSeasonChange(targetLon, year, month, day):
+def _FindSeasonChange(targetLon: float, year: int, month: int, day: int) -> Time:
     startTime = Time.Make(year, month, day, 0, 0, 0)
     time = SearchSunLongitude(targetLon, startTime, 20.0)
     if time is None:
@@ -5074,10 +5093,10 @@ def Seasons(year: int) -> SeasonInfo:
     dec_solstice = _FindSeasonChange(270, year, 12, 10)
     return SeasonInfo(mar_equinox, jun_solstice, sep_equinox, dec_solstice)
 
-def _MoonDistance(time):
+def _MoonDistance(time: Time) -> float:
     return _CalcMoon(time).distance_au
 
-def _moon_distance_slope(direction, time):
+def _moon_distance_slope(direction: int, time: Time) -> float:
     dt = 0.001
     t1 = time.AddDays(-dt/2.0)
     t2 = time.AddDays(+dt/2.0)
@@ -5239,7 +5258,7 @@ def NextLunarApsis(apsis: Apsis) -> Apsis:
     return next_apsis
 
 
-def _planet_distance_slope(context, time):
+def _planet_distance_slope(context: Tuple[float, Body], time: Time) -> float:
     (direction, body) = context
     dt = 0.001
     t1 = time.AddDays(-dt/2.0)
@@ -5349,9 +5368,10 @@ def NextPlanetApsis(body: Body, apsis: Apsis) -> Apsis:
     return next_apsis
 
 
-def _PlanetExtreme(body, kind, start_time, dayspan):
+def _PlanetExtreme(body: Body, kind: ApsisKind, start_time: Time, dayspan: float) -> Apsis:
     direction = +1.0 if (kind == ApsisKind.Apocenter) else -1.0
     npoints = 10
+    best_dist = math.nan
     while True:
         interval = dayspan / (npoints - 1)
         # Iterate until uncertainty is less than one minute.
@@ -5370,7 +5390,7 @@ def _PlanetExtreme(body, kind, start_time, dayspan):
         dayspan = 2 * interval
 
 
-def _BruteSearchPlanetApsis(body, startTime):
+def _BruteSearchPlanetApsis(body: Body, startTime: Time) -> Apsis:
     # Neptune is a special case for two reasons:
     # 1. Its orbit is nearly circular (low orbital eccentricity).
     # 2. It is so distant from the Sun that the orbital period is very long.
@@ -5503,7 +5523,7 @@ def SphereFromVector(vector: Vector) -> Spherical:
     return Spherical(lat, lon, dist)
 
 
-def _ToggleAzimuthDirection(az):
+def _ToggleAzimuthDirection(az: float) -> float:
     az = 360.0 - az
     if az >= 360.0:
         az -= 360.0
@@ -6370,7 +6390,7 @@ class EclipseKind(enum.Enum):
 
 
 class _ShadowInfo:
-    def __init__(self, time, u, r, k, p, target, direction):
+    def __init__(self, time: Time, u: float, r: float, k: float, p: float, target: Vector, direction: Vector) -> None:
         self.time = time
         self.u = u   # dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
         self.r = r   # km distance between center of Moon and the line passing through the centers of the Sun and Earth.
@@ -6380,7 +6400,7 @@ class _ShadowInfo:
         self.dir = direction        # vector from center of Sun to center of shadow-casting body
 
 
-def _CalcShadow(body_radius_km, time, target, sdir):
+def _CalcShadow(body_radius_km: float, time: Time, target: Vector, sdir: Vector) -> _ShadowInfo:
     u = (sdir.x*target.x + sdir.y*target.y + sdir.z*target.z) / (sdir.x*sdir.x + sdir.y*sdir.y + sdir.z*sdir.z)
     dx = (u * sdir.x) - target.x
     dy = (u * sdir.y) - target.y
@@ -6391,7 +6411,7 @@ def _CalcShadow(body_radius_km, time, target, sdir):
     return _ShadowInfo(time, u, r, k, p, target, sdir)
 
 
-def _EarthShadow(time):
+def _EarthShadow(time: Time) -> _ShadowInfo:
     # This function helps find when the Earth's shadow falls upon the Moon.
     # Light-travel and aberration corrected vector from the Earth to the Sun.
     # The negative vector -s is thus the path of sunlight through the center of the Earth.
@@ -6400,7 +6420,7 @@ def _EarthShadow(time):
     return _CalcShadow(_EARTH_ECLIPSE_RADIUS_KM, time, m, -s)
 
 
-def _MoonShadow(time):
+def _MoonShadow(time: Time) -> _ShadowInfo:
     s = GeoVector(Body.Sun, time, True)
     m = GeoMoon(time)       # geocentric Moon
     # -m  = lunacentric Earth
@@ -6408,7 +6428,7 @@ def _MoonShadow(time):
     return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, -m, m-s)
 
 
-def _LocalMoonShadow(time, observer):
+def _LocalMoonShadow(time: Time, observer: Observer) -> _ShadowInfo:
     # Calculate observer's geocentric position.
     pos = _geo_pos(time, observer)
     s = GeoVector(Body.Sun, time, True)
@@ -6419,7 +6439,7 @@ def _LocalMoonShadow(time, observer):
     return _CalcShadow(_MOON_MEAN_RADIUS_KM, time, lo, m-s)
 
 
-def _PlanetShadow(body, planet_radius_km, time):
+def _PlanetShadow(body: Body, planet_radius_km: float, time: Time) -> _ShadowInfo:
     # Calculate light-travel-corrected vector from Earth to planet.
     p = GeoVector(body, time, True)
     # Calculate light-travel-corrected vector from Earth to Sun.
@@ -6429,7 +6449,7 @@ def _PlanetShadow(body, planet_radius_km, time):
     return _CalcShadow(planet_radius_km, time, -p, p-s)
 
 
-def _ShadowDistanceSlope(shadowfunc, time):
+def _ShadowDistanceSlope(shadowfunc: Callable[[Time], _ShadowInfo], time: Time) -> float:
     dt = 1.0 / 86400.0
     t1 = time.AddDays(-dt)
     t2 = time.AddDays(+dt)
@@ -6438,7 +6458,7 @@ def _ShadowDistanceSlope(shadowfunc, time):
     return (shadow2.r - shadow1.r) / dt
 
 
-def _PlanetShadowSlope(context, time):
+def _PlanetShadowSlope(context: Tuple[Body, float], time: Time) -> float:
     (body, planet_radius_km) = context
     dt = 1.0 / 86400.0
     shadow1 = _PlanetShadow(body, planet_radius_km, time.AddDays(-dt))
@@ -6446,44 +6466,52 @@ def _PlanetShadowSlope(context, time):
     return (shadow2.r - shadow1.r) / dt
 
 
-def _PeakEarthShadow(search_center_time):
+def _PeakEarthShadow(search_center_time: Time) -> _ShadowInfo:
     window = 0.03        # initial search window, in days, before/after given time
     t1 = search_center_time.AddDays(-window)
     t2 = search_center_time.AddDays(+window)
     tx = Search(_ShadowDistanceSlope, _EarthShadow, t1, t2, 1.0)
+    if tx is None:
+        raise InternalError()
     return _EarthShadow(tx)
 
 
-def _PeakMoonShadow(search_center_time):
+def _PeakMoonShadow(search_center_time: Time) -> _ShadowInfo:
     window = 0.03        # initial search window, in days, before/after given time
     t1 = search_center_time.AddDays(-window)
     t2 = search_center_time.AddDays(+window)
     tx = Search(_ShadowDistanceSlope, _MoonShadow, t1, t2, 1.0)
+    if tx is None:
+        raise InternalError()
     return _MoonShadow(tx)
 
-def _PeakLocalMoonShadow(search_center_time, observer):
+def _PeakLocalMoonShadow(search_center_time: Time, observer: Observer) -> _ShadowInfo:
     # Search for the time near search_center_time that the Moon's shadow comes
     # closest to the given observer.
     window = 0.2
     t1 = search_center_time.AddDays(-window)
     t2 = search_center_time.AddDays(+window)
     tx = Search(_ShadowDistanceSlope, lambda time: _LocalMoonShadow(time, observer), t1, t2, 1.0)
+    if tx is None:
+        raise InternalError()
     return _LocalMoonShadow(tx, observer)
 
-def _PeakPlanetShadow(body, planet_radius_km, search_center_time):
+def _PeakPlanetShadow(body: Body, planet_radius_km: float, search_center_time: Time) -> _ShadowInfo:
     # Search for when the body's shadow is closest to the center of the Earth.
     window = 1.0     # days before/after inferior conjunction to search for minimum shadow distance.
     t1 = search_center_time.AddDays(-window)
     t2 = search_center_time.AddDays(+window)
     tx = Search(_PlanetShadowSlope, (body, planet_radius_km), t1, t2, 1.0)
+    if tx is None:
+        raise InternalError()
     return _PlanetShadow(body, planet_radius_km, tx)
 
 class _ShadowDiffContext:
-    def __init__(self, radius_limit, direction):
+    def __init__(self, radius_limit: float, direction: float) -> None:
         self.radius_limit = radius_limit
         self.direction = direction
 
-def _ShadowDiff(context, time):
+def _ShadowDiff(context: _ShadowDiffContext, time: Time) -> float:
     return context.direction * (_EarthShadow(time).r - context.radius_limit)
 
 
@@ -6587,7 +6615,7 @@ class GlobalSolarEclipseInfo:
     ----------
     kind : EclipseKind
         The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`.
-    obscuration : float
+    obscuration : float or `None`
         The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only).
     peak : Time
         The date and time when the solar eclipse is darkest.
@@ -6599,7 +6627,7 @@ class GlobalSolarEclipseInfo:
     longitude : float
         The geographic longitude at the center of the peak eclipse shadow.
     """
-    def __init__(self, kind: EclipseKind, obscuration: float, peak: Time, distance: float, latitude: float, longitude: float) -> None:
+    def __init__(self, kind: EclipseKind, obscuration: Optional[float], peak: Time, distance: float, latitude: float, longitude: float) -> None:
         self.kind = kind
         self.obscuration = obscuration
         self.peak = peak
@@ -6691,16 +6719,16 @@ class LocalSolarEclipseInfo:
         The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak.
     partial_begin : EclipseEvent
         The time and Sun altitude at the beginning of the eclipse.
-    total_begin : EclipseEvent
+    total_begin : EclipseEvent or `None`
         If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise `None`.
     peak : EclipseEvent
         The time and Sun altitude when the eclipse reaches its peak.
-    total_end : EclipseEvent
+    total_end : EclipseEvent or `None`
         If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise `None`.
     partial_end : EclipseEvent
         The time and Sun altitude at the end of the eclipse.
     """
-    def __init__(self, kind: EclipseKind, obscuration: float, partial_begin: EclipseEvent, total_begin: EclipseEvent, peak: EclipseEvent, total_end: EclipseEvent, partial_end: EclipseEvent) -> None:
+    def __init__(self, kind: EclipseKind, obscuration: float, partial_begin: EclipseEvent, total_begin: Optional[EclipseEvent], peak: EclipseEvent, total_end: Optional[EclipseEvent], partial_end: EclipseEvent) -> None:
         self.kind = kind
         self.obscuration = obscuration
         self.partial_begin = partial_begin
@@ -6721,7 +6749,7 @@ class LocalSolarEclipseInfo:
         )
 
 
-def _EclipseKindFromUmbra(k):
+def _EclipseKindFromUmbra(k: float) -> EclipseKind:
     # The umbra radius tells us what kind of eclipse the observer sees.
     # If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular.
     # HACK: I added a tiny bias (14 meters) to match Espenak test data.
@@ -6730,18 +6758,18 @@ def _EclipseKindFromUmbra(k):
     return EclipseKind.Annular
 
 class _LocalTransitionContext:
-    def __init__(self, observer, direction, func):
+    def __init__(self, observer: Observer, direction: float, func: Callable[[_ShadowInfo], float]) -> None:
         self.observer = observer
         self.direction = direction
         self.func = func
 
 
-def _LocalTransitionFunc(context, time):
+def _LocalTransitionFunc(context: _LocalTransitionContext, time: Time) -> float:
     shadow = _LocalMoonShadow(time, context.observer)
     return context.direction * context.func(shadow)
 
 
-def _LocalEclipseTransition(observer, direction, func, t1, t2):
+def _LocalEclipseTransition(observer: Observer, direction: float, func: Callable[[_ShadowInfo], float], t1: Time, t2: Time) -> EclipseEvent:
     context = _LocalTransitionContext(observer, direction, func)
     search = Search(_LocalTransitionFunc, context, t1, t2, 1.0)
     if search is None:
@@ -6749,28 +6777,28 @@ def _LocalEclipseTransition(observer, direction, func, t1, t2):
     return _CalcEvent(observer, search)
 
 
-def _CalcEvent(observer, time):
+def _CalcEvent(observer: Observer, time: Time) -> EclipseEvent:
     altitude = _SunAltitude(time, observer)
     return EclipseEvent(time, altitude)
 
 
-def _SunAltitude(time, observer):
+def _SunAltitude(time: Time, observer: Observer) -> float:
     equ = Equator(Body.Sun, time, observer, True, True)
     hor = Horizon(time, observer, equ.ra, equ.dec, Refraction.Normal)
     return hor.altitude
 
 
-def _local_partial_distance(shadow):
-    # Must take the absolute value of the umbra radius 'k'
-    # because it can be negative for an annular eclipse.
+def _local_partial_distance(shadow: _ShadowInfo) -> float:
     return shadow.p - shadow.r
 
 
-def _local_total_distance(shadow):
+def _local_total_distance(shadow: _ShadowInfo) -> float:
+    # Must take the absolute value of the umbra radius 'k'
+    # because it can be negative for an annular eclipse.
     return abs(shadow.k) - shadow.r
 
 
-def _LocalEclipse(shadow, observer):
+def _LocalEclipse(shadow: _ShadowInfo, observer: Observer) -> LocalSolarEclipseInfo:
     PARTIAL_WINDOW = 0.2
     TOTAL_WINDOW = 0.01
     peak = _CalcEvent(observer, shadow.time)
@@ -6792,7 +6820,7 @@ def _LocalEclipse(shadow, observer):
     return LocalSolarEclipseInfo(kind, obscuration, partial_begin, total_begin, peak, total_end, partial_end)
 
 
-def _GeoidIntersect(shadow):
+def _GeoidIntersect(shadow: _ShadowInfo) -> GlobalSolarEclipseInfo:
     kind = EclipseKind.Partial
     peak = shadow.time
     distance = shadow.r
@@ -6888,7 +6916,7 @@ def _GeoidIntersect(shadow):
     return GlobalSolarEclipseInfo(kind, obscuration, peak, distance, latitude, longitude)
 
 
-def _ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes):
+def _ShadowSemiDurationMinutes(center_time: Time, radius_limit: float, window_minutes: float) -> float:
     # Search backwards and forwards from the center time until shadow axis distance crosses radius limit.
     window = window_minutes / (24.0 * 60.0)
     before = center_time.AddDays(-window)
@@ -6900,11 +6928,11 @@ def _ShadowSemiDurationMinutes(center_time, radius_limit, window_minutes):
     return (t2.ut - t1.ut) * ((24.0 * 60.0) / 2.0)   # convert days to minutes and average the semi-durations.
 
 
-def _MoonEclipticLatitudeDegrees(time):
+def _MoonEclipticLatitudeDegrees(time: Time) -> float:
     moon = _CalcMoon(time)
     return math.degrees(moon.geo_eclip_lat)
 
-def _Obscuration(a, b, c):
+def _Obscuration(a: float, b: float, c: float) -> float:
     # a = radius of first disc
     # b = radius of second disc
     # c = distance between the centers of the discs
@@ -6946,7 +6974,7 @@ def _Obscuration(a, b, c):
     return (lens1 + lens2) / (math.pi*a*a)
 
 
-def _SolarEclipseObscuration(hm, lo):
+def _SolarEclipseObscuration(hm: Vector, lo: Vector) -> float:
     # hm = heliocentric Moon
     # lo = lunacentric observer
     # Find heliocentric observer
@@ -7242,13 +7270,13 @@ class TransitInfo:
         )
 
 
-def _PlanetShadowBoundary(context, time):
+def _PlanetShadowBoundary(context: Tuple[Body, float, float], time: Time) -> float:
     (body, planet_radius_km, direction) = context
     shadow = _PlanetShadow(body, planet_radius_km, time)
     return direction * (shadow.r - shadow.p)
 
 
-def _PlanetTransitBoundary(body, planet_radius_km, t1, t2, direction):
+def _PlanetTransitBoundary(body: Body, planet_radius_km: float, t1: Time, t2: Time, direction: float) -> Time:
     # Search for the time the planet's penumbra begins/ends making contact with the center of the Earth.
     # context = new SearchContext_PlanetShadowBoundary(body, planet_radius_km, direction);
     tx = Search(_PlanetShadowBoundary, (body, planet_radius_km, direction), t1, t2, 1.0)
@@ -7375,7 +7403,7 @@ class NodeEventInfo:
 
 _MoonNodeStepDays = +10.0   # a safe number of days to step without missing a Moon node
 
-def _MoonNodeSearchFunc(direction, time):
+def _MoonNodeSearchFunc(direction: float, time: Time) -> float:
     return direction * EclipticGeoMoon(time).lat
 
 def SearchMoonNode(startTime: Time) -> NodeEventInfo:
@@ -7661,7 +7689,7 @@ class AxisInfo:
         )
 
 
-def _EarthRotationAxis(time):
+def _EarthRotationAxis(time: Time) -> AxisInfo:
     # Unlike the other planets, we have a model of precession and nutation
     # for the Earth's axis that provides a north pole vector.
     # So calculate the vector first, then derive the (RA,DEC) angles from the vector.
@@ -8198,7 +8226,7 @@ class GravitySimulator:
         # To prepare for a possible swap operation, duplicate the current state into the previous state.
         self.prev = self._Duplicate()
 
-    def Time(self):
+    def GetTime(self) -> Time:
         """The time represented by the current step of the gravity simulation.
 
         Returns
@@ -8216,7 +8244,7 @@ class GravitySimulator:
         """
         return self._originBody
 
-    def Update(self, time) -> List[StateVector]:
+    def Update(self, time: Time) -> List[StateVector]:
         """Advances the gravity simulation by a small time step.
 
         Updates the simulation of the user-supplied small bodies
@@ -8370,14 +8398,14 @@ class GravitySimulator:
         ostate = self._InternalBodyState(self._originBody)
         return _ExportState(bstate - ostate, self.curr.time)
 
-    def _InternalBodyState(self, body):
+    def _InternalBodyState(self, body: Body) -> _body_state_t:
         if body == Body.SSB:
             return _body_state_t(self.curr.time.tt, _TerseVector.zero(), _TerseVector.zero())
         if body in self.curr.gravitators:
             return self.curr.gravitators[body]
         raise Error('Invalid body: {}'.format(body))
 
-    def _CalcBodyAccelerations(self):
+    def _CalcBodyAccelerations(self) -> None:
         for b in self.curr.bodies:
             b.a = _TerseVector.zero()
             _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Sun    ].r, _SUN_GM)
@@ -8390,7 +8418,7 @@ class GravitySimulator:
             _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Uranus ].r, _URANUS_GM)
             _AddAcceleration(b.a, b.r, self.curr.gravitators[Body.Neptune].r, _NEPTUNE_GM)
 
-    def _Duplicate(self):
+    def _Duplicate(self) -> "_GravSimEndpoint":
         # Copy the current stateinto the previous state, so that both become the same moment in time.
         gravitators = {}
         for body, grav in self.curr.gravitators.items():
@@ -8403,13 +8431,13 @@ class GravitySimulator:
         return _GravSimEndpoint(self.curr.time, gravitators, bodies)
 
 class _GravSimEndpoint:
-    def __init__(self, time, gravitators, bodies):
+    def __init__(self, time: Time, gravitators: Dict[Body, _body_state_t], bodies: List[_body_grav_calc_t]):
         self.time = time
         self.gravitators = gravitators
         self.bodies = bodies
 
-def _CalcSolarSystem(time):
-    d = {}
+def _CalcSolarSystem(time: Time) -> Dict[Body, _body_state_t]:
+    d: Dict[Body, _body_state_t] = {}
     # Start with the SSB at zero position and velocity.
     ssb = _body_state_t(time.tt, _TerseVector.zero(), _TerseVector.zero())
 
@@ -8433,7 +8461,7 @@ def _CalcSolarSystem(time):
     d[Body.Sun] = _body_state_t(time.tt, -1.0 * ssb.r, -1.0 * ssb.v)
     return d
 
-def _AddAcceleration(acc, smallPos, majorPos, gm):
+def _AddAcceleration(acc: _TerseVector, smallPos: _TerseVector, majorPos: _TerseVector, gm: float) -> None:
     dx = majorPos.x - smallPos.x
     dy = majorPos.y - smallPos.y
     dz = majorPos.z - smallPos.z

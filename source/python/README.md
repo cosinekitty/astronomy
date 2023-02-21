@@ -463,7 +463,7 @@ Developers who wish to find an obscuration value for partial solar eclipses shou
 | Type | Attribute | Description |
 | --- | --- | --- |
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
-| `float` | `obscuration` | The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only). |
+| `float` or `None` | `obscuration` | The peak fraction of the Sun's apparent disc area obscured by the Moon (total and annular eclipses only). |
 | [`Time`](#Time) | `peak` | The date and time when the solar eclipse is darkest. This is the instant when the axis of the Moon's shadow cone passes closest to the Earth's center. |
 | `float` | `distance` | The distance between the Sun/Moon shadow axis and the center of the Earth, in kilometers. |
 | `float` | `latitude` | The geographic latitude at the center of the peak eclipse shadow. |
@@ -496,6 +496,13 @@ time steps.
 | [`Body`](#Body) | `originBody` | Specifies the origin of the reference frame. All position vectors and velocity vectors will use `originBody` as the origin of the coordinate system. This origin applies to all the input vectors provided in the `bodyStates` parameter of this function, along with all output vectors returned by [`GravitySimulator.Update`](#GravitySimulator.Update). Most callers will want to provide one of the following: `Body.Sun` for heliocentric coordinates, `Body.SSB` for solar system barycentric coordinates, or `Body.Earth` for geocentric coordinates. Note that the gravity simulator does not correct for light travel time; all state vectors are tied to a Newtonian "instantaneous" time. |
 | [`Time`](#Time) | `time` | The initial time at which to start the simulation. |
 | [`StateVector`](#StateVector)`[]` | `bodyStates` | An array of zero or more initial state vectors (positions and velocities) of the small bodies to be simulated. The caller must know the positions and velocities of the small bodies at an initial moment in time. Their positions and velocities are expressed with respect to `originBody`, using J2000 mean equator orientation (EQJ). Positions are expressed in astronomical units (AU). Velocities are expressed in AU/day. All the times embedded within the state vectors must exactly match `time`, or this constructor will throw an exception. |
+
+<a name="GravitySimulator.GetTime"></a>
+### GravitySimulator.GetTime(self) -&gt; astronomy.Time
+
+**The time represented by the current step of the gravity simulation.**
+
+**Returns**: [`Time`](#Time)
 
 <a name="GravitySimulator.OriginBody"></a>
 ### GravitySimulator.OriginBody(self) -&gt; astronomy.Body
@@ -548,15 +555,8 @@ passed into the constructor. Therefore, `Swap` will
 have no effect from the caller's point of view when passed a simulator
 that has not yet been updated by a call to [`GravitySimulator.Update`](#GravitySimulator.Update).
 
-<a name="GravitySimulator.Time"></a>
-### GravitySimulator.Time(self)
-
-**The time represented by the current step of the gravity simulation.**
-
-**Returns**: [`Time`](#Time)
-
 <a name="GravitySimulator.Update"></a>
-### GravitySimulator.Update(self, time) -&gt; List[astronomy.StateVector]
+### GravitySimulator.Update(self, time: astronomy.Time) -&gt; List[astronomy.StateVector]
 
 **Advances the gravity simulation by a small time step.**
 
@@ -711,9 +711,9 @@ See [`EclipseEvent`](#EclipseEvent) for more information.
 | [`EclipseKind`](#EclipseKind) | `kind` | The type of solar eclipse: `EclipseKind.Partial`, `EclipseKind.Annular`, or `EclipseKind.Total`. |
 | `float` | `obscuration` | The fraction of the Sun's apparent disc area obscured by the Moon at the eclipse peak. |
 | [`EclipseEvent`](#EclipseEvent) | `partial_begin` | The time and Sun altitude at the beginning of the eclipse. |
-| [`EclipseEvent`](#EclipseEvent) | `total_begin` | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise `None`. |
+| [`EclipseEvent`](#EclipseEvent) or `None` | `total_begin` | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase begins; otherwise `None`. |
 | [`EclipseEvent`](#EclipseEvent) | `peak` | The time and Sun altitude when the eclipse reaches its peak. |
-| [`EclipseEvent`](#EclipseEvent) | `total_end` | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise `None`. |
+| [`EclipseEvent`](#EclipseEvent) or `None` | `total_end` | If this is an annular or a total eclipse, the time and Sun altitude when annular/total phase ends; otherwise `None`. |
 | [`EclipseEvent`](#EclipseEvent) | `partial_end` | The time and Sun altitude at the end of the eclipse. |
 
 ---
@@ -1060,7 +1060,7 @@ The vector also includes a time stamp.
 Returns the length of the vector in AU.
 
 <a name="Vector.format"></a>
-### Vector.format(self, coord_format) -&gt; str
+### Vector.format(self, coord_format: str) -&gt; str
 
 Returns a custom format string representation of the vector.
 
@@ -2873,7 +2873,7 @@ A rotation matrix that converts HOR to EQJ at `time` and for `observer`.
 ---
 
 <a name="Search"></a>
-### Search(func: Callable[[object, astronomy.Time], float], context: object, t1: astronomy.Time, t2: astronomy.Time, dt_tolerance_seconds: float) -&gt; Optional[astronomy.Time]
+### Search(func: Callable[[Any, astronomy.Time], float], context: object, t1: astronomy.Time, t2: astronomy.Time, dt_tolerance_seconds: float) -&gt; Optional[astronomy.Time]
 
 **Searches for a time at which a function's value increases through zero.**
 
@@ -3141,7 +3141,7 @@ Then call [`NextMoonNode`](#NextMoonNode) to find as many more consecutive nodes
 ---
 
 <a name="SearchMoonPhase"></a>
-### SearchMoonPhase(targetLon: float, startTime: astronomy.Time, limitDays: float)
+### SearchMoonPhase(targetLon: float, startTime: astronomy.Time, limitDays: float) -&gt; Optional[astronomy.Time]
 
 **Searches for the time that the Moon reaches a specified phase.**
 
