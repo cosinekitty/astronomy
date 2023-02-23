@@ -35,8 +35,8 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GeoEmbState = exports.GeoMoonState = exports.EclipticGeoMoon = exports.GeoMoon = exports.Ecliptic = exports.ObserverGravity = exports.VectorObserver = exports.ObserverState = exports.ObserverVector = exports.Equator = exports.SunPosition = exports.Observer = exports.Horizon = exports.EclipticCoordinates = exports.HorizontalCoordinates = exports.MakeRotation = exports.RotationMatrix = exports.EquatorialCoordinates = exports.Spherical = exports.StateVector = exports.Vector = exports.SiderealTime = exports.Libration = exports.LibrationInfo = exports.CalcMoonCount = exports.e_tilt = exports.MakeTime = exports.AstroTime = exports.SetDeltaTFunction = exports.DeltaT_JplHorizons = exports.DeltaT_EspenakMeeus = exports.PlanetOrbitalPeriod = exports.DefineStar = exports.Body = exports.AngleBetween = exports.MassProduct = exports.CALLISTO_RADIUS_KM = exports.GANYMEDE_RADIUS_KM = exports.EUROPA_RADIUS_KM = exports.IO_RADIUS_KM = exports.JUPITER_MEAN_RADIUS_KM = exports.JUPITER_POLAR_RADIUS_KM = exports.JUPITER_EQUATORIAL_RADIUS_KM = exports.RAD2HOUR = exports.RAD2DEG = exports.HOUR2RAD = exports.DEG2RAD = exports.AU_PER_LY = exports.KM_PER_AU = exports.C_AUDAY = void 0;
-exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.ApsisKind = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.HourAngle = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = exports.BackdatePosition = exports.CorrectLightTravel = exports.PositionFunction = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = void 0;
-exports.GravitySimulator = exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_EQD_ECT = exports.Rotation_ECT_EQD = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_ECT_EQJ = exports.Rotation_EQJ_ECT = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = exports.InverseRefraction = void 0;
+exports.InverseRefraction = exports.Refraction = exports.VectorFromHorizon = exports.HorizonFromVector = exports.SphereFromVector = exports.EquatorFromVector = exports.VectorFromSphere = exports.Pivot = exports.IdentityMatrix = exports.CombineRotation = exports.InverseRotation = exports.NextPlanetApsis = exports.SearchPlanetApsis = exports.NextLunarApsis = exports.SearchLunarApsis = exports.Apsis = exports.ApsisKind = exports.SearchPeakMagnitude = exports.SearchMaxElongation = exports.Elongation = exports.ElongationEvent = exports.Seasons = exports.SeasonInfo = exports.HourAngle = exports.SearchHourAngle = exports.HourAngleEvent = exports.SearchAltitude = exports.SearchRiseSet = exports.NextMoonQuarter = exports.SearchMoonQuarter = exports.MoonQuarter = exports.SearchMoonPhase = exports.MoonPhase = exports.SearchRelativeLongitude = exports.Illumination = exports.IlluminationInfo = exports.EclipticLongitude = exports.AngleFromSun = exports.PairLongitude = exports.SearchSunLongitude = exports.Search = exports.HelioState = exports.BaryState = exports.GeoVector = exports.BackdatePosition = exports.CorrectLightTravel = exports.HelioDistance = exports.HelioVector = exports.JupiterMoons = exports.JupiterMoonsInfo = void 0;
+exports.GravitySimulator = exports.LagrangePointFast = exports.LagrangePoint = exports.RotationAxis = exports.AxisInfo = exports.NextMoonNode = exports.SearchMoonNode = exports.NodeEventInfo = exports.NodeEventKind = exports.NextTransit = exports.SearchTransit = exports.TransitInfo = exports.NextLocalSolarEclipse = exports.SearchLocalSolarEclipse = exports.LocalSolarEclipseInfo = exports.EclipseEvent = exports.NextGlobalSolarEclipse = exports.SearchGlobalSolarEclipse = exports.NextLunarEclipse = exports.GlobalSolarEclipseInfo = exports.SearchLunarEclipse = exports.LunarEclipseInfo = exports.EclipseKind = exports.Constellation = exports.ConstellationInfo = exports.Rotation_EQD_ECT = exports.Rotation_ECT_EQD = exports.Rotation_GAL_EQJ = exports.Rotation_EQJ_GAL = exports.Rotation_HOR_ECL = exports.Rotation_ECL_HOR = exports.Rotation_ECL_EQD = exports.Rotation_EQD_ECL = exports.Rotation_EQJ_HOR = exports.Rotation_HOR_EQJ = exports.Rotation_HOR_EQD = exports.Rotation_EQD_HOR = exports.Rotation_EQD_EQJ = exports.Rotation_ECT_EQJ = exports.Rotation_EQJ_ECT = exports.Rotation_EQJ_EQD = exports.Rotation_ECL_EQJ = exports.Rotation_EQJ_ECL = exports.RotateState = exports.RotateVector = void 0;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -3693,18 +3693,6 @@ function HelioDistance(body, date) {
 }
 exports.HelioDistance = HelioDistance;
 /**
- * @brief A function for which to solve a light-travel time problem.
- *
- * The function {@link CorrectLightTravel} solves a generalized
- * problem of deducing how far in the past light must have left
- * a target object to be seen by an observer at a specified time.
- * This interface expresses an arbitrary position vector as
- * function of time that is passed to {@link CorrectLightTravel}.
- */
-class PositionFunction {
-}
-exports.PositionFunction = PositionFunction;
-/**
  * Solve for light travel time of a vector function.
  *
  * When observing a distant object, for example Jupiter as seen from Earth,
@@ -3712,13 +3700,13 @@ exports.PositionFunction = PositionFunction;
  * observer can significantly affect the object's apparent position.
  * This function is a generic solver that figures out how long in the
  * past light must have left the observed object to reach the observer
- * at the specified observation time. It uses {@link PositionFunction}
+ * at the specified observation time. It requires passing in `func`
  * to express an arbitrary position vector as a function of time.
  *
- * This function repeatedly calls `func.Position`, passing a series of time
- * estimates in the past. Then `func.Position` must return a relative state vector between
+ * `CorrectLightTravel` repeatedly calls `func`, passing a series of time
+ * estimates in the past. Then `func` must return a relative position vector between
  * the observer and the target. `CorrectLightTravel` keeps calling
- * `func.Position` with more and more refined estimates of the time light must have
+ * `func` with more and more refined estimates of the time light must have
  * left the target to arrive at the observer.
  *
  * For common use cases, it is simpler to use {@link BackdatePosition}
@@ -3728,8 +3716,9 @@ exports.PositionFunction = PositionFunction;
  * position vector for light travel time, only it returns the observation time in
  * the returned vector's `t` field rather than the backdated time.
  *
- * @param {PositionFunction} func
- *      An arbitrary position vector as a function of time.
+ * @param {function(AstroTime): number} func
+ *      An arbitrary position vector as a function of time:
+ *      function({@link AstroTime}) =&gt; {@link Vector}.
  *
  * @param {AstroTime} time
  *      The observation time for which to solve for light travel delay.
@@ -3743,7 +3732,7 @@ function CorrectLightTravel(func, time) {
     let ltime = time;
     let dt = 0;
     for (let iter = 0; iter < 10; ++iter) {
-        const pos = func.Position(ltime);
+        const pos = func(ltime);
         const lt = pos.Length() / exports.C_AUDAY;
         // This solver does not support more than one light-day of distance,
         // because that would cause convergence problems and inaccurate
@@ -3759,9 +3748,8 @@ function CorrectLightTravel(func, time) {
     throw `Light-travel time solver did not converge: dt = ${dt}`;
 }
 exports.CorrectLightTravel = CorrectLightTravel;
-class BodyPosition extends PositionFunction {
+class BodyPosition {
     constructor(observerBody, targetBody, aberration, observerPos) {
-        super();
         this.observerBody = observerBody;
         this.targetBody = targetBody;
         this.aberration = aberration;
@@ -3863,8 +3851,8 @@ function BackdatePosition(date, observerBody, targetBody, aberration) {
     else {
         observerPos = HelioVector(observerBody, time);
     }
-    const func = new BodyPosition(observerBody, targetBody, aberration, observerPos);
-    return CorrectLightTravel(func, time);
+    const bpos = new BodyPosition(observerBody, targetBody, aberration, observerPos);
+    return CorrectLightTravel(t => bpos.Position(t), time);
 }
 exports.BackdatePosition = BackdatePosition;
 /**
@@ -4109,7 +4097,8 @@ function QuadInterp(tm, dt, fa, fm, fb) {
  * @param {function(AstroTime): number} func
  *      The function to find an ascending zero crossing for.
  *      The function must accept a single parameter of type {@link AstroTime}
- *      and return a numeric value.
+ *      and return a numeric value:
+ *      function({@link AstroTime}) =&gt; `number`
  *
  * @param {AstroTime} t1
  *      The lower time bound of a search window.

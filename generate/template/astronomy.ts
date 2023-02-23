@@ -3201,24 +3201,6 @@ export function HelioDistance(body: Body, date: FlexibleDateTime): number {
 }
 
 /**
- * @brief A function for which to solve a light-travel time problem.
- *
- * The function {@link CorrectLightTravel} solves a generalized
- * problem of deducing how far in the past light must have left
- * a target object to be seen by an observer at a specified time.
- * This interface expresses an arbitrary position vector as
- * function of time that is passed to {@link CorrectLightTravel}.
- */
-export abstract class PositionFunction {
-    /**
-     * @brief Returns a relative position vector for a given time.
-     * @param {AstroTime} time
-     *      The time at which to evaluate a relative position vector.
-     */
-    abstract Position(time: AstroTime): Vector;
-}
-
-/**
  * Solve for light travel time of a vector function.
  *
  * When observing a distant object, for example Jupiter as seen from Earth,
@@ -3226,13 +3208,13 @@ export abstract class PositionFunction {
  * observer can significantly affect the object's apparent position.
  * This function is a generic solver that figures out how long in the
  * past light must have left the observed object to reach the observer
- * at the specified observation time. It uses {@link PositionFunction}
+ * at the specified observation time. It requires passing in `func`
  * to express an arbitrary position vector as a function of time.
  *
- * This function repeatedly calls `func.Position`, passing a series of time
- * estimates in the past. Then `func.Position` must return a relative state vector between
+ * `CorrectLightTravel` repeatedly calls `func`, passing a series of time
+ * estimates in the past. Then `func` must return a relative position vector between
  * the observer and the target. `CorrectLightTravel` keeps calling
- * `func.Position` with more and more refined estimates of the time light must have
+ * `func` with more and more refined estimates of the time light must have
  * left the target to arrive at the observer.
  *
  * For common use cases, it is simpler to use {@link BackdatePosition}
@@ -3242,8 +3224,9 @@ export abstract class PositionFunction {
  * position vector for light travel time, only it returns the observation time in
  * the returned vector's `t` field rather than the backdated time.
  *
- * @param {PositionFunction} func
- *      An arbitrary position vector as a function of time.
+ * @param {function(AstroTime): number} func
+ *      An arbitrary position vector as a function of time:
+ *      function({@link AstroTime}) =&gt; {@link Vector}.
  *
  * @param {AstroTime} time
  *      The observation time for which to solve for light travel delay.
@@ -3253,11 +3236,11 @@ export abstract class PositionFunction {
  *      The `t` field holds the time that light left the observed
  *      body to arrive at the observer at the observation time.
  */
-export function CorrectLightTravel(func: PositionFunction, time: AstroTime): Vector {
+export function CorrectLightTravel(func: (t: AstroTime) => Vector, time: AstroTime): Vector {
     let ltime = time;
     let dt: number = 0;
     for (let iter = 0; iter < 10; ++iter) {
-        const pos = func.Position(ltime);
+        const pos = func(ltime);
         const lt = pos.Length() / C_AUDAY;
 
         // This solver does not support more than one light-day of distance,
@@ -3276,15 +3259,13 @@ export function CorrectLightTravel(func: PositionFunction, time: AstroTime): Vec
 }
 
 
-class BodyPosition extends PositionFunction {
+class BodyPosition {
     constructor(
         private observerBody: Body,
         private targetBody: Body,
         private aberration: boolean,
         private observerPos: Vector
-    ) {
-        super();
-    }
+    ) {}
 
     Position(time: AstroTime): Vector {
         if (this.aberration) {
@@ -3392,8 +3373,8 @@ export function BackdatePosition(
     } else {
         observerPos = HelioVector(observerBody, time);
     }
-    const func = new BodyPosition(observerBody, targetBody, aberration, observerPos);
-    return CorrectLightTravel(func, time);
+    const bpos = new BodyPosition(observerBody, targetBody, aberration, observerPos);
+    return CorrectLightTravel(t => bpos.Position(t), time);
 }
 
 
@@ -3702,7 +3683,8 @@ export interface SearchOptions {
  * @param {function(AstroTime): number} func
  *      The function to find an ascending zero crossing for.
  *      The function must accept a single parameter of type {@link AstroTime}
- *      and return a numeric value.
+ *      and return a numeric value:
+ *      function({@link AstroTime}) =&gt; `number`
  *
  * @param {AstroTime} t1
  *      The lower time bound of a search window.

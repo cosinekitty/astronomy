@@ -466,20 +466,6 @@ and the velocities in AU/day.
 
 * * *
 
-<a name="PositionFunction"></a>
-
-## PositionFunction
-**Kind**: global class  
-**Brief**: A function for which to solve a light-travel time problem.
-
-The function [CorrectLightTravel](#CorrectLightTravel) solves a generalized
-problem of deducing how far in the past light must have left
-a target object to be seen by an observer at a specified time.
-This interface expresses an arbitrary position vector as
-function of time that is passed to [CorrectLightTravel](#CorrectLightTravel).  
-
-* * *
-
 <a name="IlluminationInfo"></a>
 
 ## IlluminationInfo
@@ -1307,13 +1293,13 @@ the amount of time it takes for light to travel from the object to the
 observer can significantly affect the object's apparent position.
 This function is a generic solver that figures out how long in the
 past light must have left the observed object to reach the observer
-at the specified observation time. It uses [PositionFunction](#PositionFunction)
+at the specified observation time. It requires passing in `func`
 to express an arbitrary position vector as a function of time.
 
-This function repeatedly calls `func.Position`, passing a series of time
-estimates in the past. Then `func.Position` must return a relative state vector between
+`CorrectLightTravel` repeatedly calls `func`, passing a series of time
+estimates in the past. Then `func` must return a relative position vector between
 the observer and the target. `CorrectLightTravel` keeps calling
-`func.Position` with more and more refined estimates of the time light must have
+`func` with more and more refined estimates of the time light must have
 left the target to arrive at the observer.
 
 For common use cases, it is simpler to use [BackdatePosition](#BackdatePosition)
@@ -1330,7 +1316,7 @@ the returned vector's `t` field rather than the backdated time.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| func | [<code>PositionFunction</code>](#PositionFunction) | An arbitrary position vector as a function of time. |
+| func | <code>function</code> | An arbitrary position vector as a function of time:      function([AstroTime](#AstroTime)) =&gt; [Vector](#Vector). |
 | time | [<code>AstroTime</code>](#AstroTime) | The observation time for which to solve for light travel delay. |
 
 
@@ -2779,7 +2765,7 @@ or even that the function will return `null`, indicating that no event was found
 
 | Param | Type | Description |
 | --- | --- | --- |
-| func | <code>function</code> | The function to find an ascending zero crossing for.      The function must accept a single parameter of type [AstroTime](#AstroTime)      and return a numeric value. |
+| func | <code>function</code> | The function to find an ascending zero crossing for.      The function must accept a single parameter of type [AstroTime](#AstroTime)      and return a numeric value:      function([AstroTime](#AstroTime)) =&gt; `number` |
 | t1 | [<code>AstroTime</code>](#AstroTime) | The lower time bound of a search window. |
 | t2 | [<code>AstroTime</code>](#AstroTime) | The upper time bound of a search window. |
 | options | [<code>SearchOptions</code>](#SearchOptions) \| <code>undefined</code> | Options that can tune the behavior of the search.      Most callers can omit this argument. |
