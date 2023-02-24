@@ -4422,11 +4422,19 @@ namespace csharp_test
         static int StringsTest()
         {
             var time = new AstroTime(2023, 2, 14, 9, 45, 30.0);
-            var vec = new AstroVector(1.0 / 7.0, 4.0 / 3.0, 5.0e-6 / 13.0, time);
-            string text = vec.ToString();
+            var pos = new AstroVector(1.0 / 7.0, 4.0 / 3.0, 5.0e-6 / 13.0, time);
+            string text = pos.ToString();
             string correct = "(0.1428571428571428, 1.333333333333333, 3.846153846153846E-07, 2023-02-14T09:45:30.000Z)";
             if (text != correct)
-                return Fail($"StringsTest: expected vector text [{correct}] but found [{text}]");
+                return Fail($"StringsTest: expected AstroVector text [{correct}] but found [{text}]");
+
+            var vel = new AstroVector(1.1, 2.2, 3.3, time);
+            var state = new StateVector(pos, vel, time);
+            text = state.ToString();
+            correct = "(0.1428571428571428, 1.333333333333333, 3.846153846153846E-07, 1.1, 2.2, 3.3, 2023-02-14T09:45:30.000Z)";
+            if (text != correct)
+                return Fail($"StringsTest: expected StateVector text [{correct}] but found [{text}]");
+
             return Pass("StringsTest");
         }
 

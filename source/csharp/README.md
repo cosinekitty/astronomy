@@ -3491,6 +3491,11 @@ along with the velocity vector of the point, expressed in AU/day.
 
 **Returns the position vector associated with this state vector.**
 
+<a name="StateVector.ToString"></a>
+### StateVector.ToString() &#8658; `string`
+
+**Converts the state vector to a string of the format (x, y, z, vx, vy, vz, t).**
+
 <a name="StateVector.Velocity"></a>
 ### StateVector.Velocity() &#8658; [`AstroVector`](#AstroVector)
 

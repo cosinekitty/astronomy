@@ -702,6 +702,14 @@ namespace CosineKitty
         }
 
         /// <summary>
+        /// Converts the state vector to a string of the format (x, y, z, vx, vy, vz, t).
+        /// </summary>
+        public override string ToString()
+        {
+            return $"({x:G16}, {y:G16}, {z:G16}, {vx:G16}, {vy:G16}, {vz:G16}, {t})";
+        }
+
+        /// <summary>
         /// Returns the position vector associated with this state vector.
         /// </summary>
         public AstroVector Position()
