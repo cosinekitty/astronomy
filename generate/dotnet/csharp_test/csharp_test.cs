@@ -85,6 +85,7 @@ namespace csharp_test
             new Test("sidereal", SiderealTimeTest),
             new Test("solar_fraction", SolarFractionTest),
             new Test("star_risesetculm", StarRiseSetCulm),
+            new Test("strings", StringsTest),
             new Test("transit", TransitTest),
             new Test("astro_check", AstroCheck),
             new Test("barystate", BaryStateTest),
@@ -4414,6 +4415,19 @@ namespace csharp_test
                         return 1;
 
             return Pass($"{nameof(HourAngleTest)} ({cases} cases, maxdiff = {maxdiff:G4})");
+        }
+
+        //-----------------------------------------------------------------------------------------
+
+        static int StringsTest()
+        {
+            var time = new AstroTime(2023, 2, 14, 9, 45, 30.0);
+            var vec = new AstroVector(1.0 / 7.0, 4.0 / 3.0, 5.0e-6 / 13.0, time);
+            string text = vec.ToString();
+            string correct = "(0.1428571428571428, 1.333333333333333, 3.846153846153846E-07, 2023-02-14T09:45:30.000Z)";
+            if (text != correct)
+                return Fail($"StringsTest: expected vector text [{correct}] but found [{text}]");
+            return Pass("StringsTest");
         }
 
         //-----------------------------------------------------------------------------------------

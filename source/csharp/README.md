@@ -2642,6 +2642,11 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 
 **Returns:** The nonnegative length of the Cartisian vector in AU.
 
+<a name="AstroVector.ToString"></a>
+### AstroVector.ToString() &#8658; `string`
+
+**Converts the vector to a string of the format (x, y, z, t).**
+
 ---
 
 <a name="AxisInfo"></a>

@@ -529,6 +529,14 @@ namespace CosineKitty
         }
 
         /// <summary>
+        /// Converts the vector to a string of the format (x, y, z, t).
+        /// </summary>
+        public override string ToString()
+        {
+            return $"({x:G16}, {y:G16}, {z:G16}, {t})";
+        }
+
+        /// <summary>
         /// Calculates the total distance in AU represented by this vector.
         /// </summary>
         /// <returns>The nonnegative length of the Cartisian vector in AU.</returns>
