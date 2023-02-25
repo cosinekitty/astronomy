@@ -1094,17 +1094,28 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
     astro_utc_t utc;
     long jd, k, m, n;
     double djd, x;
+    const long c = 2500L;
 
     djd = time.ut + 2451545.5;
     jd = (long)djd;
 
     x = 24.0 * fmod(djd, 1.0);
+    if (x < 0.0)
+        x += 24.0;
     utc.hour = (int)x;
     x = 60.0 * fmod(x, 1.0);
     utc.minute = (int)x;
     utc.second = 60.0 * fmod(x, 1.0);
 
-    k = jd + 68569L;
+    // This is my own adjustment to the NOVAS cal_date logic
+    // so that it can handle dates much farther back in the past.
+    // I add c*400 years worth of days at the front,
+    // then subtract c*400 years at the back,
+    // which avoids negative values in the formulas that mess up
+    // the calendar date calculations.
+    // Any multiple of 400 years has the same number of days,
+    // because it eliminates all the special cases for leap years.
+    k = jd + (68569L + c*146097L);
     n = 4L * k / 146097L;
     k = k - (146097L * n + 3L) / 4L;
     m = 4000L * (k + 1L) / 1461001L;
@@ -1115,7 +1126,7 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
     k = (long) utc.month / 11L;
 
     utc.month = (int) ((long)utc.month + 2L - 12L * k);
-    utc.year = (int) (100L * (n - 49L) + m + k);
+    utc.year = (int) (100L * (n - 49L) + m + k - 400L*c);
 
     return utc;
 }

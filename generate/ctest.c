@@ -494,6 +494,14 @@ static int Test_AstroTime(void)
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MINUTE, ASTRO_SUCCESS, "2021-01-01T00:00Z"));
     CHECK(CheckTimeFormat(time, TIME_FORMAT_DAY,    ASTRO_SUCCESS, "2020-12-31"));
 
+    // The verification texts are intentionally off by a millisecond or two in the following
+    // two test cases, because the extreme year values expose floating point precision limitions.
+    time = Astronomy_MakeTime(-999999, 1, 14, 22, 55, 12.0);
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI, ASTRO_SUCCESS, "-999999-01-14T22:55:11.998Z"));
+
+    time = Astronomy_MakeTime(+999999, 11, 30, 8, 15, 45.0);
+    CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI, ASTRO_SUCCESS, "+999999-11-30T08:15:44.999Z"));
+
     FPASS();
 fail:
     return error;
