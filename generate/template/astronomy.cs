@@ -27,7 +27,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CosineKitty
 {
@@ -340,6 +342,74 @@ namespace CosineKitty
             return $"{y}-{d.month:00}-{d.day:00}T{d.hour:00}:{d.minute:00}:{millis/1000:00}.{millis%1000:000}Z";
         }
 
+        private static Regex re = new Regex(
+            @"^
+            ([\+\-]?[0-9]{4,6})     # 1 : year  : should be 4-digit, or 6-digit with +/- prefix, but be flexible
+            -(0[0-9]|1[012])        # 2 : month
+            -([012][0-9]|3[01])     # 3 : day
+            T([01][0-9]|2[0-3])     # 4 : hour
+            :([0-5][0-9])           # 5 : minute
+            (                       # 6
+                :
+                (                   # 7
+                    [0-5][0-9]      # optional seconds
+                    (\.[0-9]+)?     # optional fraction of a second
+                )
+            )?
+            Z$                      # terminator",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
+        );
+
+        /// <summary>
+        /// Converts a string of the format returned by #AstroTime.ToString back into an `AstroTime`.
+        /// </summary>
+        /// <remarks>
+        /// This function attempts to parse an ISO 8601 formatted date and time string
+        /// into an `AstroTime` object.
+        /// If the string is valid, sets `time` to a new object and returns `true`.
+        /// If the string is not valid, sets `time` to `null` and returns `false`.
+        /// </remarks>
+        /// <param name="text">The string from which to parse a date and time.</param>
+        /// <param name="time">On success, receives the date and time value. On failure, receives `null`.</param>
+        public static bool TryParse(string text, out AstroTime time)
+        {
+            time = null;
+
+            if (text == null)
+                return false;
+
+            Match m = re.Match(text);
+            if (!m.Success)
+                return false;
+
+            if (!int.TryParse(m.Groups[1].Value, out int year))
+                return false;
+
+            if (!int.TryParse(m.Groups[2].Value, out int month))
+                return false;
+
+            if (!int.TryParse(m.Groups[3].Value, out int day))
+                return false;
+
+            if (!int.TryParse(m.Groups[4].Value, out int hour))
+                return false;
+
+            if (!int.TryParse(m.Groups[5].Value, out int minute))
+                return false;
+
+            double second = 0.0;
+            string stext = m.Groups[7].Value;
+            if (!string.IsNullOrEmpty(stext))
+            {
+                var styles = NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
+                if (!double.TryParse(stext, styles, CultureInfo.InvariantCulture, out second))
+                    return false;
+            }
+
+            time = new AstroTime(year, month, day, hour, minute, second);
+            return true;
+        }
+
         /// <summary>
         /// Calculates the sum or difference of an #AstroTime with a specified floating point number of days.
         /// </summary>
@@ -407,14 +477,25 @@ namespace CosineKitty
 
             double djd = ut + 2451545.5;
             long jd = (long)djd;
-
             double x = 24.0 * (djd % 1.0);
+            if (x < 0.0)
+                x += 24.0;
             hour = (int)x;
             x = 60.0 * (x % 1.0);
             minute = (int)x;
             second = 60.0 * (x % 1.0);
 
-            long k = jd + 68569L;
+            // This is my own adjustment to the NOVAS cal_date logic
+            // so that it can handle dates much farther back in the past.
+            // I add c*400 years worth of days at the front,
+            // then subtract c*400 years at the back,
+            // which avoids negative values in the formulas that mess up
+            // the calendar date calculations.
+            // Any multiple of 400 years has the same number of days,
+            // because it eliminates all the special cases for leap years.
+            const long c = 2500L;
+
+            long k = jd + (68569L + c*146097L);
             long n = 4L * k / 146097L;
             k = k - (146097L * n + 3L) / 4L;
             long m = 4000L * (k + 1L) / 1461001L;
@@ -425,7 +506,10 @@ namespace CosineKitty
             k = (long) month / 11L;
 
             month = (int) ((long)month + 2L - 12L * k);
-            year = (int) (100L * (n - 49L) + m + k);
+            year = (int) (100L * (n - 49L) + m + k - 400L*c);
+
+            if (month < 1 || day < 1 || year < -999999 || year > +999999)
+                throw new ArgumentOutOfRangeException("The supplied time is too far from the year 2000 to be represented.");
         }
     }
 
@@ -534,6 +618,43 @@ namespace CosineKitty
         public override string ToString()
         {
             return $"({x:G16}, {y:G16}, {z:G16}, {t})";
+        }
+
+        // (0.1428571428571428, 1.333333333333333, 3.846153846153846E-07, 2023-02-14T09:45:30.000Z)
+        private static Regex re = new Regex(
+            @"^\s*\(\s*                 # (
+            ([^\s,]+) \s* , \s*         # x ,
+            ([^\s,]+) \s* , \s*         # y ,
+            ([^\s,]+) \s* , \s*         # z ,
+            ([^\s\)]+) \s* \) \s* $     # t )",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
+        );
+
+        /// <summary>
+        /// Parses a vector from a string as formatted by #AstroVector.ToString.
+        /// On success, `vector` receives the vector and the function returns `true`.
+        /// Otherwise, `vector` receives the value (0, 0, 0, null) and the function returns `false`.
+        /// </summary>
+        /// <param name="text">A string of the form "(x, y, z, t)".</param>
+        /// <param name="vector">Receives the output vector.</param>
+        public static bool TryParse(string text, out AstroVector vector)
+        {
+            vector = new AstroVector();
+            if (text != null)
+            {
+                Match m = re.Match(text);
+                if (m.Success)
+                {
+                    var styles = NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
+                    return (
+                        double.TryParse(m.Groups[1].Value, styles, CultureInfo.InvariantCulture, out vector.x) &&
+                        double.TryParse(m.Groups[2].Value, styles, CultureInfo.InvariantCulture, out vector.y) &&
+                        double.TryParse(m.Groups[3].Value, styles, CultureInfo.InvariantCulture, out vector.z) &&
+                        AstroTime.TryParse(m.Groups[4].Value, out vector.t)
+                    );
+                }
+            }
+            return false;
         }
 
         /// <summary>

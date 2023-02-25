@@ -13,8 +13,9 @@ namespace csharp_test
     class Program
     {
         static bool Verbose;
-        const double SECONDS_PER_DAY = 86400.0;
-        const double MINUTES_PER_DAY =  1440.0;
+        const double MINUTES_PER_DAY = 24.0 * 60.0;
+        const double SECONDS_PER_DAY = MINUTES_PER_DAY * 60.0;
+        const double MILLISECONDS_PER_DAY = SECONDS_PER_DAY * 1000.0;
 
         static void Debug(string format, params object[] args)
         {
@@ -3100,21 +3101,8 @@ namespace csharp_test
         static int PlutoCheckDate(double ut, double arcmin_tolerance, double x, double y, double z)
         {
             var time = new AstroTime(ut);
-            string timeText;
 
-            try
-            {
-                timeText = time.ToString();
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                // One of the dates we pass in is before the year 0000.
-                // The DateTime class can't handle this.
-                timeText = "???";
-            }
-
-            Debug("C# PlutoCheck: {0} = {1} UT = {2} TT", timeText, time.ut, time.tt);
-
+            Debug("C# PlutoCheck: {0} = {1} UT = {2} TT", time, time.ut, time.tt);
             AstroVector vector = Astronomy.HelioVector(Body.Pluto, time);
             double dx = v(vector.x - x);
             double dy = v(vector.y - y);
@@ -4419,23 +4407,92 @@ namespace csharp_test
 
         //-----------------------------------------------------------------------------------------
 
-        static int StringsTest()
+        static int TimeStringCase(AstroTime time, string correct)
         {
+            string text = time.ToString();
+            if (text != correct)
+                return Fail($"{nameof(TimeStringCase)}: expected [{correct}] but found [{text}]");
+
+            if (!AstroTime.TryParse(text, out AstroTime check))
+                return Fail($"{nameof(TimeStringCase)}: AstroTime.TryParse returned false for [{text}]");
+
+            double diffMillis = MILLISECONDS_PER_DAY * abs(check.ut - time.ut);
+            if (diffMillis > 0.5)
+                return Fail($"{nameof(TimeStringCase)}: EXCESSIVE error = {diffMillis:G3} milliseconds parsing [{text}]");
+
+            return 0;
+        }
+
+        static int TimeStringTest()
+        {
+            // Test all 3 special cases for how time strings can be formatted.
+            // Note that string representations for some extreme year values are a millisecond off.
+            // This is not a mistake; there are unavoidable limits to floating point precision
+            // in the underlying calculuations.
+
+            return (
+                0 == TimeStringCase(new AstroTime(   2023,  2, 14,  9, 45, 30.123),     "2023-02-14T09:45:30.123Z") &&
+                0 == TimeStringCase(new AstroTime(  12345, 12, 25, 18, 23, 49.876),  "+012345-12-25T18:23:49.876Z") &&
+                0 == TimeStringCase(new AstroTime( -12345, 12, 25, 18, 23, 49.876),  "-012345-12-25T18:23:49.876Z") &&
+                0 == TimeStringCase(new AstroTime(-999999,  1, 14, 22, 55, 12.471),  "-999999-01-14T22:55:12.472Z") &&
+                0 == TimeStringCase(new AstroTime(+999999,  1, 14, 22, 55, 12.471),  "+999999-01-14T22:55:12.472Z")
+            ) ? 0 : 1;
+        }
+
+        static int VectorStringTest()
+        {
+            // Verify we can convert a Vector to a string.
             var time = new AstroTime(2023, 2, 14, 9, 45, 30.0);
             var pos = new AstroVector(1.0 / 7.0, 4.0 / 3.0, 5.0e-6 / 13.0, time);
             string text = pos.ToString();
-            string correct = "(0.1428571428571428, 1.333333333333333, 3.846153846153846E-07, 2023-02-14T09:45:30.000Z)";
+            const string correct = "(0.1428571428571428, 1.333333333333333, 3.846153846153846E-07, 2023-02-14T09:45:30.000Z)";
             if (text != correct)
-                return Fail($"StringsTest: expected AstroVector text [{correct}] but found [{text}]");
+                return Fail($"{nameof(VectorStringTest)}: expected AstroVector text [{correct}] but found [{text}]");
 
+            // Verify we can convert the string back to the same Vector.
+            if (AstroVector.TryParse(text, out AstroVector checkPos))
+            {
+                // Verify the position vector.
+                double diffAu = v((checkPos - pos).Length());
+                if (diffAu > 3.0e-16)
+                    return Fail($"{nameof(VectorStringTest)}: AstroVector EXCESSIVE diff = {diffAu:E5}");
+
+                // Verify the time.
+                double diffMillis = MILLISECONDS_PER_DAY * abs(checkPos.t.ut - time.ut);
+                if (diffMillis > 0.5)
+                    return Fail($"{nameof(VectorStringTest)}: EXCESSIVE error = {diffMillis:G3} milliseconds in parsed vector [{text}].");
+            }
+            else
+                return Fail($"{nameof(VectorStringTest)}: AstroVector.TryParse returned false for [{text}]");
+
+            return 0;
+        }
+
+        static int StateVectorStringTest()
+        {
+            var time = new AstroTime(2023, 2, 14, 9, 45, 30.0);
+
+            // Verify we can convert a StateVector to a string.
+            var pos = new AstroVector(1.0 / 7.0, 4.0 / 3.0, 5.0e-6 / 13.0, time);
             var vel = new AstroVector(1.1, 2.2, 3.3, time);
             var state = new StateVector(pos, vel, time);
-            text = state.ToString();
-            correct = "(0.1428571428571428, 1.333333333333333, 3.846153846153846E-07, 1.1, 2.2, 3.3, 2023-02-14T09:45:30.000Z)";
+            string text = state.ToString();
+            const string correct = "(0.1428571428571428, 1.333333333333333, 3.846153846153846E-07, 1.1, 2.2, 3.3, 2023-02-14T09:45:30.000Z)";
             if (text != correct)
-                return Fail($"StringsTest: expected StateVector text [{correct}] but found [{text}]");
+                return Fail($"{nameof(StateVectorStringTest)}: expected StateVector text [{correct}] but found [{text}]");
 
-            return Pass("StringsTest");
+            // Verify we can convert the string back to the same StateVector.
+
+            return 0;
+        }
+
+        static int StringsTest()
+        {
+            return (
+                0 == TimeStringTest() &&
+                0 == VectorStringTest() &&
+                0 == StateVectorStringTest()
+            ) ? Pass(nameof(StringsTest)) : 1;
         }
 
         //-----------------------------------------------------------------------------------------
