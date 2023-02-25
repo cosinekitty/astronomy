@@ -1000,13 +1000,14 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
     long y = (long)year;
     long m = (long)month;
     long d = (long)day;
+    long f = (14L - m) / 12L;
 
     /* This formula is adapted from NOVAS C 3.1 function julian_date() */
     long y2000 = (
         (d - 2483620L)
-        + 1461L*(y + 4800L - (14L - m) / 12L)/4L
-        + 367L*(m - 2L + (14L - m) / 12L * 12L)/12L
-        - 3L*((y + 4900L - (14L - m) / 12L) / 100L)/4L
+        + 1461L*(y + 4800L - f)/4L
+        + 367L*(m - 2L + 12L*f)/12L
+        - 3L*((y + 4900L - f) / 100L)/4L
     );
 
     time.ut = (y2000 - 0.5) + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0);
@@ -1101,14 +1102,16 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
     utc.minute = (int)x;
     utc.second = 60.0 * fmod(x, 1.0);
 
-    // This is my own adjustment to the NOVAS cal_date logic
-    // so that it can handle dates much farther back in the past.
-    // I add c*400 years worth of days at the front,
-    // then subtract c*400 years at the back,
-    // which avoids negative values in the formulas that mess up
-    // the calendar date calculations.
-    // Any multiple of 400 years has the same number of days,
-    // because it eliminates all the special cases for leap years.
+    /*
+        This is my own adjustment to the NOVAS cal_date logic
+        so that it can handle dates much farther back in the past.
+        I add c*400 years worth of days at the front,
+        then subtract c*400 years at the back,
+        which avoids negative values in the formulas that mess up
+        the calendar date calculations.
+        Any multiple of 400 years has the same number of days,
+        because it eliminates all the special cases for leap years.
+    */
     k = jd + (68569L + c*146097L);
     n = 4L * k / 146097L;
     k = k - (146097L * n + 3L) / 4L;

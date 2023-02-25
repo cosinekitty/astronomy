@@ -275,6 +275,11 @@ def _UniversalTime(tt: float) -> float:
 
 _TimeRegex = re.compile(r'^([\+\-]?[0-9]+)-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
 
+def _cdiv(numer: int, denom: int) -> int:
+    '''Divide negative numbers the same way C does: rounding toward zero, not down.'''
+    sign = +1 if (numer * denom) >= 0 else -1
+    return sign * (abs(numer) // abs(denom))
+
 class Time:
     """Represents a date and time used for performing astronomy calculations.
 
@@ -421,11 +426,12 @@ class Time:
         y = int(year)
         m = int(month)
         d = int(day)
-        y2000 = float(
+        f = (14 - m) // 12
+        y2000 = (
             (d - 2483620)
-            + 1461 * (y + 4800 - (14 - m) // 12) // 4
-            + 367 * (m - 2 + (14 - m) // 12 * 12) // 12
-            - 3 * ((y + 4900 - (14 - m) // 12) // 100) // 4
+            + _cdiv(1461 * (y + 4800 - f), 4)
+            + _cdiv(367 * (m - 2 + f*12), 12)
+            - _cdiv(3 * _cdiv(y + 4900 - f, 100), 4)
         )
         ut = (y2000 - 0.5) + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0)
         return Time(ut)
@@ -481,6 +487,8 @@ class Time:
         djd = self.ut + 2451545.5
         jd = int(djd)
         x = 24.0 * math.fmod(djd, 1.0)
+        if x < 0.0:
+            x += 24.0
         hour = int(x)
         x = 60.0 * math.fmod(x, 1.0)
         minute = int(x)
@@ -494,7 +502,8 @@ class Time:
                 if hour >= 24:
                     hour -= 24
                     jd += 1
-        k = jd + 68569
+        c = 2500
+        k = jd + (68569 + c*146097)
         n = 4 * k // 146097
         k = k - (146097 * n + 3) // 4
         m = 4000 * (k + 1) // 1461001
@@ -503,7 +512,7 @@ class Time:
         day = k - 2447 * month // 80
         k = month // 11
         month = month + 2 - 12 * k
-        year = 100 * (n - 49) + m + k
+        year = 100 * (n - 49) + m + k - c*400
         millis = max(0, min(59999, round(1000.0 * second)))
         if year < 0:
             text = '-{:06d}'.format(-year)
