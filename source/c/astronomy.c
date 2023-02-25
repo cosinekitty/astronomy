@@ -1006,14 +1006,22 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
     long y = (long)year;
     long m = (long)month;
     long d = (long)day;
-    long f = (14L - m) / 12L;
+    long f = (14 - m) / 12;
 
-    /* This formula is adapted from NOVAS C 3.1 function julian_date() */
+    /*
+        This formula is adapted from NOVAS C 3.1 function julian_date(),
+        which in turn comes from Henry F. Fliegel & Thomas C. Van Flendern:
+        Communications of the ACM, Vol 11, No 10, October 1968, p. 657.
+        See: https://dl.acm.org/doi/pdf/10.1145/364096.364097
+
+        [Don Cross - 2023-02-25] I modified the formula so that it will
+        work correctly with years as far back as -999999.
+    */
     long y2000 = (
-        (d - 2483620L)
-        + 1461L*(y + 4800L - f)/4L
-        + 367L*(m - 2L + 12L*f)/12L
-        - 3L*((y + 4900L - f) / 100L)/4L
+        (d - 365972956)
+        + (1461*(y + 1000000 - f))/4
+        + (367*(m - 2 + 12*f))/12
+        - (3*((y + 1000100 - f) / 100))/4
     );
 
     time.ut = (y2000 - 0.5) + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0);
@@ -1098,7 +1106,7 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
     const long c = 2500L;
 
     djd = time.ut + 2451545.5;
-    jd = (long)djd;
+    jd = (long)floor(djd);
 
     x = 24.0 * fmod(djd, 1.0);
     if (x < 0.0)

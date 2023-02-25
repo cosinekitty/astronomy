@@ -443,23 +443,48 @@ fail:
 }
 
 
+static int CalendarCase(int year, int month, int day, int hour, int minute, double second)
+{
+    int error;
+    astro_time_t time;
+    astro_utc_t utc;
+    double diff;
+    char repr[30];
+
+    snprintf(repr, sizeof(repr), "%04d-%02d-%02dT%02d:%02dZ", year, month, day, hour, minute);
+
+    time = Astronomy_MakeTime(year, month, day, hour, minute, second);
+
+    utc = Astronomy_UtcFromTime(time);
+    if (utc.year != year || utc.month != month || utc.day != day || utc.hour != hour || utc.minute != minute)
+    {
+        FFAIL("UtcFromTime FAILURE - Expected %s, found %04d-%02d-%02dT%02d:%02dZ, ut = %0.6lf\n",
+            repr,
+            utc.year, utc.month, utc.day, utc.hour, utc.minute,
+            time.ut);
+    }
+
+    diff = utc.second - second;
+    if (ABS(diff) > 0.0003)
+        FFAIL("excessive UTC second error %lg\n", diff);
+
+    FDEBUG("PASS: [%s] ut=%0.12lf, tt=%0.12lf\n", repr, time.ut, time.tt);
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int Test_AstroTime(void)
 {
     int error = 1;
     astro_time_t time;
-    astro_utc_t utc;
     const double expected_ut = 6910.270978506945;
     const double expected_tt = 6910.271800214368;
     double diff;
+    int year;
 
-    const int year = 2018;
-    const int month = 12;
-    const int day = 2;
-    const int hour = 18;
-    const int minute = 30;
-    const double second = 12.543;
-
-    time = Astronomy_MakeTime(year, month, day, hour, minute, second);
+    time = Astronomy_MakeTime(2018, 12, 2, 18, 30, 12.543);
     FDEBUG("ut=%0.12lf, tt=%0.12lf\n", time.ut, time.tt);
 
     diff = time.ut - expected_ut;
@@ -470,17 +495,11 @@ static int Test_AstroTime(void)
     if (ABS(diff) > 1.0e-12)
         FFAIL("excessive TT error %lg\n", diff);
 
-    utc = Astronomy_UtcFromTime(time);
-    if (utc.year != year || utc.month != month || utc.day != day || utc.hour != hour || utc.minute != minute)
-    {
-        FFAIL("UtcFromTime FAILURE - Expected %04d-%02d-%02dT%02d:%02dZ, found %04d-%02d-%02dT%02d:%02dZ\n",
-            year, month, day, hour, minute,
-            utc.year, utc.month, utc.day, utc.hour, utc.minute);
-    }
+    for (year = 2400; year >= -5400; --year)
+        CHECK(CalendarCase(year, 12,  2, 18, 30, 12.543));
 
-    diff = utc.second - second;
-    if (ABS(diff) > 2.0e-5)
-        FFAIL("excessive UTC second error %lg\n", diff);
+    for (year = -999999; year <= -999599; ++year)
+        CHECK(CalendarCase(year, 12,  2, 18, 30, 12.543));
 
     time = Astronomy_MakeTime(2020, 12, 31, 23, 59, 59.4994);
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI,  ASTRO_SUCCESS, "2020-12-31T23:59:59.499Z"));
@@ -494,8 +513,8 @@ static int Test_AstroTime(void)
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MINUTE, ASTRO_SUCCESS, "2021-01-01T00:00Z"));
     CHECK(CheckTimeFormat(time, TIME_FORMAT_DAY,    ASTRO_SUCCESS, "2020-12-31"));
 
-    // The verification texts are intentionally off by a millisecond or two in the following
-    // two test cases, because the extreme year values expose floating point precision limitions.
+    /* The verification texts are intentionally off by a millisecond or two in the following */
+    /* two test cases, because the extreme year values expose floating point precision limitions. */
     time = Astronomy_MakeTime(-999999, 1, 14, 22, 55, 12.0);
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI, ASTRO_SUCCESS, "-999999-01-14T22:55:11.998Z"));
 
