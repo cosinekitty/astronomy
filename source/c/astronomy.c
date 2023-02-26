@@ -25,11 +25,12 @@
     SOFTWARE.
 */
 
+#include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <math.h>
 #include "astronomy.h"
 
 #ifdef __FAST_MATH__
@@ -1003,10 +1004,10 @@ astro_time_t Astronomy_CurrentTime(void)
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second)
 {
     astro_time_t time;
-    long y = (long)year;
-    long m = (long)month;
-    long d = (long)day;
-    long f = (14 - m) / 12;
+    int64_t y = (int64_t)year;
+    int64_t m = (int64_t)month;
+    int64_t d = (int64_t)day;
+    int64_t f = (14 - m) / 12;
 
     /*
         This formula is adapted from NOVAS C 3.1 function julian_date(),
@@ -1017,7 +1018,7 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
         [Don Cross - 2023-02-25] I modified the formula so that it will
         work correctly with years as far back as -999999.
     */
-    long y2000 = (
+    int64_t y2000 = (
         (d - 365972956)
         + (1461*(y + 1000000 - f))/4
         + (367*(m - 2 + 12*f))/12
@@ -1101,12 +1102,12 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
 {
     /* Adapted from the NOVAS C 3.1 function cal_date() */
     astro_utc_t utc;
-    long jd, k, m, n;
+    int64_t jd, k, m, n;
     double djd, x;
-    const long c = 2500;
+    const int64_t c = 2500;
 
     djd = time.ut + 2451545.5;
-    jd = (long)floor(djd);
+    jd = (int64_t)floor(djd);
 
     x = 24.0 * fmod(djd, 1.0);
     if (x < 0.0)
@@ -1153,9 +1154,11 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
  *
  * @param time
  *      The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string.
- *      If the civil time is outside the year range 0000 to 9999, the function fails
+ *      If the civil time is outside the year range -999999 to +999999, the function fails
  *      and returns `ASTRO_BAD_TIME`. Years prior to 1583 are treated as if they are
  *      using the modern Gregorian calendar, even when the Julian calendar was actually in effect.
+ *      The year before 1 AD, commonly known as 1 BC, is represented by the value 0.
+ *      The year 2 BC is represented by -1, etc.
  *
  * @param format
  *      Specifies the resolution to which the date and time should be formatted,
