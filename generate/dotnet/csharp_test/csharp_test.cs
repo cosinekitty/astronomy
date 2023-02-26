@@ -4516,12 +4516,32 @@ namespace csharp_test
             return 0;
         }
 
+        static int ObserverStringCase(double latitude, double longitude, double height, string correct)
+        {
+            var observer = new Observer(latitude, longitude, height);
+            var text = observer.ToString();
+            if (text != correct)
+                return Fail($"{nameof(ObserverStringCase)}: expected [{correct}] but generated [{text}]");
+            return 0;
+        }
+
+        static int ObserverStringTest()
+        {
+            return (
+                0 == ObserverStringCase(+26.728965,  -93.157562, 1234.567, "(N 26.728965, W 093.157562, 1234.567 m)") &&
+                0 == ObserverStringCase(-26.728965,  -93.157562, 1234.567, "(S 26.728965, W 093.157562, 1234.567 m)") &&
+                0 == ObserverStringCase(+26.728965,  +93.157562, 1234.567, "(N 26.728965, E 093.157562, 1234.567 m)") &&
+                0 == ObserverStringCase(+26.728965, +171.157562,    0.0,   "(N 26.728965, E 171.157562, 0.000 m)")
+            ) ? 0 : 1;
+        }
+
         static int StringsTest()
         {
             return (
                 0 == TimeStringTest() &&
                 0 == VectorStringTest() &&
-                0 == StateVectorStringTest()
+                0 == StateVectorStringTest() &&
+                0 == ObserverStringTest()
             ) ? Pass(nameof(StringsTest)) : 1;
         }
 

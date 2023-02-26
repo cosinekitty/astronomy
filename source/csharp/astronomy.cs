@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace CosineKitty
@@ -1003,6 +1004,24 @@ namespace CosineKitty
             this.latitude = latitude;
             this.longitude = longitude;
             this.height = height;
+        }
+
+        /// <summary>
+        /// Converts an `Observer` to a string representation like `(N 26.728965, W 093.157562, 1234.567 m)`.
+        /// </summary>
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append("(");
+            sb.Append(latitude < 0.0 ? "S " : "N ");
+            sb.Append(Math.Abs(latitude).ToString("00.000000"));
+            sb.Append(", ");
+            sb.Append(longitude < 0.0 ? "W " : "E ");
+            sb.Append(Math.Abs(longitude).ToString("000.000000"));
+            sb.Append(", ");
+            sb.Append(height.ToString("0.000"));
+            sb.Append(" m)");
+            return sb.ToString();
         }
     }
 

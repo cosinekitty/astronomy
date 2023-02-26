@@ -3396,6 +3396,13 @@ from a particular place on the Earth.
 | `double` | `longitude` | Geographic longitude in degrees east (positive) or west (negative) of the prime meridian at Greenwich, England. |
 | `double` | `height` | The height above (positive) or below (negative) sea level, expressed in meters. |
 
+### member functions
+
+<a name="Observer.ToString"></a>
+### Observer.ToString() &#8658; `string`
+
+**Converts an `Observer` to a string representation like `(N 26.728965, W 093.157562, 1234.567 m)`.**
+
 ---
 
 <a name="Refraction"></a>
