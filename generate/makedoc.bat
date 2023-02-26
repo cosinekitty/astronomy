@@ -15,82 +15,71 @@ py patch_version_numbers.py || exit /b 1
 
 echo.Trimming trailing whitespace in source code.
 for %%f in (template\astronomy.c ..\source\c\astronomy.h) do (
-    node trimspace.js %%f
-    if errorlevel 1 (exit /b 1)
+    node trimspace.js %%f || exit /b 1
 )
 
 echo.Generating target code.
-!GENEXE! source
-if errorlevel 1 (
+!GENEXE! source || (
     echo.FATAL:  !GENEXE! source
     exit /b 1
 )
 
 echo.Trimming trailing whitespace in target code.
 for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\astronomy\astronomy.py ..\source\csharp\astronomy.cs) do (
-    node trimspace.js %%f
-    if errorlevel 1 (exit /b 1)
+    node trimspace.js %%f || exit /b 1
 )
 
 REM   C# is a special case. We have to compile the code to get the documentation.
 echo.Building C# code to get documentation.
 cd dotnet\csharp_test
-dotnet build --property:OutputPath=!CD!\exe
-if errorlevel 1 (exit /b 1)
+dotnet build --property:OutputPath=!CD!\exe || exit /b 1
+
+echo.Building csdown
 cd ..\..\csdown
-call build.bat
-if errorlevel 1 (exit /b 1)
-dotnet exe\csdown.dll csharp_prefix.md ..\dotnet\csharp_test\exe\astronomy.dll ..\dotnet\csharp_test\exe\astronomy.xml ..\..\source\csharp\README.md
-if errorlevel 1 (
+call build.bat || exit /b 1
+dotnet exe\csdown.dll csharp_prefix.md ..\dotnet\csharp_test\exe\astronomy.dll ..\dotnet\csharp_test\exe\astronomy.xml ..\..\source\csharp\README.md || (
     echo.Error generating C# documentation.
     exit /b 1
 )
 cd ..
-node eol_hack.js ..\source\csharp\README.md
-if errorlevel 1 (
+node eol_hack.js ..\source\csharp\README.md || (
     echo.FATAL: error in eol_hack.js [C#]
     exit /b 1
 )
 
 echo.Install NodeJS dev dependencies
 if not exist node_modules (
-    call npm ci
-    if errorlevel 1 (
+    call npm ci || (
         echo.Error installing NodeJS dev dependencies.
         exit /b 1
     )
 )
 
 echo.Compiling TypeScript to JavaScript.
-call npm run build
-if errorlevel 1 (
+call npm run build || (
     echo.Error in typescript compiler.
     exit /b 1
 )
 
 echo.Bundling JavaScript code for Browser.
-call npm run build:browser
-if errorlevel 1 (
+call npm run build:browser || (
     echo.Error building browser bundle
     exit /b 1
 )
 
 echo.Minifying JavaScript code.
-call npm run minify
-if errorlevel 1 (
+call npm run minify || (
     echo.Error minifying astronomy.js
     exit /b 1
 )
 
-call npm run minify:browser
-if errorlevel 1 (
+call npm run minify:browser || (
     echo.Error minifying astronomy.browser.js
     exit /b 1
 )
 
 REM -- We don't run demos in Windows, but we should update copyright year.
-copy ..\source\js\astronomy.ts ..\demo\nodejs\calendar\astronomy.ts
-if errorlevel 1 (
+copy ..\source\js\astronomy.ts ..\demo\nodejs\calendar\astronomy.ts || (
     echo.Error copying astronomy.ts to calendar demo directory.
     exit /b 1
 )
@@ -101,8 +90,7 @@ for %%f in (
     ..\source\js\astronomy.browser.js
     ..\source\js\astronomy.browser.min.js
 ) do (
-    node eol_hack.js %%f
-    if errorlevel 1 (
+    node eol_hack.js %%f || (
         echo.ERROR cleaning newlines in file: %%f
         exit /b 1
     )
@@ -110,21 +98,18 @@ for %%f in (
 
 if exist ..\website (
     echo.Generating JS documentation in JSON format.
-    call npm run docs:json
-    if errorlevel 1 (
+    call npm run docs:json || (
         echo.Error generating JSON documentation.
         exit /b 1
     )
-    node jsdoc_strip_path.js
-    if errorlevel 1 (
+    node jsdoc_strip_path.js || (
         echo.Error stripping absolute paths.
         exit /b 1
     )
 )
 
 echo.Generating JS documentation in Markdown format.
-call npm run docs:md
-if errorlevel 1 (
+call npm run docs:md || (
     echo.Error generating JS documentation.
     exit /b 1
 )
@@ -138,8 +123,7 @@ if exist ..\tutorials (
     if exist html (
         rd /s/q html
     )
-    call npm run docs:html
-    if errorlevel 1 (
+    call npm run docs:html || (
         echo.FATAL: error in jsdoc
         exit /b 1
     )
@@ -157,13 +141,9 @@ if exist disable_generate_c_docs (
         )
     )
     if exist ..\..\bin\doxygen.exe (
-        ..\..\bin\doxygen Doxyfile > doxygen.log
+        ..\..\bin\doxygen Doxyfile > doxygen.log || exit /b 1
     ) else (
-        doxygen Doxyfile > doxygen.log
-    )
-    if errorlevel 1 (
-        echo.Error in doxygen
-        exit /b 1
+        doxygen Doxyfile > doxygen.log || exit /b 1
     )
     if not exist xml (
         echo.Missing directory xml. Was supposed to be created by doxygen.
@@ -171,30 +151,26 @@ if exist disable_generate_c_docs (
     )
     cd xml
     echo.Merging doxygen xml files.
-    xsltproc combine.xslt index.xml > all.xml
-    if errorlevel 1 (
+    xsltproc combine.xslt index.xml > all.xml || (
         echo.Error in xsltproc. That means we could not merge doxygen xml files.
         exit /b 1
     )
     cd ..
     if not exist ..\..\generate\hydrogen\node_modules\xml2js (
         pushd ..\..\generate\hydrogen
-        npm ci
-        if errorlevel 1 (
+        npm ci || (
             echo.Error installing dependencies for hydrogen.
             exit /b 1
         )
         popd
     )
     echo.Translating doxygen XML to Markdown.
-    node ..\..\generate\hydrogen\hydrogen.js ..\..\generate\hydrogen\c_prefix.md .\xml\all.xml
-    if errorlevel 1 (
+    node ..\..\generate\hydrogen\hydrogen.js ..\..\generate\hydrogen\c_prefix.md .\xml\all.xml || (
         echo.Error in hydrogen.js.
         exit /b 1
     )
     cd ..\..\generate
-    node eol_hack.js ..\source\c\README.md
-    if errorlevel 1 (
+    node eol_hack.js ..\source\c\README.md || (
         echo.Error in eol_hack.js
         exit /b 1
     )

@@ -1,14 +1,9 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-call :Download https://raw.githubusercontent.com/cosinekitty/ephemeris/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256
-if errorlevel 1 (exit /b 1)
-
-call :Download https://raw.githubusercontent.com/cosinekitty/ephemeris/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256
-if errorlevel 1 (exit /b 1)
-
-call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256
-if errorlevel 1 (exit /b 1)
+call :Download https://raw.githubusercontent.com/cosinekitty/ephemeris/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256 || exit /b 1
+call :Download https://raw.githubusercontent.com/cosinekitty/ephemeris/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256 || exit /b 1
+call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256 || exit /b 1
 
 cd ..
 set copyright=
@@ -22,8 +17,7 @@ set FASTMODE=true
 set GENEXE=bin\generate.exe
 set CTESTEXE=bin\ctest.exe
 if exist "!GENEXE!" (del "!GENEXE!")
-call build.bat
-if errorlevel 1 (exit /b 1)
+call build.bat || exit /b 1
 
 if not exist "!GENEXE!" (
     echo.FATAL[run.bat]: The executable does not exist: !GENEXE!
@@ -31,12 +25,7 @@ if not exist "!GENEXE!" (
 )
 
 if exist constellation\test_input.txt (del constellation\test_input.txt)
-py make_constellation_data.py
-if errorlevel 1 (
-    echo.Error creating constellation test data.
-    exit /b 1
-)
-
+py make_constellation_data.py || exit /b 1
 if not exist constellation\test_input.txt (
     echo.ERROR - file was not created: constellation\test_input.txt
     exit /b 1
@@ -58,8 +47,7 @@ if exist temp\* (del /q temp\*)
 
 echo.
 echo.Validating TOP2013 code.
-!GENEXE! validate_top2013
-if errorlevel 1 (exit /b 1)
+!GENEXE! validate_top2013 || exit /b 1
 
 if !FASTMODE! == true (
     REM *** Override fast mode if any of the required files are missing.
@@ -84,8 +72,7 @@ if !FASTMODE! == false (
     if exist output\vsop_*.txt (del /q output\vsop_*.txt)
     echo.
     echo.Generating planet models.
-    !GENEXE! planets
-    if errorlevel 1 (
+    !GENEXE! planets|| (
         echo.FATAL: !GENEXE! planets
         exit /b 1
     )
@@ -94,8 +81,7 @@ if !FASTMODE! == false (
 if not exist output\jupiter_moons.txt (
     echo.
     echo.Optimizing Jupiter Moon models.
-    !GENEXE! jmopt
-    if errorlevel 1 (
+    !GENEXE! jmopt ||(
         echo.FATAL: !GENEXE! jmopt
         exit /b 1
     )
@@ -104,11 +90,7 @@ if not exist output\jupiter_moons.txt (
 echo.
 echo.Generating apsis test data.
 if exist apsides\apsis_*.txt (del apsides\apsis_*.txt)
-!GENEXE! apsis
-if errorlevel 1 (
-    echo.FATAL: !GENEXE! apsis
-    exit /b 1
-)
+!GENEXE! apsis || exit /b 1
 
 echo.
 echo.Generating eclipse data.
@@ -121,24 +103,15 @@ for %%f in (
 ) do (
     if exist %%f (del %%f)
 )
-py norm.py
-if errorlevel 1 (
-    echo.Error normalizing eclipse test data.
-    exit /b 1
-)
+py norm.py || exit /b 1
 cd ..
 
 echo.
 echo.Generating EQJ/GAL conversion test data.
-!GENEXE! galeqj temp\galeqj.txt
-if errorlevel 1 (
-    echo.Error generating EQJ/GAL conversion test data.
-    exit /b 1
-)
+!GENEXE! galeqj temp\galeqj.txt || exit /b 1
 echo.
 
-call makedoc.bat
-if errorlevel 1 (exit /b 1)
+call makedoc.bat || exit /b 1
 
 REM -----------------------------------------------------------------------------------------
 REM     makedoc.bat has generated source code as a side effect.
@@ -146,8 +119,7 @@ REM     Call build.bat AGAIN to build ctest.c (C unit tests).
 
 echo.Re-building to get C unit test.
 if exist "!CTESTEXE!" (del "!CTESTEXE!")
-call build.bat
-if errorlevel 1 (exit /b 1)
+call build.bat || exit /b 1
 
 if not exist "!CTESTEXE!" (
     echo.FATAL[run.bat]: The executable does not exist: !CTESTEXE!
@@ -158,126 +130,98 @@ REM ----------------------------------------------------------------------------
 echo.
 echo.Running C# tests.
 pushd dotnet\csharp_test
-dotnet run -- all
-if errorlevel 1 (exit /b 1)
+dotnet run -- all || exit /b 1
 popd
 
 REM -----------------------------------------------------------------------------------------
 echo.
 echo.Validating JavaScript code.
-node test.js astro_check > temp\js_check.txt
-if errorlevel 1 (exit /b 1)
+node test.js astro_check > temp\js_check.txt || exit /b 1
 
-!GENEXE! check temp\js_check.txt
-if errorlevel 1 (exit /b 1)
+!GENEXE! check temp\js_check.txt || exit /b 1
 
 echo.
 echo.Verifying against JPL Horizons data.
-call jplcheck.bat
-if errorlevel 1 (exit /b 1)
+call jplcheck.bat || exit /b 1
 
 echo.
 echo.Running JavaScript unit tests.
-node test.js all
-if errorlevel 1 (exit /b 1)
+node test.js all || exit /b 1
 
 for %%f in (temp\js_longitude_*.txt) do (
-    !GENEXE! check %%f
-    if errorlevel 1 (exit /b 1)
+    !GENEXE! check %%f || exit /b 1
 )
 
 REM -----------------------------------------------------------------------------------------
 
 echo.Running C unit tests.
-!CTESTEXE! check
-if errorlevel 1 (exit /b 1)
-
-!GENEXE! check temp\c_check.txt
-if errorlevel 1 (exit /b 1)
-
-!CTESTEXE! all
-if errorlevel 1 (exit /b 1)
+!CTESTEXE! check || exit /b 1
+!GENEXE! check temp\c_check.txt || exit /b 1
+!CTESTEXE! all || exit /b 1
 
 for %%f in (temp\c_longitude_*.txt) do (
-    !GENEXE! check %%f
-    if errorlevel 1 (exit /b 1)
+    !GENEXE! check %%f || exit /b 1
 )
 
 REM -----------------------------------------------------------------------------------------
 
 echo.Running Python tests.
-py test.py all
-if errorlevel 1 (exit /b 1)
+py test.py all || exit /b 1
 
 for %%f in (temp\py_longitude_*.txt) do (
-    !GENEXE! check %%f
-    if errorlevel 1 (exit /b 1)
+    !GENEXE! check %%f || exit /b 1
 )
 
 echo.Generating Python test output.
-py test.py astro_check > temp\py_check.txt
-if errorlevel 1 (exit /b 1)
+py test.py astro_check > temp\py_check.txt || exit /b 1
 
 echo.Verifying Python test output.
-!GENEXE! check temp\py_check.txt
-if errorlevel 1 (exit /b 1)
+!GENEXE! check temp\py_check.txt || exit /b 1
 
 REM -----------------------------------------------------------------------------------------
 
 echo.Running Kotlin tests.
 if exist temp\k_check.txt (
-    del temp\k_check.txt
-    if errorlevel 1 (exit /b 1)
+    del temp\k_check.txt || exit /b 1
 )
 
 pushd ..\source\kotlin
 if exist build (
-    rd /s/q build
-    if errorlevel 1 (
-        echo.run.bat: ERROR deleting source/kotlin/build directory.
-        exit /b 1
-    )
+    rd /s/q build || exit /b 1
     if exist build (
         echo.run.bat: FATAL: source/kotlin/build directory still exists after attempted deletion.
         exit /b 1
     )
 )
-call gradlew.bat assemble build test dokkaGfm jar
-if errorlevel 1 (exit /b 1)
+call gradlew.bat assemble build test dokkaGfm jar || exit /b 1
 popd
 
 cd kotlindoc
-py format_kotlin_doc.py
-if errorlevel 1 (exit /b 1)
+py format_kotlin_doc.py || exit /b 1
 cd ..
 
-!GENEXE! check temp\k_check.txt
-if errorlevel 1 (exit /b 1)
+!GENEXE! check temp\k_check.txt || exit /b 1
 
 for %%f in (temp\k_longitude_*.txt) do (
-    !GENEXE! check %%f
-    if errorlevel 1 (exit /b 1)
+    !GENEXE! check %%f || exit /b 1
 )
 
 REM -----------------------------------------------------------------------------------------
 
-call diffcalc.bat
-if errorlevel 1 (exit /b 1)
+call diffcalc.bat || exit /b 1
 
 REM -----------------------------------------------------------------------------------------
 
 echo.Validating Java demos.
 pushd ..\demo\java
-call demotest.bat
-if errorlevel 1 (exit /b 1)
+call demotest.bat || exit /b 1
 popd
 
 REM -----------------------------------------------------------------------------------------
 
 echo.Validating Kotlin demos.
 pushd ..\demo\kotlin
-call demotest.bat
-if errorlevel 1 (exit /b 1)
+call demotest.bat || exit /b 1
 popd
 
 REM -----------------------------------------------------------------------------------------
@@ -314,14 +258,12 @@ REM     A special download process helps keep the repo size reasonable for most 
 
         if defined wgetexe (
             echo.Trying download using !wgetexe! ...
-            "!wgetexe!" !EPHURL!
-            if not errorlevel 1 goto verify_eph
+            "!wgetexe!" !EPHURL! && goto verify_eph
         )
 
         if defined curlexe (
             echo.Trying download using !curlexe! ...
-            "!curlexe!" -L -o !EPHFILE! !EPHURL!
-            if not errorlevel 1 goto verify_eph
+            "!curlexe!" -L -o !EPHFILE! !EPHURL! && goto verify_eph
         )
 
         if exist !EPHFILE! (del !EPHFILE!)
@@ -336,8 +278,7 @@ REM     A special download process helps keep the repo size reasonable for most 
 
     :verify_eph
     echo.Verifying integrity of file: !EPHFILE!
-    py checksum.py sha256 !SHAFILE!
-    if errorlevel 1 (
+    py checksum.py sha256 !SHAFILE! || (
         echo.Corrupt file !EPHFILE! detected.
         if exist !EPHFILE! (del !EPHFILE!)
         exit /b 1

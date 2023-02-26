@@ -21,7 +21,7 @@ The following tools are required for developers:
 - Python 3.7+ and the following modules:
     - [mypy](https://pypi.org/project/mypy/)
     - [pylint](https://pypi.org/project/pylint/)
-- Microsoft .NET 6.0 SDK
+- Microsoft .NET 7 SDK
 - doxygen
 - xsltproc
 - coreutils
@@ -46,7 +46,7 @@ Change into the `generate` directory (this directory) and run the bash script
 ## Tool setup
 
 The following tools are required for developers:
-- Microsoft .NET 6.0 SDK
+- Microsoft .NET 7 SDK
 - Node.js
 - npm (needed to install other tools like TypeScript, jsdoc2md, ...)
 - Python 3.7+ and the following modules:

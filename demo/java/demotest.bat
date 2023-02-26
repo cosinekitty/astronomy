@@ -28,13 +28,11 @@ exit /b 0
 REM ----------------------------------------------------------------------------------
 
 :TestDemo
-java -jar build/libs/astronomy-demo-1.0.0.jar %* > test\%1.txt
-if errorlevel 1 (
+java -jar build/libs/astronomy-demo-1.0.0.jar %* > test\%1.txt || (
     echo Error running Kotlin demo: %1
     exit /b 1
 )
-fc correct\%1.txt test\%1.txt
-if errorlevel 1 (
+fc correct\%1.txt test\%1.txt || (
     echo Incorrect output for Kotlin demo: %1
     exit /b 1
 )
