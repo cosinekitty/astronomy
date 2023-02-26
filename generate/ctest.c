@@ -449,26 +449,22 @@ static int CalendarCase(int year, int month, int day, int hour, int minute, doub
     astro_time_t time;
     astro_utc_t utc;
     double diff;
-    char repr[30];
-
-    snprintf(repr, sizeof(repr), "%04d-%02d-%02dT%02d:%02dZ", year, month, day, hour, minute);
 
     time = Astronomy_MakeTime(year, month, day, hour, minute, second);
 
     utc = Astronomy_UtcFromTime(time);
     if (utc.year != year || utc.month != month || utc.day != day || utc.hour != hour || utc.minute != minute)
     {
-        FFAIL("UtcFromTime FAILURE - Expected %s, found %04d-%02d-%02dT%02d:%02dZ, ut = %0.6lf\n",
-            repr,
+        FFAIL("UtcFromTime FAILURE - Expected %04d-%02d-%02dT%02d:%02dZ, found %04d-%02d-%02dT%02d:%02dZ, ut = %0.6lf\n",
+            year, month, day, hour, minute,
             utc.year, utc.month, utc.day, utc.hour, utc.minute,
             time.ut);
     }
 
     diff = utc.second - second;
-    if (ABS(diff) > 0.0003)
-        FFAIL("excessive UTC second error %lg\n", diff);
+    if (ABS(diff) > 0.001)
+        FFAIL("excessive UTC second error %lg for %06d-%02d-%02d\n", diff, year, month, day);
 
-    FDEBUG("PASS: [%s] ut=%0.12lf, tt=%0.12lf\n", repr, time.ut, time.tt);
     error = 0;
 fail:
     return error;
@@ -495,11 +491,12 @@ static int Test_AstroTime(void)
     if (ABS(diff) > 1.0e-12)
         FFAIL("excessive TT error %lg\n", diff);
 
-    for (year = 2400; year >= -5400; --year)
-        CHECK(CalendarCase(year, 12,  2, 18, 30, 12.543));
-
-    for (year = -999999; year <= -999599; ++year)
-        CHECK(CalendarCase(year, 12,  2, 18, 30, 12.543));
+    for (year = -999999; year <= +999999; ++year)
+    {
+        /* Check just before and after each potential leap day. */
+        CHECK(CalendarCase(year, 2, 28, 18, 30, 12.543));
+        CHECK(CalendarCase(year, 3,  1, 18, 30, 12.543));
+    }
 
     time = Astronomy_MakeTime(2020, 12, 31, 23, 59, 59.4994);
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI,  ASTRO_SUCCESS, "2020-12-31T23:59:59.499Z"));

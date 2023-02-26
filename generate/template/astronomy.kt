@@ -460,19 +460,27 @@ public fun defineStar(body: Body, ra: Double, dec: Double, distanceLightYears: D
 
 
 private fun universalTimeDays(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double): Double {
-    // This formula is adapted from NOVAS C 3.1 function julian_date().
+    // This formula is adapted from NOVAS C 3.1 function julian_date(),
+    // which in turn comes from Henry F. Fliegel & Thomas C. Van Flendern:
+    // Communications of the ACM, Vol 11, No 10, October 1968, p. 657.
+    // See: https://dl.acm.org/doi/pdf/10.1145/364096.364097
+    //
+    // [Don Cross - 2023-02-25] I modified the formula so that it will
+    // work correctly with years as far back as -999999.
+
     val y = year.toLong()
     val m = month.toLong()
     val d = day.toLong()
+    val f = (14 - m) / 12
 
-    val jd12h: Long = (
-        d - 32075L + 1461L*(y + 4800L + (m - 14L)/12L)/4L
-        + 367L*(m - 2L - ((m - 14L)/12L)*12L)/12L
-        - 3L*((y + 4900L + (m - 14L)/12L)/100L)/4L
+    val y2000: Long = (
+        (d - 365972956)
+        + (1461*(y + 1000000 - f))/4
+        + (367*(m - 2 + 12*f))/12
+        - (3*((y + 1000100 - f) / 100))/4
     )
 
-    val y2000 = jd12h - 2451545L
-    return y2000.toDouble() - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0))
+    return y2000 - 0.5 + (hour / 24.0) + (minute / (24.0 * 60.0)) + (second / (24.0 * 3600.0))
 }
 
 
@@ -549,26 +557,38 @@ class DateTime(
 internal fun dayValueToDateTime(ut: Double): DateTime {
     // Adapted from the NOVAS C 3.1 function cal_date()
     val djd = ut + 2451545.5
-    val jd = djd.toLong()
+    val jd = floor(djd).toLong()
 
     var x = 24.0 * (djd % 1.0)
+    if (x < 0.0)
+        x += 24.0
     val hour = x.toInt()
     x = 60.0 * (x % 1.0)
     val minute = x.toInt()
     val second = 60.0 * (x % 1.0)
 
-    var k = jd + 68569L
-    val n = 4L * k / 146097L
-    k -= (146097L * n + 3L) / 4L
-    val m = 4000L * (k + 1L) / 1461001L
-    k = k - 1461L * m / 4L + 31L
+    // This is my own adjustment to the NOVAS cal_date logic
+    // so that it can handle dates much farther back in the past.
+    // I add c*400 years worth of days at the front,
+    // then subtract c*400 years at the back,
+    // which avoids negative values in the formulas that mess up
+    // the calendar date calculations.
+    // Any multiple of 400 years has the same number of days,
+    // because it eliminates all the special cases for leap years.
+    val c = 2500L
 
-    var month = (80L * k / 2447L).toInt()
-    val day = (k - 2447L * month.toLong() / 80L).toInt()
-    k = month.toLong() / 11L
+    var k = jd + (68569 + c*146097)
+    val n = (4 * k) / 146097
+    k -= (146097*n + 3) / 4
+    val m = (4000*(k+1)) / 1461001
+    k = k - (1461*m)/4 + 31
 
-    month = (month.toLong() + 2L - 12L * k).toInt()
-    val year = (100L * (n - 49L) + m + k).toInt()
+    var month = ((80 * k) / 2447).toInt()
+    val day = (k - (2447 * month.toLong())/80).toInt()
+    k = month.toLong() / 11
+
+    month = (month.toLong() + 2 - 12*k).toInt()
+    val year = (100*(n - 49) + m + k - 400*c).toInt()
 
     return DateTime(year, month, day, hour, minute, second)
 }

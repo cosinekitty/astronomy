@@ -242,17 +242,12 @@ namespace csharp_test
             if (0 != UtDayValueTest())
                 return 1;
 
-            for (int year = 2400; year >= -5400; --year)
-                if (0 != CalendarCase(year, 12,  2, 18, 30, 12.543))
-                    return 1;
-
-            for (int year = -999999; year <= -999599; ++year)
-                if (0 != CalendarCase(year, 12,  2, 18, 30, 12.543))
-                    return 1;
-
-            for (int year = +999599; year <= +999999; ++year)
-                if (0 != CalendarCase(year, 12,  2, 18, 30, 12.543))
-                    return 1;
+            for (int year = -999999; year <= +999999; ++year)
+            {
+                // Check just before and after each potential leap day.
+                if (0 != CalendarCase(year, 2,  28, 18, 30, 12.543)) return 1;
+                if (0 != CalendarCase(year, 3,   1, 18, 30, 12.543)) return 1;
+            }
 
             return Pass(nameof(TestTime));
         }

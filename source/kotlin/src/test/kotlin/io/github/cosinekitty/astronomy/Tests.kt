@@ -923,12 +923,33 @@ class Tests {
     private fun decemberSolstice(year: Int): String =
         seasons(year).decemberSolstice.toString()
 
+    private fun calendarCase(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Double) {
+        // Verify we can convert the calendar date to a Time, then back to a calendar date,
+        // and that the round-trip result matches what we started with.
+        val time = Time(year, month, day, hour, minute, second)
+        val cal = time.toDateTime()
+        assertTrue(cal.year == year && cal.month == month && cal.day == day, "expected $year-$month-$day but found ${cal.year}-${cal.month}-${cal.day}")
+
+        val expectedMillis = 1000.0*(second + 60.0*(minute + 60.0*hour))
+        val calcMillis = 1000.0*(cal.second + 60.0*(cal.minute + 60.0*cal.hour))
+        val diffMillis = abs(calcMillis - expectedMillis)
+        assertTrue(diffMillis < 3.0, "Millisecond error = $diffMillis for date $year-$month-$day")
+    }
+
     @Test
     fun `Extreme year values`() {
         // https://github.com/cosinekitty/astronomy/issues/250
         assertEquals("2022-12-21T21:47:54.455Z", decemberSolstice(2022))
         assertEquals("-002300-12-19T16:22:27.929Z", decemberSolstice(-2300))
         assertEquals("+012345-12-11T13:30:10.276Z", decemberSolstice(12345))
+
+        var year = -999999
+        while (year <= +999999) {
+            // Verify just before and after every potential leap day.
+            calendarCase(year, 2, 28, 18, 30, 45.0)
+            calendarCase(year, 3,  1, 18, 30, 45.0)
+            ++year
+        }
     }
 
     //----------------------------------------------------------------------------------------
