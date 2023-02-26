@@ -1103,7 +1103,7 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
     astro_utc_t utc;
     long jd, k, m, n;
     double djd, x;
-    const long c = 2500L;
+    const long c = 2500;
 
     djd = time.ut + 2451545.5;
     jd = (long)floor(djd);
@@ -1126,18 +1126,18 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
         Any multiple of 400 years has the same number of days,
         because it eliminates all the special cases for leap years.
     */
-    k = jd + (68569L + c*146097L);
-    n = 4L * k / 146097L;
-    k = k - (146097L * n + 3L) / 4L;
-    m = 4000L * (k + 1L) / 1461001L;
-    k = k - 1461L * m / 4L + 31L;
+    k = jd + (68569 + c*146097);
+    n = (4 * k) / 146097;
+    k = k - (146097 * n + 3)/4;
+    m = (4000 * (k+1)) / 1461001;
+    k = k - (1461 * m)/4 + 31;
 
-    utc.month = (int) (80L * k / 2447L);
-    utc.day = (int) (k - 2447L * (long)utc.month / 80L);
-    k = (long) utc.month / 11L;
+    utc.month = (int) ((80 * k) / 2447);
+    utc.day = (int) (k - (2447*utc.month)/80);
+    k = utc.month / 11;
 
-    utc.month = (int) ((long)utc.month + 2L - 12L * k);
-    utc.year = (int) (100L * (n - 49L) + m + k - 400L*c);
+    utc.month = (int) (utc.month + 2 - 12*k);
+    utc.year = (int) (100 * (n - 49) + m + k - 400*c);
 
     return utc;
 }

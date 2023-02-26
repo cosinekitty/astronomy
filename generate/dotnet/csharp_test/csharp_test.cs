@@ -182,7 +182,29 @@ namespace csharp_test
             return line.Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries);
         }
 
-        static int TestTime()
+        static int CalendarCase(int year, int month, int day, int hour, int minute, double second)
+        {
+            // Convert calendar date to time.
+            var time = new AstroTime(year, month, day, hour, minute, second);
+
+            // Convert time back to calendar date.
+            var cal = time.ToCalendarDateTime();
+
+            // Verify the round-trip was correct.
+            if (cal.year != year || cal.month != month || cal.day != day)
+                return Fail($"{nameof(CalendarCase)}: expected [{year:0000}-{month:00}-{day:00}] but found [{cal.year:0000}-{cal.month:00}-{cal.day:00}]");
+
+            // Be a little more tolerant with time because of roundoff errors.
+            double expectedMillis = 1000.0 * (second + 60*(minute + 60*hour));
+            double calcMillis = 1000.0 * (cal.second + 60*(cal.minute + 60*cal.hour));
+            double diffMillis = abs(calcMillis - expectedMillis);
+            if (diffMillis > 1.0)
+                return Fail($"{nameof(CalendarCase)}: EXCESSIVE time error = {diffMillis} milliseconds.");
+
+            return 0;
+        }
+
+        static int UtDayValueTest()
         {
             const int year = 2018;
             const int month = 12;
@@ -194,13 +216,13 @@ namespace csharp_test
 
             DateTime d = new DateTime(year, month, day, hour, minute, second, milli, DateTimeKind.Utc);
             AstroTime time = new AstroTime(d);
-            Console.WriteLine("C# TestTime: text={0}, ut={1}, tt={2}", time.ToString(), time.ut.ToString("F6"), time.tt.ToString("F6"));
+            Debug("C# UtDayValueTest: text={0}, ut={1}, tt={2}", time, time.ut.ToString("F6"), time.tt.ToString("F6"));
 
             const double expected_ut = 6910.270978506945;
             double diff = time.ut - expected_ut;
             if (abs(diff) > 1.0e-12)
             {
-                Console.WriteLine("C# TestTime: ERROR - excessive UT error {0}", diff);
+                Console.WriteLine("C# UtDayValueTest: ERROR - excessive UT error {0}", diff);
                 return 1;
             }
 
@@ -208,18 +230,31 @@ namespace csharp_test
             diff = time.tt - expected_tt;
             if (abs(diff) > 1.0e-12)
             {
-                Console.WriteLine("C# TestTime: ERROR - excessive TT error {0}", diff);
-                return 1;
-            }
-
-            DateTime utc = time.ToUtcDateTime();
-            if (utc.Year != year || utc.Month != month || utc.Day != day || utc.Hour != hour || utc.Minute != minute || utc.Second != second || utc.Millisecond != milli)
-            {
-                Console.WriteLine("C# TestTime: ERROR - Expected {0:o}, found {1:o}", d, utc);
+                Console.WriteLine("C# UtDayValueTest: ERROR - excessive TT error {0}", diff);
                 return 1;
             }
 
             return 0;
+        }
+
+        static int TestTime()
+        {
+            if (0 != UtDayValueTest())
+                return 1;
+
+            for (int year = 2400; year >= -5400; --year)
+                if (0 != CalendarCase(year, 12,  2, 18, 30, 12.543))
+                    return 1;
+
+            for (int year = -999999; year <= -999599; ++year)
+                if (0 != CalendarCase(year, 12,  2, 18, 30, 12.543))
+                    return 1;
+
+            for (int year = +999599; year <= +999999; ++year)
+                if (0 != CalendarCase(year, 12,  2, 18, 30, 12.543))
+                    return 1;
+
+            return Pass(nameof(TestTime));
         }
 
         static int MoonTest()

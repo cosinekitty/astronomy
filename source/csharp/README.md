@@ -2589,6 +2589,16 @@ an `AstroTime` value that can be passed to Astronomy Engine functions.
 | --- | --- | --- |
 | `double` | `tt` | The number of days after the J2000 epoch. |
 
+<a name="AstroTime.ToCalendarDateTime"></a>
+### AstroTime.ToCalendarDateTime() &#8658; [`CalendarDateTime`](#CalendarDateTime)
+
+**Converts this object to our custom type [`CalendarDateTime`](#CalendarDateTime).**
+
+The .NET type `DateTime` can only represent years in the range 0000..9999.
+However, the Astronomy Engine type [`CalendarDateTime`](#CalendarDateTime) can represent
+years in the range -999999..+999999. This is a time span of nearly 2 million years.
+This function converts this `AstroTime` object to an equivalent Gregorian calendar representation.
+
 <a name="AstroTime.ToString"></a>
 ### AstroTime.ToString() &#8658; `string`
 
@@ -2716,6 +2726,50 @@ It is expressed in the J2000 mean equator system (EQJ).
 | `Star6` | User-defined star #6. |
 | `Star7` | User-defined star #7. |
 | `Star8` | User-defined star #8. |
+
+---
+
+<a name="CalendarDateTime"></a>
+## `struct CalendarDateTime`
+
+**Represents a Gregorian calendar date and time within plus or minus 1 million years from the year 0.**
+
+The C# standard type `System.DateTime` only allows years from 0001 to 9999.
+However, the [`AstroTime`](#AstroTime) class can represent years in the range -999999 to +999999.
+In order to support formatting dates with extreme year values in an extrapolated
+Gregorian calendar, the `CalendarDateTime` class breaks out the components of
+a date into separate fields.
+
+### constructors
+
+### new CalendarDateTime(ut)
+
+**Convert a J2000 day value to a Gregorian calendar date.**
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `ut` | The real-valued number of days since the J2000 epoch. |
+
+
+### member variables
+
+| Type | Name | Description |
+| --- | --- | --- |
+| `int` | `year` | The year value in the range -999999 to +999999. |
+| `int` | `month` | The calendar month in the range 1..12. |
+| `int` | `day` | The day of the month in the reange 1..31. |
+| `int` | `hour` | The hour in the range 0..23. |
+| `int` | `minute` | The minute in the range 0..59. |
+| `double` | `second` | The real-valued second in the half-open range [0, 60). |
+
+### member functions
+
+<a name="CalendarDateTime.ToString"></a>
+### CalendarDateTime.ToString() &#8658; `string`
+
+**Converts this `CalendarDateTime` to ISO 8601 format, expressed in UTC with millisecond resolution.**
+
+**Returns:** Example: "2019-08-30T17:45:22.763Z".
 
 ---
 

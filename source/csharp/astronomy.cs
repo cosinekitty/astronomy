@@ -325,22 +325,21 @@ namespace CosineKitty
         }
 
         /// <summary>
+        /// Converts this object to our custom type #CalendarDateTime.
+        /// </summary>
+        /// <remarks>
+        /// The .NET type `DateTime` can only represent years in the range 0000..9999.
+        /// However, the Astronomy Engine type #CalendarDateTime can represent
+        /// years in the range -999999..+999999. This is a time span of nearly 2 million years.
+        /// This function converts this `AstroTime` object to an equivalent Gregorian calendar representation.
+        /// </remarks>
+        public CalendarDateTime ToCalendarDateTime() => new CalendarDateTime(ut);
+
+        /// <summary>
         /// Converts this `AstroTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
         /// </summary>
         /// <returns>Example: "2019-08-30T17:45:22.763Z".</returns>
-        public override string ToString()
-        {
-            var d = new CalendarDateTime(ut);
-            int millis = Math.Max(0, Math.Min(59999, (int)Math.Round(d.second * 1000.0)));
-            string y;
-            if (d.year < 0)
-                y = "-" + (-d.year).ToString("000000");
-            else if (d.year <= 9999)
-                y = d.year.ToString("0000");
-            else
-                y = "+" + d.year.ToString("000000");
-            return $"{y}-{d.month:00}-{d.day:00}T{d.hour:00}:{d.minute:00}:{millis/1000:00}.{millis%1000:000}Z";
-        }
+        public override string ToString() => ToCalendarDateTime().ToString();
 
         private static Regex re = new Regex(
             @"^
@@ -441,19 +440,24 @@ namespace CosineKitty
 
         private static double UniversalTimeFromCalendar(int year, int month, int day, int hour, int minute, double second)
         {
-            // This formula is adapted from NOVAS C 3.1 function julian_date().
-            // It given a Gregorian calendar date/time, it calculates the fractional
-            // number of days since the J2000 epoch.
+            // This formula is adapted from NOVAS C 3.1 function julian_date(),
+            // which in turn comes from Henry F. Fliegel & Thomas C. Van Flendern:
+            // Communications of the ACM, Vol 11, No 10, October 1968, p. 657.
+            // See: https://dl.acm.org/doi/pdf/10.1145/364096.364097
+            //
+            // [Don Cross - 2023-02-25] I modified the formula so that it will
+            // work correctly with years as far back as -999999.
 
             long y = (long)year;
             long m = (long)month;
             long d = (long)day;
+            long f = (14 - m) / 12;
 
             long y2000 = (
-                (d - 2483620L)
-                + 1461L*(y + 4800L - (14L - m) / 12L)/4L
-                + 367L*(m - 2L + (14L - m) / 12L * 12L)/12L
-                - 3L*((y + 4900L - (14L - m) / 12L) / 100L)/4L
+                (d - 365972956)
+                + (1461*(y + 1000000 - f))/4
+                + (367*(m - 2 + 12*f))/12
+                - (3*((y + 1000100 - f) / 100))/4
             );
 
             double ut = (y2000 - 0.5) + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0);
@@ -461,22 +465,45 @@ namespace CosineKitty
         }
     }
 
-    internal struct CalendarDateTime
+    /// <summary>
+    /// Represents a Gregorian calendar date and time within plus or minus 1 million years from the year 0.
+    /// </summary>
+    /// <remarks>
+    /// The C# standard type `System.DateTime` only allows years from 0001 to 9999.
+    /// However, the #AstroTime class can represent years in the range -999999 to +999999.
+    /// In order to support formatting dates with extreme year values in an extrapolated
+    /// Gregorian calendar, the `CalendarDateTime` class breaks out the components of
+    /// a date into separate fields.
+    /// </remarks>
+    public struct CalendarDateTime
     {
+        /// <summary>The year value in the range -999999 to +999999.</summary>
         public int year;
+
+        /// <summary>The calendar month in the range 1..12.</summary>
         public int month;
+
+        /// <summary>The day of the month in the reange 1..31.</summary>
         public int day;
+
+        /// <summary>The hour in the range 0..23.</summary>
         public int hour;
+
+        /// <summary>The minute in the range 0..59.</summary>
         public int minute;
+
+        /// <summary>The real-valued second in the half-open range [0, 60).</summary>
         public double second;
 
+        /// <summary>Convert a J2000 day value to a Gregorian calendar date.</summary>
+        /// <param name="ut">The real-valued number of days since the J2000 epoch.</param>
         public CalendarDateTime(double ut)
         {
             // Adapted from the NOVAS C 3.1 function cal_date().
             // Convert fractional days since J2000 into Gregorian calendar date/time.
 
             double djd = ut + 2451545.5;
-            long jd = (long)djd;
+            long jd = (long)Math.Floor(djd);
             double x = 24.0 * (djd % 1.0);
             if (x < 0.0)
                 x += 24.0;
@@ -493,23 +520,43 @@ namespace CosineKitty
             // the calendar date calculations.
             // Any multiple of 400 years has the same number of days,
             // because it eliminates all the special cases for leap years.
-            const long c = 2500L;
+            const long c = 2500;
 
-            long k = jd + (68569L + c*146097L);
-            long n = 4L * k / 146097L;
-            k = k - (146097L * n + 3L) / 4L;
-            long m = 4000L * (k + 1L) / 1461001L;
-            k = k - 1461L * m / 4L + 31L;
+            long k = jd + (68569 + c*146097);
+            long n = (4 * k) / 146097;
+            k = k - (146097*n + 3) / 4;
+            long m = (4000 * (k+1)) / 1461001;
+            k = k - (1461 * m)/4 + 31;
 
-            month = (int) (80L * k / 2447L);
-            day = (int) (k - 2447L * (long)month / 80L);
-            k = (long) month / 11L;
+            month = (int) ((80 * k) / 2447);
+            day = (int) (k - (2447 * month)/80);
+            k = month / 11;
 
-            month = (int) ((long)month + 2L - 12L * k);
-            year = (int) (100L * (n - 49L) + m + k - 400L*c);
+            month = (int) (month + 2 - 12*k);
+            year = (int) (100 * (n - 49) + m + k - 400*c);
 
-            if (month < 1 || day < 1 || year < -999999 || year > +999999)
+            if (year < -999999 || year > +999999)
                 throw new ArgumentOutOfRangeException("The supplied time is too far from the year 2000 to be represented.");
+
+            if (month < 1 || month > 12 || day < 1 || day > 31)
+                throw new InternalError($"Invalid calendar date calculated: month={month}, day={day}.");
+        }
+
+        /// <summary>
+        /// Converts this `CalendarDateTime` to ISO 8601 format, expressed in UTC with millisecond resolution.
+        /// </summary>
+        /// <returns>Example: "2019-08-30T17:45:22.763Z".</returns>
+        public override string ToString()
+        {
+            int millis = Math.Max(0, Math.Min(59999, (int)Math.Round(second * 1000.0)));
+            string y;
+            if (year < 0)
+                y = "-" + (-year).ToString("000000");
+            else if (year <= 9999)
+                y = year.ToString("0000");
+            else
+                y = "+" + year.ToString("000000");
+            return $"{y}-{month:00}-{day:00}T{hour:00}:{minute:00}:{millis/1000:00}.{millis%1000:000}Z";
         }
     }
 
