@@ -3,6 +3,7 @@ import sys
 import math
 import re
 import os
+from itertools import chain
 sys.path.append('../source/python')
 import astronomy
 
@@ -61,6 +62,25 @@ def AssertBadTime(text):
         print('PY AssertBadTime FAILURE: should not have parsed "{}"'.format(text))
         sys.exit(1)
 
+def CalendarCase(year, month, day, hour, minute, second):
+    # Convert to Astronomy Engine Time object.
+    time = astronomy.Time.Make(year, month, day, hour, minute, second)
+    # Convert to back calendar date tuple.
+    (cyear, cmonth, cday, chour, cminute, csecond) = time.Calendar()
+    if (cyear, cmonth, cday) != (year, month, day):
+        return Fail('CalendarCase', 'Expected {:06d}-{:02d}-{:02d} but found {:06d}-{:02d}-{:02d}'.format(
+            year, month, day,
+            cyear, cmonth, cday
+        ))
+    expectedMillis = 1000.0*(second + 60.0*(minute + 60.0*hour))
+    calcMillis = 1000.0*(csecond + 60.0*(cminute + 60.0*chour))
+    diffMillis = vabs(calcMillis - expectedMillis)
+    if diffMillis > 4.0:
+        return Fail('CalendarCase', 'EXCESSIVE millisecond error = {:0.6f} for {:06d}-{:02d}-{:02d}'.format(
+            diffMillis, year, month, day
+        ))
+    return 0
+
 def AstroTime():
     expected_ut = 6910.270978506945
     expected_tt = 6910.271800214368
@@ -114,7 +134,16 @@ def AstroTime():
     AssertGoodTime('-999998-01-14T22:55:12.297Z', '-999998-01-14T22:55:12.297Z')
     AssertGoodTime('-999999-01-14T22:55:12.000Z', '-999999-01-14T22:55:11.998Z')
     AssertGoodTime('+999999-01-14T22:55:12.000Z', '+999999-01-14T22:55:11.998Z')
-    return 0
+
+    nyears = 0
+    for year in chain(range(-999999, -995999), range(-3000, 3001), range(+996000, +1000000)):
+        # Check just before and after each potential leap day.
+        if CalendarCase(year, 2, 28, 14, 45, 28.321):
+            return 1
+        if CalendarCase(year, 3,  1, 14, 45, 28.321):
+            return 1
+        nyears += 1
+    return Pass('AstroTime({} calendar years)'.format(nyears))
 
 #-----------------------------------------------------------------------------------------------------------
 
