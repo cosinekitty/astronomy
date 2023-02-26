@@ -947,6 +947,16 @@ The value of the calling object is not modified. This function creates a brand n
 
 **Returns**: [`Time`](#Time)
 
+<a name="Time.Calendar"></a>
+### Time.Calendar(self) &#8594; Tuple\[int, int, int, int, int, float\]
+
+**Returns a tuple of the form (year, month, day, hour, minute, second).**
+
+This is a convenience method for converting a `Time` value into
+its Gregorian calendar date/time representation.
+Unlike the built-in `datetime` class, this method can represent
+dates over a nearly 2 million year range: the years -999999 to +999999.
+
 <a name="Time.FromTerrestrialTime"></a>
 ### Time.FromTerrestrialTime(tt: float) &#8594; [`Time`](#Time)
 

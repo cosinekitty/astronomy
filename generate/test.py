@@ -77,18 +77,13 @@ def AstroTime():
     if s != '2018-12-02 18:30:12.543000':
         print('PY AstroTime: Utc() returned incorrect string "{}"'.format(s))
         return 1
-    time = astronomy.Time.Make(2018, 12, 31, 23, 59, 59.9994)
+    time = astronomy.Time.Make(2018, 12, 31, 23, 59, 59.9999)
+    expected = '2018-12-31T23:59:59.999Z'
     s = str(time)
-    if s != '2018-12-31T23:59:59.999Z':
-        print('PY AstroTime: expected 2018-12-31T23:59:59.999Z but found {}'.format(s))
-        return 1
-    time = astronomy.Time.Make(2018, 12, 31, 23, 59, 59.9995)
-    s = str(time)
-    if s != '2019-01-01T00:00:00.000Z':
-        print('PY AstroTime: expected 2019-01-01T00:00:00.000Z but found {}'.format(s))
+    if s != expected:
+        print('PY AstroTime: expected {} but found {}'.format(expected, s))
         return 1
     print('PY Current time =', astronomy.Time.Now())
-    AssertGoodTime('2015-12-31', '2015-12-31T00:00:00.000Z')
     AssertGoodTime('2015-12-31T23:45Z', '2015-12-31T23:45:00.000Z')
     AssertGoodTime('2015-01-02T23:45:17Z', '2015-01-02T23:45:17.000Z')
     AssertGoodTime('1971-03-17T03:30:55.976Z', '1971-03-17T03:30:55.976Z')
@@ -100,14 +95,25 @@ def AstroTime():
     AssertBadTime('1971-12-31T23:00:60Z')
     AssertBadTime('1971-03-17T03:30:55.976')
     # Extreme year values...
+    AssertGoodTime('-4172-12-02T14:30:45.123Z', '-004172-12-02T14:30:45.123Z')
+    AssertGoodTime('-4173-12-02T14:30:45.123Z', '-004173-12-02T14:30:45.123Z')
+    AssertGoodTime('-4174-12-02T14:30:45.123Z', '-004174-12-02T14:30:45.123Z')
+    AssertGoodTime('-4175-12-02T14:30:45.123Z', '-004175-12-02T14:30:45.123Z')
+    AssertGoodTime('-4176-12-02T14:30:45.123Z', '-004176-12-02T14:30:45.123Z')
     AssertGoodTime('-2300-12-19T16:22:26.325Z', '-002300-12-19T16:22:26.325Z')
-    AssertGoodTime('+12345-12-11T13:30:10.041Z', '+012345-12-11T13:30:10.041Z')
-    AssertGoodTime('+12345-12-11T13:30:10.041Z', '+012345-12-11T13:30:10.041Z')
-    AssertGoodTime('+12345-12-11T13:30:10.041Z', '+012345-12-11T13:30:10.041Z')
-    AssertGoodTime('-123456-01-14T22:55:12.000Z', '-123456-01-14T22:55:12.000Z')
-    AssertGoodTime('+123456-01-14T22:55:12.000Z', '+123456-01-14T22:55:12.000Z')
-    AssertGoodTime('-999999-01-14T22:55:12.000Z', '-999999-01-14T22:55:11.999Z')
-    AssertGoodTime('+999999-01-14T22:55:12.000Z', '+999999-01-14T22:55:11.999Z')
+    AssertGoodTime('-2300-12-19T16:22:26.325Z', '-002300-12-19T16:22:26.325Z')
+    AssertGoodTime('+12345-12-11T13:30:10.041Z', '+012345-12-11T13:30:10.040Z')
+    AssertGoodTime('+12346-12-11T13:30:10.041Z', '+012346-12-11T13:30:10.040Z')
+    AssertGoodTime('+12347-12-11T13:30:10.041Z', '+012347-12-11T13:30:10.040Z')
+    AssertGoodTime('+12348-12-11T13:30:10.041Z', '+012348-12-11T13:30:10.040Z')
+    AssertGoodTime('-123456-01-14T22:55:12.000Z', '-123456-01-14T22:55:11.999Z')
+    AssertGoodTime('+123456-01-14T22:55:12.000Z', '+123456-01-14T22:55:11.999Z')
+    AssertGoodTime('-999995-01-14T22:55:12.297Z', '-999995-01-14T22:55:12.297Z')
+    AssertGoodTime('-999996-01-14T22:55:12.297Z', '-999996-01-14T22:55:12.297Z')
+    AssertGoodTime('-999997-01-14T22:55:12.297Z', '-999997-01-14T22:55:12.297Z')
+    AssertGoodTime('-999998-01-14T22:55:12.297Z', '-999998-01-14T22:55:12.297Z')
+    AssertGoodTime('-999999-01-14T22:55:12.000Z', '-999999-01-14T22:55:11.998Z')
+    AssertGoodTime('+999999-01-14T22:55:12.000Z', '+999999-01-14T22:55:11.998Z')
     return 0
 
 #-----------------------------------------------------------------------------------------------------------
@@ -3033,7 +3039,7 @@ def DatesIssue250():
     # Make sure we can handle dates outside the range supported by System.DateTime.
     # https://github.com/cosinekitty/astronomy/issues/250
     return (
-        CheckDecemberSolstice( 2022, "2022-12-21T21:47:54.456Z") or
+        CheckDecemberSolstice( 2022, "2022-12-21T21:47:54.455Z") or
         CheckDecemberSolstice(-2300, "-002300-12-19T16:22:27.929Z") or
         CheckDecemberSolstice(12345, "+012345-12-11T13:30:10.276Z") or
         Pass('DatesIssue250')

@@ -48,6 +48,11 @@ def _cbrt(x: float) -> float:
         return y
     raise InternalError()
 
+def _cdiv(numer: int, denom: int) -> int:
+    '''Divide negative numbers the same way C does: rounding toward zero, not down.'''
+    sign = -1 if (numer * denom) < 0 else +1
+    return sign * (abs(numer) // abs(denom))
+
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
 AU_PER_LY = 63241.07708807546       #<const> The number of astronomical units in one light-year.
@@ -275,11 +280,6 @@ def _UniversalTime(tt: float) -> float:
 
 _TimeRegex = re.compile(r'^([\+\-]?[0-9]+)-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2})(:([0-9]{2}(\.[0-9]+)?))?Z)?$')
 
-def _cdiv(numer: int, denom: int) -> int:
-    '''Divide negative numbers the same way C does: rounding toward zero, not down.'''
-    sign = +1 if (numer * denom) >= 0 else -1
-    return sign * (abs(numer) // abs(denom))
-
 class Time:
     """Represents a date and time used for performing astronomy calculations.
 
@@ -428,10 +428,10 @@ class Time:
         d = int(day)
         f = (14 - m) // 12
         y2000 = (
-            (d - 2483620)
-            + _cdiv(1461 * (y + 4800 - f), 4)
+            (d - 365972956)
+            + _cdiv(1461 * (y + 1000000 - f), 4)
             + _cdiv(367 * (m - 2 + f*12), 12)
-            - _cdiv(3 * _cdiv(y + 4900 - f, 100), 4)
+            - _cdiv(3 * _cdiv(y + 1000100 - f, 100), 4)
         )
         ut = (y2000 - 0.5) + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0)
         return Time(ut)
@@ -483,37 +483,8 @@ class Time:
         return 'Time(\'' + str(self) + '\')'
 
     def __str__(self) -> str:
-        # Adapted from the NOVAS C 3.1 function cal_date().
-        djd = self.ut + 2451545.5
-        jd = int(djd)
-        x = 24.0 * math.fmod(djd, 1.0)
-        if x < 0.0:
-            x += 24.0
-        hour = int(x)
-        x = 60.0 * math.fmod(x, 1.0)
-        minute = int(x)
-        second = round(60.0 * math.fmod(x, 1.0), 3)
-        if second >= 60.0:
-            second -= 60.0
-            minute += 1
-            if minute >= 60:
-                minute -= 60
-                hour += 1
-                if hour >= 24:
-                    hour -= 24
-                    jd += 1
-        c = 2500
-        k = jd + (68569 + c*146097)
-        n = 4 * k // 146097
-        k = k - (146097 * n + 3) // 4
-        m = 4000 * (k + 1) // 1461001
-        k = k - 1461 * m // 4 + 31
-        month = (80 * k) // 2447
-        day = k - 2447 * month // 80
-        k = month // 11
-        month = month + 2 - 12 * k
-        year = 100 * (n - 49) + m + k - c*400
-        millis = max(0, min(59999, round(1000.0 * second)))
+        (year, month, day, hour, minute, second) = self.Calendar()
+        millis = max(0, min(59999, int(math.floor(1000.0 * second))))
         if year < 0:
             text = '-{:06d}'.format(-year)
         elif year <= 9999:
@@ -522,6 +493,38 @@ class Time:
             text = '+{:06d}'.format(year)
         text += '-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.{:03d}Z'.format(month, day, hour, minute, millis // 1000, millis % 1000)
         return text
+
+    def Calendar(self) -> Tuple[int, int, int, int, int, float]:
+        """Returns a tuple of the form (year, month, day, hour, minute, second).
+
+        This is a convenience method for converting a `Time` value into
+        its Gregorian calendar date/time representation.
+        Unlike the built-in `datetime` class, this method can represent
+        dates over a nearly 2 million year range: the years -999999 to +999999.
+        """
+        # Adapted from the NOVAS C 3.1 function cal_date().
+        # [Don Cross - 2023-02-25] Fixed to handle a much wider range of years.
+        djd = self.ut + 2451545.5
+        jd = int(math.floor(djd))
+        x = 24.0 * math.fmod(djd, 1.0)
+        if x < 0.0:
+            x += 24.0
+        hour = int(x)
+        x = 60.0 * math.fmod(x, 1.0)
+        minute = int(x)
+        second = 60.0 * math.fmod(x, 1.0)
+        c = 2500
+        k = jd + (68569 + c*146097)
+        n = _cdiv(4*k, 146097)
+        k = k - _cdiv(146097*n + 3, 4)
+        m = _cdiv(4000*(k+1), 1461001)
+        k = k - _cdiv(1461 * m, 4) + 31
+        month = _cdiv(80 * k, 2447)
+        day = k - _cdiv(2447 * month, 80)
+        k = _cdiv(month, 11)
+        month = month + 2 - 12 * k
+        year = 100 * (n - 49) + m + k - c*400
+        return (year, month, day, hour, minute, second)
 
     def Utc(self) -> datetime.datetime:
         """Returns the UTC date and time as a `datetime` object.
