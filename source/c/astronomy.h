@@ -1285,6 +1285,10 @@ astro_func_result_t Astronomy_HourAngle(
 
 /** @endcond */
 
+astro_angle_result_t Astronomy_HorizonDipAngle(
+    astro_observer_t observer,
+    double metersAboveGround);
+
 astro_search_result_t Astronomy_SearchRiseSet(
     astro_body_t body,
     astro_observer_t observer,

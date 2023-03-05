@@ -198,6 +198,7 @@ static int MoonNodes(void);
 static int MoonVector(void);
 static int MoonEcliptic(void);
 static int RiseSet(void);
+static int RiseSetElevation(void);
 static int RiseSetReverse(void);
 static int LunarApsis(void);
 static int EarthApsis(void);
@@ -300,6 +301,7 @@ static unit_test_t UnitTests[] =
     {"pluto",                   PlutoCheck},
     {"refraction",              RefractionTest},
     {"riseset",                 RiseSet},
+    {"riseset_elevation",       RiseSetElevation},
     {"riseset_reverse",         RiseSetReverse},
     {"rotation",                RotationTest},
     {"seasons",                 SeasonsTest},
@@ -1918,6 +1920,89 @@ static int RiseSetReverse(void)
     FPASS();
 fail:
     free(utList);
+    return error;
+}
+
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+
+static int RiseSetElevationCase(
+    astro_observer_t observer,
+    double metersAboveGround,
+    double expectedDipAngle,
+    astro_time_t time,
+    double sr, double ss, double mr, double ms)
+{
+    int error;
+    double diff;
+    astro_angle_result_t result;
+
+    /* Calculate the dip angle for the given observer's height above the ground plane. */
+    result = Astronomy_HorizonDipAngle(observer, metersAboveGround);
+    CHECK_STATUS(result);
+
+    diff = ABS(result.angle - expectedDipAngle);
+    if (diff > 0.002)
+        FFAIL("EXCESSIVE dip angle error = %0.6lf degrees; expected=%0.6lf, calc=%0.6lf.\n", diff, expectedDipAngle, result.angle);
+
+    error = 0;
+fail:
+    return error;
+}
+
+
+static int RiseSetElevation(void)
+{
+    const char *filename = "riseset/elevation.txt";
+    int error;
+    FILE *infile = NULL;
+    int lnum, nscanned, year, month, day;
+    int srh, srm, ssh, ssm, mrh, mrm, msh, msm;
+    astro_observer_t observer;
+    astro_time_t time;
+    double sr, ss, mr, ms;      /* day offsets for sr, ss, mr, ms */
+    double metersAboveGround, dip;
+    char line[200];
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FFAIL("Cannot open input file: %s\n", filename);
+
+    lnum = 0;
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        if (line[0] == '#')
+            continue;
+
+        nscanned = sscanf(line, "%d-%d-%d %lf %lf %lf %lf %d:%d %d:%d %d:%d %d:%d %lf",
+            &year, &month, &day,
+            &observer.latitude, &observer.longitude, &observer.height,
+            &metersAboveGround,
+            &srh, &srm, &ssh, &ssm,
+            &mrh, &mrm, &msh, &msm,
+            &dip
+        );
+
+        if (nscanned != 16)
+            FLNFAIL("Expected 16 tokens but found %d\n", nscanned);
+
+        /* Get search origin time. */
+        time = Astronomy_MakeTime(year, month, day, 0, 0, 0.0);
+
+        /* Convert scanned values into sunrise, sunset, moonrise, moonset day offsets. */
+        sr = (srh + srm/60.0) / 24.0;
+        ss = (ssh + ssm/60.0) / 24.0;
+        mr = (mrh + mrm/60.0) / 24.0;
+        ms = (msh + msm/60.0) / 24.0;
+
+        CHECK(RiseSetElevationCase(observer, metersAboveGround, dip, time, sr, ss, mr, ms));
+    }
+
+    /* Correct rise/set times for an observer that is above the horizon plane. */
+    FPASS();
+fail:
+    if (infile != NULL) fclose(infile);
     return error;
 }
 

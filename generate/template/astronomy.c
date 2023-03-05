@@ -7089,6 +7089,81 @@ static astro_search_result_t InternalSearchAltitude(
 
 
 /**
+ * @brief Calculates the horizon's decreased angle below an observer's level plane.
+ *
+ * Given the geographic location of an observer and a height above ground level,
+ * this function calculates how far below the observer's horizontal plane
+ * the observed horizon dips.
+ *
+ * If `metersAboveGround` is zero, the function succeeds and returns an angle of zero.
+ * If `metersAboveGround` is a positive number, the function succeeds and returns
+ * a negative angle expressed in degrees.
+ * If `metersAboveGround` is a negative number, the function fails, because
+ * an underground or underwater observer has no defined horizon.
+ *
+ * This function assists calculating rise/set times of celestial bodies
+ * when the observer is significantly higher than the ground, and the ground itself
+ * is fairly flat.
+ *
+ * @param observer
+ *      The geographic location of the observer.
+ *      The `height` field must be the height of the observer above sea level,
+ *      not height above the ground.
+ *
+ * @param metersAboveGround
+ *      The height of the observer above the ground, expressed in meters.
+ *      This value must be greater than or equal to zero meters, or the function will fail.
+ *
+ * @return
+ *      On success, the `status` field holds `ASTRO_SUCCESS` and the `angle`
+ *      value holds a negative or zero angle expressed in degrees. Otherwise,
+ *      `status` holds an error code and `angle` is undefined.
+ */
+astro_angle_result_t Astronomy_HorizonDipAngle(
+    astro_observer_t observer,
+    double metersAboveGround)
+{
+    astro_angle_result_t result;
+    double phi, sinphi, cosphi, c, s, ht_km, ach, ash, radius_m;
+    double k;
+
+    if (!isfinite(metersAboveGround) || (metersAboveGround < 0.0))
+        return AngleError(ASTRO_INVALID_PARAMETER);
+
+    /* Calculate the effective radius of the Earth at ground level below the observer. */
+    /* Correct for the Earth's oblateness. */
+    phi = observer.latitude * DEG2RAD;
+    sinphi = sin(phi);
+    cosphi = cos(phi);
+    c = 1.0 / hypot(cosphi, sinphi*EARTH_FLATTENING);
+    s = c * (EARTH_FLATTENING * EARTH_FLATTENING);
+    ht_km = (observer.height - metersAboveGround) / 1000.0;     /* height of ground above sea level */
+    ach = EARTH_EQUATORIAL_RADIUS_KM*c + ht_km;
+    ash = EARTH_EQUATORIAL_RADIUS_KM*s + ht_km;
+    radius_m = 1000.0 * hypot(ach*cosphi, ash*sinphi);
+
+    /*
+        Correct refraction of a ray of light traveling tangent to the Earth's surface.
+        Based on: https://www.largeformatphotography.info/sunmooncalc/SMCalc.js
+        which in turn derives from:
+        Sweer, John. 1938.  The Path of a Ray of Light Tangent to the Surface of the Earth.
+        Journal of the Optical Society of America 28 (September):327-329.
+    */
+
+    /* k = refraction index */
+    k = 0.175 * pow(1.0 - (6.5e-3/283.15)*((observer.height - (2.0/3.0)*metersAboveGround)), 3.256);
+
+    result.angle = RAD2DEG * (sqrt(2*(1 - k)*metersAboveGround / radius_m) / (1 - k));
+    if (!isfinite(result.angle))
+        return AngleError(ASTRO_INTERNAL_ERROR);
+
+    result.status = ASTRO_SUCCESS;
+    return result;
+}
+
+
+
+/**
  * @brief Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
  *
  * This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
