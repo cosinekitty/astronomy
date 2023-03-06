@@ -247,6 +247,7 @@ static int GeoMoonPerformance(void);
 static int NutationPerformance(void);
 static int EclipticTest(void);
 static int HourAngleTest(void);
+static int Atmosphere(void);
 
 typedef int (* unit_test_func_t) (void);
 
@@ -263,6 +264,7 @@ unit_test_t;
 static unit_test_t UnitTests[] =
 {
     {"aberration",              AberrationTest},
+    {"atmosphere",              Atmosphere},
     {"axis",                    AxisTest},
     {"barystate",               BaryStateTest},
     {"check",                   AstroCheck},
@@ -7683,6 +7685,70 @@ static int HourAngleTest(void)
 
     FPASSA("%d cases, maxdiff = %0.4le hours.\n", cases, maxdiff);
 fail:
+    return error;
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+
+static int Atmosphere(void)
+{
+    int error;
+    FILE *infile = NULL;
+    const char *filename = "riseset/atmosphere.csv";
+    int lnum = 0;
+    int ncases = 0;
+    int nscanned;
+    const double tolerance = 8.8e-11;
+    double diff, maxdiff = 0.0;
+    double elevation, temperature, pressure, ignore_density, relative_density;
+    astro_atmosphere_t atmos;
+    char line[200];
+
+    infile = fopen(filename, "rt");
+    if (infile == NULL)
+        FFAIL("Cannot open input file: %s\n", filename);
+
+    while (ReadLine(line, sizeof(line), infile, filename, lnum))
+    {
+        TrimWhiteSpace(line);
+        ++lnum;
+        if (lnum == 1)
+        {
+            if (0 != strcmp(line, "elevation,temperature,pressure,density,relative_density"))
+                FLNFAIL("Expected header line, but found: [%s]\n", line);
+        }
+        else
+        {
+            /* 1000,281.65,89874.78809616930,319.1009696295730,0.9074655257711480 */
+            nscanned = sscanf(line, "%lf,%lf,%lf,%lf,%lf", &elevation, &temperature, &pressure, &ignore_density, &relative_density);
+            if (nscanned != 5)
+                FLNFAIL("Expected 5 tokens but found %d\n", nscanned);
+
+            atmos = Astronomy_Atmosphere(elevation);
+            CHECK_STATUS(atmos);
+
+            diff = ABS(atmos.temperature - temperature);
+            if (diff > maxdiff) maxdiff = diff;
+            if (diff > tolerance) FLNFAIL("EXCESSIVE temperature difference = %lg\n", diff);
+
+            diff = ABS(atmos.pressure - pressure);
+            if (diff > maxdiff) maxdiff = diff;
+            if (diff > tolerance) FLNFAIL("EXCESSIVE pressure difference = %lg\n", diff);
+
+            diff = ABS(atmos.density - relative_density);
+            if (diff > maxdiff) maxdiff = diff;
+            if (diff > tolerance) FLNFAIL("EXCESSIVE density difference = %lg\n", diff);
+
+            ++ncases;
+        }
+    }
+
+    if (ncases != 34)
+        FFAIL("Expected 34 test cases but processed %d.\n", ncases);
+
+    FPASSA("%d cases, maxdiff = %lg.\n", ncases, maxdiff);
+fail:
+    if (infile != NULL) fclose(infile);
     return error;
 }
 

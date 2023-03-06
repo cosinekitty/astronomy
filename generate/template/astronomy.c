@@ -300,11 +300,11 @@ static const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
 
 /*
     Degrees of refractive "lift" seen for objects near horizon.
-    More precisely, a pre-calculated value if InverseRefraction(REFRACTION_NORMAL, 0.0),
-    which indicates how far below the horizon a point has to be, at sea level,
+    More precisely, the angle below the horizon a point has to be, at sea level,
     to appear to be exactly on the horizon.
+    If the ground plane is higher than sea level, this angle
+    needs to be corrected for decreased atmospheric density.
 */
-//static const double REFRACTION_NEAR_HORIZON = 0.5738754906088583;
 static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;
 
 
