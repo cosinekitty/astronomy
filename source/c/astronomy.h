@@ -540,6 +540,18 @@ typedef enum
 astro_refraction_t;
 
 /**
+ * @brief Information about atmospheric pressure and temperature at a given elevation.
+ */
+typedef struct
+{
+    astro_status_t status;  /**< `ASTRO_SUCCESS` if this struct is valid; otherwise an error code. */
+    double pressure;        /**< Atmospheric pressure in pascals */
+    double temperature;     /**< Atmospheric temperature in kelvins */
+    double density;         /**< Atmospheric density relative to sea level */
+}
+astro_atmosphere_t;
+
+/**
  * @brief The result of a search for an astronomical event.
  */
 typedef struct
@@ -988,7 +1000,7 @@ astro_equator_date_t;
 /**
  * @brief Selects whether to search for a rise time or a set time.
  *
- * The #Astronomy_SearchRiseSet function finds the rise or set time of a body
+ * The #Astronomy_SearchRiseSetEx function finds the rise or set time of a body
  * depending on the value of its `direction` parameter.
  */
 typedef enum
@@ -1279,19 +1291,19 @@ astro_func_result_t Astronomy_HourAngle(
 
 /** @cond DOXYGEN_SKIP */
 
-/* The following is provided for backward compatibility. */
+/* The following are provided for backward compatibility. */
 #define Astronomy_SearchHourAngle(body,observer,hourAngle,startTime)    \
     Astronomy_SearchHourAngleEx((body), (observer), (hourAngle), (startTime), +1)
 
+#define Astronomy_SearchRiseSet(body,observer,direction,startTime,limitDays) \
+    Astronomy_SearchRiseSetEx((body), (observer), 0.0, (direction), (startTime), (limitDays))
+
 /** @endcond */
 
-astro_angle_result_t Astronomy_HorizonDipAngle(
-    astro_observer_t observer,
-    double metersAboveGround);
-
-astro_search_result_t Astronomy_SearchRiseSet(
+astro_search_result_t Astronomy_SearchRiseSetEx(
     astro_body_t body,
     astro_observer_t observer,
+    double metersAboveGround,
     astro_direction_t direction,
     astro_time_t startTime,
     double limitDays);
@@ -1303,6 +1315,8 @@ astro_search_result_t Astronomy_SearchAltitude(
     astro_time_t startTime,
     double limitDays,
     double altitude);
+
+astro_atmosphere_t Astronomy_Atmosphere(double elevationMeters);
 
 astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t *time);
 

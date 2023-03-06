@@ -1927,26 +1927,47 @@ fail:
 /*-----------------------------------------------------------------------------------------------------------*/
 
 
+static int RiseSetElevationBodyCase(
+    astro_body_t body,
+    astro_observer_t observer,
+    astro_direction_t direction,
+    double metersAboveGround,
+    astro_time_t startTime,
+    double eventOffsetDays)
+{
+    int error;
+    astro_search_result_t result;
+    double diff;
+
+    result = Astronomy_SearchRiseSetEx(body, observer, metersAboveGround, direction, startTime, 2.0);
+    CHECK_STATUS(result);
+
+    diff = V(result.time.ut - (startTime.ut + eventOffsetDays));
+    if (diff > 0.5)
+        diff -= 1.0;   /* assume event actually takes place on the next day */
+
+    diff = ABS(MINUTES_PER_DAY * diff);     /* convert signed days to absolute minutes */
+    FDEBUG("%-4s %s, diff = %0.3lf, expected day offset = %0.6lf, search time = %0.6lf calc event time = %0.6lf\n", Astronomy_BodyName(body), (direction > 0) ? "rise" : "set ", diff, eventOffsetDays, startTime.ut, result.time.ut);
+    if (diff > 0.5)
+        FFAIL("body=%s, direction=%c, EXCESSIVE diff = %0.3lf minutes\n", Astronomy_BodyName(body), (direction > 0) ? 'r' : 's', diff);
+
+    error = 0;
+fail:
+    return error;
+}
+
+
 static int RiseSetElevationCase(
     astro_observer_t observer,
     double metersAboveGround,
-    double expectedDipAngle,
     astro_time_t time,
     double sr, double ss, double mr, double ms)
 {
     int error;
-    double diff;
-    astro_angle_result_t result;
-
-    /* Calculate the dip angle for the given observer's height above the ground plane. */
-    result = Astronomy_HorizonDipAngle(observer, metersAboveGround);
-    CHECK_STATUS(result);
-
-    diff = ABS(result.angle - expectedDipAngle);
-    if (diff > 0.002)
-        FFAIL("EXCESSIVE dip angle error = %0.6lf degrees; expected=%0.6lf, calc=%0.6lf.\n", diff, expectedDipAngle, result.angle);
-
-    error = 0;
+    CHECK(RiseSetElevationBodyCase(BODY_SUN,  observer, DIRECTION_RISE,  metersAboveGround, time, sr));
+    CHECK(RiseSetElevationBodyCase(BODY_SUN,  observer, DIRECTION_SET,   metersAboveGround, time, ss));
+    CHECK(RiseSetElevationBodyCase(BODY_MOON, observer, DIRECTION_RISE,  metersAboveGround, time, mr));
+    CHECK(RiseSetElevationBodyCase(BODY_MOON, observer, DIRECTION_SET,   metersAboveGround, time, ms));
 fail:
     return error;
 }
@@ -1996,7 +2017,7 @@ static int RiseSetElevation(void)
         mr = (mrh + mrm/60.0) / 24.0;
         ms = (msh + msm/60.0) / 24.0;
 
-        CHECK(RiseSetElevationCase(observer, metersAboveGround, dip, time, sr, ss, mr, ms));
+        CHECK(RiseSetElevationCase(observer, metersAboveGround, time, sr, ss, mr, ms));
     }
 
     /* Correct rise/set times for an observer that is above the horizon plane. */

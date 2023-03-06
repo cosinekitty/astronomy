@@ -303,7 +303,16 @@ static const double SOLAR_DAYS_PER_SIDEREAL_DAY = 0.9972695717592592;
 static const double MEAN_SYNODIC_MONTH = 29.530588;     /* average number of days for Moon to return to the same phase */
 static const double EARTH_ORBITAL_PERIOD = 365.256;
 static const double NEPTUNE_ORBITAL_PERIOD = 60189.0;
-static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;   /* degrees of refractive "lift" seen for objects near horizon */
+
+/*
+    Degrees of refractive "lift" seen for objects near horizon.
+    More precisely, a pre-calculated value if InverseRefraction(REFRACTION_NORMAL, 0.0),
+    which indicates how far below the horizon a point has to be, at sea level,
+    to appear to be exactly on the horizon.
+*/
+//static const double REFRACTION_NEAR_HORIZON = 0.5738754906088583;
+static const double REFRACTION_NEAR_HORIZON = 34.0 / 60.0;
+
 
 #define             SUN_RADIUS_AU  (SUN_RADIUS_KM / KM_PER_AU)
 
@@ -8250,46 +8259,79 @@ static astro_search_result_t InternalSearchAltitude(
 
 
 /**
- * @brief Calculates the horizon's decreased angle below an observer's level plane.
+ * @brief Calculates U.S. Standard Atmosphere (1976) variables as a function of elevation.
  *
- * Given the geographic location of an observer and a height above ground level,
- * this function calculates how far below the observer's horizontal plane
- * the observed horizon dips.
+ * This function calculates idealized values of pressure, temperature, and density
+ * using the U.S. Standard Atmosphere (1976) model.
  *
- * If `metersAboveGround` is zero, the function succeeds and returns an angle of zero.
- * If `metersAboveGround` is a positive number, the function succeeds and returns
- * a negative angle expressed in degrees.
- * If `metersAboveGround` is a negative number, the function fails, because
- * an underground or underwater observer has no defined horizon.
+ * See:
+ * https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml
+ * https://ntrs.nasa.gov/api/citations/19770009539/downloads/19770009539.pdf
+ * https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf
  *
- * This function assists calculating rise/set times of celestial bodies
- * when the observer is significantly higher than the ground, and the ground itself
- * is fairly flat.
+ * @param elevationMeters
+ *      The elevation above sea level at which to calculate atmospheric variables.
+ *      The value must be in the range -500 to +32000, or the function will
+ *      fail with status `ASTRO_INVALID_PARAMETER`.
  *
- * @param observer
- *      The geographic location of the observer.
- *      The `height` field must be the height of the observer above sea level,
- *      not height above the ground.
- *
- * @param metersAboveGround
- *      The height of the observer above the ground, expressed in meters.
- *      This value must be greater than or equal to zero meters, or the function will fail.
- *
- * @return
- *      On success, the `status` field holds `ASTRO_SUCCESS` and the `angle`
- *      value holds a negative or zero angle expressed in degrees. Otherwise,
- *      `status` holds an error code and `angle` is undefined.
+ * @return astro_atmosphere_tp0
  */
-astro_angle_result_t Astronomy_HorizonDipAngle(
+astro_atmosphere_t Astronomy_Atmosphere(double elevationMeters)
+{
+    astro_atmosphere_t atmos;
+    const double P0 = 101325.0;     /* pressure at sea level [pascals] */
+    const double T0 = 288.15;       /* temperature at sea level [kelvins] */
+    const double T1 = 216.65;       /* temperature between 20 km and 32 km [kelvins] */
+
+    /*
+        Formulas for air temperature and pressure at a height of `h` meters
+        were found at:
+        https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml
+
+        These in turn come from:
+        1. COESA, U.S. Standard Atmosphere, 1976, U.S. Government Printing Office, Washington, DC, 1976.
+        2. Jursa, A. S., Ed., Handbook of Geophysics and the Space Environment, Air Force Geophysics Laboratory, 1985.
+    */
+
+    if (!isfinite(elevationMeters) || elevationMeters < -500.0 || elevationMeters > 32000.0)
+    {
+        /* Invalid elevation. */
+        atmos.status = ASTRO_INVALID_PARAMETER;
+        atmos.pressure = atmos.temperature = atmos.density = NAN;
+    }
+    else
+    {
+        if (elevationMeters <= 11000.0)
+        {
+            atmos.temperature = T0 - 0.0065*elevationMeters;
+            atmos.pressure = P0 * pow(T0 / atmos.temperature, -5.25577);
+        }
+        else if (elevationMeters <= 20000.0)
+        {
+            atmos.temperature = T1;
+            atmos.pressure = 22632.0 * exp(-0.00015768832 * (elevationMeters - 11000.0));
+        }
+        else
+        {
+            atmos.temperature = T1 + 0.001*(elevationMeters - 20000.0);
+            atmos.pressure = 5474.87 * pow(T1 / atmos.temperature, 34.16319);
+        }
+        /* The density is calculated relative to the sea level value. */
+        /* Using the ideal gas law PV=nRT, we deduce that density is proportional to P/T. */
+        atmos.density = (atmos.pressure / atmos.temperature) / (P0 / T0);
+        atmos.status = ASTRO_SUCCESS;
+    }
+
+    return atmos;
+}
+
+
+static double HorizonDipAngle(
     astro_observer_t observer,
     double metersAboveGround)
 {
-    astro_angle_result_t result;
     double phi, sinphi, cosphi, c, s, ht_km, ach, ash, radius_m;
-    double k;
-
-    if (!isfinite(metersAboveGround) || (metersAboveGround < 0.0))
-        return AngleError(ASTRO_INVALID_PARAMETER);
+    double k, dip;
 
     /* Calculate the effective radius of the Earth at ground level below the observer. */
     /* Correct for the Earth's oblateness. */
@@ -8312,14 +8354,11 @@ astro_angle_result_t Astronomy_HorizonDipAngle(
     */
 
     /* k = refraction index */
-    k = 0.175 * pow(1.0 - (6.5e-3/283.15)*((observer.height - (2.0/3.0)*metersAboveGround)), 3.256);
+    k = 0.175 * pow(1.0 - (6.5e-3/283.15)*(observer.height - (2.0/3.0)*metersAboveGround), 3.256);
 
-    result.angle = RAD2DEG * (sqrt(2*(1 - k)*metersAboveGround / radius_m) / (1 - k));
-    if (!isfinite(result.angle))
-        return AngleError(ASTRO_INTERNAL_ERROR);
-
-    result.status = ASTRO_SUCCESS;
-    return result;
+    /* Calculate how far below the observer's horizontal plane the observed horizon dips. */
+    dip = RAD2DEG * -(sqrt(2*(1 - k)*metersAboveGround / radius_m) / (1 - k));
+    return dip;
 }
 
 
@@ -8356,6 +8395,13 @@ astro_angle_result_t Astronomy_HorizonDipAngle(
  *      The location where observation takes place.
  *      You can create an observer structure by calling #Astronomy_MakeObserver.
  *
+ * @param metersAboveGround
+ *      Usually the observer is located at ground level. Then this parameter
+ *      should be zero. But if the observer is significantly higher than ground
+ *      level, for example in an airplane, this parameter should be a positive
+ *      number indicating how far above the ground the observer is.
+ *      An error occurs if `metersAboveGround` is negative.
+ *
  * @param direction
  *      Either `DIRECTION_RISE` to find a rise time or `DIRECTION_SET` to find a set time.
  *
@@ -8379,14 +8425,21 @@ astro_angle_result_t Astronomy_HorizonDipAngle(
  *      event does not occur within `limitDays` days of `startTime`. This is a normal condition,
  *      not an error. Any other value of `status` indicates an error of some kind.
  */
-astro_search_result_t Astronomy_SearchRiseSet(
+astro_search_result_t Astronomy_SearchRiseSetEx(
     astro_body_t body,
     astro_observer_t observer,
+    double metersAboveGround,
     astro_direction_t direction,
     astro_time_t startTime,
     double limitDays)
 {
+    double altitude, dip;
     double body_radius_au;
+    astro_atmosphere_t atmos;
+
+    if (!isfinite(metersAboveGround) || (metersAboveGround < 0.0))
+        return SearchError(ASTRO_INVALID_PARAMETER);
+
     switch (body)
     {
     case BODY_SUN:  body_radius_au = SUN_RADIUS_AU;                 break;
@@ -8394,7 +8447,19 @@ astro_search_result_t Astronomy_SearchRiseSet(
     default:        body_radius_au = 0.0;                           break;
     }
 
-    return InternalSearchAltitude(body, observer, direction, startTime, limitDays, body_radius_au, -REFRACTION_NEAR_HORIZON);
+    /* Calculate atmospheric density at ground level. */
+    atmos = Astronomy_Atmosphere(observer.height - metersAboveGround);
+    if (atmos.status != ASTRO_SUCCESS)
+        return SearchError(atmos.status);
+
+    /* Calculate the apparent angular dip of the horizon. */
+    dip = HorizonDipAngle(observer, metersAboveGround);
+
+    /* Correct refraction for objects near the horizon, using atmospheric density at the ground. */
+    altitude = dip - (REFRACTION_NEAR_HORIZON * atmos.density);
+
+    /* Search for the top of the body crossing the corrected altitude angle. */
+    return InternalSearchAltitude(body, observer, direction, startTime, limitDays, body_radius_au, altitude);
 }
 
 
@@ -8424,7 +8489,7 @@ astro_search_result_t Astronomy_SearchRiseSet(
  * `Astronomy_SearchAltitude` is not intended to find rise/set times of a body for two reasons:
  * (1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers.
  * (2) Rise/set times are affected significantly by atmospheric refraction.
- * Therefore, it is better to use #Astronomy_SearchRiseSet to find rise/set times, which
+ * Therefore, it is better to use #Astronomy_SearchRiseSetEx to find rise/set times, which
  * corrects for both of these considerations.
  *
  * `Astronomy_SearchAltitude` will not work reliably for altitudes at or near the body's
@@ -9799,6 +9864,9 @@ astro_vector_t Astronomy_VectorFromHorizon(astro_spherical_t sphere, astro_time_
  * the amount of "lift" caused by atmospheric refraction.
  * This is the number of degrees higher in the sky an object appears
  * due to the lensing of the Earth's atmosphere.
+ * This function works best near sea level.
+ * To correct for higher elevations, call #Astronomy_Atmosphere for that
+ * elevation and multiply the refraction angle by the resulting relative density.
  *
  * @param refraction
  *      The option selecting which refraction correction to use.

@@ -72,7 +72,7 @@ To get started quickly, here are some [examples](../../demo/c/).
 
 | Function | Description |
 | -------- | ----------- |
-| [SearchRiseSet](#Astronomy_SearchRiseSet) | Finds time of rise or set for a body as seen by an observer on the Earth. |
+| [SearchRiseSetEx](#Astronomy_SearchRiseSetEx) | Finds time of rise or set for a body as seen by an observer on the Earth. |
 | [SearchAltitude](#Astronomy_SearchAltitude) | Finds time when a body reaches a given altitude above or below the horizon. Useful for finding civil, nautical, or astronomical twilight. |
 | [SearchHourAngleEx](#Astronomy_SearchHourAngleEx) | Finds when body reaches a given hour angle for an observer on the Earth. Hour angle = 0 finds culmination, the highest point in the sky. |
 
@@ -285,6 +285,32 @@ This function calculates the angular separation between the given body and the S
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The celestial body whose angle from the Sun is to be measured. Not allowed to be `BODY_EARTH`. | 
 | [`astro_time_t`](#astro_time_t) | `time` |  The time at which the observation is made. | 
+
+
+
+
+---
+
+<a name="Astronomy_Atmosphere"></a>
+### Astronomy_Atmosphere(elevationMeters) &#8658; [`astro_atmosphere_t`](#astro_atmosphere_t)
+
+**Calculates U.S. Standard Atmosphere (1976) variables as a function of elevation.** 
+
+
+
+This function calculates idealized values of pressure, temperature, and density using the U.S. Standard Atmosphere (1976) model.
+
+See: [https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml](https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml)[https://ntrs.nasa.gov/api/citations/19770009539/downloads/19770009539.pdf](https://ntrs.nasa.gov/api/citations/19770009539/downloads/19770009539.pdf)[https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf](https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf)
+
+
+
+**Returns:**  astro_atmosphere_tp0 
+
+
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `double` | `elevationMeters` |  The elevation above sea level at which to calculate atmospheric variables. The value must be in the range -500 to +32000, or the function will fail with status `ASTRO_INVALID_PARAMETER`. | 
 
 
 
@@ -1943,7 +1969,7 @@ For example, if you have rotation matrix that converts ecliptic coordinates (ECL
 
 
 
-Given an altitude angle and a refraction option, calculates the amount of "lift" caused by atmospheric refraction. This is the number of degrees higher in the sky an object appears due to the lensing of the Earth's atmosphere.
+Given an altitude angle and a refraction option, calculates the amount of "lift" caused by atmospheric refraction. This is the number of degrees higher in the sky an object appears due to the lensing of the Earth's atmosphere. This function works best near sea level. To correct for higher elevations, call [`Astronomy_Atmosphere`](#Astronomy_Atmosphere) for that elevation and multiply the refraction angle by the resulting relative density.
 
 
 
@@ -2524,7 +2550,7 @@ Astronomical twilight uses -18 degrees as the `altitude` value.
 
 By convention for twilight time calculations, the altitude is not corrected for atmospheric refraction. This is because the target altitudes are below the horizon, and refraction is not directly observable.
 
-`Astronomy_SearchAltitude` is not intended to find rise/set times of a body for two reasons: (1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers. (2) Rise/set times are affected significantly by atmospheric refraction. Therefore, it is better to use [`Astronomy_SearchRiseSet`](#Astronomy_SearchRiseSet) to find rise/set times, which corrects for both of these considerations.
+`Astronomy_SearchAltitude` is not intended to find rise/set times of a body for two reasons: (1) Rise/set times of the Sun or Moon are defined by their topmost visible portion, not their centers. (2) Rise/set times are affected significantly by atmospheric refraction. Therefore, it is better to use [`Astronomy_SearchRiseSetEx`](#Astronomy_SearchRiseSetEx) to find rise/set times, which corrects for both of these considerations.
 
 `Astronomy_SearchAltitude` will not work reliably for altitudes at or near the body's maximum or minimum altitudes. To find the time a body reaches minimum or maximum altitude angles, use [`Astronomy_SearchHourAngleEx`](#Astronomy_SearchHourAngleEx).
 
@@ -2885,8 +2911,8 @@ Certain astronomical events are defined in terms of relative longitude between t
 
 ---
 
-<a name="Astronomy_SearchRiseSet"></a>
-### Astronomy_SearchRiseSet(body, observer, direction, startTime, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
+<a name="Astronomy_SearchRiseSetEx"></a>
+### Astronomy_SearchRiseSetEx(body, observer, metersAboveGround, direction, startTime, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 **Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.** 
 
@@ -2908,6 +2934,7 @@ Note that rise or set may not occur in every 24 hour period. For example, near t
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [`Astronomy_DefineStar`](#Astronomy_DefineStar). | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The location where observation takes place. You can create an observer structure by calling [`Astronomy_MakeObserver`](#Astronomy_MakeObserver). | 
+| `double` | `metersAboveGround` |  Usually the observer is located at ground level. Then this parameter should be zero. But if the observer is significantly higher than ground level, for example in an airplane, this parameter should be a positive number indicating how far above the ground the observer is. An error occurs if `metersAboveGround` is negative. | 
 | [`astro_direction_t`](#astro_direction_t) | `direction` |  Either `DIRECTION_RISE` to find a rise time or `DIRECTION_SET` to find a set time. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
 | `double` | `limitDays` |  Limits how many days to search for a rise or set time, and defines the direction in time to search. When `limitDays` is positive, the search is performed into the future, after `startTime`. When negative, the search is performed into the past, before `startTime`. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. | 
@@ -3875,7 +3902,7 @@ Aberration correction is useful to improve accuracy of coordinates of apparent l
 
 
 
-The [`Astronomy_SearchRiseSet`](#Astronomy_SearchRiseSet) function finds the rise or set time of a body depending on the value of its `direction` parameter. 
+The [`Astronomy_SearchRiseSetEx`](#Astronomy_SearchRiseSetEx) function finds the rise or set time of a body depending on the value of its `direction` parameter. 
 
 | Enum Value | Description |
 | --- | --- |
@@ -4064,6 +4091,23 @@ This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_Sea
 | [`astro_apsis_kind_t`](#astro_apsis_kind_t) | `kind` |  Whether this is a pericenter or apocenter event.  |
 | `double` | `dist_au` |  The distance between the centers of the bodies in astronomical units.  |
 | `double` | `dist_km` |  The distance between the centers of the bodies in kilometers.  |
+
+
+---
+
+<a name="astro_atmosphere_t"></a>
+### `astro_atmosphere_t`
+
+**Information about atmospheric pressure and temperature at a given elevation.** 
+
+
+
+| Type | Member | Description |
+| ---- | ------ | ----------- |
+| [`astro_status_t`](#astro_status_t) | `status` |  `ASTRO_SUCCESS` if this struct is valid; otherwise an error code.  |
+| `double` | `pressure` |  Atmospheric pressure in pascals  |
+| `double` | `temperature` |  Atmospheric temperature in kelvins  |
+| `double` | `density` |  Atmospheric density relative to sea level  |
 
 
 ---
