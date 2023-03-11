@@ -2912,7 +2912,7 @@ Certain astronomical events are defined in terms of relative longitude between t
 ---
 
 <a name="Astronomy_SearchRiseSetEx"></a>
-### Astronomy_SearchRiseSetEx(body, observer, metersAboveGround, direction, startTime, limitDays) &#8658; [`astro_search_result_t`](#astro_search_result_t)
+### Astronomy_SearchRiseSetEx(body, observer, direction, startTime, limitDays, metersAboveGround) &#8658; [`astro_search_result_t`](#astro_search_result_t)
 
 **Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.** 
 
@@ -2934,10 +2934,10 @@ Note that rise or set may not occur in every 24 hour period. For example, near t
 | --- | --- | --- |
 | [`astro_body_t`](#astro_body_t) | `body` |  The Sun, Moon, any planet other than the Earth, or a user-defined star that was created by a call to [`Astronomy_DefineStar`](#Astronomy_DefineStar). | 
 | [`astro_observer_t`](#astro_observer_t) | `observer` |  The location where observation takes place. You can create an observer structure by calling [`Astronomy_MakeObserver`](#Astronomy_MakeObserver). | 
-| `double` | `metersAboveGround` |  Usually the observer is located at ground level. Then this parameter should be zero. But if the observer is significantly higher than ground level, for example in an airplane, this parameter should be a positive number indicating how far above the ground the observer is. An error occurs if `metersAboveGround` is negative. | 
 | [`astro_direction_t`](#astro_direction_t) | `direction` |  Either `DIRECTION_RISE` to find a rise time or `DIRECTION_SET` to find a set time. | 
 | [`astro_time_t`](#astro_time_t) | `startTime` |  The date and time at which to start the search. | 
 | `double` | `limitDays` |  Limits how many days to search for a rise or set time, and defines the direction in time to search. When `limitDays` is positive, the search is performed into the future, after `startTime`. When negative, the search is performed into the past, before `startTime`. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. | 
+| `double` | `metersAboveGround` |  Usually the observer is located at ground level. Then this parameter should be zero. But if the observer is significantly higher than ground level, for example in an airplane, this parameter should be a positive number indicating how far above the ground the observer is. An error occurs if `metersAboveGround` is negative. | 
 
 
 

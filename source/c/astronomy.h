@@ -1296,17 +1296,17 @@ astro_func_result_t Astronomy_HourAngle(
     Astronomy_SearchHourAngleEx((body), (observer), (hourAngle), (startTime), +1)
 
 #define Astronomy_SearchRiseSet(body,observer,direction,startTime,limitDays) \
-    Astronomy_SearchRiseSetEx((body), (observer), 0.0, (direction), (startTime), (limitDays))
+    Astronomy_SearchRiseSetEx((body), (observer), (direction), (startTime), (limitDays), 0.0)
 
 /** @endcond */
 
 astro_search_result_t Astronomy_SearchRiseSetEx(
     astro_body_t body,
     astro_observer_t observer,
-    double metersAboveGround,
     astro_direction_t direction,
     astro_time_t startTime,
-    double limitDays);
+    double limitDays,
+    double metersAboveGround);
 
 astro_search_result_t Astronomy_SearchAltitude(
     astro_body_t body,

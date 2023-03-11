@@ -7234,13 +7234,6 @@ static double HorizonDipAngle(
  *      The location where observation takes place.
  *      You can create an observer structure by calling #Astronomy_MakeObserver.
  *
- * @param metersAboveGround
- *      Usually the observer is located at ground level. Then this parameter
- *      should be zero. But if the observer is significantly higher than ground
- *      level, for example in an airplane, this parameter should be a positive
- *      number indicating how far above the ground the observer is.
- *      An error occurs if `metersAboveGround` is negative.
- *
  * @param direction
  *      Either `DIRECTION_RISE` to find a rise time or `DIRECTION_SET` to find a set time.
  *
@@ -7257,6 +7250,13 @@ static double HorizonDipAngle(
  *      in the future (for example, for an observer near the south pole), you can
  *      pass in a larger value like 365.
  *
+ * @param metersAboveGround
+ *      Usually the observer is located at ground level. Then this parameter
+ *      should be zero. But if the observer is significantly higher than ground
+ *      level, for example in an airplane, this parameter should be a positive
+ *      number indicating how far above the ground the observer is.
+ *      An error occurs if `metersAboveGround` is negative.
+ *
  * @return
  *      On success, the `status` field in the returned structure contains `ASTRO_SUCCESS`
  *      and the `time` field contains the date and time of the rise or set time as requested.
@@ -7267,10 +7267,10 @@ static double HorizonDipAngle(
 astro_search_result_t Astronomy_SearchRiseSetEx(
     astro_body_t body,
     astro_observer_t observer,
-    double metersAboveGround,
     astro_direction_t direction,
     astro_time_t startTime,
-    double limitDays)
+    double limitDays,
+    double metersAboveGround)
 {
     double altitude, dip;
     double body_radius_au;

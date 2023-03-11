@@ -1941,7 +1941,7 @@ static int RiseSetElevationBodyCase(
     astro_search_result_t result;
     double diff;
 
-    result = Astronomy_SearchRiseSetEx(body, observer, metersAboveGround, direction, startTime, 2.0);
+    result = Astronomy_SearchRiseSetEx(body, observer, direction, startTime, 2.0, metersAboveGround);
     CHECK_STATUS(result);
 
     diff = V(result.time.ut - (startTime.ut + eventOffsetDays));
