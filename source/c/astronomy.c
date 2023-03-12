@@ -8271,7 +8271,7 @@ static astro_search_result_t InternalSearchAltitude(
  *
  * @param elevationMeters
  *      The elevation above sea level at which to calculate atmospheric variables.
- *      The value must be in the range -500 to +32000, or the function will
+ *      The value must be at least -500 to +100000, or the function will
  *      fail with status `ASTRO_INVALID_PARAMETER`.
  *
  * @return astro_atmosphere_tp0
@@ -8293,7 +8293,7 @@ astro_atmosphere_t Astronomy_Atmosphere(double elevationMeters)
         2. Jursa, A. S., Ed., Handbook of Geophysics and the Space Environment, Air Force Geophysics Laboratory, 1985.
     */
 
-    if (!isfinite(elevationMeters) || elevationMeters < -500.0 || elevationMeters > 32000.0)
+    if (!isfinite(elevationMeters) || elevationMeters < -500.0 || elevationMeters > 100000.0)
     {
         /* Invalid elevation. */
         atmos.status = ASTRO_INVALID_PARAMETER;

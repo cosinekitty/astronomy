@@ -540,7 +540,7 @@ typedef enum
 astro_refraction_t;
 
 /**
- * @brief Information about atmospheric pressure and temperature at a given elevation.
+ * @brief Information about idealized atmospheric variables at a given elevation.
  */
 typedef struct
 {

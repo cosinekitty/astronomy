@@ -310,7 +310,7 @@ See: [https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml](https
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `double` | `elevationMeters` |  The elevation above sea level at which to calculate atmospheric variables. The value must be in the range -500 to +32000, or the function will fail with status `ASTRO_INVALID_PARAMETER`. | 
+| `double` | `elevationMeters` |  The elevation above sea level at which to calculate atmospheric variables. The value must be at least -500 to +100000, or the function will fail with status `ASTRO_INVALID_PARAMETER`. | 
 
 
 
@@ -4098,7 +4098,7 @@ This data structure is returned by [`Astronomy_SearchLunarApsis`](#Astronomy_Sea
 <a name="astro_atmosphere_t"></a>
 ### `astro_atmosphere_t`
 
-**Information about atmospheric pressure and temperature at a given elevation.** 
+**Information about idealized atmospheric variables at a given elevation.** 
 
 
 

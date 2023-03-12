@@ -1290,6 +1290,27 @@ namespace CosineKitty
     }
 
     /// <summary>
+    /// Information about idealized atmospheric variables at a given elevation.
+    /// </summary>
+    public struct AtmosphereInfo
+    {
+        /// <summary>
+        /// Atmospheric pressure in pascals.
+        /// </summary>
+        public double pressure;
+
+        /// <summary>
+        /// Atmospheric temperature in kelvins.
+        /// </summary>
+        public double temperature;
+
+        /// <summary>
+        /// Atmospheric density relative to sea level.
+        /// </summary>
+        public double density;
+    }
+
+    /// <summary>
     /// A lunar quarter event (new moon, first quarter, full moon, or third quarter) along with its date and time.
     /// </summary>
     public struct MoonQuarterInfo
@@ -6170,6 +6191,56 @@ $ASTRO_JUPITER_MOONS();
             AstroTime t1 = startTime.AddDays(dt1);
             AstroTime t2 = startTime.AddDays(dt2);
             return Search(moon_offset, t1, t2, 0.1);
+        }
+
+
+        /// <summary>
+        /// Calculates U.S. Standard Atmosphere (1976) variables as a function of elevation.
+        /// </summary>
+        /// <remarks>
+        /// This function calculates idealized values of pressure, temperature, and density
+        /// using the U.S. Standard Atmosphere (1976) model.
+        /// 1. COESA, U.S. Standard Atmosphere, 1976, U.S. Government Printing Office, Washington, DC, 1976.
+        /// 2. Jursa, A. S., Ed., Handbook of Geophysics and the Space Environment, Air Force Geophysics Laboratory, 1985.
+        /// See:
+        /// https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml
+        /// https://ntrs.nasa.gov/api/citations/19770009539/downloads/19770009539.pdf
+        /// https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf
+        /// </remarks>
+        /// <param name="elevationMeters">
+        /// The elevation above sea level at which to calculate atmospheric variables.
+        /// Must be in the range -500 to +100000, or an exception will occur.
+        /// </param>
+        public static AtmosphereInfo Atmosphere(double elevationMeters)
+        {
+            const double P0 = 101325.0;     // pressure at sea level [pascals]
+            const double T0 = 288.15;       // temperature at sea level [kelvins]
+            const double T1 = 216.65;       // temperature between 20 km and 32 km [kelvins]
+
+            if (!isfinite(elevationMeters) || elevationMeters < -500.0 || elevationMeters > 100000.0)
+                throw new ArgumentOutOfRangeException(nameof(elevationMeters));
+
+            double temperature;
+            double pressure;
+            if (elevationMeters <= 11000.0)
+            {
+                temperature = T0 - 0.0065*elevationMeters;
+                pressure = P0 * Math.Pow(T0 / temperature, -5.25577);
+            }
+            else if (elevationMeters <= 20000.0)
+            {
+                temperature = T1;
+                pressure = 22632.0 * Math.Exp(-0.00015768832 * (elevationMeters - 11000.0));
+            }
+            else
+            {
+                temperature = T1 + 0.001*(elevationMeters - 20000.0);
+                pressure = 5474.87 * Math.Pow(T1 / temperature, 34.16319);
+            }
+            // The density is calculated relative to the sea level value.
+            // Using the ideal gas law PV=nRT, we deduce that density is proportional to P/T.
+            double density = (pressure / temperature) / (P0 / T0);
+            return new AtmosphereInfo { pressure = pressure, temperature = temperature, density = density };
         }
 
 

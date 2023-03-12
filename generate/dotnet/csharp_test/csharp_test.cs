@@ -95,6 +95,7 @@ namespace csharp_test
             new Test("aberration", AberrationTest),
             new Test("twilight", TwilightTest),
             new Test("axis", AxisTest),
+            new Test("atmosphere", Atmosphere),
         };
 
         static int Main(string[] args)
@@ -4543,6 +4544,67 @@ namespace csharp_test
                 0 == StateVectorStringTest() &&
                 0 == ObserverStringTest()
             ) ? Pass(nameof(StringsTest)) : 1;
+        }
+
+        //-----------------------------------------------------------------------------------------
+
+        static int Atmosphere()
+        {
+            const string filename = "../../riseset/atmosphere.csv";
+            const double tolerance = 8.8e-11;
+            double maxdiff = 0.0;
+            int ncases = 0;
+
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                string line;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    if (lnum == 1)
+                    {
+                        if (line != "elevation,temperature,pressure,density,relative_density")
+                            return Fail($"{nameof(Atmosphere)}: Expected header line, but found: [{line}]");
+                    }
+                    else
+                    {
+                        string[] tokens = line.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                        if (tokens.Length != 5)
+                            return Fail($"{nameof(Atmosphere)}({filename} line {lnum}): expected 5 numeric tokens but found {tokens.Length}");
+
+                        if (double.TryParse(tokens[0], out double elevation) &&
+                            double.TryParse(tokens[1], out double temperature) &&
+                            double.TryParse(tokens[2], out double pressure) &&
+                            // ignore tokens[3] = absolute_density
+                            double.TryParse(tokens[4], out double relative_density))
+                        {
+                            AtmosphereInfo atmos = Astronomy.Atmosphere(elevation);
+
+                            double diff = abs(atmos.temperature - temperature);
+                            if (diff > maxdiff) maxdiff = diff;
+                            if (diff > tolerance) return Fail($"{nameof(Atmosphere)}: EXCESSIVE temperature difference = {diff}");
+
+                            diff = abs(atmos.pressure - pressure);
+                            if (diff > maxdiff) maxdiff = diff;
+                            if (diff > tolerance) return Fail($"{nameof(Atmosphere)}: EXCESSIVE pressure difference = {diff}");
+
+                            diff = abs(atmos.density - relative_density);
+                            if (diff > maxdiff) maxdiff = diff;
+                            if (diff > tolerance) return Fail($"{nameof(Atmosphere)}: EXCESSIVE density difference = {diff}");
+
+                            ++ncases;
+                        }
+                        else
+                            return Fail($"{nameof(Atmosphere)}({filename} line {lnum}): cannot parse numeric data.");
+                    }
+                }
+            }
+
+            if (ncases != 34)
+                return Fail($"{nameof(Atmosphere)}: expected 34 test cases but processed {ncases}.");
+
+            return Pass(nameof(Atmosphere));
         }
 
         //-----------------------------------------------------------------------------------------
