@@ -711,7 +711,7 @@ namespace CosineKitty
         /// <returns>The nonnegative length of the Cartisian vector in AU.</returns>
         public double Length()
         {
-            return Math.Sqrt(x*x + y*y + z*z);
+            return Astronomy.hypot(x, y, z);
         }
 
 #pragma warning disable 1591        // we don't need XML documentation for these operator overloads
@@ -3007,6 +3007,16 @@ $ASTRO_ADDSOL()
             return !double.IsNaN(x) && !double.IsInfinity(x);
         }
 
+        internal static double hypot(double x, double y)
+        {
+            return Math.Sqrt(x*x + y*y);
+        }
+
+        internal static double hypot(double x, double y, double z)
+        {
+            return Math.Sqrt(x*x + y*y + z*z);
+        }
+
         private class StarDef
         {
             public double ra;       // heliocentric right ascension in EQJ
@@ -4125,7 +4135,7 @@ $ASTRO_JUPITER_MOONS();
             double x = ovec.x * KM_PER_AU;
             double y = ovec.y * KM_PER_AU;
             double z = ovec.z * KM_PER_AU;
-            double p = Math.Sqrt(x*x + y*y);
+            double p = hypot(x, y);
             if (p < 1.0e-6)
             {
                 // Special case: within 1 millimeter of a pole!
@@ -4190,12 +4200,11 @@ $ASTRO_JUPITER_MOONS();
         private static StateVector terra(Observer observer, AstroTime time)
         {
             double st = SiderealTime(time);
-            double df2 = EARTH_FLATTENING * EARTH_FLATTENING;
             double phi = observer.latitude * DEG2RAD;
             double sinphi = Math.Sin(phi);
             double cosphi = Math.Cos(phi);
-            double c = 1.0 / Math.Sqrt(cosphi*cosphi + df2*sinphi*sinphi);
-            double s = df2 * c;
+            double c = 1.0 / hypot(cosphi, EARTH_FLATTENING * sinphi);
+            double s = (EARTH_FLATTENING * EARTH_FLATTENING) * c;
             double ht_km = observer.height / 1000.0;
             double ach = EARTH_EQUATORIAL_RADIUS_KM*c + ht_km;
             double ash = EARTH_EQUATORIAL_RADIUS_KM*s + ht_km;
@@ -5507,7 +5516,7 @@ $ASTRO_JUPITER_MOONS();
             double pw = p.x*uw.x + p.y*uw.y + p.z*uw.z;
 
             // proj is the "shadow" of the body vector along the observer's flat ground.
-            double proj = Math.Sqrt(pn*pn + pw*pw);
+            double proj = hypot(pn, pw);
 
             // Calculate az = azimuth (compass direction clockwise from East.)
             double az;
@@ -5548,7 +5557,7 @@ $ASTRO_JUPITER_MOONS();
                     double pry = ((p.y - coszd0 * uz.y) / sinzd0)*sinzd + uz.y*coszd;
                     double prz = ((p.z - coszd0 * uz.z) / sinzd0)*sinzd + uz.z*coszd;
 
-                    proj = Math.Sqrt(prx*prx + pry*pry);
+                    proj = hypot(prx, pry);
                     if (proj > 0.0)
                     {
                         hor_ra = RAD2HOUR * Math.Atan2(pry, prx);
@@ -5621,7 +5630,7 @@ $ASTRO_JUPITER_MOONS();
             double ey = +pos.y*cos_ob + pos.z*sin_ob;
             double ez = -pos.y*sin_ob + pos.z*cos_ob;
 
-            double xyproj = Math.Sqrt(ex*ex + ey*ey);
+            double xyproj = hypot(ex, ey);
             double elon = 0.0;
             if (xyproj > 0.0)
             {
@@ -6241,12 +6250,6 @@ $ASTRO_JUPITER_MOONS();
             // Using the ideal gas law PV=nRT, we deduce that density is proportional to P/T.
             double density = (pressure / temperature) / (P0 / T0);
             return new AtmosphereInfo { pressure = pressure, temperature = temperature, density = density };
-        }
-
-
-        private static double hypot(double x, double y)
-        {
-            return Math.Sqrt(x*x + y*y);
         }
 
 
@@ -8079,7 +8082,7 @@ $ASTRO_JUPITER_MOONS();
                 double pz = (u*v.z - e.z) * EARTH_FLATTENING;
 
                 // Convert cartesian coordinates into geodetic latitude/longitude.
-                double proj = Math.Sqrt(px*px + py*py) * (EARTH_FLATTENING * EARTH_FLATTENING);
+                double proj = hypot(px, py) * (EARTH_FLATTENING * EARTH_FLATTENING);
                 if (proj == 0.0)
                     eclipse.latitude = (pz > 0.0) ? +90.0 : -90.0;
                 else
@@ -8190,7 +8193,7 @@ $ASTRO_JUPITER_MOONS();
             double dx = (u * dir.x) - target.x;
             double dy = (u * dir.y) - target.y;
             double dz = (u * dir.z) - target.z;
-            double r = KM_PER_AU * Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            double r = KM_PER_AU * hypot(dx, dy, dz);
             double k = +SUN_RADIUS_KM - (1.0 + u)*(SUN_RADIUS_KM - body_radius_km);
             double p = -SUN_RADIUS_KM + (1.0 + u)*(SUN_RADIUS_KM + body_radius_km);
             return new ShadowInfo(time, u, r, k, p, target, dir);
@@ -9164,7 +9167,7 @@ $ASTRO_JUPITER_MOONS();
                 double uz = nx*dy - ny*dx;
 
                 // Convert the tangential direction vector to a unit vector.
-                double U = Math.Sqrt(ux*ux + uy*uy + uz*uz);
+                double U = hypot(ux, uy, uz);
                 ux /= U;
                 uy /= U;
                 uz /= U;
