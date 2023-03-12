@@ -1472,6 +1472,9 @@ Given an altitude angle and a refraction option, calculates
 the amount of "lift" caused by atmospheric refraction.
 This is the number of degrees higher in the sky an object appears
 due to the lensing of the Earth's atmosphere.
+This function works best near sea level.
+To correct for higher elevations, call [`Astronomy.Atmosphere`](#Astronomy.Atmosphere) for that
+elevation and multiply the refraction angle by the resulting relative density.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -2210,7 +2213,7 @@ Certain astronomical events are defined in terms of relative longitude between t
 **Returns:** The date and time of the relative longitude event.
 
 <a name="Astronomy.SearchRiseSet"></a>
-### Astronomy.SearchRiseSet(body, observer, direction, startTime, limitDays) &#8658; [`AstroTime`](#AstroTime)
+### Astronomy.SearchRiseSet(body, observer, direction, startTime, limitDays, metersAboveGround) &#8658; [`AstroTime`](#AstroTime)
 
 **Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.**
 
@@ -2242,6 +2245,7 @@ Therefore callers must not assume that the function will always succeed.
 | [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find a rise time or `Direction.Set` to find a set time. |
 | [`AstroTime`](#AstroTime) | `startTime` | The date and time at which to start the search. |
 | `double` | `limitDays` | Limits how many days to search for a rise or set time, and defines the direction in time to search. When `limitDays` is positive, the search is performed into the future, after `startTime`. When negative, the search is performed into the past, before `startTime`. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
+| `double` | `metersAboveGround` | Usually the observer is located at ground level. Then this parameter should be zero. But if the observer is significantly higher than ground level, for example in an airplane, this parameter should be a positive number indicating how far above the ground the observer is. An exception occurs if `metersAboveGround` is negative. |
 
 **Returns:** On success, returns the date and time of the rise or set time as requested. If the function returns `null`, it means the rise or set event does not occur within `limitDays` days of `startTime`. This is a normal condition, not an error.
 

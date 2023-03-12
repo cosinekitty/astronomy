@@ -79,6 +79,7 @@ namespace csharp_test
             new Test("pluto", PlutoCheck),
             new Test("refraction", RefractionTest),
             new Test("riseset", RiseSetTest),
+            new Test("riseset_elevation", RiseSetElevation),
             new Test("riseset_reverse", RiseSetReverseTest),
             new Test("rotation", RotationTest),
             new Test("seasons", SeasonsTest),
@@ -4605,6 +4606,100 @@ namespace csharp_test
                 return Fail($"{nameof(Atmosphere)}: expected 34 test cases but processed {ncases}.");
 
             return Pass(nameof(Atmosphere));
+        }
+
+        //-----------------------------------------------------------------------------------------
+
+        static int RiseSetElevationBodyCase(
+            Body body,
+            Observer observer,
+            Direction direction,
+            double metersAboveGround,
+            AstroTime startTime,
+            double eventOffsetDays)
+        {
+            AstroTime time = Astronomy.SearchRiseSet(body, observer, direction, startTime, 2.0, metersAboveGround);
+
+            double diff = v(time.ut - (startTime.ut + eventOffsetDays));
+            if (diff > 0.5)
+                diff -= 1.0;   // assume event actually takes place on the next day
+
+            diff = abs(MINUTES_PER_DAY * diff);     // convert signed days to absolute minutes
+            if (diff > 0.5)
+                return Fail($"{nameof(RiseSetElevationBodyCase)}: body={body}, direction={direction}, EXCESSIVE diff = {diff:F3} minutes");
+
+            return 0;
+        }
+
+        static int RiseSetElevationCase(
+            Observer observer,
+            double metersAboveGround,
+            AstroTime time,
+            double sr, double ss, double mr, double ms)
+        {
+            return (
+                0 == RiseSetElevationBodyCase(Body.Sun,  observer, Direction.Rise, metersAboveGround, time, sr) &&
+                0 == RiseSetElevationBodyCase(Body.Sun,  observer, Direction.Set,  metersAboveGround, time, ss) &&
+                0 == RiseSetElevationBodyCase(Body.Moon, observer, Direction.Rise, metersAboveGround, time, mr) &&
+                0 == RiseSetElevationBodyCase(Body.Moon, observer, Direction.Set,  metersAboveGround, time, ms)
+            ) ? 0 : 1;
+        }
+
+        static int RiseSetElevation()
+        {
+            const string filename = "../../riseset/elevation.txt";
+            var re = new Regex(@"^(\d+)-(\d+)-(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\S+)\s*$");
+
+            using (StreamReader infile = File.OpenText(filename))
+            {
+                int lnum = 0;
+                string line;
+                while (null != (line = infile.ReadLine()))
+                {
+                    ++lnum;
+                    if (line.StartsWith("#"))
+                        continue;
+
+                    Match m = re.Match(line);
+                    if (!m.Success)
+                        return Fail($"{nameof(RiseSetElevation)}({filename} line {lnum}): Invalid data format.");
+
+                    if (!(
+                        int.TryParse(m.Groups[1].Value, out int year) &&
+                        int.TryParse(m.Groups[2].Value, out int month) &&
+                        int.TryParse(m.Groups[3].Value, out int day) &&
+                        double.TryParse(m.Groups[ 4].Value, out double latitude) &&
+                        double.TryParse(m.Groups[ 5].Value, out double longitude) &&
+                        double.TryParse(m.Groups[ 6].Value, out double height) &&
+                        double.TryParse(m.Groups[ 7].Value, out double metersAboveGround) &&
+                        int.TryParse(m.Groups[ 8].Value, out int srh) &&
+                        int.TryParse(m.Groups[ 9].Value, out int srm) &&
+                        int.TryParse(m.Groups[10].Value, out int ssh) &&
+                        int.TryParse(m.Groups[11].Value, out int ssm) &&
+                        int.TryParse(m.Groups[12].Value, out int mrh) &&
+                        int.TryParse(m.Groups[13].Value, out int mrm) &&
+                        int.TryParse(m.Groups[14].Value, out int msh) &&
+                        int.TryParse(m.Groups[15].Value, out int msm)
+                    ))
+                        return Fail($"{nameof(RiseSetElevation)}({filename} line {lnum}): Cannot parse numeric data.");
+
+                    // Get search origin time.
+                    var time = new AstroTime(year, month, day, 0, 0, 0.0);
+
+                    // Convert scanned values into sunrise, sunset, moonrise, moonset day offsets.
+                    double sr = (srh + srm/60.0) / 24.0;
+                    double ss = (ssh + ssm/60.0) / 24.0;
+                    double mr = (mrh + mrm/60.0) / 24.0;
+                    double ms = (msh + msm/60.0) / 24.0;
+
+                    var observer = new Observer(latitude, longitude, height);
+
+                    if (0 != RiseSetElevationCase(observer, metersAboveGround, time, sr, ss, mr, ms))
+                        return 1;
+                }
+            }
+
+            return Pass(nameof(RiseSetElevation));
         }
 
         //-----------------------------------------------------------------------------------------

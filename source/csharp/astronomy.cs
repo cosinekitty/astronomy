@@ -7378,6 +7378,40 @@ namespace CosineKitty
         }
 
 
+        private static double hypot(double x, double y)
+        {
+            return Math.Sqrt(x*x + y*y);
+        }
+
+
+        private static double HorizonDipAngle(Observer observer, double metersAboveGround)
+        {
+            // Calculate the effective radius of the Earth at ground level below the observer.
+            // Correct for the Earth's oblateness.
+            double phi = observer.latitude * DEG2RAD;
+            double sinphi = Math.Sin(phi);
+            double cosphi = Math.Cos(phi);
+            double c = 1.0 / hypot(cosphi, sinphi*EARTH_FLATTENING);
+            double s = c * (EARTH_FLATTENING * EARTH_FLATTENING);
+            double ht_km = (observer.height - metersAboveGround) / 1000.0;     // height of ground above sea level
+            double ach = EARTH_EQUATORIAL_RADIUS_KM*c + ht_km;
+            double ash = EARTH_EQUATORIAL_RADIUS_KM*s + ht_km;
+            double radius_m = 1000.0 * hypot(ach*cosphi, ash*sinphi);
+
+            // Correct refraction of a ray of light traveling tangent to the Earth's surface.
+            // Based on: https://www.largeformatphotography.info/sunmooncalc/SMCalc.js
+            // which in turn derives from:
+            // Sweer, John. 1938.  The Path of a Ray of Light Tangent to the Surface of the Earth.
+            // Journal of the Optical Society of America 28 (September):327-329.
+
+            // k = refraction index
+            double k = 0.175 * Math.Pow(1.0 - (6.5e-3/283.15)*(observer.height - (2.0/3.0)*metersAboveGround), 3.256);
+
+            // Calculate how far below the observer's horizontal plane the observed horizon dips.
+            return RAD2DEG * -(Math.Sqrt(2*(1 - k)*metersAboveGround / radius_m) / (1 - k));
+        }
+
+
         private struct AscentInfo
         {
             public bool valid;
@@ -7679,6 +7713,14 @@ namespace CosineKitty
         /// pass in a larger value like 365.
         /// </param>
         ///
+        /// <param name="metersAboveGround">
+        /// Usually the observer is located at ground level. Then this parameter
+        /// should be zero. But if the observer is significantly higher than ground
+        /// level, for example in an airplane, this parameter should be a positive
+        /// number indicating how far above the ground the observer is.
+        /// An exception occurs if `metersAboveGround` is negative.
+        /// </param>
+        ///
         /// <returns>
         /// On success, returns the date and time of the rise or set time as requested.
         /// If the function returns `null`, it means the rise or set event does not occur
@@ -7690,8 +7732,12 @@ namespace CosineKitty
             Observer observer,
             Direction direction,
             AstroTime startTime,
-            double limitDays)
+            double limitDays,
+            double metersAboveGround = 0.0)
         {
+            if (!isfinite(metersAboveGround) || metersAboveGround < 0.0)
+                throw new ArgumentOutOfRangeException(nameof(metersAboveGround));
+
             double bodyRadiusAu;
             switch (body)
             {
@@ -7708,7 +7754,17 @@ namespace CosineKitty
                     break;
             }
 
-            return InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, -REFRACTION_NEAR_HORIZON);
+            // Calculate atmospheric density at ground level.
+            AtmosphereInfo atmos = Astronomy.Atmosphere(observer.height - metersAboveGround);
+
+            // Calculate the apparent angular dip of the horizon.
+            double dip = HorizonDipAngle(observer, metersAboveGround);
+
+            // Correct refraction for objects near the horizon, using atmospheric density at the ground.
+            double altitude = dip - (REFRACTION_NEAR_HORIZON * atmos.density);
+
+            // Search for the top of the body crossing the corrected altitude angle.
+            return InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, altitude);
         }
 
         /// <summary>
@@ -10688,6 +10744,9 @@ namespace CosineKitty
         /// the amount of "lift" caused by atmospheric refraction.
         /// This is the number of degrees higher in the sky an object appears
         /// due to the lensing of the Earth's atmosphere.
+        /// This function works best near sea level.
+        /// To correct for higher elevations, call #Astronomy.Atmosphere for that
+        /// elevation and multiply the refraction angle by the resulting relative density.
         /// </remarks>
         /// <param name="refraction">
         /// The option selecting which refraction correction to use.
