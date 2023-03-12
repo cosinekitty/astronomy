@@ -2773,4 +2773,39 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Atmospheric temperature pressure density`() {
+        val filename = dataRootDir + "riseset/atmosphere.csv"
+        val file = File(filename)
+        var lnum = 0
+        var ncases = 0
+        val reCommaDelim = Regex("""[,\s]+""")
+        val tolerance = 8.8e-11
+        for (line in file.readLines()) {
+            ++lnum
+            if (lnum == 1) {
+                assertEquals("elevation,temperature,pressure,density,relative_density", line)
+            } else {
+                val tokens = line.split(reCommaDelim)
+                assertEquals(5, tokens.size, "$filename line $lnum: expected 5 tokens, found ${tokens.size}")
+                val elevation = tokens[0].toDouble()
+                val temperature = tokens[1].toDouble()
+                val pressure = tokens[2].toDouble()
+                // Ignore tokens[3] because we don't care about absolute density
+                val relativeDensity = tokens[4].toDouble()
+                val atmos = atmosphere(elevation)
+                val temperatureDiff = abs(atmos.temperature - temperature)
+                assertTrue(temperatureDiff < tolerance, "$filename line $lnum: excessive temperature diff = $temperatureDiff")
+                val pressureDiff = abs(atmos.pressure - pressure)
+                assertTrue(pressureDiff < tolerance, "$filename line $lnum: excessive pressure diff = $pressureDiff")
+                val densityDiff = abs(atmos.density - relativeDensity)
+                assertTrue(densityDiff < tolerance, "$filename line $lnum: excessive density diff = $densityDiff")
+                ++ncases
+            }
+        }
+        assertEquals(34, ncases)
+    }
+
+    //----------------------------------------------------------------------------------------
 }

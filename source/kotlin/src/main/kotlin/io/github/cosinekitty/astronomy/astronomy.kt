@@ -36,6 +36,7 @@ import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.log10
@@ -1730,6 +1731,28 @@ class SeasonsInfo(
      */
     val decemberSolstice: Time
 )
+
+
+/**
+ * Information about idealized atmospheric variables at a given elevation.
+ */
+class AtmosphereInfo(
+    /**
+     * Atmospheric pressure in pascals.
+     */
+    val pressure: Double,
+
+    /**
+     * Atmospheric temperature in kelvins.
+     */
+    val temperature: Double,
+
+    /**
+     * Atmospheric density relative to sea level.
+     */
+    val density: Double
+)
+
 
 
 /**
@@ -6424,6 +6447,49 @@ fun hourAngle(body: Body, time: Time, observer: Observer): Double {
     val ofdate = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
     var hourAngle = (observer.longitude/15 + gast - ofdate.ra) % 24.0
     return if (hourAngle < 0.0) hourAngle + 24.0 else hourAngle
+}
+
+
+/**
+ * Calculates U.S. Standard Atmosphere (1976) variables as a function of elevation.
+ *
+ * This function calculates idealized values of pressure, temperature, and density
+ * using the U.S. Standard Atmosphere (1976) model.
+ * 1. COESA, U.S. Standard Atmosphere, 1976, U.S. Government Printing Office, Washington, DC, 1976.
+ * 2. Jursa, A. S., Ed., Handbook of Geophysics and the Space Environment, Air Force Geophysics Laboratory, 1985.
+ * See:
+ * https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml
+ * https://ntrs.nasa.gov/api/citations/19770009539/downloads/19770009539.pdf
+ * https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf
+ *
+ * @param elevationMeters
+ * The elevation above sea level at which to calculate atmospheric variables.
+ * Must be in the range -500 to +100000, or an exception will occur.
+ */
+fun atmosphere(elevationMeters: Double): AtmosphereInfo {
+    val P0 = 101325.0      // pressure at sea level [pascals]
+    val T0 = 288.15        // temperature at sea level [kelvins]
+    val T1 = 216.65        // temperature between 20 km and 32 km [kelvins]
+
+    if (!elevationMeters.isFinite() || elevationMeters < -500.0 || elevationMeters > 100000.0)
+        throw IllegalArgumentException("elevationMeters value is not valid: $elevationMeters")
+
+    var temperature: Double
+    var pressure: Double
+    if (elevationMeters <= 11000.0) {
+        temperature = T0 - 0.0065*elevationMeters
+        pressure = P0 * (T0 / temperature).pow(-5.25577)
+    } else if (elevationMeters <= 20000.0) {
+        temperature = T1
+        pressure = 22632.0 * exp(-0.00015768832 * (elevationMeters - 11000.0))
+    } else {
+        temperature = T1 + 0.001*(elevationMeters - 20000.0)
+        pressure = 5474.87 * (T1 / temperature).pow(34.16319)
+    }
+    // The density is calculated relative to the sea level value.
+    // Using the ideal gas law PV=nRT, we deduce that density is proportional to P/T.
+    val density = (pressure / temperature) / (P0 / T0)
+    return AtmosphereInfo(pressure, temperature, density)
 }
 
 
