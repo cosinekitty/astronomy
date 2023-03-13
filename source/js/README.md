@@ -2363,7 +2363,10 @@ reorient ECL coordinates to the orientation of your telescope camera.
 Given an altitude angle and a refraction option, calculates
 the amount of "lift" caused by atmospheric refraction.
 This is the number of degrees higher in the sky an object appears
-due to the lensing of the Earth's atmosphere.  
+due to the lensing of the Earth's atmosphere.
+This function works best near sea level.
+To correct for higher elevations, call [Atmosphere](#Atmosphere) for that
+elevation and multiply the refraction angle by the resulting relative density.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -3147,7 +3150,7 @@ This means the Earth and the other planet are on opposite sides of the Sun.
 
 <a name="SearchRiseSet"></a>
 
-## SearchRiseSet(body, observer, direction, dateStart, limitDays) ⇒ [<code>AstroTime</code>](#AstroTime) \| <code>null</code>
+## SearchRiseSet(body, observer, direction, dateStart, limitDays, metersAboveGround) ⇒ [<code>AstroTime</code>](#AstroTime) \| <code>null</code>
 **Kind**: global function  
 **Returns**: [<code>AstroTime</code>](#AstroTime) \| <code>null</code> - The date and time of the rise or set event, or null if no such event
      occurs within the specified time window.  
@@ -3174,13 +3177,14 @@ This is because the Moon sets nearly an hour later each day due to orbiting the 
 significant amount during each rotation of the Earth.
 Therefore callers must not assume that the function will always succeed.  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| body | [<code>Body</code>](#Body) | The Sun, Moon, any planet other than the Earth,      or a user-defined star that was created by a call to [DefineStar](#DefineStar). |
-| observer | [<code>Observer</code>](#Observer) | Specifies the geographic coordinates and elevation above sea level of the observer. |
-| direction | <code>number</code> | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
-| dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) | The date and time after which the specified rise or set time is to be found. |
-| limitDays | <code>number</code> | Limits how many days to search for a rise or set time, and defines      the direction in time to search. When `limitDays` is positive, the      search is performed into the future, after `dateStart`.      When negative, the search is performed into the past, before `dateStart`.      To limit a rise or set time to the same day, you can use a value of 1 day.      In cases where you want to find the next rise or set time no matter how far      in the future (for example, for an observer near the south pole), you can      pass in a larger value like 365. |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| body | [<code>Body</code>](#Body) |  | The Sun, Moon, any planet other than the Earth,      or a user-defined star that was created by a call to [DefineStar](#DefineStar). |
+| observer | [<code>Observer</code>](#Observer) |  | Specifies the geographic coordinates and elevation above sea level of the observer. |
+| direction | <code>number</code> |  | Either +1 to find rise time or -1 to find set time.      Any other value will cause an exception to be thrown. |
+| dateStart | [<code>FlexibleDateTime</code>](#FlexibleDateTime) |  | The date and time after which the specified rise or set time is to be found. |
+| limitDays | <code>number</code> |  | Limits how many days to search for a rise or set time, and defines      the direction in time to search. When `limitDays` is positive, the      search is performed into the future, after `dateStart`.      When negative, the search is performed into the past, before `dateStart`.      To limit a rise or set time to the same day, you can use a value of 1 day.      In cases where you want to find the next rise or set time no matter how far      in the future (for example, for an observer near the south pole), you can      pass in a larger value like 365. |
+| metersAboveGround | <code>number</code> | <code>0</code> | Defaults to 0.0 if omitted.      Usually the observer is located at ground level. Then this parameter      should be zero. But if the observer is significantly higher than ground      level, for example in an airplane, this parameter should be a positive      number indicating how far above the ground the observer is.      An exception occurs if `metersAboveGround` is negative. |
 
 
 * * *

@@ -4890,6 +4890,28 @@ function Atmosphere(elevationMeters) {
     return new AtmosphereInfo(pressure, temperature, density);
 }
 exports.Atmosphere = Atmosphere;
+function HorizonDipAngle(observer, metersAboveGround) {
+    // Calculate the effective radius of the Earth at ground level below the observer.
+    // Correct for the Earth's oblateness.
+    const phi = observer.latitude * exports.DEG2RAD;
+    const sinphi = Math.sin(phi);
+    const cosphi = Math.cos(phi);
+    const c = 1.0 / Math.hypot(cosphi, sinphi * EARTH_FLATTENING);
+    const s = c * (EARTH_FLATTENING * EARTH_FLATTENING);
+    const ht_km = (observer.height - metersAboveGround) / 1000.0; // height of ground above sea level
+    const ach = EARTH_EQUATORIAL_RADIUS_KM * c + ht_km;
+    const ash = EARTH_EQUATORIAL_RADIUS_KM * s + ht_km;
+    const radius_m = 1000.0 * Math.hypot(ach * cosphi, ash * sinphi);
+    // Correct refraction of a ray of light traveling tangent to the Earth's surface.
+    // Based on: https://www.largeformatphotography.info/sunmooncalc/SMCalc.js
+    // which in turn derives from:
+    // Sweer, John. 1938.  The Path of a Ray of Light Tangent to the Surface of the Earth.
+    // Journal of the Optical Society of America 28 (September):327-329.
+    // k = refraction index
+    const k = 0.175 * Math.pow(1.0 - (6.5e-3 / 283.15) * (observer.height - (2.0 / 3.0) * metersAboveGround), 3.256);
+    // Calculate how far below the observer's horizontal plane the observed horizon dips.
+    return exports.RAD2DEG * -(Math.sqrt(2 * (1 - k) * metersAboveGround / radius_m) / (1 - k));
+}
 function BodyRadiusAu(body) {
     // For the purposes of calculating rise/set times,
     // only the Sun and Moon appear large enough to an observer
@@ -4949,13 +4971,32 @@ function BodyRadiusAu(body) {
  *      in the future (for example, for an observer near the south pole), you can
  *      pass in a larger value like 365.
  *
+ * @param {number?} metersAboveGround
+ *      Defaults to 0.0 if omitted.
+ *      Usually the observer is located at ground level. Then this parameter
+ *      should be zero. But if the observer is significantly higher than ground
+ *      level, for example in an airplane, this parameter should be a positive
+ *      number indicating how far above the ground the observer is.
+ *      An exception occurs if `metersAboveGround` is negative.
+ *
  * @returns {AstroTime | null}
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
-function SearchRiseSet(body, observer, direction, dateStart, limitDays) {
+function SearchRiseSet(body, observer, direction, dateStart, limitDays, metersAboveGround = 0.0) {
+    if (!Number.isFinite(metersAboveGround) || (metersAboveGround < 0.0))
+        throw `Invalid value for metersAboveGround: ${metersAboveGround}`;
+    // We want to find when the top of the body crosses the horizon, not the body's center.
+    // Therefore, we need to know the body's radius.
     const body_radius_au = BodyRadiusAu(body);
-    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, body_radius_au, -REFRACTION_NEAR_HORIZON);
+    // Calculate atmospheric density at ground level.
+    const atmos = Atmosphere(observer.height - metersAboveGround);
+    // Calculate the apparent angular dip of the horizon.
+    const dip = HorizonDipAngle(observer, metersAboveGround);
+    // Correct refraction for objects near the horizon, using atmospheric density at the ground.
+    const altitude = dip - (REFRACTION_NEAR_HORIZON * atmos.density);
+    // Search for the top of the body crossing the corrected altitude angle.
+    return InternalSearchAltitude(body, observer, direction, dateStart, limitDays, body_radius_au, altitude);
 }
 exports.SearchRiseSet = SearchRiseSet;
 /**
@@ -6390,6 +6431,9 @@ exports.VectorFromHorizon = VectorFromHorizon;
  * the amount of "lift" caused by atmospheric refraction.
  * This is the number of degrees higher in the sky an object appears
  * due to the lensing of the Earth's atmosphere.
+ * This function works best near sea level.
+ * To correct for higher elevations, call {@link Atmosphere} for that
+ * elevation and multiply the refraction angle by the resulting relative density.
  *
  * @param {string} refraction
  *      `"normal"`: correct altitude for atmospheric refraction (recommended).

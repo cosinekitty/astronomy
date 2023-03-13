@@ -1652,11 +1652,19 @@ export declare function Atmosphere(elevationMeters: number): AtmosphereInfo;
  *      in the future (for example, for an observer near the south pole), you can
  *      pass in a larger value like 365.
  *
+ * @param {number?} metersAboveGround
+ *      Defaults to 0.0 if omitted.
+ *      Usually the observer is located at ground level. Then this parameter
+ *      should be zero. But if the observer is significantly higher than ground
+ *      level, for example in an airplane, this parameter should be a positive
+ *      number indicating how far above the ground the observer is.
+ *      An exception occurs if `metersAboveGround` is negative.
+ *
  * @returns {AstroTime | null}
  *      The date and time of the rise or set event, or null if no such event
  *      occurs within the specified time window.
  */
-export declare function SearchRiseSet(body: Body, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number): AstroTime | null;
+export declare function SearchRiseSet(body: Body, observer: Observer, direction: number, dateStart: FlexibleDateTime, limitDays: number, metersAboveGround?: number): AstroTime | null;
 /**
  * @brief Finds the next time the center of a body passes through a given altitude.
  *
@@ -2274,6 +2282,9 @@ export declare function VectorFromHorizon(sphere: Spherical, time: FlexibleDateT
  * the amount of "lift" caused by atmospheric refraction.
  * This is the number of degrees higher in the sky an object appears
  * due to the lensing of the Earth's atmosphere.
+ * This function works best near sea level.
+ * To correct for higher elevations, call {@link Atmosphere} for that
+ * elevation and multiply the refraction angle by the resulting relative density.
  *
  * @param {string} refraction
  *      `"normal"`: correct altitude for atmospheric refraction (recommended).

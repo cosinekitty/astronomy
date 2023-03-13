@@ -3563,6 +3563,66 @@ function Atmosphere() {
 
 //-------------------------------------------------------------------------------------------------
 
+function RiseSetElevationBodyCase(body, observer, direction, metersAboveGround, startTime, eventOffsetDays) {
+    const time = Astronomy.SearchRiseSet(body, observer, direction, startTime, 2.0, metersAboveGround);
+    if (!time) Fail(`Failed to find event for ${body} direction=${direction}`);
+    let diff = v(time.ut - (startTime.ut + eventOffsetDays));
+    if (diff > 0.5)
+        diff -= 1.0;    // assume event actually takes place on the next day
+
+    diff = abs(MINUTES_PER_DAY * diff);
+    if (diff > 0.5)
+        Fail(`RiseSetElevationBodyCase: body=${body}, direction=${direction}, EXCESSIVE diff = ${diff} minutes.`);
+}
+
+
+function RiseSetElevation() {
+    const re = /^(\d+)-(\d+)-(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\S+)\s*$/;
+    const filename = 'riseset/elevation.txt';
+    const lines = ReadLines(filename);
+    let lnum = 0;
+    for (let line of lines) {
+        ++lnum;
+        if (line.startsWith('#')) continue;
+        const m = line.match(re);
+        if (!m) Fail(`RiseSetElevation(${filename} line ${lnum}): invalid data format.`);
+        const year = int(m[1]);
+        const month = int(m[2]);
+        const day = int(m[3]);
+        const latitude = float(m[4]);
+        const longitude = float(m[5]);
+        const height = float(m[6]);
+        const metersAboveGround = float(m[7]);
+        const srh = int(m[ 8]);
+        const srm = int(m[ 9]);
+        const ssh = int(m[10]);
+        const ssm = int(m[11]);
+        const mrh = int(m[12]);
+        const mrm = int(m[13]);
+        const msh = int(m[14]);
+        const msm = int(m[15]);
+
+        // Get search time origin.
+        const time = Astronomy.MakeTime(new Date(Date.UTC(year, month-1, day, 0, 0)));
+
+        // Convert scanned values into sunrise, sunset, moonrise, moonset day offsets.
+        const sr = (srh + srm/60)/24;
+        const ss = (ssh + ssm/60)/24;
+        const mr = (mrh + mrm/60)/24;
+        const ms = (msh + msm/60)/24;
+
+        const observer = new Astronomy.Observer(latitude, longitude, height);
+
+        RiseSetElevationBodyCase(Astronomy.Body.Sun,  observer, +1, metersAboveGround, time, sr);
+        RiseSetElevationBodyCase(Astronomy.Body.Sun,  observer, -1, metersAboveGround, time, ss);
+        RiseSetElevationBodyCase(Astronomy.Body.Moon, observer, +1, metersAboveGround, time, mr);
+        RiseSetElevationBodyCase(Astronomy.Body.Moon, observer, -1, metersAboveGround, time, ms);
+    }
+    return Pass('RiseSetElevation');
+}
+
+//-------------------------------------------------------------------------------------------------
+
 const UnitTests = {
     aberration:             AberrationTest,
     atmosphere:             Atmosphere,
@@ -3595,6 +3655,7 @@ const UnitTests = {
     refraction:             Refraction,
     riseset:                RiseSet,
     riseset_reverse:        RiseSetReverse,
+    riseset_elevation:      RiseSetElevation,
     rotation:               Rotation,
     seasons:                Seasons,
     seasons187:             SeasonsIssue187,
