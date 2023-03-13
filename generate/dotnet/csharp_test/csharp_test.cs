@@ -4620,6 +4620,9 @@ namespace csharp_test
         {
             AstroTime time = Astronomy.SearchRiseSet(body, observer, direction, startTime, 2.0, metersAboveGround);
 
+            if (time == null)
+                return Fail($"{nameof(RiseSetElevationBodyCase)}: search failed for {body} {direction} search.");
+
             double diff = v(time.ut - (startTime.ut + eventOffsetDays));
             if (diff > 0.5)
                 diff -= 1.0;   // assume event actually takes place on the next day

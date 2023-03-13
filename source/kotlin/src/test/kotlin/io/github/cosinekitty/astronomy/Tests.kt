@@ -2808,4 +2808,71 @@ class Tests {
     }
 
     //----------------------------------------------------------------------------------------
+
+    @Test
+    fun `Rise set elevation`() {
+        val filename = dataRootDir + "riseset/elevation.txt"
+        val file = File(filename)
+        var lnum = 0
+        val re = Regex("""[\s:]+""")
+        for (line in file.readLines()) {
+            ++lnum
+            if (line.startsWith("#"))
+                continue
+            val tokens = line.split(re)
+            assertEquals(14, tokens.size, "$filename line $lnum: expected 16 tokens but found ${tokens.size}")
+            val date = tokens[0].split("-")
+            assertEquals(3, date.size, "$filename line $lnum: expected 3 tokens in date ${tokens[0]} but found ${date.size}")
+            val year = date[0].toInt()
+            val month = date[1].toInt()
+            val day = date[2].toInt()
+            val latitude = tokens[1].toDouble()
+            val longitude = tokens[2].toDouble()
+            val height = tokens[3].toDouble()
+            val metersAboveGround = tokens[4].toDouble()
+            val srh = tokens[ 5].toInt()
+            val srm = tokens[ 6].toInt()
+            val ssh = tokens[ 7].toInt()
+            val ssm = tokens[ 8].toInt()
+            val mrh = tokens[ 9].toInt()
+            val mrm = tokens[10].toInt()
+            val msh = tokens[11].toInt()
+            val msm = tokens[12].toInt()
+
+            // Get search origin time
+            val time = Time(year, month, day, 0, 0, 0.0)
+
+            // Convert scanned values into sunrise, sunset, moonrise, moonset day offets.
+            val sr = (srh + srm/60.0) / 24.0
+            val ss = (ssh + ssm/60.0) / 24.0
+            val mr = (mrh + mrm/60.0) / 24.0
+            val ms = (msh + msm/60.0) / 24.0
+
+            val observer = Observer(latitude, longitude, height)
+
+            riseSetElevationBodyCase(Body.Sun,  observer, Direction.Rise, metersAboveGround, time, sr)
+            riseSetElevationBodyCase(Body.Sun,  observer, Direction.Set,  metersAboveGround, time, ss)
+            riseSetElevationBodyCase(Body.Moon, observer, Direction.Rise, metersAboveGround, time, mr)
+            riseSetElevationBodyCase(Body.Moon, observer, Direction.Set,  metersAboveGround, time, ms)
+        }
+    }
+
+    private fun riseSetElevationBodyCase(
+        body: Body,
+        observer: Observer,
+        direction: Direction,
+        metersAboveGround: Double,
+        startTime: Time,
+        eventOffsetDays: Double
+    ) {
+        val time = searchRiseSet(body, observer, direction, startTime, 2.0, metersAboveGround) ?:
+            fail("search for $body $direction event failed")
+        var diff = time.ut - (startTime.ut + eventOffsetDays)
+        if (diff > 0.5)
+            diff -= 1.0     // assume event actually takes place on the next day
+        diff = abs(MINUTES_PER_DAY * diff)      // convert signed days to absolute minutes
+        assertTrue(diff < 0.5, "body=$body, direction=$direction, EXCESSIVE diff=$diff minutes.")
+    }
+
+    //----------------------------------------------------------------------------------------
 }

@@ -6,7 +6,7 @@ fun [refractionAngle](refraction-angle.md)(refraction: [Refraction](-refraction/
 
 Calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
 
-Given an altitude angle and a refraction option, calculates the amount of "lift" caused by atmospheric refraction. This is the number of degrees higher in the sky an object appears due to the lensing of the Earth's atmosphere.
+Given an altitude angle and a refraction option, calculates the amount of "lift" caused by atmospheric refraction. This is the number of degrees higher in the sky an object appears due to the lensing of the Earth's atmosphere. This function works best near sea level. To correct for higher elevations, call [atmosphere](atmosphere.md) for that elevation and multiply the refraction angle by the resulting relative density.
 
 ## Parameters
 
