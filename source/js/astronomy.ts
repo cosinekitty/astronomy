@@ -5364,6 +5364,73 @@ export function NextMoonQuarter(mq: MoonQuarter): MoonQuarter {
     return SearchMoonQuarter(date);
 }
 
+
+/**
+ * @brief Information about idealized atmospheric variables at a given elevation.
+ *
+ * @property {number} pressure
+ *      Atmospheric pressure in pascals.
+ *
+ * @property {number} temperature
+ *      Atmospheric temperature in kelvins.
+ *
+ * @property {number} density
+ *      Atmospheric density relative to sea level.
+ */
+export class AtmosphereInfo {
+    constructor(
+        public pressure: number,
+        public temperature: number,
+        public density: number
+    ) {}
+}
+
+
+/**
+ * @brief Calculates U.S. Standard Atmosphere (1976) variables as a function of elevation.
+ *
+ * This function calculates idealized values of pressure, temperature, and density
+ * using the U.S. Standard Atmosphere (1976) model.
+ * 1. COESA, U.S. Standard Atmosphere, 1976, U.S. Government Printing Office, Washington, DC, 1976.
+ * 2. Jursa, A. S., Ed., Handbook of Geophysics and the Space Environment, Air Force Geophysics Laboratory, 1985.
+ * See:
+ * https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml
+ * https://ntrs.nasa.gov/api/citations/19770009539/downloads/19770009539.pdf
+ * https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf
+ *
+ * @param {number} elevationMeters
+ *      The elevation above sea level at which to calculate atmospheric variables.
+ *      Must be in the range -500 to +100000, or an exception will occur.
+ *
+ * @returns {AtmosphereInfo}
+ */
+export function Atmosphere(elevationMeters: number): AtmosphereInfo {
+    const P0 = 101325.0;     // pressure at sea level [pascals]
+    const T0 = 288.15;       // temperature at sea level [kelvins]
+    const T1 = 216.65;       // temperature between 20 km and 32 km [kelvins]
+
+    if (!Number.isFinite(elevationMeters) || elevationMeters < -500.0 || elevationMeters > 100000.0)
+        throw `Invalid elevation: ${elevationMeters}`;
+
+    let temperature: number;
+    let pressure: number;
+    if (elevationMeters <= 11000.0) {
+        temperature = T0 - 0.0065*elevationMeters;
+        pressure = P0 * Math.pow(T0 / temperature, -5.25577);
+    } else if (elevationMeters <= 20000.0) {
+        temperature = T1;
+        pressure = 22632.0 * Math.exp(-0.00015768832 * (elevationMeters - 11000.0));
+    } else {
+        temperature = T1 + 0.001*(elevationMeters - 20000.0);
+        pressure = 5474.87 * Math.pow(T1 / temperature, 34.16319);
+    }
+    // The density is calculated relative to the sea level value.
+    // Using the ideal gas law PV=nRT, we deduce that density is proportional to P/T.
+    const density = (pressure / temperature) / (P0 / T0);
+    return new AtmosphereInfo(pressure, temperature, density);
+}
+
+
 function BodyRadiusAu(body: Body): number {
     // For the purposes of calculating rise/set times,
     // only the Sun and Moon appear large enough to an observer

@@ -3511,13 +3511,61 @@ function HourAngleTest() {
         }
     }
 
-    return Pass(`JS HourAngleTest (${context.cases} cases, maxdiff = ${context.maxdiff.toExponential(4)})`);
+    return Pass(`HourAngleTest (${context.cases} cases, maxdiff = ${context.maxdiff.toExponential(4)})`);
+}
+
+//-------------------------------------------------------------------------------------------------
+
+function Atmosphere() {
+    const filename = 'riseset/atmosphere.csv';
+    const lines = ReadLines(filename);
+    const tolerance = 8.8e-11;
+    let lnum = 0;
+    let ncases = 0;
+    let maxdiff = 0.0;
+    for (let line of lines) {
+        ++lnum;
+        if (lnum === 1) {
+            if (line != "elevation,temperature,pressure,density,relative_density")
+                Fail(`Atmosphere: Expected header line, but found: [${line}]`);
+        } else {
+            const tokens = line.split(',');
+            if (tokens.length !== 5)
+                Fail(`Atmosphere(${filename} line ${line}): expected 5 numeric tokens but found ${tokens.length}`);
+
+            const elevation = float(tokens[0]);
+            const temperature = float(tokens[1]);
+            const pressure = float(tokens[2]);
+            // ignore tokens[3] = absolute_density
+            const relative_density = float(tokens[4]);
+
+            const atmos = Astronomy.Atmosphere(elevation);
+
+            let diff = abs(atmos.temperature - temperature);
+            if (diff > maxdiff) maxdiff = diff;
+            if (diff > tolerance) Fail(`Atmosphere(${filename} line ${lnum}): EXCESSIVE temperature difference = ${diff}`);
+
+            diff = abs(atmos.pressure - pressure);
+            if (diff > maxdiff) maxdiff = diff;
+            if (diff > tolerance) Fail(`Atmosphere(${filename} line ${lnum}): EXCESSIVE pressure difference = ${diff}`);
+
+            diff = abs(atmos.density - relative_density);
+            if (diff > maxdiff) maxdiff = diff;
+            if (diff > tolerance) Fail(`Atmosphere(${filename} line ${lnum}): EXCESSIVE density difference = ${diff}`);
+
+            ++ncases;
+        }
+    }
+    if (ncases !== 34)
+        Fail(`Atmosphere: expected 34 test cases but found ${ncases}.`);
+    return Pass('Atmosphere');
 }
 
 //-------------------------------------------------------------------------------------------------
 
 const UnitTests = {
     aberration:             AberrationTest,
+    atmosphere:             Atmosphere,
     axis:                   AxisTest,
     barystate:              BaryStateTest,
     constellation:          Constellation,
