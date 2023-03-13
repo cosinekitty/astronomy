@@ -3215,8 +3215,58 @@ def HourAngle():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Atmosphere():
+    filename = 'riseset/atmosphere.csv'
+    maxdiff = 0.0
+    ncases = 0
+    tolerance = 8.8e-11
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            line = line.strip()
+            lnum += 1
+            if lnum == 1:
+                if line != 'elevation,temperature,pressure,density,relative_density':
+                    return Fail('Atmosphere', 'Expected header line but found [{}]'.format(line))
+            else:
+                tokens = line.split(',')
+                if len(tokens) != 5:
+                    return Fail('Atmosphere({} line {})'.format(filename, lnum), 'expected 5 numeric tokens but found {}'.format(len(tokens)))
+                elevation = v(float(tokens[0]))
+                temperature = v(float(tokens[1]))
+                pressure = v(float(tokens[2]))
+                # ignore tokens[3] = absolute_density
+                relative_density = v(float(tokens[4]))
+
+                atmos = astronomy.Atmosphere(elevation)
+
+                diff = vabs(atmos.temperature - temperature)
+                maxdiff = max(maxdiff, diff)
+                if diff > tolerance:
+                    return Fail('Atmosphere', 'EXCESSIVE temperature difference = {}'.format(diff))
+
+                diff = vabs(atmos.pressure - pressure)
+                maxdiff = max(maxdiff, diff)
+                if diff > tolerance:
+                    return Fail('Atmosphere', 'EXCESSIVE pressure difference = {}'.format(diff))
+
+                diff = vabs(atmos.density - relative_density)
+                maxdiff = max(maxdiff, diff)
+                if diff > tolerance:
+                    return Fail('Atmosphere', 'EXCESSIVE density difference = {}'.format(diff))
+
+                ncases += 1
+
+    if ncases != 34:
+        return Fail('Atmosphere', 'expected 34 cases but found {}'.format(ncases))
+
+    return Pass('Atmosphere')
+
+#-----------------------------------------------------------------------------------------------------------
+
 UnitTests = {
     'aberration':               Aberration,
+    'atmosphere':               Atmosphere,
     'axis':                     Axis,
     'barystate':                BaryState,
     'constellation':            Constellation,

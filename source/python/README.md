@@ -302,6 +302,19 @@ to iterate through consecutive alternating perigees and apogees.
 
 ---
 
+<a name="AtmosphereInfo"></a>
+### class AtmosphereInfo
+
+**Information about idealized atmospheric variables at a given elevation.**
+
+| Type | Attribute | Description |
+| --- | --- | --- |
+| `float` | `pressure` | Atmospheric pressure in pascals. |
+| `float` | `temperature` | Atmospheric temperature in kelvins. |
+| `float` | `density` | Atmospheric densitive relative to sea level. |
+
+---
+
 <a name="AxisInfo"></a>
 ### class AxisInfo
 
@@ -1314,6 +1327,28 @@ easy it is to see the body away from the glare of the Sun.
 **Returns**: `float`
 A numeric value indicating the angle in degrees between the Sun
 and the specified body as seen from the center of the Earth.
+
+---
+
+<a name="Atmosphere"></a>
+### Atmosphere(elevationMeters: float) &#8594; [`AtmosphereInfo`](#AtmosphereInfo)
+
+**Calculates U.S. Standard Atmosphere (1976) variables as a function of elevation.**
+
+This function calculates idealized values of pressure, temperature, and density
+using the U.S. Standard Atmosphere (1976) model.
+1. COESA, U.S. Standard Atmosphere, 1976, U.S. Government Printing Office, Washington, DC, 1976.
+2. Jursa, A. S., Ed., Handbook of Geophysics and the Space Environment, Air Force Geophysics Laboratory, 1985.
+See:
+https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml
+https://ntrs.nasa.gov/api/citations/19770009539/downloads/19770009539.pdf
+https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf
+
+| Type | Parameter | Description |
+| --- | --- | --- |
+| `float` | `elevationMeters` | The elevation above sea level at which to calculate atmospheric variables. Must be in the range -500 to +100000, or an exception will occur. |
+
+**Returns**: [`AtmosphereInfo`](#AtmosphereInfo)
 
 ---
 
