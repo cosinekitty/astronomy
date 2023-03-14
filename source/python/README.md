@@ -2494,6 +2494,9 @@ Given an altitude angle and a refraction option, calculates
 the amount of "lift" caused by atmospheric refraction.
 This is the number of degrees higher in the sky an object appears
 due to lensing of the Earth's atmosphere.
+This function works best near sea level.
+To correct for higher elevations, call [`Atmosphere`](#Atmosphere) for that
+elevation and multiply the refraction angle by the resulting relative density.
 
 | Type | Parameter | Description |
 | --- | --- | --- |
@@ -3324,7 +3327,7 @@ The date and time of the relative longitude event.
 ---
 
 <a name="SearchRiseSet"></a>
-### SearchRiseSet(body: [`Body`](#Body), observer: [`Observer`](#Observer), direction: [`Direction`](#Direction), startTime: [`Time`](#Time), limitDays: float) &#8594; Optional\[[`Time`](#Time)\]
+### SearchRiseSet(body: [`Body`](#Body), observer: [`Observer`](#Observer), direction: [`Direction`](#Direction), startTime: [`Time`](#Time), limitDays: float, metersAboveGround: float = 0.0) &#8594; Optional\[[`Time`](#Time)\]
 
 **Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.**
 
@@ -3355,6 +3358,7 @@ Therefore callers must not assume that the function will always succeed.
 | [`Direction`](#Direction) | `direction` | Either `Direction.Rise` to find a rise time or `Direction.Set` to find a set time. |
 | [`Time`](#Time) | `startTime` | The date and time at which to start the search. |
 | `float` | `limitDays` | Limits how many days to search for a rise or set time, and defines the direction in time to search. When `limitDays` is positive, the search is performed into the future, after `startTime`. When negative, the search is performed into the past, before `startTime`. To limit a rise or set time to the same day, you can use a value of 1 day. In cases where you want to find the next rise or set time no matter how far in the future (for example, for an observer near the south pole), you can pass in a larger value like 365. |
+| `float` | `metersAboveGround` | Default value = 0.0. Usually the observer is located at ground level. Then this parameter should be zero. But if the observer is significantly higher than ground level, for example in an airplane, this parameter should be a positive number indicating how far above the ground the observer is. An exception occurs if `metersAboveGround` is negative. |
 
 **Returns**: [`Time`](#Time) or `None`
 If the rise or set time is found within the specified time window,

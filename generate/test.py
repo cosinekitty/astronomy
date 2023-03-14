@@ -3264,6 +3264,70 @@ def Atmosphere():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def RiseSetElevationBodyCase(body, observer, direction, metersAboveGround, startTime, eventOffsetDays):
+    time = astronomy.SearchRiseSet(body, observer, direction, startTime, 2.0, metersAboveGround)
+    if not time:
+        return Fail('RiseSetElevationBodyCase {} {}: search failed.'.format(body, direction))
+    diff = v(time.ut - (startTime.ut + eventOffsetDays))
+    if diff > 0.5:
+        diff -= 1.0     # assume event actually takes place on the next day
+    diff = vabs(MINUTES_PER_DAY * diff)     # convert signed days to absolute minutes
+    if diff > 0.5:
+        return Fail('RiseSetElevationBodyCase {} {}: EXCESSIVE diff = {}.'.format(body, direction, diff))
+    return 0
+
+
+def RiseSetElevation():
+    regex = re.compile(r'^(\d+)-(\d+)-(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\d+):(\d+)\s+(\S+)\s*$')
+    filename = 'riseset/elevation.txt'
+    with open(filename, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            if line.startswith('#'):
+                continue
+            m = regex.match(line)
+            if not m:
+                return Fail('RiseSetElevation({} line {})'.format(filename, lnum), 'Invalid data format')
+            year = int(m.group(1))
+            month = int(m.group(2))
+            day = int(m.group(3))
+            latitude = v(float(m.group(4)))
+            longitude = v(float(m.group(5)))
+            height = v(float(m.group(6)))
+            metersAboveGround = v(float(m.group(7)))
+            srh = int(m.group( 8))
+            srm = int(m.group( 9))
+            ssh = int(m.group(10))
+            ssm = int(m.group(11))
+            mrh = int(m.group(12))
+            mrm = int(m.group(13))
+            msh = int(m.group(14))
+            msm = int(m.group(15))
+
+            # Get search origin time
+            time = astronomy.Time.Make(year, month, day, 0, 0, 0.0)
+
+            # Convert scanned values into sunrise, sunset, moonrise, moonset day offsets.
+            sr = (srh + srm/60.0) / 24.0
+            ss = (ssh + ssm/60.0) / 24.0
+            mr = (mrh + mrm/60.0) / 24.0
+            ms = (msh + msm/60.0) / 24.0
+
+            observer = astronomy.Observer(latitude, longitude, height)
+
+            if (0 != RiseSetElevationBodyCase(astronomy.Body.Sun,  observer, astronomy.Direction.Rise, metersAboveGround, time, sr) or
+                0 != RiseSetElevationBodyCase(astronomy.Body.Sun,  observer, astronomy.Direction.Set,  metersAboveGround, time, ss) or
+                0 != RiseSetElevationBodyCase(astronomy.Body.Moon, observer, astronomy.Direction.Rise, metersAboveGround, time, mr) or
+                0 != RiseSetElevationBodyCase(astronomy.Body.Moon, observer, astronomy.Direction.Set,  metersAboveGround, time, ms)):
+                return 1
+
+
+    return Pass('RiseSetElevation')
+
+#-----------------------------------------------------------------------------------------------------------
+
+
 UnitTests = {
     'aberration':               Aberration,
     'atmosphere':               Atmosphere,
@@ -3297,6 +3361,7 @@ UnitTests = {
     'refraction':               Refraction,
     'repr':                     Repr,
     'riseset':                  RiseSet,
+    'riseset_elevation':        RiseSetElevation,
     'riseset_reverse':          RiseSetReverse,
     'rotation':                 Rotation,
     'seasons':                  Seasons,

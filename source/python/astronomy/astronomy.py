@@ -4958,6 +4958,9 @@ def RefractionAngle(refraction: Refraction, altitude: float) -> float:
     the amount of "lift" caused by atmospheric refraction.
     This is the number of degrees higher in the sky an object appears
     due to lensing of the Earth's atmosphere.
+    This function works best near sea level.
+    To correct for higher elevations, call #Atmosphere for that
+    elevation and multiply the refraction angle by the resulting relative density.
 
     Parameters
     ----------
@@ -6470,7 +6473,34 @@ def _InternalSearchAltitude(body: Body, observer: Observer, direction: Direction
             a1 = a2
 
 
-def SearchRiseSet(body: Body, observer: Observer, direction: Direction, startTime: Time, limitDays: float) -> Optional[Time]:
+def _HorizonDipAngle(observer: Observer, metersAboveGround: float) -> float:
+    # Calculate the effective radius of the Earth at ground level below the observer.
+    # Correct for the Earth's oblateness.
+    phi = math.radians(observer.latitude)
+    sinphi = math.sin(phi)
+    cosphi = math.cos(phi)
+    c = 1.0 / math.hypot(cosphi, sinphi*_EARTH_FLATTENING)
+    s = c * (_EARTH_FLATTENING * _EARTH_FLATTENING)
+    ht_km = (observer.height - metersAboveGround) / 1000.0     # height of ground above sea level
+    ach = _EARTH_EQUATORIAL_RADIUS_KM*c + ht_km
+    ash = _EARTH_EQUATORIAL_RADIUS_KM*s + ht_km
+    radius_m = 1000.0 * math.hypot(ach*cosphi, ash*sinphi)
+
+    # Correct refraction of a ray of light traveling tangent to the Earth's surface.
+    # Based on: https://www.largeformatphotography.info/sunmooncalc/SMCalc.js
+    # which in turn derives from:
+    # Sweer, John. 1938.  The Path of a Ray of Light Tangent to the Surface of the Earth.
+    # Journal of the Optical Society of America 28 (September):327-329.
+
+    # k = refraction index
+    k = 0.175 * (1.0 - (6.5e-3/283.15)*(observer.height - (2.0/3.0)*metersAboveGround))**3.256
+
+    # Calculate how far below the observer's horizontal plane the observed horizon dips.
+    return math.degrees(-(math.sqrt(2*(1 - k)*metersAboveGround / radius_m) / (1 - k)))
+
+
+
+def SearchRiseSet(body: Body, observer: Observer, direction: Direction, startTime: Time, limitDays: float, metersAboveGround: float = 0.0) -> Optional[Time]:
     """Searches for the next time a celestial body rises or sets as seen by an observer on the Earth.
 
     This function finds the next rise or set time of the Sun, Moon, or planet other than the Earth.
@@ -6515,6 +6545,13 @@ def SearchRiseSet(body: Body, observer: Observer, direction: Direction, startTim
         In cases where you want to find the next rise or set time no matter how far
         in the future (for example, for an observer near the south pole), you can
         pass in a larger value like 365.
+    metersAboveGround : float
+        Default value = 0.0.
+        Usually the observer is located at ground level. Then this parameter
+        should be zero. But if the observer is significantly higher than ground
+        level, for example in an airplane, this parameter should be a positive
+        number indicating how far above the ground the observer is.
+        An exception occurs if `metersAboveGround` is negative.
 
     Returns
     -------
@@ -6522,13 +6559,28 @@ def SearchRiseSet(body: Body, observer: Observer, direction: Direction, startTim
         If the rise or set time is found within the specified time window,
         this function returns that time. Otherwise, it returns `None`.
     """
+    if not math.isfinite(metersAboveGround) or metersAboveGround < 0.0:
+        raise Error('Invalid value for metersAboveGround: {}'.format(metersAboveGround))
+
+    # Determine the radius of the body to be observed.
     if body == Body.Sun:
         bodyRadiusAu = _SUN_RADIUS_AU
     elif body == Body.Moon:
         bodyRadiusAu = _MOON_EQUATORIAL_RADIUS_AU
     else:
         bodyRadiusAu = 0.0
-    return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, -_REFRACTION_NEAR_HORIZON)
+
+    # Calculate atmospheric density at ground level.
+    atmos = Atmosphere(observer.height - metersAboveGround)
+
+    # Calculate the apparent angular dip of the horizon.
+    dip = _HorizonDipAngle(observer, metersAboveGround)
+
+    # Correct refraction for objects near the horizon, using atmospheric density at the ground.
+    altitude = dip - (_REFRACTION_NEAR_HORIZON * atmos.density)
+
+    # Search for the top of the body crossing the corrected altitude angle.
+    return _InternalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, altitude)
 
 
 def SearchAltitude(body: Body, observer: Observer, direction: Direction, startTime: Time, limitDays: float, altitude: float) -> Optional[Time]:
