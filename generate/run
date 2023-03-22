@@ -20,37 +20,48 @@ Download()
     if [[ ! -f ${EPHFILE} ]]; then
         echo ""
         echo "Local file not found: ${EPHFILE}"
-        echo "Trying to download for you from:"
-        echo "${EPHURL}"
+    elif ! ./checksum.py sha256 ${SHAFILE}; then
+        # Sometimes we have to upgrade to a new version an external file.
+        # When that happens, we just change the checksum file.
+        # Then we notice here that the checksum doesn't match,
+        # delete the file, and re-download it.
         echo ""
-        if IsInstalled wget; then
-            wget_success=false
-            for attempt in {1..10}; do
-                if [[ ${attempt} > 1 ]]; then
-                    echo "wget failed (attempt ${attempt} of 10) -- will retry download in 9 seconds..."
-                    sleep 9
-                fi
-                if wget --no-verbose ${EPHURL}; then
-                    echo "wget successfully downloaded the file."
-                    wget_success=true
-                    break
-                fi
-            done
-            [[ ${wget_success} == true ]] || Fail "Could not download using wget: ${EPHFILE}"
-        elif IsInstalled curl; then
-            curl -L -o ${EPHFILE} ${EPHURL} || Fail "Could not download using curl: ${EPHFILE}"
-        else
-            echo "Neither wget nor curl is installed. Use your browser to download"
-            echo "the file at the URL above into this directory."
-            echo "Then run this script again to continue."
-            exit 1
-        fi
+        echo "The local version of ${EPHFILE} is obsolete or corrupt."
+        rm -fv ${EPHFILE}
+    else
+        return 0
+    fi
+
+    echo "Attempting download from:"
+    echo "${EPHURL}"
+    echo ""
+    if IsInstalled wget; then
+        wget_success=false
+        for attempt in {1..10}; do
+            if [[ ${attempt} > 1 ]]; then
+                echo "wget failed (attempt ${attempt} of 10) -- will retry download in 9 seconds..."
+                sleep 9
+            fi
+            if wget --no-verbose ${EPHURL}; then
+                echo "wget successfully downloaded the file."
+                wget_success=true
+                break
+            fi
+        done
+        [[ ${wget_success} == true ]] || Fail "Could not download using wget: ${EPHFILE}"
+    elif IsInstalled curl; then
+        curl -L -o ${EPHFILE} ${EPHURL} || Fail "Could not download using curl: ${EPHFILE}"
+    else
+        echo "Neither wget nor curl is installed. Use your browser to download"
+        echo "the file at the URL above into this directory."
+        echo "Then run this script again to continue."
+        exit 1
     fi
 
     if ./checksum.py sha256 ${SHAFILE}; then
         echo "Validated file using sha256 checksum."
     else
-        rm -f ${EPHFILE}
+        rm -fv ${EPHFILE}
         Fail "Detected corrupt file: failed sha256 check."
     fi
 }

@@ -249,32 +249,43 @@ REM     A special download process helps keep the repo size reasonable for most 
     set EPHURL=%1
     set EPHFILE=%2
     set SHAFILE=%3
+
     if not exist !EPHFILE! (
         echo.
         echo.Local file not found: !EPHFILE!
-        echo.Trying to download for you from:
-        echo.!EPHURL!
+    ) else (
+        py checksum.py sha256 !SHAFILE! && exit /b 0
+        REM     Sometimes we have to upgrade to a new version an external file.
+        REM     When that happens, we just change the checksum file.
+        REM     Then we notice here that the checksum doesn't match,
+        REM     delete the file, and re-download it.
         echo.
-
-        if defined wgetexe (
-            echo.Trying download using !wgetexe! ...
-            "!wgetexe!" !EPHURL! && goto verify_eph
-        )
-
-        if defined curlexe (
-            echo.Trying download using !curlexe! ...
-            "!curlexe!" -L -o !EPHFILE! !EPHURL! && goto verify_eph
-        )
-
-        if exist !EPHFILE! (del !EPHFILE!)
-
-        echo.
-        echo.Could not download the file.
-        echo.Use your browser to download the above file from
-        echo.the above URL into this directory.
-        echo.Then run this batch file again to continue.
-        exit /b 1
+        echo.The local version of !EPHFILE! is obsolete or corrupt.
+        del !EPHFILE!
     )
+
+    echo.Attempting download from:
+    echo.!EPHURL!
+    echo.
+
+    if defined wgetexe (
+        echo.Trying download using !wgetexe! ...
+        "!wgetexe!" !EPHURL! && goto verify_eph
+    )
+
+    if defined curlexe (
+        echo.Trying download using !curlexe! ...
+        "!curlexe!" -L -o !EPHFILE! !EPHURL! && goto verify_eph
+    )
+
+    if exist !EPHFILE! (del !EPHFILE!)
+
+    echo.
+    echo.Could not download the file.
+    echo.Use your browser to download the above file from
+    echo.the above URL into this directory.
+    echo.Then run this batch file again to continue.
+    exit /b 1
 
     :verify_eph
     echo.Verifying integrity of file: !EPHFILE!
