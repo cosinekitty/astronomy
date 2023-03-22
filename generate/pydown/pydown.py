@@ -240,6 +240,9 @@ def MdClass(c):
     md = ''
     doc = inspect.getdoc(c)
     if doc:
+        # Do not document the placeholder type `Any`
+        if c.__name__ == 'Any':
+            return ''
         md += '\n'
         md += '---\n'
         md += '\n'
