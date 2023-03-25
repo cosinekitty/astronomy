@@ -1,0 +1,6 @@
+Moon horizontal position: azimuth = 300.698, altitude = 10.854
+Moon check: x = 1.000000, y = 0.000000, z = 0.000000
+Sun vector: x = 0.835771, y = 0.507283, z = -0.194463
+Tilt angle of sunlit side of the Moon = 110.974 degrees counterclockwise from up.
+Moon magnitude = -7.12, phase angle = 146.54 degrees.
+Angle between Moon and Sun as seen from Earth = 33.38 degrees.

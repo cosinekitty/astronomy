@@ -97,7 +97,7 @@ function Camera(observer, time) {
 
     // Calculate the tilt angle of the sunlit side, as seen by the camera.
     // The x-axis is now pointing directly at the object, z is up in the camera image, y is to the left.
-    const tilt = RAD2DEG * Math.atan2(vec.z, vec.y);
+    const tilt = RAD2DEG * Math.atan2(vec.y, vec.z);
     console.log(`Tilt angle of sunlit side of the Moon = ${tilt.toFixed(3)} degrees counterclockwise from up.`);
 
     const illum = Astronomy.Illumination(Astronomy.Body.Moon, time);
