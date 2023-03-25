@@ -94,7 +94,7 @@ namespace camera
 
             // Calculate the tilt angle of the sunlit side, as seen by the camera.
             // The x-axis is now pointing directly at the object, z is up in the camera image, y is to the left.
-            double tilt = Astronomy.RAD2DEG * Math.Atan2(vec.z, vec.y);
+            double tilt = Astronomy.RAD2DEG * Math.Atan2(vec.y, vec.z);
             Console.WriteLine($"Tilt angle of sunlit side of the Moon = {tilt:F3} degrees counterclockwise from up.");
 
             IllumInfo illum = Astronomy.Illumination(Body.Moon, time);
