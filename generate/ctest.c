@@ -6595,6 +6595,7 @@ static int TopoStateTest(void)
     int error;  /* set as a side-effect of CHECK macro */
     verify_state_context_t context;
 
+    memset(&context, 0, sizeof(context));
     context.func = TopoStateFunc;
     CHECK(VerifyStateBody(&context, BODY_EARTH,   "topostate/Earth_N30_W80_1000m.txt",  2.108e-04, 2.430e-04));
     CHECK(VerifyStateBody(&context, BODY_GEO_EMB, "topostate/EMB_N30_W80_1000m.txt",    7.197e-04, 2.497e-04));
