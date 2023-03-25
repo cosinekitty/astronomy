@@ -8,16 +8,19 @@ Fail()
 TestDemo()
 {
     echo "Testing C demo: $1"
-    bin/$* > test/$1.txt || Fail "Error running demo: $1"
-    diff {correct,test}/$1.txt || Fail "Incorrect output: $1"
+    bin/$* > test/$1${SUFFIX}.txt || Fail "Error running demo: $1"
+    diff {correct,test}/$1${SUFFIX}.txt || Fail "Incorrect output: $1"
 }
 
 rm -f test/*.txt
 mkdir -p test
 [[ "$1" == "nobuild" ]] || ./build || Fail "Error building example programs."
 
+SUFFIX=
 TestDemo solar_time +38.88 -77.03 2023-02-12T17:00:00Z
-TestDemo camera 29 -81 2021-03-22T02:45:00Z
+SUFFIX=_nz TestDemo camera -41.17 175.5 2023-03-24T06:30:00Z
+SUFFIX=_fl TestDemo camera +29 -81 2023-03-25T00:00:00Z
+SUFFIX=_ca TestDemo camera 51.05 -114.07 2023-03-24T02:07:31.000Z
 TestDemo moonphase 2019-06-15T09:15:32.987Z
 TestDemo positions +45.6 -90.7 2018-11-30T17:55:07.234Z
 TestDemo riseset 45 -90 2019-06-14T21:45:25Z

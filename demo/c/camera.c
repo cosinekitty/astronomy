@@ -121,7 +121,7 @@ static int CameraImage(astro_observer_t observer, astro_time_t time)
 
     /* Calculate the tilt angle of the sunlit side, as seen by the camera. */
     /* The x-axis is now pointing directly at the object, z is up in the camera image, y is to the left. */
-    tilt = RAD2DEG * atan2(vec.z, vec.y);
+    tilt = RAD2DEG * atan2(vec.y, vec.z);
     printf("Tilt angle of sunlit side of the Moon = %0.3lf degrees counterclockwise from up.\n", tilt);
 
     illum = Astronomy_Illumination(BODY_MOON, time);
