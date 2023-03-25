@@ -6833,7 +6833,7 @@ static int DE405_Check(void)
         }
         else
         {
-            nscanned = sscanf(line, "%10[A-Za-z] %lf %lf %lf %lf %lf %lf", name, &pos[0], &pos[1], &pos[2], &vel[0], &vel[1], &vel[2]);
+            nscanned = sscanf(line, "%7[A-Za-z] %lf %lf %lf %lf %lf %lf", name, &pos[0], &pos[1], &pos[2], &vel[0], &vel[1], &vel[2]);
             if (nscanned != 7)
                 FAIL("C DE405_Check(%s line %d): expected 7 tokens, found %d\n", filename, lnum, nscanned);
             body = Astronomy_BodyCode(name);
@@ -7126,7 +7126,7 @@ static int MoonNodes(void)
         if (strlen(line) < 40)
             FAIL("C MoonNodes(%s line %d): line is too short\n", filename, lnum);
 
-        nscanned = sscanf(line, "%c %20s %lf %lf", &kind, date, &ra, &dec);
+        nscanned = sscanf(line, "%c %17s %lf %lf", &kind, date, &ra, &dec);
         if (nscanned != 4)
             FAIL("C MoonNodes(%s line %d): syntax error\n", filename, lnum);
 

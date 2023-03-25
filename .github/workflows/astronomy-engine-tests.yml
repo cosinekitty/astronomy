@@ -23,10 +23,10 @@ jobs:
       run: python -m pip install --upgrade pip && pip install pylint mypy
     - name: Install documentation tools Linux
       if: startsWith(matrix.os, 'ubuntu')
-      run: sudo apt install -y doxygen xsltproc
+      run: sudo apt install -y doxygen xsltproc cppcheck
     - name: Install documentation tools macOS
       if: startsWith(matrix.os, 'macOS')
-      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install doxygen
+      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install doxygen cppcheck
     - name: Init Node.js 16
       uses: actions/setup-node@v3
       with:

@@ -8,6 +8,8 @@ Fail()
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 [[ -z "${CPP}" ]] && CPP=g++
 
+cppcheck --error-exitcode=9 ../source/c/astronomy.c ctest.c || exit 1
+
 # Verify that the source can be built as modern C++.
 ${CPP} -x c++ -std=c++17 -c -Wall -Werror -O3 ../source/c/astronomy.c || Fail "Cannot compile as C++"
 rm -f astronomy.o

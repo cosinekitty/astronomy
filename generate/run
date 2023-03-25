@@ -82,6 +82,7 @@ cd generate || Fail "Cannot change back to generate directory."
 
 echo ""
 echo "Building C source code for 'generate' program."
+cppcheck --error-exitcode=9 generate.c || exit 1
 ./build || Fail "Could not build 'generate' program from source."
 
 mkdir -pv output temp apsides || Fail "Error creating directories."

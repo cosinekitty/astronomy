@@ -547,6 +547,7 @@ static astro_ecliptic_t EclError(astro_status_t status)
 {
     astro_ecliptic_t ecl;
     ecl.status = status;
+    ecl.elon = ecl.elat = NAN;
     ecl.vec = VecError(status, TimeError());
     return ecl;
 }
@@ -666,11 +667,12 @@ static astro_transit_t TransitErr(astro_status_t status)
     return transit;
 }
 
-static astro_axis_t AxisErr(astro_status_t status)
+static astro_axis_t AxisErr(astro_status_t status, astro_time_t time)
 {
     astro_axis_t axis;
     axis.status = status;
-    axis.ra = axis.dec = NAN;
+    axis.ra = axis.dec = axis.spin = NAN;
+    axis.north = VecError(status, time);
     return axis;
 }
 
@@ -5583,6 +5585,7 @@ astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time)
         state.y = vec.y;
         state.z = vec.z;
         state.vx = state.vy = state.vz = 0.0;
+        state.t = time;
         state.status = vec.status;
         return state;
     }
@@ -12676,7 +12679,7 @@ static astro_axis_t EarthRotationAxis(astro_time_t *time)
     /* Derive angular values: right ascension and declination. */
     equ = Astronomy_EquatorFromVector(axis.north);
     if (equ.status != ASTRO_SUCCESS)
-        return AxisErr(equ.status);
+        return AxisErr(equ.status, *time);
     axis.ra = equ.ra;
     axis.dec = equ.dec;
 
@@ -12899,7 +12902,7 @@ astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t *time)
         break;
 
     default:
-        return AxisErr(ASTRO_INVALID_BODY);
+        return AxisErr(ASTRO_INVALID_BODY, *time);
     }
 
     axis.ra = ra / 15.0;      /* convert degrees to sidereal hours */

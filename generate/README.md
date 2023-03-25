@@ -25,6 +25,7 @@ The following tools are required for developers:
 - doxygen
 - xsltproc
 - coreutils
+- cppcheck
 - Java Developer Kit (JDK), for Kotlin.
     - Hint for quick start: install [Android Developer Studio](https://developer.android.com/studio)
     or the Community version of [IntelliJ IDEA](https://www.jetbrains.com/idea/).
