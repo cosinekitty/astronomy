@@ -3,14 +3,13 @@
 ---
 
 ### [Camera](camera.py)
-Suppose you want to photograph the Moon,
-and you want to know what it will look like in the photo.
-Given a location on the Earth, and a date/time,
-this program calculates the orientation of the sunlit
-side of the Moon with respect to the top of your
-photo image. It assumes the camera faces directly
-toward the Moon's azimuth and tilts upward to its
-altitude angle above the horizon.
+Suppose you want to photograph the Moon, and you want to know what it will look like in the photo.
+Given a location on the Earth, and a date/time, this program calculates the orientation of the sunlit
+side of the Moon with respect to the top of your photo image. It assumes the camera faces directly
+toward the Moon's azimuth and tilts upward to its altitude angle above the horizon.
+The angles are defined counterclockwise from the zenith, as shown here:
+
+![](https://user-images.githubusercontent.com/11699954/227584171-1135ad6b-2584-4f71-a1e7-5b6ed9ccb87a.png)
 
 ### [Constellation](constellation.py)
 This demo finds what constellation the Moon
