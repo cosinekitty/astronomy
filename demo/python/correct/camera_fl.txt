@@ -1,0 +1,6 @@
+Moon horizontal position: azimuth = 271.417, altitude = 35.839
+Moon check: (1.00000000, 0.00000000, 0.00000000, 2023-03-25T00:00:00.000Z)
+Sun vector: (0.74444935, -0.06287897, -0.66024014, 2023-03-25T00:00:00.000Z)
+Tilt angle of sunlit side of the Moon = -174.560 degrees counterclockwise from up.
+Moon magnitude = -7.75, phase angle = 137.43 degrees.
+Angle between Moon and Sun as seen from Earth = 42.47 degrees.

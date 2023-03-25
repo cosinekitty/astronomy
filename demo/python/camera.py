@@ -84,7 +84,7 @@ def Camera(observer, time):
 
     # Calculate the tilt angle of the sunlit side, as seen by the camera.
     # The x-axis is now pointing directly at the object, z is up in the camera image, y is to the left.
-    tilt = math.degrees(math.atan2(vec.z, vec.y))
+    tilt = math.degrees(math.atan2(vec.y, vec.z))
     print('Tilt angle of sunlit side of the Moon = {:0.3f} degrees counterclockwise from up.'.format(tilt))
     illum = astronomy.Illumination(astronomy.Body.Moon, time)
     print('Moon magnitude = {:0.2f}, phase angle = {:0.2f} degrees.'.format(illum.mag, illum.phase_angle))
