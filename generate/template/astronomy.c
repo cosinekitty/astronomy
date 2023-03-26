@@ -1811,7 +1811,6 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
             /* Error is still too large. Find the next estimate. */
             /* Calculate D = the derivative of W with respect to lat. */
             D = factor*((c2 - s2)/denom - s2*c2*(F-1)/(factor*radicand)) + z*s + p*c;
-            adjust = W/D;
             lat -= W/D;
         }
         /* We now have a solution for the latitude in radians. */

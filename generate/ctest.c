@@ -1898,7 +1898,7 @@ static int RiseSetReverse(void)
         FFAIL("Invalid intervals between sunrise/sunset.\n");
 
     /* Perform the same search in reverse. Verify we get consistent rise/set times. */
-    for (int i = nsamples-1; i >= 0; --i)
+    for (i = nsamples-1; i >= 0; --i)
     {
         dir *= -1;      /* Toggle searching sunrise/sunset. */
         result = Astronomy_SearchRiseSet(BODY_SUN, observer, dir, time, -1.0);
@@ -2576,7 +2576,7 @@ static const char *ParseJplHorizonsDateTime(const char *text, astro_time_t *time
 
     time->ut = time->tt = NAN;
 
-    while (*text == ' ' && *text != '\0')
+    while (*text == ' ')
         ++text;
 
     nscanned = sscanf(text, "%d-%3[A-Za-z]-%d %d:%d", &year, mtext, &day, &hour, &minute);
@@ -2820,7 +2820,7 @@ static int PlanetApsis(void)
         while (ReadLine(line, sizeof(line), infile, filename, count-1))
         {
             /* Parse the line of test data. */
-            if (   (3 != sscanf(line, "%d %s %lf", &expected_kind, expected_time_text, &expected_distance))
+            if (   (3 != sscanf(line, "%d %30s %lf", &expected_kind, expected_time_text, &expected_distance))
                 || (expected_kind & ~1)     /* must be either 0=perihelion or 1=aphelion */
                 || (expected_distance <= 0.0)
                 || ParseDate(expected_time_text, &expected_time))
@@ -5251,7 +5251,7 @@ static astro_state_vector_t SelectJupiterMoon(const astro_jupiter_moons_t *jm, i
 }
 
 
-static int JupiterMoons_CheckJpl(int mindex, double tt, double pos[3], double vel[3])
+static int JupiterMoons_CheckJpl(int mindex, double tt, const double pos[3], const double vel[3])
 {
     int error;
     astro_jupiter_moons_t jm;
@@ -6355,6 +6355,7 @@ static int LagrangeJplAnalyzeFiles(
     }
 
     /* Special case for L4, L5: confirm velocity vector would leave distances as an equilateral triangle. */
+    /* cppcheck-suppress[duplicateCondition] */
     if (point == 4 || point == 5)
     {
         double a, b, c;      /* distances before v*dt increment */
@@ -6463,9 +6464,10 @@ static int LagrangeJplAnalyzeFiles(
     }
 
     /* Special case for L4/L5: confirm velocity vectors are 60 degrees apart. */
+    /* cppcheck-suppress[duplicateCondition] */
     if (point == 4 || point == 5)
     {
-        double speed, angle, arcmin_error;
+        double speed, arcmin_error;
         double mx, my, mz;
         double px, py, pz;
         double min_angle = NAN;
