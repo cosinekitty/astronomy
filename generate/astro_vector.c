@@ -105,7 +105,7 @@ int QuadraticRegression(const VectorListType *list, ParabolaType parab[3])
     memset(&s, 0, sizeof(s));
     s.N = list->length;
     for (i=0; i < list->length; ++i)
-    {        
+    {
         double t = list->array[i].t;
         double t2 = t*t;
         s.st1 += t;
