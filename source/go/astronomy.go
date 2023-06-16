@@ -17,6 +17,13 @@ type terse_vector_t struct {
 	z float64
 }
 
+type body_grav_calc_t struct {
+	tt float64        /* J2000 terrestrial time [days] */
+	r  terse_vector_t /* position [au] */
+	v  terse_vector_t /* velocity [au/day] */
+	a  terse_vector_t /* acceleration [au/day^2] */
+}
+
 //name of precess_dir_t
 const (
 	FROM_2000 = 0
