@@ -634,7 +634,7 @@ int TopEcliptic(int planet, const top_elliptical_t *ellip, top_rectangular_t *ec
 
     do
     {
-        z2r = 0.0; z2i = e;
+        z2i = e;
         zteta_r = cos(z2i);
         zteta_i = sin(z2i);
         z3r = z1r*zteta_r - z1i*zteta_i;
