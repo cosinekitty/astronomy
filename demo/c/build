@@ -19,7 +19,7 @@ mkdir -p bin
 for name in altazsearch; do
     rm -f bin/${name}
     echo "Compiling ${name}.cpp"
-    g++ ${BUILDOPT} -Wall -Werror -o bin/${name} -I../../source/c ../../source/c/astronomy.c ${name}.cpp ||
+    g++ ${BUILDOPT} -Wall -Werror -o bin/${name} -I../../source/c -x c ../../source/c/astronomy.c -x c++ ${name}.cpp ||
         Fail "Error building ${name}.cpp"
 done
 
