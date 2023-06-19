@@ -985,7 +985,7 @@ When a simulation is created by a call to [`Astronomy_GravSimInit`](#Astronomy_G
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+| `const astro_grav_sim_t *` | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
 
 
 
@@ -1005,7 +1005,7 @@ When a simulation is created by a call to [`Astronomy_GravSimInit`](#Astronomy_G
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+| `const astro_grav_sim_t *` | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
 
 
 
@@ -1049,7 +1049,7 @@ Usually this function will be called immediately after a matching call to [`Astr
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| <code><a href="#astro_grav_sim_t">astro_grav_sim_t</a> *</code> | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
+| `const astro_grav_sim_t *` | `sim` |  A gravity simulator object that was created by a prior call to [`Astronomy_GravSimInit`](#Astronomy_GravSimInit).  | 
 
 
 
