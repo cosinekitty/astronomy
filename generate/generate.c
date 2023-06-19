@@ -1750,8 +1750,8 @@ static int Diff(const char *filename1, const char *filename2, int *nlines)
 
     for(;;)
     {
-        char *r1 = fgets(line1, sizeof(line1), infile1);
-        char *r2 = fgets(line2, sizeof(line2), infile2);
+        const char *r1 = fgets(line1, sizeof(line1), infile1);
+        const char *r2 = fgets(line2, sizeof(line2), infile2);
         if (r1 == NULL && r2 == NULL)
             break;
         if (r1 == NULL)

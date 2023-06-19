@@ -786,11 +786,11 @@ class _StarDef:
         self.dec = 0.0
         self.dist = 0.0     # signals that the star has not yet been defined
 
-_StarTable = [_StarDef() for _ in range(8)]
+_StarTable:List[_StarDef] = [_StarDef() for _ in range(8)]
 
 def _GetStar(body: Body) -> Optional[_StarDef]:
     if Body.Star1.value <= body.value <= Body.Star8.value:
-        return _StarTable[body.value - Body.Star1.value]
+        return _StarTable[int(body.value - Body.Star1.value)]
     return None
 
 def _UserDefinedStar(body: Body) -> Optional[_StarDef]:
@@ -867,7 +867,7 @@ def BodyCode(name: str) -> Body:
 def _IsSuperiorPlanet(body: Body) -> bool:
     return body in [Body.Mars, Body.Jupiter, Body.Saturn, Body.Uranus, Body.Neptune, Body.Pluto]
 
-_PlanetOrbitalPeriod = [
+_PlanetOrbitalPeriod:List[float] = [
     87.969,
     224.701,
     _EARTH_ORBITAL_PERIOD,
@@ -944,7 +944,7 @@ def PlanetOrbitalPeriod(body: Body) -> float:
         The mean orbital period of the body in days.
     """
     if isinstance(body, Body) and (0 <= body.value < len(_PlanetOrbitalPeriod)):
-        return _PlanetOrbitalPeriod[body.value]
+        return _PlanetOrbitalPeriod[int(body.value)]
     raise InvalidBodyError(body)
 
 def _SynodicPeriod(body: Body) -> float:
@@ -954,7 +954,7 @@ def _SynodicPeriod(body: Body) -> float:
         raise InvalidBodyError(body)
     if body == Body.Moon:
         return _MEAN_SYNODIC_MONTH
-    return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[body.value] - 1.0))
+    return abs(_EARTH_ORBITAL_PERIOD / (_EARTH_ORBITAL_PERIOD/_PlanetOrbitalPeriod[int(body.value)] - 1.0))
 
 def AngleBetween(a: Vector, b: Vector) -> float:
     """Calculates the angle in degrees between two vectors.
@@ -6313,7 +6313,7 @@ def _altdiff(context: _altitude_context, time: Time) -> float:
     ofdate = Equator(context.body, time, context.observer, True, True)
     hor = Horizon(time, context.observer, ofdate.ra, ofdate.dec, Refraction.Airless)
     altitude = hor.altitude + math.degrees(math.asin(context.bodyRadiusAu / ofdate.dist))
-    return context.direction.value*(altitude - context.targetAltitude)
+    return float(context.direction.value)*(altitude - context.targetAltitude)
 
 def _MaxAltitudeSlope(body: Body, latitude: float) -> float:
     # Calculate the maximum possible rate that this body's altitude
@@ -8901,6 +8901,8 @@ def _LocalEclipse(shadow: _ShadowInfo, observer: Observer) -> LocalSolarEclipseI
     t2 = shadow.time.AddDays(+PARTIAL_WINDOW)
     partial_begin = _LocalEclipseTransition(observer, +1.0, _local_partial_distance, t1, shadow.time)
     partial_end   = _LocalEclipseTransition(observer, -1.0, _local_partial_distance, shadow.time, t2)
+    total_begin: Optional[EclipseEvent]
+    total_end: Optional[EclipseEvent]
     if shadow.r < abs(shadow.k):    # take absolute value of 'k' to handle annular eclipses too.
         t1 = shadow.time.AddDays(-TOTAL_WINDOW)
         t2 = shadow.time.AddDays(+TOTAL_WINDOW)
@@ -8908,9 +8910,9 @@ def _LocalEclipse(shadow: _ShadowInfo, observer: Observer) -> LocalSolarEclipseI
         total_end   = _LocalEclipseTransition(observer, -1.0, _local_total_distance, shadow.time, t2)
         kind = _EclipseKindFromUmbra(shadow.k)
     else:
+        kind = EclipseKind.Partial
         total_begin = None
         total_end = None
-        kind = EclipseKind.Partial
     obscuration = 1.0 if (kind == EclipseKind.Total) else _SolarEclipseObscuration(shadow.dir, shadow.target)
     return LocalSolarEclipseInfo(kind, obscuration, partial_begin, total_begin, peak, total_end, partial_end)
 
@@ -8947,6 +8949,8 @@ def _GeoidIntersect(shadow: _ShadowInfo) -> GlobalSolarEclipseInfo:
     B = -2.0 * (v.x*e.x + v.y*e.y + v.z*e.z)
     C = (e.x*e.x + e.y*e.y + e.z*e.z) - R*R
     radic = B*B - 4*A*C
+
+    obscuration: Optional[float]
 
     if radic > 0.0:
         # Calculate the closer of the two intersection points.
