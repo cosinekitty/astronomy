@@ -1,6 +1,6 @@
 package main
 
-import "unsafe"
+
 
 const C_AUDAY = 173.1446326846693
 const KM_PER_AU = 1.4959787069098932e+08
@@ -356,4 +356,3 @@ type astro_node_event_t struct {
 type astro_grav_sim_s struct {
 }
 type astro_grav_sim_t astro_grav_sim_s
-type astro_position_func_t func(context unsafe.Pointer, time astro_time_t) astro_vector_t
