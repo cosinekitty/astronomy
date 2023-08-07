@@ -4199,7 +4199,7 @@ astro_status_t Astronomy_GravSimUpdate(
                 current accelerations apply across the whole time interval.
                 approx_pos = pos1 + vel1*dt + (1/2)acc*dt^2
             */
-            body_grav_calc_t *prev = &sim->prev->bodies[i];
+            const body_grav_calc_t *prev = &sim->prev->bodies[i];
             sim->curr->bodies[i].r = UpdatePosition(dt, prev->r, prev->v, prev->a);
         }
 
@@ -4211,7 +4211,7 @@ astro_status_t Astronomy_GravSimUpdate(
 
         for (i = 0; i < numBodies; ++i)
         {
-            body_grav_calc_t *prev = &sim->prev->bodies[i];
+            const body_grav_calc_t *prev = &sim->prev->bodies[i];
             body_grav_calc_t *curr = &sim->curr->bodies[i];
 
             /*
@@ -4376,7 +4376,7 @@ void Astronomy_GravSimSwap(astro_grav_sim_t *sim)
  * @param sim
  *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
  */
-astro_time_t Astronomy_GravSimTime(astro_grav_sim_t *sim)
+astro_time_t Astronomy_GravSimTime(const astro_grav_sim_t *sim)
 {
     return sim->curr->time;
 }
@@ -4393,7 +4393,7 @@ astro_time_t Astronomy_GravSimTime(astro_grav_sim_t *sim)
  * @param sim
  *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
  */
-int Astronomy_GravSimNumBodies(astro_grav_sim_t *sim)
+int Astronomy_GravSimNumBodies(const astro_grav_sim_t *sim)
 {
     return sim->numBodies;
 }
@@ -4410,7 +4410,7 @@ int Astronomy_GravSimNumBodies(astro_grav_sim_t *sim)
  * @param sim
  *      A gravity simulator object that was created by a prior call to #Astronomy_GravSimInit.
  */
-astro_body_t Astronomy_GravSimOrigin(astro_grav_sim_t *sim)
+astro_body_t Astronomy_GravSimOrigin(const astro_grav_sim_t *sim)
 {
     return sim->originBody;
 }

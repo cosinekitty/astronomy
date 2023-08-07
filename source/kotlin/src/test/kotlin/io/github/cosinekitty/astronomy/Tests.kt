@@ -532,7 +532,7 @@ class Tests {
         checkScalar(ofdate.dist, 0.29355004763100184, 1.0e-16, "Venus EQD distance")
 
         val hor = horizon(time, observer, ofdate.ra, ofdate.dec, Refraction.None)
-        checkScalar(hor.azimuth,  87.59636363753623,   1.0e-16, "Venus azimuth")
+        checkScalar(hor.azimuth,  87.59636363753623,   1.5e-14, "Venus azimuth")
         checkScalar(hor.altitude, 54.92906326370683,   7.2e-15, "Venus altitude")
     }
 

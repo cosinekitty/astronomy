@@ -672,7 +672,7 @@ double ExtrapolatedDeltaT(int year)
 
 
 static int ScanRealArray(
-    cg_context_t *context,
+    const cg_context_t *context,
     const char *filename,
     int lnum,
     char *line,
@@ -727,7 +727,7 @@ static int ScanRealArray(
     return 0;   /* successful parse */
 }
 
-static int OptimizeConst(cg_context_t *context, char *buffer, size_t size, double c, const char *v)
+static int OptimizeConst(const cg_context_t *context, char *buffer, size_t size, double c, const char *v)
 {
     int nprinted;
     const char *op;
@@ -757,7 +757,7 @@ static int OptimizeConst(cg_context_t *context, char *buffer, size_t size, doubl
     return 0;
 }
 
-static int OptimizeLinear(cg_context_t *context, char *buffer, size_t size, double a, double b)
+static int OptimizeLinear(const cg_context_t *context, char *buffer, size_t size, double a, double b)
 {
     int nprinted;
 
