@@ -29,7 +29,7 @@ function Equatorial(time) {
     return equ.dec;
 }
 
-function Search(time1, direction, func) {
+function Search(startTime, direction, func) {
     // Create a callback function that reports the rate of change of the desired variable.
     function f(t) {
         const dt = 1 / 86400;       // one second, expressed in days
@@ -38,7 +38,20 @@ function Search(time1, direction, func) {
         return direction*(x2 - x1);
     }
 
-    return Astronomy.Search(f, time1, time1.AddDays(30));
+    // Search forward 10 days at a time until we find a solution.
+    // Because the Moon's orbit takes about 29 days, we want an interval
+    // that is less than half that amount of time. This prevents
+    // finding more than one extreme (minimum/maximum) in a single
+    // search interval, which would cause the search to fail.
+    let t1 = startTime;
+    while (true) {
+        const t2 = t1.AddDays(10);
+        const tx = Astronomy.Search(f, t1, t2);
+        if (tx) {
+            return tx;      // found a solution!
+        }
+        t1 = t2;
+    }
 }
 
 function Solve(time1, direction, func, comment) {
@@ -58,16 +71,20 @@ function ParseDate(text) {
 }
 
 function Demo() {
-    if (process.argv.length === 3) {
-        const time1 = Astronomy.MakeTime(ParseDate(process.argv[2]));
-        Solve(time1, -1, Ecliptic, 'maximum ecliptic latitude');
-        Solve(time1, +1, Ecliptic, 'minimum ecliptic latitude');
-        Solve(time1, -1, Equatorial, 'maximum declination');
-        Solve(time1, +1, Equatorial, 'minimum declination');
-        process.exit(0);
-    } else {
-        console.log('USAGE: node moon_north_south yyyy-mm-dd[Thh:mm:ssZ]');
+    if (process.argv.length < 3) {
+        console.log('USAGE: node moon_north_south yyyy-mm-dd[Thh:mm:ssZ] ...');
         process.exit(1);
+    } else {
+        for (let i = 2; i < process.argv.length; ++i) {
+            const time1 = Astronomy.MakeTime(ParseDate(process.argv[i]));
+            console.log(`${time1}  Starting search.`);
+            Solve(time1, -1, Ecliptic, 'maximum ecliptic latitude');
+            Solve(time1, +1, Ecliptic, 'minimum ecliptic latitude');
+            Solve(time1, -1, Equatorial, 'maximum declination');
+            Solve(time1, +1, Equatorial, 'minimum declination');
+            console.log();
+        }
+        process.exit(0);
     }
 }
 
