@@ -37,8 +37,7 @@ function HorizontalCoords(ecliptic_longitude, time, rot_ecl_hor) {
 }
 
 
-function Search(time, rot_ecl_hor, e1, e2)
-{
+function Search(time, rot_ecl_hor, e1, e2) {
     const tolerance = 1.0e-6;        /* one-millionth of a degree is close enough! */
 
     /*
@@ -47,13 +46,11 @@ function Search(time, rot_ecl_hor, e1, e2)
         bound zero in ascending order.
     */
 
-    for(;;)
-    {
+    for(;;) {
         const e3 = (e1 + e2) / 2.0;
         const h3 = HorizontalCoords(e3, time, rot_ecl_hor);
 
-        if (Math.abs(e2-e1) < tolerance)
-        {
+        if (Math.abs(e2-e1) < tolerance) {
             /* We have found the horizon crossing within tolerable limits. */
             return { ex:e3, h:h3 };
         }

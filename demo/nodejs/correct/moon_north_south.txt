@@ -1,0 +1,4 @@
+2023-09-10T07:47:00.420Z  Moon next reaches maximum ecliptic latitude = 5.1662436.
+2023-08-28T08:26:14.233Z  Moon next reaches minimum ecliptic latitude = -5.1107593.
+2023-09-08T13:13:01.641Z  Moon next reaches maximum declination = 28.1783302.
+2023-08-26T20:18:11.883Z  Moon next reaches minimum declination = -28.1066748.
