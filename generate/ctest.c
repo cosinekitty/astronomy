@@ -478,11 +478,11 @@ fail:
 static int Test_AstroTime(void)
 {
     int error = 1;
-    astro_time_t time;
+    astro_time_t time, time2;
     const double expected_ut = 6910.270978506945;
     const double expected_tt = 6910.271800214368;
     double diff;
-    int year;
+    int year, count;
 
     time = Astronomy_MakeTime(2018, 12, 2, 18, 30, 12.543);
     FDEBUG("ut=%0.12lf, tt=%0.12lf\n", time.ut, time.tt);
@@ -522,7 +522,25 @@ static int Test_AstroTime(void)
     time = Astronomy_MakeTime(+999999, 11, 30, 8, 15, 45.0);
     CHECK(CheckTimeFormat(time, TIME_FORMAT_MILLI, ASTRO_SUCCESS, "+999999-11-30T08:15:44.999Z"));
 
-    FPASS();
+    /* Verify that the realtime clock supports fine-grained time resolution. */
+    time = Astronomy_CurrentTime();
+    count = 0;
+    do
+    {
+        /* Keep looping until the time changes. */
+        time2 = Astronomy_CurrentTime();
+
+        /* Prevent infinite looping, in case something goes bonkers. */
+        if (++count > 1000)
+            FFAIL("TAKING TOO LONG for Astronomy_CurrentTime() to change.\n");
+    } while (time2.ut == time.ut);
+    diff = V((time2.ut - time.ut)*SECONDS_PER_DAY);
+    if (diff <= 0.0)
+        FFAIL("IMPOSSIBLE realtime increment = %0.4lg seconds after %d iterations.\n", diff, count);
+    if (diff > 0.001)
+        FFAIL("EXCESSIVE realtime increment = %0.4lg seconds after %d iterations.\n", diff, count);
+
+    FPASSA("realtime increment = %0.4lg seconds after %d iterations.\n", diff, count);
 fail:
     return error;
 }

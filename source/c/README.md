@@ -508,7 +508,11 @@ For geocentric calculations, [`Astronomy_GeoVector`](#Astronomy_GeoVector) also 
 
 
 
-Uses the computer's system clock to find the current UTC date and time with 1-second granularity. Converts that date and time to an [`astro_time_t`](#astro_time_t) value and returns the result. Callers can pass this value to other Astronomy Engine functions to calculate current observational conditions. 
+Uses the computer's system clock to find the current UTC date and time. Converts that date and time to an [`astro_time_t`](#astro_time_t) value and returns the result. Callers can pass this value to other Astronomy Engine functions to calculate current observational conditions.
+
+On supported platforms (Linux/Unix, Mac, Windows), the time is measured with microsecond resolution.
+
+On unsupported platforms, a compiler error will occur due to lack of microsecond resolution support. However, if whole second resolution is good enough for your application, you can define the preprocessor symbol `ASTRONOMY_ENGINE_WHOLE_SECOND` to use the portable function `time(NULL)`. Alternatively, if you do not need to use `Astronomy_CurrentTime`, you can define the preprocessor symbol `ASTRONOMY_ENGINE_NO_CURRENT_TIME` to exclude this function from your code. 
 
 ---
 
