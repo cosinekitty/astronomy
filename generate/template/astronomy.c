@@ -30,7 +30,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(__unix__) || defined(__unix) || \
+        (defined(__APPLE__) && defined(__MACH__))
+#include <sys/time.h>
+#elif defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <time.h>
+#endif
+
 #include "astronomy.h"
 
 #ifdef __FAST_MATH__
@@ -351,7 +361,7 @@ static const double PLUTO_GM   = 0.2188699765425970e-11;
 #define MOON_GM   (EARTH_GM / EARTH_MOON_MASS_RATIO)
 
 /** @cond DOXYGEN_SKIP */
-#define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
+#define ASTRO_ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
 #define AU_PER_PARSEC   (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
 #define Y2000_IN_MJD    (T0 - MJD_BASIS)
 /** @endcond */
@@ -976,10 +986,34 @@ astro_time_t Astronomy_CurrentTime(void)
 {
     astro_time_t t;
 
+	double sec = 0;
+
+
+#if defined(__unix__) || defined(__unix) || \
+        (defined(__APPLE__) && defined(__MACH__))
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+	sec = (double)tv.tv_sec + 1e-6*tv.tv_usec;
+#elif defined(_WIN32)
+	FILETIME ft;
+	GetSystemTimeAsFileTime(&ft);
+	unsigned long long tt = ft.dwHighDateTime;
+	tt <<=32;
+	tt |= ft.dwLowDateTime;
+	tt /= 10;
+	tt -= 11644473600000000ULL;
+
+	sec = (double)tt / 1e6;
+#else
+	#warning microsecond-resolution time function not found: using 1-second resolution.
+	sec = time(NULL);
+#endif
+
     /* Get seconds since midnight January 1, 1970, divide to convert to days, */
     /* then subtract to get days since noon on January 1, 2000. */
 
-    t.ut = (time(NULL) / SECONDS_PER_DAY) - 10957.5;
+    t.ut = (sec / SECONDS_PER_DAY) - 10957.5;
     t.tt = TerrestrialTime(t.ut);
     t.psi = t.eps = t.st = NAN;
     return t;
@@ -2506,7 +2540,7 @@ $ASTRO_C_VSOP(Uranus);
 $ASTRO_C_VSOP(Neptune);
 
 /** @cond DOXYGEN_SKIP */
-#define VSOPFORMULA(x)    { ARRAYSIZE(x), x }
+#define VSOPFORMULA(x)    { ASTRO_ARRAYSIZE(x), x }
 /** @endcond */
 
 static const vsop_model_t vsop[] =
