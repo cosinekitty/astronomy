@@ -1164,7 +1164,9 @@ astro_angle_result_t Astronomy_AngleBetween(astro_vector_t a, astro_vector_t b);
 const char *Astronomy_BodyName(astro_body_t body);
 astro_body_t Astronomy_BodyCode(const char *name);
 astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
+#if !defined(ASTRONOMY_ENGINE_NO_CURRENT_TIME)
 astro_time_t Astronomy_CurrentTime(void);
+#endif
 astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
 astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
 astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);

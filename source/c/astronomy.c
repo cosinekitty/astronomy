@@ -31,14 +31,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(__unix__) || defined(__unix) || \
-        (defined(__APPLE__) && defined(__MACH__))
+#if !defined(ASTRONOMY_ENGINE_NO_CURRENT_TIME)
+#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
 #include <sys/time.h>
 #elif defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
 #include <time.h>
+#endif
 #endif
 
 #include "astronomy.h"
@@ -979,51 +980,56 @@ astro_time_t Astronomy_TerrestrialTime(double tt)
     }
 }
 
-
+#if !defined(ASTRONOMY_ENGINE_NO_CURRENT_TIME)
 /**
  * @brief Returns the computer's current date and time in the form of an #astro_time_t.
  *
- * Uses the computer's system clock to find the current UTC date and time with 1-second granularity.
+ * Uses the computer's system clock to find the current UTC date and time.
  * Converts that date and time to an #astro_time_t value and returns the result.
  * Callers can pass this value to other Astronomy Engine functions to calculate
  * current observational conditions.
+ *
+ * On supported platforms (Linux/Unix, Mac, Windows), the time is measured with
+ * microsecond resolution.
+ *
+ * On unsupported platforms, a compiler error will occur due to lack of
+ * microsecond resolution support. However, if whole second resolution is good
+ * enough for your application, you can define the preprocessor symbol
+ * `ASTRONOMY_ENGINE_WHOLE_SECOND` to use the portable function `time(NULL)`.
+ * Alternatively, if you do not need to use `Astronomy_CurrentTime`, you can
+ * define the preprocessor symbol `ASTRONOMY_ENGINE_NO_CURRENT_TIME` to
+ * exclude this function from your code.
  */
 astro_time_t Astronomy_CurrentTime(void)
 {
     astro_time_t t;
+    double sec;         /* Seconds since midnight January 1, 1970. */
 
-	double sec = 0;
-
-
-#if defined(__unix__) || defined(__unix) || \
-        (defined(__APPLE__) && defined(__MACH__))
+#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
     struct timeval tv;
-
     gettimeofday(&tv, NULL);
-	sec = (double)tv.tv_sec + 1e-6*tv.tv_usec;
+    sec = (double)tv.tv_sec + tv.tv_usec/1.0e+6;
 #elif defined(_WIN32)
-	FILETIME ft;
-	GetSystemTimeAsFileTime(&ft);
-	unsigned long long tt = ft.dwHighDateTime;
-	tt <<=32;
-	tt |= ft.dwLowDateTime;
-	tt /= 10;
-	tt -= 11644473600000000ULL;
-
-	sec = (double)tt / 1e6;
+    FILETIME ft;
+    ULARGE_INTEGER large;
+    /* Get time in 100-nanosecond units from January 1, 1601. */
+    GetSystemTimePreciseAsFileTime(&ft);
+    large.u.LowPart  = ft.dwLowDateTime;
+    large.u.HighPart = ft.dwHighDateTime;
+    sec = (large.QuadPart - 116444736000000000ULL) / 1.0e+7;
+#elif defined(ASTRONOMY_ENGINE_WHOLE_SECOND)
+    sec = time(NULL);
 #else
-	#warning microsecond-resolution time function not found: using 1-second resolution.
-	sec = time(NULL);
+    #error Microsecond time resolution is not supported on this platform. Define ASTRONOMY_ENGINE_WHOLE_SECOND to use second resolution instead.
 #endif
 
-    /* Get seconds since midnight January 1, 1970, divide to convert to days, */
-    /* then subtract to get days since noon on January 1, 2000. */
-
+    /* Convert seconds to days, then subtract to get days since noon on January 1, 2000. */
     t.ut = (sec / SECONDS_PER_DAY) - 10957.5;
     t.tt = TerrestrialTime(t.ut);
     t.psi = t.eps = t.st = NAN;
     return t;
 }
+#endif
 
 /**
  * @brief Creates an #astro_time_t value from a given calendar date and time.
