@@ -1013,7 +1013,7 @@ astro_time_t Astronomy_CurrentTime(void)
     FILETIME ft;
     ULARGE_INTEGER large;
     /* Get time in 100-nanosecond units from January 1, 1601. */
-    GetSystemTimeAsFileTime(&ft);
+    GetSystemTimePreciseAsFileTime(&ft);
     large.u.LowPart  = ft.dwLowDateTime;
     large.u.HighPart = ft.dwHighDateTime;
     sec = (large.QuadPart - 116444736000000000ULL) / 1.0e+7;
