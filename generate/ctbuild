@@ -30,7 +30,7 @@ else
     Fail "unrecognized command line option"
 fi
 
-${CC} ${BUILDOPT} -D_FORTIFY_SOURCE=3 -Wall -Werror -o ctest -I ../source/c/ ../source/c/astronomy.c ctest.c -lm || Fail "Error building ctest"
+${CC} ${BUILDOPT} -Wall -Werror -o ctest -I ../source/c/ ../source/c/astronomy.c ctest.c -lm || Fail "Error building ctest"
 
 echo "$0: Built 'ctest' program."
 exit 0
