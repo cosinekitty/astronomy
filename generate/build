@@ -2,6 +2,7 @@
 
 [[ -z "${CC}" ]] && CC=gcc
 echo "$0: C compiler = ${CC}"
+${CC} --version
 
 if [[ "$1" == "debug" ]]; then
     BUILDOPT='-g -Og'
@@ -16,7 +17,7 @@ else
     exit 1
 fi
 
-${CC} ${BUILDOPT} -Wall -Werror -o generate -I novas -I vsop -I top2013 -I . \
+${CC} ${BUILDOPT} -D_FORTIFY_SOURCE=3 -Wall -Werror -o generate -I novas -I vsop -I top2013 -I . \
     generate.c \
     earth.c \
     astro_vector.c \

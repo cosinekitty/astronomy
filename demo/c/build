@@ -19,7 +19,7 @@ mkdir -p bin
 for name in altazsearch; do
     rm -f bin/${name}
     echo "Compiling ${name}.cpp"
-    g++ ${BUILDOPT} -Wall -Werror -x c++ -std=c++11 -o bin/${name} -I../../source/c ${name}.cpp ../../source/c/astronomy.c ||
+    g++ ${BUILDOPT} -D_FORTIFY_SOURCE=3 -Wall -Werror -x c++ -std=c++11 -o bin/${name} -I../../source/c ${name}.cpp ../../source/c/astronomy.c ||
         Fail "Error building ${name}.cpp"
 done
 
@@ -27,7 +27,7 @@ done
 for name in solar_time gravity galactic camera moonphase positions linux_riseset riseset seasons culminate horizon lunar_eclipse triangulate ecliptic_vector; do
     rm -f bin/${name}
     echo "Compiling ${name}.c"
-    gcc ${BUILDOPT} -Wall -Werror -o bin/${name} -I../../source/c ../../source/c/astronomy.c astro_demo_common.c ${name}.c -lm ||
+    gcc ${BUILDOPT} -D_FORTIFY_SOURCE=3 -Wall -Werror -o bin/${name} -I../../source/c ../../source/c/astronomy.c astro_demo_common.c ${name}.c -lm ||
         Fail "Error building ${name}.c"
 done
 
