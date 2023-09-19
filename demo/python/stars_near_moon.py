@@ -25,7 +25,7 @@ if __name__ == '__main__':
     # the given observer at the specified time.
     moon_vec = GeoMoon(time) - ObserverVector(time, observer, False)
 
-    with open('../../generate/hygdata_v3.csv') as starfile:
+    with open('../../generate/hyg_v35_1.csv') as starfile:
         reader = csv.DictReader(starfile)
         lnum = 0
         for row in reader:

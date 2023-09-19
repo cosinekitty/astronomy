@@ -8,14 +8,17 @@
 import sys
 import re
 
+def Unquote(s):
+    return s.replace('"', '')
+
 def Translate(inFileName, outFileName):
 
-    # Ignore disagreements with hygdata_v3.
+    # Ignore disagreements with HYG v3.5.1.
     # See: https://github.com/astronexus/HYG-Database/issues/21
     ignore = set([
-        3865, 7751, 10342, 19173, 22400, 27992, 29366,
+        3865, 7751, 19173, 27992,
         30112, 52886, 58221, 59234, 67599, 72017, 74021, 78313,
-        84413, 85957, 87694, 89105, 91382, 92907, 93308,
+        85957, 87694, 89105, 91382, 92907, 93308,
         95468, 100777, 101541, 105623
     ])
 
@@ -27,12 +30,12 @@ def Translate(inFileName, outFileName):
                 lnum += 1
                 token = line.strip().split(',')
                 if lnum == 1:
-                    columns = dict((key, col) for (col, key) in enumerate(token))
+                    columns = dict((Unquote(key), col) for (col, key) in enumerate(token))
                 else:
                     id = int(token[columns['id']])
                     ra = float(token[columns['ra']])
                     dec = float(token[columns['dec']])
-                    sym = token[columns['con']]
+                    sym = Unquote(token[columns['con']])
                     if sym != '':
                         if not re.match(r'^[A-Z][a-zA-Z]{2}$', sym):
                             print('make_constellation_data: bad symbol "{}" in {} line {}'.format(sym, inFileName, lnum))
@@ -45,4 +48,4 @@ def Translate(inFileName, outFileName):
     return 0
 
 if __name__ == '__main__':
-    sys.exit(Translate('hygdata_v3.csv', 'constellation/test_input.txt'))
+    sys.exit(Translate('hyg_v35_1.csv', 'constellation/test_input.txt'))

@@ -3,7 +3,7 @@ setlocal EnableDelayedExpansion
 
 call :Download https://raw.githubusercontent.com/cosinekitty/ephemeris/master/lnxp1600p2200.405 lnxp1600p2200.405 ephemeris.sha256 || exit /b 1
 call :Download https://raw.githubusercontent.com/cosinekitty/ephemeris/master/top2013/TOP2013.dat TOP2013.dat top2013.sha256 || exit /b 1
-call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/f09e144652f61ca8dfd473ddf5c3c708977cb3b5/hygdata_v3.csv hygdata_v3.csv hygdata_v3.sha256 || exit /b 1
+call :Download https://raw.githubusercontent.com/astronexus/HYG-Database/f6439fb5ae08640d7c2b19fc67fdb3f094ce78d3/hyg/v3/hyg_v35_1.csv hyg_v35_1.csv hyg_v35_1.sha256 || exit /b 1
 
 cd ..
 set copyright=
