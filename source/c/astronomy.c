@@ -2056,7 +2056,7 @@ static void Init(MoonContext *ctx)
     }
 }
 
-static void Term(MoonContext *ctx, int p, int q, int r, int s, double *x, double *y)
+static void Term(const MoonContext *ctx, int p, int q, int r, int s, double *x, double *y)
 {
     int k;
     DECLARE_PASCAL_ARRAY_1(int, i, 1, 4);
