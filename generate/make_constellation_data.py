@@ -13,14 +13,9 @@ def Unquote(s):
 
 def Translate(inFileName, outFileName):
 
-    # Ignore disagreements with HYG v3.5.1.
+    # Ignore disagreements with HYG v3.6.1.
     # See: https://github.com/astronexus/HYG-Database/issues/21
-    ignore = set([
-        3865, 7751, 19173, 27992,
-        30112, 52886, 58221, 59234, 67599, 72017, 74021, 78313,
-        85957, 87694, 89105, 91382, 92907, 93308,
-        95468, 100777, 101541, 105623
-    ])
+    ignore = set([78313, 117789])
 
     count = 0
     with open(inFileName, 'rt') as infile:
@@ -48,4 +43,4 @@ def Translate(inFileName, outFileName):
     return 0
 
 if __name__ == '__main__':
-    sys.exit(Translate('hyg_v35_1.csv', 'constellation/test_input.txt'))
+    sys.exit(Translate('hyg_v36_1.csv', 'constellation/test_input.txt'))
