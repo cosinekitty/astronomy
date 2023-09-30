@@ -208,6 +208,20 @@ for %%f in (temp\k_longitude_*.txt) do (
 
 REM -----------------------------------------------------------------------------------------
 
+echo.Running Go tests.
+pushd ..\source\golang
+go version || (
+    echo.FATAL: Cannot find Go compiler.
+    exit /b 1
+)
+go test || (
+    echo.FATAL: Failure in Go unit tests.
+    exit /b 1
+)
+popd
+
+REM -----------------------------------------------------------------------------------------
+
 call diffcalc.bat || exit /b 1
 
 REM -----------------------------------------------------------------------------------------
