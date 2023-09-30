@@ -20,6 +20,11 @@ for file in ../source/c/astronomy.c ../source/js/astronomy.ts ../source/python/a
     node trimspace.js ${file} || Fail "Cannot trim whitespace from target file: ${file}"
 done
 
+echo "Formatting Go code."
+cd ../source/golang
+go fmt astronomy.go || Fail "Error in 'go fmt astronomy.go' command."
+cd ../../generate
+
 # C# is a special case: we have to compile the code to get its documentation.
 echo "Building C# code to get documentation XML."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
