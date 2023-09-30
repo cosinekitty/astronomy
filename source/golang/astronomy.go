@@ -1,8 +1,4 @@
-package main
-
-import (
-	"fmt"
-)
+package astronomy
 
 const (
 	C_AUDAY                      = 173.1446326846693
@@ -87,22 +83,22 @@ type astroTime struct {
 	*
 	* Before the era of atomic timekeeping, days based on the Earth's rotation
 	* were often known as *mean solar days*.
-	*/
-	UT  float64
+	 */
+	UT float64
 	/**
-     *    Terrestrial Time days since noon on January 1, 2000.
-     *
-     * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
-     * In this system, days are not based on Earth rotations, but instead by
-     * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
-     * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
-     * for changes in the Earth's rotation.
-     *
-     * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
-     * such as the orbits of planets around the Sun, or the Moon around the Earth.
-     *
-     * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
-     */
+	 *    Terrestrial Time days since noon on January 1, 2000.
+	 *
+	 * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
+	 * In this system, days are not based on Earth rotations, but instead by
+	 * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
+	 * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
+	 * for changes in the Earth's rotation.
+	 *
+	 * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
+	 * such as the orbits of planets around the Sun, or the Moon around the Earth.
+	 *
+	 * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
+	 */
 	TT  float64
 	Psi float64 //For internal use only. Used to optimize Earth tilt calculations.
 	Eps float64 //For internal use only.  Used to optimize Earth tilt calculations.
@@ -482,10 +478,3 @@ func AstronomyDeltaTEspenakMeeus(ut float64) float64 {
 	u = (y - 1820) / 100
 	return -20 + (32 * u * u)
 }
-
-func main() {
-	d_TerrestrialTime := TerrestrialTime(235)
-	fmt.Printf("Value of TerrestrialTime = %f\n", d_TerrestrialTime)
-}
-
-// test it -> go run astronomy.go
