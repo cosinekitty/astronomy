@@ -3,7 +3,7 @@ issue_103.txt
 disable_generate_c_docs
 generate
 lnxp1600p2200.405
-hygdata_v3.csv
+hyg_v36_1.csv
 pluto_*.csv
 TOP2013.dat
 temp/

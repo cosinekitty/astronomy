@@ -30,7 +30,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if !defined(ASTRONOMY_ENGINE_NO_CURRENT_TIME)
+#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
+#include <sys/time.h>
+#elif defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <time.h>
+#endif
+#endif
+
 #include "astronomy.h"
 
 #ifdef __FAST_MATH__
@@ -351,7 +362,7 @@ static const double PLUTO_GM   = 0.2188699765425970e-11;
 #define MOON_GM   (EARTH_GM / EARTH_MOON_MASS_RATIO)
 
 /** @cond DOXYGEN_SKIP */
-#define ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
+#define ASTRO_ARRAYSIZE(x)    (sizeof(x) / sizeof(x[0]))
 #define AU_PER_PARSEC   (ASEC180 / PI)             /* exact definition of how many AU = one parsec */
 #define Y2000_IN_MJD    (T0 - MJD_BASIS)
 /** @endcond */
@@ -963,27 +974,56 @@ astro_time_t Astronomy_TerrestrialTime(double tt)
     }
 }
 
-
+#if !defined(ASTRONOMY_ENGINE_NO_CURRENT_TIME)
 /**
  * @brief Returns the computer's current date and time in the form of an #astro_time_t.
  *
- * Uses the computer's system clock to find the current UTC date and time with 1-second granularity.
+ * Uses the computer's system clock to find the current UTC date and time.
  * Converts that date and time to an #astro_time_t value and returns the result.
  * Callers can pass this value to other Astronomy Engine functions to calculate
  * current observational conditions.
+ *
+ * On supported platforms (Linux/Unix, Mac, Windows), the time is measured with
+ * microsecond resolution.
+ *
+ * On unsupported platforms, a compiler error will occur due to lack of
+ * microsecond resolution support. However, if whole second resolution is good
+ * enough for your application, you can define the preprocessor symbol
+ * `ASTRONOMY_ENGINE_WHOLE_SECOND` to use the portable function `time(NULL)`.
+ * Alternatively, if you do not need to use `Astronomy_CurrentTime`, you can
+ * define the preprocessor symbol `ASTRONOMY_ENGINE_NO_CURRENT_TIME` to
+ * exclude this function from your code.
  */
 astro_time_t Astronomy_CurrentTime(void)
 {
     astro_time_t t;
+    double sec;         /* Seconds since midnight January 1, 1970. */
 
-    /* Get seconds since midnight January 1, 1970, divide to convert to days, */
-    /* then subtract to get days since noon on January 1, 2000. */
+#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    sec = (double)tv.tv_sec + tv.tv_usec/1.0e+6;
+#elif defined(_WIN32)
+    FILETIME ft;
+    ULARGE_INTEGER large;
+    /* Get time in 100-nanosecond units from January 1, 1601. */
+    GetSystemTimePreciseAsFileTime(&ft);
+    large.u.LowPart  = ft.dwLowDateTime;
+    large.u.HighPart = ft.dwHighDateTime;
+    sec = (large.QuadPart - 116444736000000000ULL) / 1.0e+7;
+#elif defined(ASTRONOMY_ENGINE_WHOLE_SECOND)
+    sec = time(NULL);
+#else
+    #error Microsecond time resolution is not supported on this platform. Define ASTRONOMY_ENGINE_WHOLE_SECOND to use second resolution instead.
+#endif
 
-    t.ut = (time(NULL) / SECONDS_PER_DAY) - 10957.5;
+    /* Convert seconds to days, then subtract to get days since noon on January 1, 2000. */
+    t.ut = (sec / SECONDS_PER_DAY) - 10957.5;
     t.tt = TerrestrialTime(t.ut);
     t.psi = t.eps = t.st = NAN;
     return t;
 }
+#endif
 
 /**
  * @brief Creates an #astro_time_t value from a given calendar date and time.
@@ -2010,7 +2050,7 @@ static void Init(MoonContext *ctx)
     }
 }
 
-static void Term(MoonContext *ctx, int p, int q, int r, int s, double *x, double *y)
+static void Term(const MoonContext *ctx, int p, int q, int r, int s, double *x, double *y)
 {
     int k;
     DECLARE_PASCAL_ARRAY_1(int, i, 1, 4);
@@ -2506,7 +2546,7 @@ $ASTRO_C_VSOP(Uranus);
 $ASTRO_C_VSOP(Neptune);
 
 /** @cond DOXYGEN_SKIP */
-#define VSOPFORMULA(x)    { ARRAYSIZE(x), x }
+#define VSOPFORMULA(x)    { ASTRO_ARRAYSIZE(x), x }
 /** @endcond */
 
 static const vsop_model_t vsop[] =
