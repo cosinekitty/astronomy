@@ -31,7 +31,7 @@ for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\a
 
 echo.Formatting Go code.
 for %%f in (
-    ..\source\golang\astromomy.go
+    ..\source\golang\astronomy.go
     ..\source\golang\astronomy_test.go
 ) do (
     node eol_hack.js %%f || (
