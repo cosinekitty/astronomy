@@ -30,15 +30,6 @@ for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\a
 )
 
 echo.Formatting Go code.
-for %%f in (
-    ..\source\golang\astronomy.go
-    ..\source\golang\astronomy_test.go
-) do (
-    node eol_hack.js %%f || (
-        echo.ERROR cleaning newlines in file: %%f
-        exit /b 1
-    )
-)
 cd ..\source\golang
 go version || (
     echo.FATAL: Cannot find Go compiler.
