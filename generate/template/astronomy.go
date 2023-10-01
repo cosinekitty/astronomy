@@ -1,63 +1,38 @@
 package astronomy
 
 const (
-	C_AUDAY                      = 173.1446326846693
-	KM_PER_AU                    = 1.4959787069098932e+8
-	AU_PER_LY                    = 63241.07708807546
-	DEG2RAD                      = 0.017453292519943296
-	HOUR2RAD                     = 0.2617993877991494365
-	RAD2DEG                      = 57.295779513082321
-	RAD2HOUR                     = 3.819718634205488
-	SUN_RADIUS_KM                = 695700.0
-	MERCURY_EQUATORIAL_RADIUS_KM = 2440.5
-	MERCURY_POLAR_RADIUS_KM      = 2438.3
-	VENUS_RADIUS_KM              = 6051.8
-	EARTH_EQUATORIAL_RADIUS_KM   = 6378.1366
-	EARTH_FLATTENING             = 0.996647180302104
-	EARTH_POLAR_RADIUS_KM        = (EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING)
-	MOON_EQUATORIAL_RADIUS_KM    = 1738.1
-	MOON_POLAR_RADIUS_KM         = 1736.0
-	MARS_EQUATORIAL_RADIUS_KM    = 3396.2
-	MARS_POLAR_RADIUS_KM         = 3376.2
-	JUPITER_EQUATORIAL_RADIUS_KM = 71492.0
-	JUPITER_POLAR_RADIUS_KM      = 66854.0
-	JUPITER_MEAN_RADIUS_KM       = 69911.0
-	IO_RADIUS_KM                 = 1821.6
-	EUROPA_RADIUS_KM             = 1560.8
-	GANYMEDE_RADIUS_KM           = 2631.2
-	CALLISTO_RADIUS_KM           = 2410.3
-	SATURN_EQUATORIAL_RADIUS_KM  = 60268.0
-	SATURN_POLAR_RADIUS_KM       = 54364.0
-	URANUS_EQUATORIAL_RADIUS_KM  = 25559.0
-	URANUS_POLAR_RADIUS_KM       = 24973.0
-	NEPTUNE_EQUATORIAL_RADIUS_KM = 24764.0
-	NEPTUNE_POLAR_RADIUS_KM      = 24341.0
-	PLUTO_RADIUS_KM              = 1188.3
+	DaysPerTropicalYear       = 365.24217
+	SpeedOfLightAuPerDay      = 173.1446326846693
+	KmPerAu                   = 1.4959787069098932e+8
+	AuPerLightYear            = 63241.07708807546
+	SunRadiusKm               = 695700.0
+	MercuryEquatorialRadiusKm = 2440.5
+	MercuryPolarRadiusKm      = 2438.3
+	VenusRadiusKm             = 6051.8
+	EarthEquatorialRadiusKm   = 6378.1366
+	EarthFlattening           = 0.996647180302104
+	EarthPolarRadiusKm        = EarthEquatorialRadiusKm * EarthFlattening
+	MoonEquatorialRadiusKm    = 1738.1
+	MoonPolarRadiusKm         = 1736.0
+	MarsEquatorialRadiusKm    = 3396.2
+	MarsPolarRadiusKm         = 3376.2
+	JupiterEquatorialRadiusKm = 71492.0
+	JupiterPolarRadiusKm      = 66854.0
+	JupiterMeanRadiusKm       = 69911.0
+	IoRadiusKm                = 1821.6
+	EuropaRadiusKm            = 1560.8
+	GanymedeRadiusKm          = 2631.2
+	CallistoRadiusKm          = 2410.3
+	SaturnEquatorialRadiusKm  = 60268.0
+	SaturnPolarRadiusKm       = 54364.0
+	UranusEquatorialRadiusKm  = 25559.0
+	UranusPolarRadiusKm       = 24973.0
+	NeptuneEquatorialRadiusKm = 24764.0
+	NeptunePolarRadiusKm      = 24341.0
+	PlutoRadiusKm             = 1188.3
 )
 
-type astroStatus int
-
-const (
-	ASTRO_SUCCESS = iota
-	ASTRO_NOT_INITIALIZED
-	ASTRO_INVALID_BODY
-	ASTRO_NO_CONVERGE
-	ASTRO_BAD_TIME
-	ASTRO_BAD_VECTOR
-	ASTRO_SEARCH_FAILURE
-	ASTRO_EARTH_NOT_ALLOWED
-	ASTRO_NO_MOON_QUARTER
-	ASTRO_WRONG_MOON_QUARTER
-	ASTRO_INTERNAL_ERROR
-	ASTRO_INVALID_PARAMETER
-	ASTRO_FAIL_APSIS
-	ASTRO_BUFFER_TOO_SMALL
-	ASTRO_OUT_OF_MEMORY
-	ASTRO_INCONSISTENT_TIMES
-)
-
-type astroTime struct {
-
+type AstroTime struct {
 	/**
 	* @brief   UT1/UTC number of days since noon on January 1, 2000.
 	*
@@ -84,7 +59,7 @@ type astroTime struct {
 	* Before the era of atomic timekeeping, days based on the Earth's rotation
 	* were often known as *mean solar days*.
 	 */
-	UT float64
+	Ut float64
 	/**
 	 *    Terrestrial Time days since noon on January 1, 2000.
 	 *
@@ -99,13 +74,13 @@ type astroTime struct {
 	 *
 	 * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
 	 */
-	TT  float64
+	Tt  float64
 	Psi float64 //For internal use only. Used to optimize Earth tilt calculations.
 	Eps float64 //For internal use only.  Used to optimize Earth tilt calculations.
 	St  float64 //For internal use only.  Lazy-caches sidereal time (Earth rotation).
 }
 
-type astroUTC struct {
+type CalendarDateTime struct {
 	Year   int
 	Month  int
 	Day    int
@@ -114,148 +89,126 @@ type astroUTC struct {
 	Second float64
 }
 
-type astroVector struct {
-	Status astroStatus
-	X      float64
-	Y      float64
-	Z      float64
-	T      astroTime
+type AstroVector struct {
+	X float64
+	Y float64
+	Z float64
+	T AstroTime
 }
 
-type astroStateVector struct {
-	Status astroStatus
-	X      float64
-	Y      float64
-	Z      float64
-	Vx     float64
-	Vy     float64
-	Vz     float64
-	T      astroTime
+type StateVector struct {
+	X  float64
+	Y  float64
+	Z  float64
+	Vx float64
+	Vy float64
+	Vz float64
+	T  AstroTime
 }
 
-type astroSpherical struct {
-	Status astroStatus
-	Lat    float64
-	Lon    float64
-	Dist   float64
+type Spherical struct {
+	Lat  float64
+	Lon  float64
+	Dist float64
 }
 
-type astroAngleResult struct {
-	Status astroStatus
-	Angle  float64
-}
-
-type astroBody int
+type Body int
 
 const (
-	BODY_INVALID = -1
-	BODY_MERCURY
-	BODY_VENUS
-	BODY_EARTH
-	BODY_MARS
-	BODY_JUPITER
-	BODY_SATURN
-	BODY_URANUS
-	BODY_NEPTUNE
-	BODY_PLUTO
-	BODY_SUN
-	BODY_MOON
-	BODY_EMB
-	BODY_SSB
-	BODY_STAR1 = 101
-	BODY_STAR2
-	BODY_STAR3
-	BODY_STAR4
-	BODY_STAR5
-	BODY_STAR6
-	BODY_STAR7
-	BODY_STAR8
+	InvalidBody Body = -1
+	Mercury          = 0
+	Venus
+	Earth
+	Mars
+	Jupiter
+	Saturn
+	Uranus
+	Neptune
+	Pluto
+	Sun
+	Moon
+	Emb
+	Ssb
+	Star1 = 101
+	Star2
+	Star3
+	Star4
+	Star5
+	Star6
+	Star7
+	Star8
 )
 
-type astroObserver struct {
+type Observer struct {
 	Latitude  float64
 	Longitude float64
 	Height    float64
 }
 
-type astroEquatorial struct {
-	Status astroStatus
-	RA     float64
-	Dec    float64
-	Dist   float64
-	Vec    astroVector
+type Equatorial struct {
+	Ra   float64
+	Dec  float64
+	Dist float64
+	Vec  AstroVector
 }
 
-type astroEcliptic struct {
-	Status astroStatus
-	Vec    astroVector
-	Elat   float64
-	Elon   float64
+type Ecliptic struct {
+	Vec  AstroVector
+	Elat float64
+	Elon float64
 }
 
-type astroHorizon struct {
+type Topocentric struct {
 	Azimuth  float64
 	Altitude float64
-	RA       float64
+	Ra       float64
 	Dec      float64
 }
 
-type astroRotation struct {
-	Status astroStatus
-	Rot    [3][3]float64
+type RotationMatrix struct {
+	Rot [3][3]float64
 }
 
-type astroRefraction int
+type Refraction int
 
 const (
-	REFRACTION_NONE = iota
-	REFRACTION_NORMAL
-	REFRACTION_JPLHOR
+	NoRefraction Refraction = iota
+	NormalRefraction
+	JplHorizonsRefraction
 )
 
-type astroAtmosphere struct {
-	Status      astroStatus
+type AtmosphereInfo struct {
 	Pressure    float64
 	Temperature float64
 	Density     float64
 }
 
-type astroSearchResult struct {
-	Status astroStatus
-	Time   astroTime
+type SeasonsInfo struct {
+	MarEquinox  AstroTime
+	JunSolstice AstroTime
+	SepEquinox  AstroTime
+	DecSolstice AstroTime
 }
 
-type astroSeasons struct {
-	Status      astroStatus
-	MarEquinox  astroTime
-	JunSolstice astroTime
-	SepEquinox  astroTime
-	DecSolstice astroTime
-}
-
-type astroMoonQuarter struct {
-	Status  astroStatus
+type AstroMoonQuarter struct {
 	Quarter int
-	Time    astroTime
+	Time    AstroTime
 }
 
-type astroFuncResult struct {
-	Status astroStatus
-	Value  float64
-}
+type TimeFormat int
 
 const (
-	TimeFormatDay = iota
+	TimeFormatDay TimeFormat = iota
 	TimeFormatMinute
 	TimeFormatSecond
 	TimeFormatMilli
 )
 
-type astroSearchFunc func(context interface{}, time astroTime) astroFuncResult
+type AstroSearchFunc func(context interface{}, time AstroTime) float64
 
-type astroDeltaTFunc func(ut float64) float64
+type DeltaTimeFunc func(ut float64) float64
 
-type astroLibration struct {
+type LibrationInfo struct {
 	Elat    float64
 	Elon    float64
 	Mlat    float64
@@ -264,93 +217,66 @@ type astroLibration struct {
 	DiamDeg float64
 }
 
-type astroAxis struct {
-	Status astroStatus
-	RA     float64
-	Dec    float64
-	Spin   float64
-	North  astroVector
+type AxisInfo struct {
+	Ra    float64
+	Dec   float64
+	Spin  float64
+	North AstroVector
 }
 
-const TIME_TEXT_BYTES = 28
-
-type astroNodeKind int
+type NodeEventKind int
 
 const (
-	INVALID_NODE    = 0
-	ASCENDING_NODE  = 1
-	DESCENDING_NODE = -1
+	InvalidNode    NodeEventKind = 0
+	AscendingNode                = 1
+	DescendingNode               = -1
 )
 
-type astroNodeEvent struct {
-	Status astroStatus
-	Time   astroTime
-	Kind   astroNodeKind
+type NodeEventInfo struct {
+	Time AstroTime
+	Kind NodeEventKind
 }
 
-type TerseVector struct {
+type terseVector struct {
 	X float64
 	Y float64
 	Z float64
 }
 
-// AstroTime represents a time in astronomy.
-
-// BodyGravCalc represents gravitational calculations for a celestial body.
-type BodyGravCalc struct {
+// bodyGravCalc represents gravitational calculations for a celestial body.
+type bodyGravCalc struct {
 	TT float64     // J2000 terrestrial time [days]
-	R  TerseVector // Position [au]
-	V  TerseVector // Velocity [au/day]
-	A  TerseVector // Acceleration [au/day^2]
+	R  terseVector // Position [au]
+	V  terseVector // Velocity [au/day]
+	A  terseVector // Acceleration [au/day^2]
 }
 
 // GravSimEndpoint represents an endpoint in a gravitational simulation.
 
-type astroJupiterMoons struct {
-	Io       astroStateVector
-	Europa   astroStateVector
-	Ganymede astroStateVector
-	Callisto astroStateVector
+type JupiterMoonsInfo struct {
+	Io       StateVector
+	Europa   StateVector
+	Ganymede StateVector
+	Callisto StateVector
 }
+
 type GravSimEndpoint struct {
 	Time        AstroTime
-	Gravitators [1 + BODY_SUN]BodyGravCalc
-	Bodies      *BodyGravCalc
+	Gravitators []bodyGravCalc
+	Bodies      []bodyGravCalc
 }
-type astroGravSim struct {
-	OriginBody astroBody
+
+type GravitySimulator struct {
+	OriginBody Body
 	NumBodies  int
 	Endpoint   [2]GravSimEndpoint
 	Prev       *GravSimEndpoint
 	Curr       *GravSimEndpoint
 }
 
-type astro_grav_sim_t = astroGravSim
-
-type AstroStatus int
-
-const (
-	AstroSuccess AstroStatus = iota
-	AstroError
-)
-
-type AstroFuncResult struct {
-	Status AstroStatus // Status of the result.
-	Value  float64     // The value returned by the function.
-}
-
-type AstroTime struct {
-}
-
-type AstroSearchResult struct {
-}
-
 type astroDeltatFunc func(ut float64) float64
 
-var (
-	daysPerTropicalYear                 = 365.24217
-	deltaTFunc          astroDeltatFunc = AstronomyDeltaTEspenakMeeus
-)
+var deltaTFunc astroDeltatFunc = AstronomyDeltaTEspenakMeeus
 
 func AstronomySetDeltaTFunction(funcPtr astroDeltatFunc) {
 	deltaTFunc = funcPtr
@@ -377,7 +303,7 @@ func AstronomyDeltaTEspenakMeeus(ut float64) float64 {
 
 	var y, u, u2, u3, u4, u5, u6, u7 float64
 
-	y = 2000 + ((ut - 14) / daysPerTropicalYear)
+	y = 2000 + ((ut - 14) / DaysPerTropicalYear)
 
 	if y < -500 {
 		u = (y - 1820) / 100
@@ -474,7 +400,7 @@ func AstronomyDeltaTEspenakMeeus(ut float64) float64 {
 		return -20 + 32*u*u - 0.5628*(2150-y)
 	}
 
-	/* all years after 2150 */
+	// all years after 2150
 	u = (y - 1820) / 100
 	return -20 + (32 * u * u)
 }
