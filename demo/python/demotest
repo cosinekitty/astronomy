@@ -35,6 +35,7 @@ TestDemo lunar_angles 2021-05-15
 TestDemo galactic 38.92056 -77.0658 22.793498 197.070510 2025-04-06T00:00:00Z
 TestDemo triangulate 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12
 TestDemo stars_near_moon 30 -80 2021-11-08T23:00:00Z
+TestDemo ecliptic_of_date 53.6375 9.9981 2023-10-28T20:24:33.489Z
 
 echo "Testing Python demo: gravity"
 for latitude in {0..90}; do
