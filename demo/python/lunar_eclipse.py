@@ -12,10 +12,11 @@
 #    python3 lunar_eclipse.py [date]
 #
 import sys
-from astronomy import Time, SearchLunarEclipse, NextLunarEclipse, EclipseKind
+from astronomy import Time, SearchLunarEclipse, NextLunarEclipse, EclipseKind, LunarEclipseInfo
+from typing import List
 
 
-def PrintEclipse(e):
+def PrintEclipse(e: LunarEclipseInfo) -> None:
     # Calculate beginning/ending of different phases
     # of an eclipse by subtracting/adding the peak time
     # with the number of minutes indicated by the "semi-duration"
@@ -35,7 +36,7 @@ def PrintEclipse(e):
     print()
 
 
-def main(args):
+def main(args: List[str]) -> int:
     if len(args) == 1:
         time = Time.Now()
     elif len(args) == 2:

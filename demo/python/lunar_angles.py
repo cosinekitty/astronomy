@@ -31,25 +31,26 @@
 #
 import sys
 from astronomy import Time, Body, PairLongitude, Search
+from typing import List
 
 #------------------------------------------------------------------------------
 
 class Event:
-    def __init__(self, body, time, angle):
+    def __init__(self, body: Body, time: Time, angle: float) -> None:
         self.body = body
         self.time = time
         self.angle = angle
 
-    def __lt__(self, other):
+    def __lt__(self, other: 'Event') -> bool:
         # This makes lists of Event objects sortable chronologically.
         return self.time < other.time
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '{} {:<8s} {:3.0f}'.format(self.time, self.body.name, self.angle)
 
 #------------------------------------------------------------------------------
 
-def AdjustAngle(angle):
+def AdjustAngle(angle: float) -> float:
     # Force the angle into the half-open range (-180.0, +180.0]
     while angle <= -180.0:
         angle += 360.0
@@ -60,28 +61,28 @@ def AdjustAngle(angle):
 #------------------------------------------------------------------------------
 
 class PairSearchContext:
-    def __init__(self, body1, body2, targetRelLon):
+    def __init__(self, body1: Body, body2: Body, targetRelLon: float) -> None:
         self.body1 = body1
         self.body2 = body2
         self.targetRelLon = targetRelLon
 
 
-def LongitudeFunc(context, time):
+def LongitudeFunc(context: PairSearchContext, time: Time) -> float:
     lon = PairLongitude(context.body1, context.body2, time)
     return AdjustAngle(lon - context.targetRelLon)
 
 
-def LongitudeSearch(body1, body2, angle, t1, t2):
+def LongitudeSearch(body1: Body, body2: Body, angle: float, t1: Time, t2: Time) -> Time:
     context = PairSearchContext(body1, body2, angle)
     tolerance_seconds = 0.1
     t = Search(LongitudeFunc, context, t1, t2, tolerance_seconds)
     if not t:
-        raise Exception('Search failure for body={}, t1={}, t2={}'.format(body, t1, t2))
+        raise Exception('Search failure for body1={}, body2={}, t1={}, t2={}'.format(body1.name, body2.name, t1, t2))
     return t
 
 #------------------------------------------------------------------------------
 
-def Straddle(lon1, lon2, angle):
+def Straddle(lon1: float, lon2: float, angle: float) -> bool:
     # A pair of longitudes "straddles" an angle if
     # the angle lies between the two longitudes modulo 360 degrees.
     a1 = AdjustAngle(lon1 - angle)
@@ -90,7 +91,7 @@ def Straddle(lon1, lon2, angle):
 
 #------------------------------------------------------------------------------
 
-def AppendEvents(event_list, body, startTime, stopTime, dayIncrement):
+def AppendEvents(event_list: List[Event], body: Body, startTime: Time, stopTime: Time, dayIncrement: float) -> None:
     angle_list = [30.0*i for i in range(12)]
     t1 = startTime
     while t1 < stopTime:
@@ -108,12 +109,12 @@ def AppendEvents(event_list, body, startTime, stopTime, dayIncrement):
 
 #------------------------------------------------------------------------------
 
-def PrintMoonChart(startTime, stopTime, dayIncrement):
+def PrintMoonChart(startTime: Time, stopTime: Time, dayIncrement: float) -> int:
     # Make a list of all other bodies with which to compare the Moon.
     otherBodyList = [Body.Sun, Body.Mercury, Body.Venus, Body.Mars, Body.Jupiter, Body.Saturn]
 
     # Make a list of events for each body in that list.
-    event_list = []
+    event_list: List[Event] = []
     for body in otherBodyList:
         AppendEvents(event_list, body, startTime, stopTime, dayIncrement)
 

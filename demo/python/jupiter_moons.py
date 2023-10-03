@@ -12,9 +12,9 @@
 #   the Earth from the Jupiter system.
 #
 import sys
-from astronomy import Time, JupiterMoons, GeoVector, EquatorFromVector, Body, C_AUDAY
+from astronomy import Time, JupiterMoons, GeoVector, EquatorFromVector, Body, C_AUDAY, Vector
 
-def PrintBody(name, geovec):
+def PrintBody(name: str, geovec: Vector) -> None:
     # Convert the geocentric vector into equatorial coordinates.
     equ = EquatorFromVector(geovec)
     print('{:<8s}   RA {:10.6f}   DEC {:10.6f}  {:10.6f} AU'.format(name, equ.ra, equ.dec, equ.dist))
@@ -60,10 +60,10 @@ if __name__ == '__main__':
     # "duck typing" for Pythonistas.
 
     PrintBody('Jupiter',    jv)
-    PrintBody('Io',         jv + jm.io)
-    PrintBody('Europa',     jv + jm.europa)
-    PrintBody('Ganymede',   jv + jm.ganymede)
-    PrintBody('Callisto',   jv + jm.callisto)
+    PrintBody('Io',         jv + jm.io.Position())
+    PrintBody('Europa',     jv + jm.europa.Position())
+    PrintBody('Ganymede',   jv + jm.ganymede.Position())
+    PrintBody('Callisto',   jv + jm.callisto.Position())
     print()
 
     sys.exit(0)

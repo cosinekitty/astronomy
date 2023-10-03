@@ -10,6 +10,7 @@
 
 import sys
 from astronomy import *
+from typing import Tuple
 
 UsageText = r'''
 USAGE: galactic olat olon glat glon [yyyy-mm-ddThh:mm:ssZ]
@@ -31,7 +32,7 @@ Otherwise, the computer's current date/time is used.
 '''
 
 
-def GalacticToHorizontal(time, observer, glat, glon):
+def GalacticToHorizontal(time: Time, observer: Observer, glat: float, glon: float) -> Tuple[float, float]:
     # Calculate a matrix that converts galactic coordinates
     # to J2000 equatorial coordinates.
     rot = Rotation_GAL_EQJ()

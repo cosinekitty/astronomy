@@ -10,6 +10,7 @@ TestDemo()
     local name=$1
     shift
     echo "Testing Python demo: $name"
+    mypy --strict $name.py || Fail "Error in mypy verification of $name.py."
     ./$name.py $* > test/$name${SUFFIX}.txt || Fail "Error testing $name.py."
     diff {correct,test}/$name${SUFFIX}.txt || Fail "Incorrect output from $name.py."
 }

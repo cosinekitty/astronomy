@@ -14,8 +14,9 @@
 #
 import sys
 import astronomy
+from typing import List
 
-def QuarterName(quarter):
+def QuarterName(quarter: int) -> str:
     return [
         'New Moon',
         'First Quarter',
@@ -23,7 +24,7 @@ def QuarterName(quarter):
         'Third Quarter'
     ][quarter]
 
-def main(args):
+def main(args: List[str]) -> int:
     if len(args) == 1:
         time = astronomy.Time.Now()
     elif len(args) == 2:

@@ -23,7 +23,7 @@ import math
 import astronomy
 from astro_demo_common import ParseArgs
 
-def Camera(observer, time):
+def Camera(observer: astronomy.Observer, time: astronomy.Time) -> int:
     tolerance = 1.0e-15
 
     # Calculate the topocentric equatorial coordinates of date for the Moon.

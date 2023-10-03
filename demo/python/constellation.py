@@ -8,18 +8,19 @@
 #
 
 import sys
-from astronomy import Time, Body, Constellation, GeoVector, EquatorFromVector
+from astronomy import Time, Body, Constellation, ConstellationInfo, GeoVector, EquatorFromVector
+from typing import Tuple
 
 #------------------------------------------------------------------------------
 
-def BodyConstellation(body, time):
+def BodyConstellation(body: Body, time: Time) -> ConstellationInfo:
     vec = GeoVector(body, time, False)
     equ = EquatorFromVector(vec)
     return Constellation(equ.ra, equ.dec)
 
 #------------------------------------------------------------------------------
 
-def FindConstellationChange(body, c1, t1, t2):
+def FindConstellationChange(body: Body, c1: ConstellationInfo, t1: Time, t2: Time) -> Tuple[Time, ConstellationInfo]:
     # Do a binary search to find what time between t1 and t2
     # is the boundary between being in constellation c1 and some other
     # constellation. Return the tuple (tx, cx), where tx is the
@@ -40,7 +41,7 @@ def FindConstellationChange(body, c1, t1, t2):
 
 #------------------------------------------------------------------------------
 
-def FindConstellationChanges(body, startTime, stopTime, dayIncrement):
+def FindConstellationChanges(body: Body, startTime: Time, stopTime: Time, dayIncrement: float) -> int:
     t1 = startTime
     c1 = BodyConstellation(body, t1)
     while t1 < stopTime:
