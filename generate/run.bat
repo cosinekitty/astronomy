@@ -212,6 +212,13 @@ call diffcalc.bat || exit /b 1
 
 REM -----------------------------------------------------------------------------------------
 
+echo.Validating Python demos.
+pushd ..\demo\python
+call demotest.bat || exit /b 1
+popd
+
+REM -----------------------------------------------------------------------------------------
+
 echo.Validating Java demos.
 pushd ..\demo\java
 call demotest.bat || exit /b 1
