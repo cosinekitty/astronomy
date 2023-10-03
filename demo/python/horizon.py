@@ -14,33 +14,34 @@
 #    python3 horizon.py latitude longitude [yyyy-mm-ddThh:mm:ssZ]
 #
 import sys
-import astronomy
+from astronomy import *
 from astro_demo_common import ParseArgs
+from typing import Tuple
 
 NUM_SAMPLES = 4
 
-def ECLIPLON(i):
+def ECLIPLON(i: int) -> float:
     return (360.0 * i) / NUM_SAMPLES
 
 
-def HorizontalCoords(ecliptic_longitude, time, rot_ecl_hor):
-    eclip = astronomy.Spherical(
+def HorizontalCoords(ecliptic_longitude: float, time: Time, rot_ecl_hor: RotationMatrix) -> Spherical:
+    eclip = Spherical(
         0.0,                    # being "on the ecliptic plane" means ecliptic latitude is zero.
         ecliptic_longitude,
         1.0                     # any positive distance value will work fine.
     )
 
     # Convert ecliptic angular coordinates to ecliptic vector.
-    ecl_vec = astronomy.VectorFromSphere(eclip, time)
+    ecl_vec = VectorFromSphere(eclip, time)
 
     # Use the rotation matrix to convert ecliptic vector to horizontal vector.
-    hor_vec = astronomy.RotateVector(rot_ecl_hor, ecl_vec)
+    hor_vec = RotateVector(rot_ecl_hor, ecl_vec)
 
     # Find horizontal angular coordinates, correcting for atmospheric refraction.
-    return astronomy.HorizonFromVector(hor_vec, astronomy.Refraction.Normal)
+    return HorizonFromVector(hor_vec, Refraction.Normal)
 
 
-def Search(time, rot_ecl_hor, e1, e2):
+def SearchCrossing(time: Time, rot_ecl_hor: RotationMatrix, e1: float, e2: float) -> Tuple[float, Spherical]:
     tolerance = 1.0e-6      # one-millionth of a degree is close enough!
     # Binary search: find the ecliptic longitude such that the horizontal altitude
     # ascends through a zero value. The caller must pass e1, e2 such that the altitudes
@@ -56,7 +57,7 @@ def Search(time, rot_ecl_hor, e1, e2):
             e2 = e3
 
 
-def FindEclipticCrossings(observer, time):
+def FindEclipticCrossings(observer: Observer, time: Time) -> int:
     # The ecliptic is a celestial circle that describes the mean plane of
     # the Earth's orbit around the Sun. We use J2000 ecliptic coordinates,
     # meaning the x-axis is defined to where the plane of the Earth's
@@ -64,7 +65,7 @@ def FindEclipticCrossings(observer, time):
     # The positive x-axis points toward the March equinox.
     # Calculate a rotation matrix that converts J2000 ecliptic vectors
     # to horizontal vectors for this observer and time.
-    rot = astronomy.Rotation_ECL_HOR(time, observer)
+    rot = Rotation_ECL_HOR(time, observer)
 
     # Sample several points around the ecliptic.
     # Remember the horizontal coordinates for each sample.
@@ -77,9 +78,9 @@ def FindEclipticCrossings(observer, time):
         e2 = ECLIPLON(i+1)
         if a1 * a2 <= 0.0:
             if a2 > a1:
-                (ex, h) = Search(time, rot, e1, e2)
+                (ex, h) = SearchCrossing(time, rot, e1, e2)
             else:
-                (ex, h) = Search(time, rot, e2, e1)
+                (ex, h) = SearchCrossing(time, rot, e2, e1)
 
             if h.lon > 0.0 and h.lon < 180.0:
                 direction = 'ascends'

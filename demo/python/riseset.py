@@ -13,15 +13,16 @@
 #    python3 riseset.py latitude longitude [yyyy-mm-ddThh:mm:ssZ]
 #
 import sys
-from astronomy import Body, Direction, SearchRiseSet
+from astronomy import Body, Time, Direction, SearchRiseSet
 from astro_demo_common import ParseArgs
+from typing import List, Optional
 
-def PrintEvent(name, time):
+def PrintEvent(name: str, time: Optional[Time]) -> None:
     if time is None:
         raise Exception('Failure to calculate ' + name)
     print('{:<8s} : {}'.format(name, time))
 
-def main(args):
+def main(args: List[str]) -> int:
     observer, time = ParseArgs(args)
     sunrise  = SearchRiseSet(Body.Sun,  observer, Direction.Rise, time, 300)
     sunset   = SearchRiseSet(Body.Sun,  observer, Direction.Set,  time, 300)

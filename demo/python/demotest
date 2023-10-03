@@ -10,6 +10,7 @@ TestDemo()
     local name=$1
     shift
     echo "Testing Python demo: $name"
+    mypy --strict $name.py || Fail "Error in mypy verification of $name.py."
     ./$name.py $* > test/$name${SUFFIX}.txt || Fail "Error testing $name.py."
     diff {correct,test}/$name${SUFFIX}.txt || Fail "Incorrect output from $name.py."
 }
@@ -35,6 +36,8 @@ TestDemo lunar_angles 2021-05-15
 TestDemo galactic 38.92056 -77.0658 22.793498 197.070510 2025-04-06T00:00:00Z
 TestDemo triangulate 48.16042 24.49986 2019 18 7 48.27305 24.36401 662 83 12
 TestDemo stars_near_moon 30 -80 2021-11-08T23:00:00Z
+TestDemo ecliptic_of_date 53.6375 9.9981 2023-10-28T20:24:33.489Z
+TestDemo solar_eclipse 28.5 -82.5 2023-01-01
 
 echo "Testing Python demo: gravity"
 for latitude in {0..90}; do

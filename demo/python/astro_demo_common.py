@@ -6,8 +6,9 @@
 #
 import sys
 import astronomy
+from typing import List, Tuple
 
-def ParseArgs(args):
+def ParseArgs(args: List[str]) -> Tuple[astronomy.Observer, astronomy.Time]:
     if len(args) not in [3, 4]:
         print('USAGE: {} latitude longitude [yyyy-mm-ddThh:mm:ssZ]'.format(args[0]))
         sys.exit(1)

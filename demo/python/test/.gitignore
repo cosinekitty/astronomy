@@ -2,6 +2,7 @@ camera_fl.txt
 camera_nz.txt
 camera_ca.txt
 constellation.txt
+ecliptic_of_date.txt
 moonphase.txt
 positions.txt
 riseset.txt
@@ -16,3 +17,4 @@ triangulate.txt
 gravity.txt
 stars_near_moon.txt
 solar_time.txt
+solar_eclipse.txt

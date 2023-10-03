@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import sys
+from math import sqrt
 from astronomy import *
+from typing import Tuple, Union
+
 
 UsageText = r'''
 USAGE:  triangulate.py  lat1 lon1 elv1 az1 alt1  lat2 lon2 elv2 az2 alt2
@@ -22,14 +25,17 @@ of that triangulation point, along with the error radius in meters.
 
 Verbose = False
 
-def Debug(text):
+
+def Debug(text: str) -> None:
     if Verbose:
         print(text)
 
-def DotProduct(a, b):
+
+def DotProduct(a: Vector, b: Vector) -> float:
     return a.x*b.x + a.y*b.y + a.z*b.z
 
-def Intersect(pos1, dir1, pos2, dir2):
+
+def Intersect(pos1: Vector, dir1: Vector, pos2: Vector, dir2: Vector) -> Union[Tuple[Observer, float], Tuple[None, None]]:
     F = DotProduct(dir1, dir2)
     amb = Vector(pos1.x-pos2.x, pos1.y-pos2.y, pos1.z-pos2.z, pos1.t)
     E = DotProduct(dir1, amb)
@@ -53,12 +59,13 @@ def Intersect(pos1, dir1, pos2, dir2):
     c = Vector((a.x + b.x)/2, (a.y + b.y)/2, (a.z + b.z)/2, a.t)
     Debug('c = {}'.format(c))
     # Calculate the error radius in meters between the two skew lines.
-    dist = (KM_PER_AU * 1000 / 2) * math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2)
+    dist = (KM_PER_AU * 1000 / 2) * sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2)
     # Convert vector back to geographic coordinates
     obs = VectorObserver(c, True)
     return obs, dist
 
-def DirectionVector(time, observer, altitude, azimuth):
+
+def DirectionVector(time: Time, observer: Observer, altitude: float, azimuth: float) -> Vector:
     # Convert horizontal angles to a horizontal unit vector.
     hor = Spherical(altitude, azimuth, 1.0)
     hvec = VectorFromHorizon(hor, time, Refraction.Airless)
@@ -67,6 +74,7 @@ def DirectionVector(time, observer, altitude, azimuth):
     # Rotate the horizontal (HOR) vector to an equator-of-date (EQD) vector.
     evec = RotateVector(rot, hvec)
     return evec
+
 
 if __name__ == '__main__':
     # Validate and parse command line arguments.
@@ -108,7 +116,7 @@ if __name__ == '__main__':
 
     # Solve for the target point.
     obs, error = Intersect(pos1, dir1, pos2, dir2)
-    if obs is None:
+    if obs is None or error is None:
         print('ERROR: Could not find intersection.')
         sys.exit(1)
 
@@ -116,7 +124,7 @@ if __name__ == '__main__':
 
     # Solve again with the inputs reversed, as a sanity check.
     check_obs, check_error = Intersect(pos2, dir2, pos1, dir1)
-    if check_obs is None:
+    if check_obs is None or check_error is None:
         print('INTERNAL ERROR: inconsistent solution.')
         sys.exit(1)
 

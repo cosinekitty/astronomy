@@ -1,0 +1,52 @@
+Eclipse #1 : Partial, obscuration = 0.578
+2023-10-14T15:49:46.242Z  Partial begins at altitude = 47.81
+2023-10-14T17:23:57.808Z  Peak at altitude = 53.23
+2023-10-14T19:01:05.326Z  Partial ends at altitude = 45.36
+
+Eclipse #2 : Partial, obscuration = 0.598
+2024-04-08T17:44:04.787Z  Partial begins at altitude = 68.88
+2024-04-08T19:01:17.826Z  Peak at altitude = 60.28
+2024-04-08T20:16:00.353Z  Partial ends at altitude = 46.04
+
+Eclipse #3 : Partial, obscuration = 0.126
+2028-01-26T13:12:39.972Z  Partial begins at altitude = 9.64
+2028-01-26T14:15:20.170Z  Peak at altitude = 21.25
+2028-01-26T15:26:59.492Z  Partial ends at altitude = 32.57
+
+Eclipse #4 : Partial, obscuration = 0.310
+2029-01-14T15:57:06.135Z  Partial begins at altitude = 34.58
+2029-01-14T17:22:42.479Z  Peak at altitude = 40.20
+2029-01-14T18:47:09.068Z  Partial ends at altitude = 37.74
+
+Eclipse #5 : Partial, obscuration = 0.289
+2031-11-14T21:39:15.668Z  Partial begins at altitude = 10.82
+2031-11-14T22:33:57.149Z  Peak at altitude = 0.30
+2031-11-14T23:23:30.664Z  Partial ends at altitude = -9.99
+
+Eclipse #6 : Partial, obscuration = 0.197
+2038-07-02T11:15:56.815Z  Partial begins at altitude = 7.15
+2038-07-02T12:01:18.675Z  Peak at altitude = 16.44
+2038-07-02T12:50:38.438Z  Partial ends at altitude = 26.87
+
+Eclipse #7 : Partial, obscuration = 0.332
+2040-11-04T18:18:48.849Z  Partial begins at altitude = 43.06
+2040-11-04T19:34:09.142Z  Peak at altitude = 34.23
+2040-11-04T20:44:15.802Z  Partial ends at altitude = 22.58
+
+Eclipse #8 : Total, obscuration = 1.000
+2045-08-12T16:06:58.629Z  Partial begins at altitude = 65.41
+2045-08-12T17:26:23.697Z  Total begins at altitude = 76.04
+2045-08-12T17:29:23.960Z  Peak at altitude = 76.12
+2045-08-12T17:32:23.148Z  Total ends at altitude = 76.17
+2045-08-12T18:49:31.494Z  Partial ends at altitude = 67.88
+
+Eclipse #9 : Partial, obscuration = 0.503
+2048-06-11T10:11:22.409Z  Partial begins at altitude = -4.19
+2048-06-11T11:07:27.487Z  Peak at altitude = 6.37
+2048-06-11T12:09:50.788Z  Partial ends at altitude = 19.18
+
+Eclipse #10 : Partial, obscuration = 0.028
+2049-05-31T12:04:20.583Z  Partial begins at altitude = 18.00
+2049-05-31T12:33:09.875Z  Peak at altitude = 24.12
+2049-05-31T13:03:29.456Z  Partial ends at altitude = 30.64
+
