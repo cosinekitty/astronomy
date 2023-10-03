@@ -1,0 +1,4 @@
+#!/bin/bash
+mypy --strict goplan.py || exit 1
+python3 goplan.py > plan.csv || exit 1
+exit 0
