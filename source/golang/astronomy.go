@@ -1,85 +1,88 @@
+// Package astronomy implements [Astronomy Engine] for the Go programming language.
+//
+// It provides a suite of well-tested functions for calculating positions of the
+// Sun, Moon, and planets, along with many practical phenomena visible from observers
+// on the Earth, such as sunrise, sunset, seasons, eclipses, transits, and lunar phases.
+//
+// [Astronomy Engine]: https://github.com/cosinekitty/astronomy
 package astronomy
 
 import "math"
 
 const (
-	DaysPerTropicalYear       = 365.24217
-	SpeedOfLightAuPerDay      = 173.1446326846693
-	KmPerAu                   = 1.4959787069098932e+8
-	AuPerLightYear            = 63241.07708807546
-	SunRadiusKm               = 695700.0
-	MercuryEquatorialRadiusKm = 2440.5
-	MercuryPolarRadiusKm      = 2438.3
-	VenusRadiusKm             = 6051.8
-	EarthEquatorialRadiusKm   = 6378.1366
-	EarthFlattening           = 0.996647180302104
-	EarthPolarRadiusKm        = EarthEquatorialRadiusKm * EarthFlattening
-	MoonEquatorialRadiusKm    = 1738.1
-	MoonPolarRadiusKm         = 1736.0
-	MarsEquatorialRadiusKm    = 3396.2
-	MarsPolarRadiusKm         = 3376.2
-	JupiterEquatorialRadiusKm = 71492.0
-	JupiterPolarRadiusKm      = 66854.0
-	JupiterMeanRadiusKm       = 69911.0
-	IoRadiusKm                = 1821.6
-	EuropaRadiusKm            = 1560.8
-	GanymedeRadiusKm          = 2631.2
-	CallistoRadiusKm          = 2410.3
-	SaturnEquatorialRadiusKm  = 60268.0
-	SaturnPolarRadiusKm       = 54364.0
-	UranusEquatorialRadiusKm  = 25559.0
-	UranusPolarRadiusKm       = 24973.0
-	NeptuneEquatorialRadiusKm = 24764.0
-	NeptunePolarRadiusKm      = 24341.0
-	PlutoRadiusKm             = 1188.3
+	DaysPerTropicalYear       = 365.24217                                 // the number of days in one tropical year
+	SpeedOfLightAuPerDay      = 173.1446326846693                         // the speed of light in vacuum expressed in astronomical units per day
+	KmPerAu                   = 1.4959787069098932e+8                     // the number of kilometers in one astronomical unit
+	AuPerLightYear            = 63241.07708807546                         // the number of astronomical units in one light year
+	SunRadiusKm               = 695700.0                                  // the radius of the Sun in kilometers
+	MercuryEquatorialRadiusKm = 2440.5                                    // the equatorial radius of Mercury in kilometers
+	MercuryPolarRadiusKm      = 2438.3                                    // the polar radius of Mercury in kilometers
+	VenusRadiusKm             = 6051.8                                    // the radius of Venus in kilometers
+	EarthEquatorialRadiusKm   = 6378.1366                                 // the equatorial radius of the Earth in kilometers
+	EarthFlattening           = 0.996647180302104                         // the ratio of the Earth's polar radius to its equatorial radius
+	EarthPolarRadiusKm        = EarthEquatorialRadiusKm * EarthFlattening // the polar radius of the Earth in kilometers
+	MoonEquatorialRadiusKm    = 1738.1                                    // the Moon's equatorial radius in kilometers
+	MoonPolarRadiusKm         = 1736.0                                    // the Moon's polar radius in kilometers
+	MarsEquatorialRadiusKm    = 3396.2                                    // the equatorial radius of Mars in kilometers
+	MarsPolarRadiusKm         = 3376.2                                    // the polar radius of Mars in kilometers
+	JupiterEquatorialRadiusKm = 71492.0                                   // the equatorial radius of Jupiter in kilometers
+	JupiterPolarRadiusKm      = 66854.0                                   // the polar radius of Jupiter in kilometers
+	JupiterMeanRadiusKm       = 69911.0                                   // the volumetric mean radius of Jupiter in kilometers
+	IoRadiusKm                = 1821.6                                    // the radius of Jupiter's moon Io in kilometers
+	EuropaRadiusKm            = 1560.8                                    // the radius of Jupiter's moon Europa in kilometers
+	GanymedeRadiusKm          = 2631.2                                    // the radius of Jupiter's moon Ganymede in kilometers
+	CallistoRadiusKm          = 2410.3                                    // the radius of Jupiter's moon Callisto in kilometers
+	SaturnEquatorialRadiusKm  = 60268.0                                   // the equatorial radius of Saturn in kilometers
+	SaturnPolarRadiusKm       = 54364.0                                   // the polar radius of Saturn in kilometers
+	UranusEquatorialRadiusKm  = 25559.0                                   // the equatorial radius of Uranus in kilometers
+	UranusPolarRadiusKm       = 24973.0                                   // the polar radius of Uranus in kilometers
+	NeptuneEquatorialRadiusKm = 24764.0                                   // the equatorial radius of Neptune in kilometers
+	NeptunePolarRadiusKm      = 24341.0                                   // the polar radius of Neptune in kilometers
+	PlutoRadiusKm             = 1188.3                                    // the radius of Pluto in kilometers
 )
 
 type AstroTime struct {
-	/**
-	* @brief   UT1/UTC number of days since noon on January 1, 2000.
-	*
-	* The floating point number of days of Universal Time since noon UTC January 1, 2000.
-	* Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
-	* not exactly equivalent; UTC and UT1 can disagree by up to &plusmn;0.9 seconds.
-	* This approximation is sufficient for the accuracy requirements of Astronomy Engine.
-	*
-	* Universal Time Coordinate (UTC) is the international standard for legal and civil
-	* timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
-	* UTC is kept in sync with unpredictable observed changes in the Earth's rotation
-	* by occasionally adding leap seconds as needed.
-	*
-	* UT1 is an idealized time scale based on observed rotation of the Earth, which
-	* gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
-	* large scale weather events like hurricanes, and internal seismic and convection effects.
-	* Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
-	* is adjusted by a scheduled whole number of leap seconds as needed.
-	*
-	* The value in `ut` is appropriate for any calculation involving the Earth's rotation,
-	* such as calculating rise/set times, culumination, and anything involving apparent
-	* sidereal time.
-	*
-	* Before the era of atomic timekeeping, days based on the Earth's rotation
-	* were often known as *mean solar days*.
-	 */
+	// Ut holds the floating point number of days of Universal Time since noon UTC January 1, 2000.
+	// Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
+	// not exactly equivalent; UTC and UT1 can disagree by up to 0.9 seconds.
+	// This approximation is sufficient for the accuracy requirements of Astronomy Engine.
+	//
+	// Universal Time Coordinate (UTC) is the international standard for legal and civil
+	// timekeeping and replaces the older Greenwich Mean Time (GMT) standard.
+	// UTC is kept in sync with unpredictable observed changes in the Earth's rotation
+	// by occasionally adding leap seconds as needed.
+	//
+	// UT1 is an idealized time scale based on observed rotation of the Earth, which
+	// gradually slows down in an unpredictable way over time, due to tidal drag by the Moon and Sun,
+	// large scale weather events like hurricanes, and internal seismic and convection effects.
+	// Conceptually, UT1 drifts from atomic time continuously and erratically, whereas UTC
+	// is adjusted by a scheduled whole number of leap seconds as needed.
+	//
+	// The value in Ut is appropriate for any calculation involving the Earth's rotation,
+	// such as calculating rise/set times, culumination, and anything involving apparent
+	// sidereal time.
+	//
+	// Before the era of atomic timekeeping, days based on the Earth's rotation
+	// were often known as ``mean solar days''.
 	Ut float64
-	/**
-	 *    Terrestrial Time days since noon on January 1, 2000.
-	 *
-	 * Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
-	 * In this system, days are not based on Earth rotations, but instead by
-	 * the number of elapsed [SI seconds](https://physics.nist.gov/cuu/Units/second.html)
-	 * divided by 86400. Unlike `ut`, `tt` increases uniformly without adjustments
-	 * for changes in the Earth's rotation.
-	 *
-	 * The value in `tt` is used for calculations of movements not involving the Earth's rotation,
-	 * such as the orbits of planets around the Sun, or the Moon around the Earth.
-	 *
-	 * Historically, Terrestrial Time has also been known by the term *Ephemeris Time* (ET).
-	 */
-	Tt  float64
-	psi float64 //For internal use only. Used to optimize Earth tilt calculations.
-	eps float64 //For internal use only.  Used to optimize Earth tilt calculations.
-	st  float64 //For internal use only.  Lazy-caches sidereal time (Earth rotation).
+
+	// Tt holds a Terrestrial Time value expressed in days.
+	// Terrestrial Time is an atomic time scale defined as a number of days since noon on January 1, 2000.
+	// In this system, days are not based on Earth rotations, but instead by
+	// the number of elapsed [SI seconds] divided by 86400.
+	// Unlike Ut, Tt increases uniformly without adjustments for changes in the Earth's rotation.
+	//
+	// The value in Tt is used for calculations of movements not involving the Earth's rotation,
+	// such as the orbits of planets around the Sun, or the Moon around the Earth.
+	//
+	// Historically, Terrestrial Time has also been known by the term ``Ephemeris Time'' (ET).
+	//
+	// [SI seconds]: https://physics.nist.gov/cuu/Units/second.html
+	Tt float64
+
+	psi float64 // For internal use only. Used to optimize Earth tilt calculations.
+	eps float64 // For internal use only.  Used to optimize Earth tilt calculations.
+	st  float64 // For internal use only.  Lazy-caches sidereal time (Earth rotation).
 }
 
 func makeTime(ut float64, tt float64) AstroTime {
@@ -92,16 +95,8 @@ func makeTime(ut float64, tt float64) AstroTime {
 	}
 }
 
-type astroDeltatFunc func(ut float64) float64
-
-var deltaTFunc astroDeltatFunc = AstronomyDeltaTEspenakMeeus
-
-func AstronomySetDeltaTFunction(funcPtr astroDeltatFunc) {
-	deltaTFunc = funcPtr
-}
-
 func terrestrialTime(ut float64) float64 {
-	return ut + deltaTFunc(ut)/86400.0
+	return ut + deltaTime(ut)/86400.0
 }
 
 func universalTime(tt float64) float64 {
@@ -121,19 +116,17 @@ func universalTime(tt float64) float64 {
 	}
 }
 
-func AstronomyDeltaTEspenakMeeus(ut float64) float64 {
-	/*
-		Fred Espenak writes about Delta-T generically here:
-		https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
-		https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
-
-		He provides polynomial approximations for distant years here:
-		https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
-
-		They start with a year value 'y' such that y=2000 corresponds
-		to the UTC Date 15-January-2000. Convert difference in days
-		to mean tropical years.
-	*/
+func deltaTime(ut float64) float64 {
+	// Fred Espenak writes about Delta-T generically here:
+	// https://eclipse.gsfc.nasa.gov/SEhelp/deltaT.html
+	// https://eclipse.gsfc.nasa.gov/SEhelp/deltat2004.html
+	//
+	// He provides polynomial approximations for distant years here:
+	// https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+	//
+	// They start with a year value 'y' such that y=2000 corresponds
+	// to the UTC Date 15-January-2000. Convert difference in days
+	// to mean tropical years.
 
 	var y, u, u2, u3, u4, u5, u6, u7 float64
 
@@ -414,33 +407,16 @@ type terseVector struct {
 	Z float64
 }
 
-// bodyGravCalc represents gravitational calculations for a celestial body.
 type bodyGravCalc struct {
-	TT float64     // J2000 terrestrial time [days]
+	Tt float64     // J2000 terrestrial time [days]
 	R  terseVector // Position [au]
 	V  terseVector // Velocity [au/day]
 	A  terseVector // Acceleration [au/day^2]
 }
-
-// GravSimEndpoint represents an endpoint in a gravitational simulation.
 
 type JupiterMoonsInfo struct {
 	Io       StateVector
 	Europa   StateVector
 	Ganymede StateVector
 	Callisto StateVector
-}
-
-type GravSimEndpoint struct {
-	Time        AstroTime
-	Gravitators []bodyGravCalc
-	Bodies      []bodyGravCalc
-}
-
-type GravitySimulator struct {
-	OriginBody Body
-	NumBodies  int
-	Endpoint   [2]GravSimEndpoint
-	Prev       *GravSimEndpoint
-	Curr       *GravSimEndpoint
 }
