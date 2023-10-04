@@ -29,7 +29,7 @@ for %%f in (..\source\c\astronomy.c ..\source\js\astronomy.js ..\source\python\a
     node trimspace.js %%f || exit /b 1
 )
 
-echo.Formatting Go code.
+echo.Formatting and documenting Go code.
 cd ..\source\golang
 go version || (
     echo.FATAL: Cannot find Go compiler.
@@ -37,6 +37,10 @@ go version || (
 )
 go fmt ./... || (
     echo.FATAL: Error in 'go fmt' command.
+    exit /b 1
+)
+gomarkdoc -o README.md || (
+    echo.Error generating Go documentation using 'gomarkdoc'.
     exit /b 1
 )
 cd ..\..\generate

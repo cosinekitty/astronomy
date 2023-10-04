@@ -20,10 +20,14 @@ for file in ../source/c/astronomy.c ../source/js/astronomy.ts ../source/python/a
     node trimspace.js ${file} || Fail "Cannot trim whitespace from target file: ${file}"
 done
 
-echo "Formatting Go code."
+echo "Formatting and documenting Go code."
 cd ../source/golang
+echo "GOROOT = ${GOROOT}"
+echo "GOPATH = ${GOPATH}"
+echo "PATH = ${PATH}"
 go version || Fail "Cannot find Go compiler."
 go fmt ./... || Fail "Error in 'go fmt' command."
+gomarkdoc -o README.md || Fail "Error generating Go documentation using 'gomarkdoc'."
 cd ../../generate
 
 # C# is a special case: we have to compile the code to get its documentation.

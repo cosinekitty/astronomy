@@ -37,6 +37,8 @@ jobs:
         distribution: 'zulu'
         java-version: 11
     - uses: gradle/wrapper-validation-action@v1
+    - name: Install Go documentation tools
+      run: go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@v1.1.0
 
     - name: Test Astronomy Engine Unix
       if: startsWith(matrix.os, 'windows') == false

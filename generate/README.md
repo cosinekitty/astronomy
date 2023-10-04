@@ -22,6 +22,8 @@ The following tools are required for developers:
     - [mypy](https://pypi.org/project/mypy/)
     - [pylint](https://pypi.org/project/pylint/)
 - Microsoft .NET 7 SDK
+- Go programming language version 1.20.8 or higher.
+    - Also install Markdown generator: `go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@v1.1.0`
 - doxygen
 - xsltproc
 - coreutils
@@ -53,6 +55,8 @@ The following tools are required for developers:
 - Python 3.7+ and the following modules:
     - [mypy](https://pypi.org/project/mypy/)
     - [pylint](https://pypi.org/project/pylint/)
+- Go programming language version 1.20.8 or higher.
+    - Also install Markdown generator: `go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@v1.1.0`
 - doxygen
 - xsltproc  (Follow instructions at https://www.zlatkovic.com/libxml.en.html)
 
