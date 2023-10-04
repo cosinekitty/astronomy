@@ -25,9 +25,10 @@ cd ../source/golang
 echo "GOROOT = ${GOROOT}"
 echo "GOPATH = ${GOPATH}"
 echo "PATH = ${PATH}"
+echo "GITHUB_REF_NAME = ${GITHUB_REF_NAME}"
 go version || Fail "Cannot find Go compiler."
 go fmt ./... || Fail "Error in 'go fmt' command."
-gomarkdoc -o README.md || Fail "Error generating Go documentation using 'gomarkdoc'."
+gomarkdoc --repository.url "https://github.com/cosinekitty/astronomy" --repository.default-branch golang --repository.path "/source/golang" -o README.md . || Fail "Error generating Go documentation using 'gomarkdoc'."
 cd ../../generate
 
 # C# is a special case: we have to compile the code to get its documentation.

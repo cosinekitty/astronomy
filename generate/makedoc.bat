@@ -39,7 +39,7 @@ go fmt ./... || (
     echo.FATAL: Error in 'go fmt' command.
     exit /b 1
 )
-gomarkdoc -o README.md || (
+gomarkdoc --repository.url "https://github.com/cosinekitty/astronomy" --repository.default-branch golang --repository.path "/source/golang" -o README.md . || (
     echo.Error generating Go documentation using 'gomarkdoc'.
     exit /b 1
 )

@@ -119,7 +119,7 @@ const (
 ```
 
 <a name="AstroMoonQuarter"></a>
-## type [AstroMoonQuarter](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L357-L360>)
+## type [AstroMoonQuarter](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L357-L360>)
 
 
 
@@ -131,7 +131,7 @@ type AstroMoonQuarter struct {
 ```
 
 <a name="AstroSearchFunc"></a>
-## type [AstroSearchFunc](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L371>)
+## type [AstroSearchFunc](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L371>)
 
 
 
@@ -140,7 +140,7 @@ type AstroSearchFunc func(context interface{}, time AstroTime) float64
 ```
 
 <a name="AstroTime"></a>
-## type [AstroTime](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L44-L86>)
+## type [AstroTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L44-L86>)
 
 
 
@@ -188,7 +188,7 @@ type AstroTime struct {
 ```
 
 <a name="TimeFromTerrestrialDays"></a>
-### func [TimeFromTerrestrialDays](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L239>)
+### func [TimeFromTerrestrialDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L239>)
 
 ```go
 func TimeFromTerrestrialDays(tt float64) AstroTime
@@ -197,7 +197,7 @@ func TimeFromTerrestrialDays(tt float64) AstroTime
 
 
 <a name="TimeFromUniversalDays"></a>
-### func [TimeFromUniversalDays](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L235>)
+### func [TimeFromUniversalDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L235>)
 
 ```go
 func TimeFromUniversalDays(ut float64) AstroTime
@@ -206,7 +206,7 @@ func TimeFromUniversalDays(ut float64) AstroTime
 
 
 <a name="AstroTime.AddDays"></a>
-### func \(\*AstroTime\) [AddDays](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L243>)
+### func \(\*AstroTime\) [AddDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L243>)
 
 ```go
 func (time *AstroTime) AddDays(days float64) AstroTime
@@ -215,7 +215,7 @@ func (time *AstroTime) AddDays(days float64) AstroTime
 
 
 <a name="AstroVector"></a>
-## type [AstroVector](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L256-L261>)
+## type [AstroVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L256-L261>)
 
 
 
@@ -229,7 +229,7 @@ type AstroVector struct {
 ```
 
 <a name="AtmosphereInfo"></a>
-## type [AtmosphereInfo](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L344-L348>)
+## type [AtmosphereInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L344-L348>)
 
 
 
@@ -242,7 +242,7 @@ type AtmosphereInfo struct {
 ```
 
 <a name="AxisInfo"></a>
-## type [AxisInfo](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L384-L389>)
+## type [AxisInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L384-L389>)
 
 
 
@@ -256,7 +256,7 @@ type AxisInfo struct {
 ```
 
 <a name="Body"></a>
-## type [Body](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L279>)
+## type [Body](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L279>)
 
 
 
@@ -265,7 +265,7 @@ type Body int
 ```
 
 <a name="CalendarDateTime"></a>
-## type [CalendarDateTime](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L247-L254>)
+## type [CalendarDateTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L247-L254>)
 
 
 
@@ -281,7 +281,7 @@ type CalendarDateTime struct {
 ```
 
 <a name="DeltaTimeFunc"></a>
-## type [DeltaTimeFunc](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L373>)
+## type [DeltaTimeFunc](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L373>)
 
 
 
@@ -290,7 +290,7 @@ type DeltaTimeFunc func(ut float64) float64
 ```
 
 <a name="Ecliptic"></a>
-## type [Ecliptic](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L319-L323>)
+## type [Ecliptic](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L319-L323>)
 
 
 
@@ -303,7 +303,7 @@ type Ecliptic struct {
 ```
 
 <a name="Equatorial"></a>
-## type [Equatorial](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L312-L317>)
+## type [Equatorial](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L312-L317>)
 
 
 
@@ -317,7 +317,7 @@ type Equatorial struct {
 ```
 
 <a name="JupiterMoonsInfo"></a>
-## type [JupiterMoonsInfo](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L417-L422>)
+## type [JupiterMoonsInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L417-L422>)
 
 
 
@@ -331,7 +331,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="LibrationInfo"></a>
-## type [LibrationInfo](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L375-L382>)
+## type [LibrationInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L375-L382>)
 
 
 
@@ -347,7 +347,7 @@ type LibrationInfo struct {
 ```
 
 <a name="NodeEventInfo"></a>
-## type [NodeEventInfo](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L399-L402>)
+## type [NodeEventInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L399-L402>)
 
 
 
@@ -359,7 +359,7 @@ type NodeEventInfo struct {
 ```
 
 <a name="NodeEventKind"></a>
-## type [NodeEventKind](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L391>)
+## type [NodeEventKind](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L391>)
 
 
 
@@ -368,7 +368,7 @@ type NodeEventKind int
 ```
 
 <a name="Observer"></a>
-## type [Observer](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L306-L310>)
+## type [Observer](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L306-L310>)
 
 
 
@@ -381,7 +381,7 @@ type Observer struct {
 ```
 
 <a name="Refraction"></a>
-## type [Refraction](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L336>)
+## type [Refraction](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L336>)
 
 
 
@@ -400,7 +400,7 @@ const (
 ```
 
 <a name="RotationMatrix"></a>
-## type [RotationMatrix](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L332-L334>)
+## type [RotationMatrix](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L332-L334>)
 
 
 
@@ -411,7 +411,7 @@ type RotationMatrix struct {
 ```
 
 <a name="SeasonsInfo"></a>
-## type [SeasonsInfo](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L350-L355>)
+## type [SeasonsInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L350-L355>)
 
 
 
@@ -425,7 +425,7 @@ type SeasonsInfo struct {
 ```
 
 <a name="Spherical"></a>
-## type [Spherical](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L273-L277>)
+## type [Spherical](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L273-L277>)
 
 
 
@@ -438,7 +438,7 @@ type Spherical struct {
 ```
 
 <a name="StateVector"></a>
-## type [StateVector](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L263-L271>)
+## type [StateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L263-L271>)
 
 
 
@@ -455,7 +455,7 @@ type StateVector struct {
 ```
 
 <a name="TimeFormat"></a>
-## type [TimeFormat](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L362>)
+## type [TimeFormat](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L362>)
 
 
 
@@ -475,7 +475,7 @@ const (
 ```
 
 <a name="Topocentric"></a>
-## type [Topocentric](<https://github.com/cosinekitty/astronomy/blob/master/source/golang/astronomy.go#L325-L330>)
+## type [Topocentric](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L325-L330>)
 
 
 
