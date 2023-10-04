@@ -44,6 +44,7 @@ gomarkdoc --repository.url "https://github.com/cosinekitty/astronomy" --reposito
     exit /b 1
 )
 cd ..\..\generate
+node eol_hack.js ..\source\golang\README.md || exit /b 1
 
 REM   C# is a special case. We have to compile the code to get the documentation.
 echo.Building C# code to get documentation.
