@@ -29,6 +29,16 @@
     </tr>
     <tr>
         <td style="text-align: center;">
+            <div>Go</div>
+            <div><img src="source/golang/go_logo.svg" width="100" height="100" alt="Go" /></div>
+        </td>
+        <td style="text-align: center;"><a href="demo/golang/">Examples</a></td>
+        <td style="text-align: center;">
+            <div><a href="source/golang/">Code &amp; Docs</a></div>
+        </td>
+    </tr>
+    <tr>
+        <td style="text-align: center;">
             <div>JavaScript</div>
             <div><img src="source/js/nodejs.svg" width="100" height="100" alt="Node.js" /></div>
         </td>
@@ -46,17 +56,6 @@
     </tr>
     <tr>
         <td style="text-align: center;">
-            <div>Python</div>
-            <div><img src="source/python/python_language.svg" width="100" height="100" alt="Python" /></div>
-        </td>
-        <td style="text-align: center;"><a href="demo/python/">Examples</a></td>
-        <td style="text-align: center;">
-            <div><a href="https://pypi.org/project/astronomy-engine/" target="_blank"><img alt="PyPI" src="https://img.shields.io/pypi/v/astronomy-engine"></a></div>
-            <div><a href="source/python/">Code &amp; Docs</a></div>
-        </td>
-    </tr>
-    <tr>
-        <td style="text-align: center;">
             <div>Kotlin / JVM</div>
             <div><img src="source/kotlin/kotlin_language.svg" width="100" height="100" alt="Kotlin" /></div>
         </td>
@@ -70,6 +69,17 @@
         <td style="text-align: center;">
             <div><a href="https://jitpack.io/#cosinekitty/astronomy" target="_blank"><img alt="JitPack" src="https://img.shields.io/jitpack/v/github/cosinekitty/astronomy" /></a></div>
             <div><a href="source/kotlin/">Code &amp; Docs</a></div>
+        </td>
+    </tr>
+    <tr>
+        <td style="text-align: center;">
+            <div>Python</div>
+            <div><img src="source/python/python_language.svg" width="100" height="100" alt="Python" /></div>
+        </td>
+        <td style="text-align: center;"><a href="demo/python/">Examples</a></td>
+        <td style="text-align: center;">
+            <div><a href="https://pypi.org/project/astronomy-engine/" target="_blank"><img alt="PyPI" src="https://img.shields.io/pypi/v/astronomy-engine"></a></div>
+            <div><a href="source/python/">Code &amp; Docs</a></div>
         </td>
     </tr>
 </table>
