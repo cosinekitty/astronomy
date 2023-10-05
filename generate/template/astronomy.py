@@ -1586,7 +1586,7 @@ def _CalcMoon(time: Time) -> _moonpos:
 
         I += 1
 
-$ASTRO_ADDSOL()
+#$ASTRO_ADDSOL()
 
     def ADDN(coeffn: float, p: int, q: int, r: int, s: int) -> float:
         return coeffn * (ex[p][1] * ex[q][2] * ex[r][3] * ex[s][4]).imag
@@ -1804,14 +1804,14 @@ class _vsop_model_t:
         self.rad = rad
 
 _vsop: List[_vsop_model_t] = [
-$ASTRO_PYTHON_VSOP(Mercury),
-$ASTRO_PYTHON_VSOP(Venus),
-$ASTRO_PYTHON_VSOP(Earth),
-$ASTRO_PYTHON_VSOP(Mars),
-$ASTRO_PYTHON_VSOP(Jupiter),
-$ASTRO_PYTHON_VSOP(Saturn),
-$ASTRO_PYTHON_VSOP(Uranus),
-$ASTRO_PYTHON_VSOP(Neptune),
+#$ASTRO_PYTHON_VSOP(Mercury),
+#$ASTRO_PYTHON_VSOP(Venus),
+#$ASTRO_PYTHON_VSOP(Earth),
+#$ASTRO_PYTHON_VSOP(Mars),
+#$ASTRO_PYTHON_VSOP(Jupiter),
+#$ASTRO_PYTHON_VSOP(Saturn),
+#$ASTRO_PYTHON_VSOP(Uranus),
+#$ASTRO_PYTHON_VSOP(Neptune),
 ]
 
 def _VsopFormula(formula: _vsop_formula_t, t: float, clamp_angle: bool) -> float:
@@ -1968,7 +1968,7 @@ class _pstate:
         self.pos = _TerseVector(pos[0], pos[1], pos[2])
         self.vel = _TerseVector(vel[0], vel[1], vel[2])
 
-$ASTRO_PLUTO_TABLE()
+#$ASTRO_PLUTO_TABLE()
 
 def _AdjustBarycenterPosVel(ssb: _body_state_t, tt: float, body: Body, planet_gm: float) -> _body_state_t:
     shift = planet_gm / (planet_gm + _SUN_GM)
@@ -2205,7 +2205,7 @@ class _jm:
         self.z = z
         self.zeta = zeta
 
-$ASTRO_JUPITER_MOONS()
+#$ASTRO_JUPITER_MOONS()
 
 class JupiterMoonsInfo:
     """Holds the positions and velocities of Jupiter's major 4 moons.
@@ -6438,7 +6438,7 @@ class ConstellationInfo:
 
 _ConstelRot = None
 _Epoch2000 = None
-$ASTRO_CONSTEL()
+#$ASTRO_CONSTEL()
 
 
 def Constellation(ra: float, dec: float) -> ConstellationInfo:

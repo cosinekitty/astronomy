@@ -1005,7 +1005,7 @@ function CalcMoon(time: AstroTime) {
         SINPI += coeffp * result.x;
     }
 
-$ASTRO_ADDSOL()
+//$ASTRO_ADDSOL()
 
     function ADDN(coeffn: number, p: number, q: number, r: number, s: number) {
         return coeffn * Term(p, q, r, s).y;
@@ -2596,7 +2596,7 @@ function CalcSolarSystemBarycenter(time: AstroTime): Vector {
 
 // Pluto integrator begins ----------------------------------------------------
 
-$ASTRO_PLUTO_TABLE()
+//$ASTRO_PLUTO_TABLE()
 
 class TerseVector {
     constructor(
@@ -2958,7 +2958,7 @@ interface jupiter_moon_t {
     zeta: jm_series_t;
 };
 
-$ASTRO_JUPITER_MOONS();
+//$ASTRO_JUPITER_MOONS();
 
 /**
  * @brief Holds the positions and velocities of Jupiter's major 4 moons.
@@ -6836,7 +6836,7 @@ export function Rotation_GAL_EQJ(): RotationMatrix {
 }
 
 
-$ASTRO_CONSTEL()
+//$ASTRO_CONSTEL()
 
 let ConstelRot: RotationMatrix;
 let Epoch2000 : AstroTime;
