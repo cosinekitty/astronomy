@@ -420,3 +420,17 @@ type JupiterMoonsInfo struct {
 	Ganymede StateVector
 	Callisto StateVector
 }
+
+type constelInfo struct {
+	symbol string
+	name   string
+}
+
+type constelBoundary struct {
+	index int
+	raLo  float64
+	raHi  float64
+	decLo float64
+}
+
+//$ASTRO_CONSTEL()

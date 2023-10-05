@@ -1266,6 +1266,12 @@ static int ConstellationData(cg_context_t *context)
             fprintf(context->outfile, "new constel_info_t(\"%s\", \"%s\"%*s)  // %2d\n", d, d+4, (20-len), "", lnum-1);
             break;
 
+        case CODEGEN_LANGUAGE_GO:
+            if (lnum == 1)
+                fprintf(context->outfile, "var constelNames = [...]constelInfo{\n");
+            fprintf(context->outfile, "\t{\"%s\", \"%s\"},\n", d, d+4);
+            break;
+
         case CODEGEN_LANGUAGE_JS:
             if (lnum == 1)
                 fprintf(context->outfile, "const ConstelNames = [\n ");
@@ -1322,6 +1328,11 @@ static int ConstellationData(cg_context_t *context)
         fprintf(context->outfile, "        {\n");
         break;
 
+    case CODEGEN_LANGUAGE_GO:
+        fprintf(context->outfile, "}\n\n");
+        fprintf(context->outfile, "var constelBounds = [...]constelBoundary{\n");
+        break;
+
     case CODEGEN_LANGUAGE_JS:
         fprintf(context->outfile, "];\n\n");
         fprintf(context->outfile, "const ConstelBounds = [\n");
@@ -1376,6 +1387,10 @@ static int ConstellationData(cg_context_t *context)
                 index, ra_lo, ra_hi, dec, symbol);
             break;
 
+        case CODEGEN_LANGUAGE_GO:
+            fprintf(context->outfile, "\t{%d, %6lg, %6lg, %6lg},\t// %s\n", index, ra_lo, ra_hi, dec, symbol);
+            break;
+
         case CODEGEN_LANGUAGE_JS:
             fprintf(context->outfile, "%c   [ %2d, %6lg, %6lg, %6lg ]    // %s\n",
                 ((lnum == 1) ? ' ' : ','),
@@ -1408,6 +1423,10 @@ static int ConstellationData(cg_context_t *context)
 
     case CODEGEN_LANGUAGE_CSHARP:
         fprintf(context->outfile, "        };\n\n");
+        break;
+
+    case CODEGEN_LANGUAGE_GO:
+        fprintf(context->outfile, "}\n\n");
         break;
 
     case CODEGEN_LANGUAGE_JS:
