@@ -55,7 +55,7 @@ extern "C" {
 /** @cond DOXYGEN_SKIP */
 #define PI      3.14159265358979323846
 
-$ASTRO_C_PLUTO_CONST()
+//$ASTRO_C_PLUTO_CONST()
 
 typedef enum
 {
@@ -2133,7 +2133,7 @@ static void CalcMoon(
 
     context.t = centuries_since_j2000;
     Init(ctx);
-$ASTRO_ADDSOL()
+//$ASTRO_ADDSOL()
     SolarN(ctx);
     Planetary(ctx);
     S = F + DS/ARC;
@@ -2536,14 +2536,14 @@ typedef struct
 jupiter_moon_t;
 /** @endcond */
 
-$ASTRO_C_VSOP(Mercury);
-$ASTRO_C_VSOP(Venus);
-$ASTRO_C_VSOP(Earth);
-$ASTRO_C_VSOP(Mars);
-$ASTRO_C_VSOP(Jupiter);
-$ASTRO_C_VSOP(Saturn);
-$ASTRO_C_VSOP(Uranus);
-$ASTRO_C_VSOP(Neptune);
+//$ASTRO_C_VSOP(Mercury);
+//$ASTRO_C_VSOP(Venus);
+//$ASTRO_C_VSOP(Earth);
+//$ASTRO_C_VSOP(Mars);
+//$ASTRO_C_VSOP(Jupiter);
+//$ASTRO_C_VSOP(Saturn);
+//$ASTRO_C_VSOP(Uranus);
+//$ASTRO_C_VSOP(Neptune);
 
 /** @cond DOXYGEN_SKIP */
 #define VSOPFORMULA(x)    { ASTRO_ARRAYSIZE(x), x }
@@ -3544,7 +3544,7 @@ void Astronomy_GravSimFree(astro_grav_sim_t *sim)
 
 /*------------------ begin Pluto integrator ------------------*/
 
-$ASTRO_PLUTO_TABLE();
+//$ASTRO_PLUTO_TABLE();
 
 /* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
 static body_segment_t *pluto_cache[PLUTO_NUM_STATES-1];
@@ -3707,7 +3707,7 @@ static astro_status_t CalcPluto(body_state_t *bstate, astro_time_t time, int hel
 
 /*---------------------- begin Jupiter moons ----------------------*/
 
-$ASTRO_JUPITER_MOONS();
+//$ASTRO_JUPITER_MOONS();
 
 static astro_state_vector_t JupiterMoon_elem2pv(astro_time_t time, double mu, const double elem[6])
 {
@@ -9505,7 +9505,7 @@ typedef struct
 constel_boundary_t;
 /** @endcond */
 
-$ASTRO_CONSTEL()
+//$ASTRO_CONSTEL()
 
 /**
  * @brief

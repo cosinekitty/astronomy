@@ -137,13 +137,13 @@ static int IndexOf(const char *text, int offset, const char *pattern)
     return -1;
 }
 
-static int ScanDirective(
+static int ScanDirectiveVariant(
     char *line,
     const char **verb_text,
     const char **args_text,
-    const char **tail_text)
+    const char **tail_text,
+    const char *prefix)
 {
-    static const char prefix[] = "$ASTRO_";
     static const char delim[] = "(";
     static const char suffix[] = ")";
     int prefix_length = (int)strlen(prefix);
@@ -196,6 +196,18 @@ static int ScanDirective(
     *tail_text = &line[suffix_index + suffix_length];
 
     return 1;
+}
+
+static int ScanDirective(
+    char *line,
+    const char **verb_text,
+    const char **args_text,
+    const char **tail_text)
+{
+    return
+        ScanDirectiveVariant(line, verb_text, args_text, tail_text, "//$ASTRO_") ||
+        ScanDirectiveVariant(line, verb_text, args_text, tail_text, "#$ASTRO_") ||
+        ScanDirectiveVariant(line, verb_text, args_text, tail_text, "$ASTRO_");
 }
 
 static int ParseVsopBodyName(const cg_context_t *context, const char *name, vsop_body_t *body)

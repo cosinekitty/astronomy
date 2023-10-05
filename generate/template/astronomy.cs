@@ -2334,7 +2334,7 @@ namespace CosineKitty
         internal MoonResult CalcMoon()
         {
             ++Astronomy.CalcMoonCount;
-$ASTRO_ADDSOL()
+//$ASTRO_ADDSOL()
             SolarN();
             Planetary();
             S = F + DS/Astronomy.ARC;
@@ -3209,14 +3209,14 @@ $ASTRO_ADDSOL()
             }
         };
 
-$ASTRO_CSHARP_VSOP(Mercury)
-$ASTRO_CSHARP_VSOP(Venus)
-$ASTRO_CSHARP_VSOP(Earth)
-$ASTRO_CSHARP_VSOP(Mars)
-$ASTRO_CSHARP_VSOP(Jupiter)
-$ASTRO_CSHARP_VSOP(Saturn)
-$ASTRO_CSHARP_VSOP(Uranus)
-$ASTRO_CSHARP_VSOP(Neptune)
+//$ASTRO_CSHARP_VSOP(Mercury)
+//$ASTRO_CSHARP_VSOP(Venus)
+//$ASTRO_CSHARP_VSOP(Earth)
+//$ASTRO_CSHARP_VSOP(Mars)
+//$ASTRO_CSHARP_VSOP(Jupiter)
+//$ASTRO_CSHARP_VSOP(Saturn)
+//$ASTRO_CSHARP_VSOP(Uranus)
+//$ASTRO_CSHARP_VSOP(Neptune)
 
         private static readonly vsop_model_t[] vsop = new vsop_model_t[]
         {
@@ -3525,7 +3525,7 @@ $ASTRO_CSHARP_VSOP(Neptune)
 
 #region Pluto
 
-$ASTRO_PLUTO_TABLE();
+//$ASTRO_PLUTO_TABLE();
 
         internal static TerseVector UpdatePosition(double dt, TerseVector r, TerseVector v, TerseVector a)
         {
@@ -3753,7 +3753,7 @@ $ASTRO_PLUTO_TABLE();
             public vsop_term_t[] zeta;
         }
 
-$ASTRO_JUPITER_MOONS();
+//$ASTRO_JUPITER_MOONS();
 
         private static StateVector JupiterMoon_elem2pv(
             AstroTime time,
@@ -10583,7 +10583,7 @@ $ASTRO_JUPITER_MOONS();
             throw new InternalError($"Unable to find constellation for coordinates: RA={ra}, DEC={dec}");
         }
 
-$ASTRO_CONSTEL()
+//$ASTRO_CONSTEL()
 
     }
 }
