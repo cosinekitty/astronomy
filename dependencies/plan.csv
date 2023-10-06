@@ -1,7 +1,6 @@
 0,AddDays
 0,AngleBetween
 0,Atmosphere
-0,CalcEvent
 0,CalcMoon
 0,CalcShadow
 0,CalendarDateTime
@@ -83,7 +82,6 @@
 2,CalcEarth,CalcVsop
 2,GeoMoon,CalcMoon,ecl2equ_vec,precession
 2,JupiterMoons,CalcJupiterMoon
-2,LocalEclipseTransition,CalcEvent,Search
 2,PlanetTransitBoundary,Search
 2,Rotation_ECT_EQD,e_tilt
 2,Rotation_EQD_ECT,e_tilt
@@ -100,7 +98,6 @@
 3,CalcSolarSystemBarycenter,BarycenterContrib
 3,FindSeasonChange,SearchSunLongitude
 3,GeoMoonState,AddDays,GeoMoon
-3,LocalEclipse,CalcEvent,EclipseKindFromUmbra,LocalEclipseTransition,SolarEclipseObscuration
 3,MajorBodyBary,AdjustBarycenterPosVel
 3,NextLunarApsis,AddDays,SearchLunarApsis
 3,Rotation_EQD_EQJ,CombineRotation,nutation_rot,precession_rot
@@ -172,14 +169,17 @@
 12,PeakPlanetShadow,AddDays,PlanetShadow,Search
 12,SearchHourAngle,AddDays,Equator,Horizon,SiderealTime
 12,SunAltitude,Equator,Horizon
+13,CalcEvent,SunAltitude
 13,SearchGlobalSolarEclipse,AddDays,GeoidIntersect,MoonEclipticLatitudeDegrees,PeakMoonShadow,SearchMoonPhase
-13,SearchLocalSolarEclipse,AddDays,LocalEclipse,MoonEclipticLatitudeDegrees,PeakLocalMoonShadow,SearchMoonPhase
 13,SearchLunarEclipse,AddDays,CalcMoon,Obscuration,PeakEarthShadow,SearchMoonPhase,ShadowSemiDurationMinutes
 13,SearchMaxElongation,AddDays,EclipticLongitude,Elongation,LongitudeOffset,Search,SearchRelativeLongitude,SynodicPeriod
 13,SearchMoonQuarter,MoonPhase,SearchMoonPhase
 13,SearchTransit,AddDays,AngleFromSun,PeakPlanetShadow,PlanetTransitBoundary,SearchRelativeLongitude
+14,LocalEclipseTransition,CalcEvent,Search
 14,NextGlobalSolarEclipse,AddDays,SearchGlobalSolarEclipse
-14,NextLocalSolarEclipse,AddDays,SearchLocalSolarEclipse
 14,NextLunarEclipse,AddDays,SearchLunarEclipse
 14,NextMoonQuarter,AddDays,SearchMoonQuarter
 14,NextTransit,AddDays,SearchTransit
+15,LocalEclipse,CalcEvent,EclipseKindFromUmbra,LocalEclipseTransition,SolarEclipseObscuration
+16,SearchLocalSolarEclipse,AddDays,LocalEclipse,MoonEclipticLatitudeDegrees,PeakLocalMoonShadow,SearchMoonPhase
+17,NextLocalSolarEclipse,AddDays,SearchLocalSolarEclipse

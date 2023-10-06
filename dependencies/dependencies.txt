@@ -443,6 +443,9 @@ NextLocalSolarEclipse
     AddDays
     SearchLocalSolarEclipse
 
+CalcEvent
+    SunAltitude
+
 LocalEclipse
     CalcEvent
     LocalEclipseTransition
