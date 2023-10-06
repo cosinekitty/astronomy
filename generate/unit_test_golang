@@ -10,7 +10,7 @@ Fail()
 go version || Fail "Cannot find Go compiler."
 
 cd ../source/golang
-go test || Fail "Failure in Go unit tests."
+go test -v || Fail "Failure in Go unit tests."
 cd ../../generate
 echo "unit_test_golang: success"
 exit 0

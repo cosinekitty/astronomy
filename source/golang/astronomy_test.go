@@ -27,3 +27,14 @@ func TestTerrestrialTime(t *testing.T) {
 		t.Errorf("Excessive Universal Time Error = %g for time2", utdiff2)
 	}
 }
+
+func TestAngleBetween(t *testing.T) {
+	time := TimeFromUniversalDays(0.0)
+	a := AstroVector{1.0, 0.0, 0.0, time}
+	b := AstroVector{1.0, 1.0, 0.0, time}
+	angle := AngleBetween(a, b)
+	diff := math.Abs(angle - 45.0)
+	if diff > 1.0e-14 {
+		t.Errorf("Excessive angle error = %g", diff)
+	}
+}

@@ -240,7 +240,7 @@ func TimeFromTerrestrialDays(tt float64) AstroTime {
 	return makeTime(universalTime(tt), tt)
 }
 
-func (time *AstroTime) AddDays(days float64) AstroTime {
+func (time AstroTime) AddDays(days float64) AstroTime {
 	return TimeFromUniversalDays(time.Ut + days)
 }
 
@@ -260,6 +260,11 @@ type AstroVector struct {
 	T AstroTime
 }
 
+// Returns the length of vec expressed in the same distance units as vec's components.
+func (vec AstroVector) Length() float64 {
+	return math.Sqrt(vec.X*vec.X + vec.Y*vec.Y + vec.Z*vec.Z)
+}
+
 type StateVector struct {
 	X  float64
 	Y  float64
@@ -268,6 +273,16 @@ type StateVector struct {
 	Vy float64
 	Vz float64
 	T  AstroTime
+}
+
+// Position returns the position vector inside a state vector.
+func (state StateVector) Position() AstroVector {
+	return AstroVector{state.X, state.Y, state.Z, state.T}
+}
+
+// Position returns the velocity vector inside a state vector.
+func (state StateVector) Velocity() AstroVector {
+	return AstroVector{state.Vx, state.Vy, state.Vz, state.T}
 }
 
 type Spherical struct {
@@ -431,6 +446,36 @@ type constelBoundary struct {
 	raLo  float64
 	raHi  float64
 	decLo float64
+}
+
+// DegreesFromRadians converts an angle expressed in radians to an angle expressed in degrees.
+func DegreesFromRadians(radians float64) float64 {
+	return radians * (180.0 / math.Pi)
+}
+
+// RadiansFromDegrees converts an angle expressed in degrees to an angle expressed in radians.
+func RadiansFromDegrees(degrees float64) float64 {
+	return degrees * (math.Pi / 180.0)
+}
+
+// AngleBetween calculates the angle in degrees between two vectors.
+// Given a pair of vectors avec and bvec, this function returns the
+// angle in degrees between the vectors in 3D space.
+// The angle is measured in the plane that contains both vectors.
+// The returned value is in the closed range [0, 180].
+func AngleBetween(avec AstroVector, bvec AstroVector) float64 {
+	r := avec.Length() * bvec.Length()
+	if r < 1.0e-8 {
+		panic("Cannot find angle between vectors because they are too short.")
+	}
+	dot := (avec.X*bvec.X + avec.Y*bvec.Y + avec.Z*bvec.Z) / r
+	if dot <= -1.0 {
+		return 180.0
+	}
+	if dot >= +1.0 {
+		return 0.0
+	}
+	return DegreesFromRadians(math.Acos(dot))
 }
 
 //$ASTRO_CONSTEL()
