@@ -38,3 +38,31 @@ func TestAngleBetween(t *testing.T) {
 		t.Errorf("Excessive angle error = %g", diff)
 	}
 }
+
+func TestCalendar(t *testing.T) {
+	ut := 8679.201044872223
+	cal, err := CalendarFromDays(ut)
+	if err != nil {
+		t.Error(err)
+	}
+	// (2023, 10, 6, 16, 49, 30.276975631713867)
+	if cal.Year != 2023 {
+		t.Errorf("Expected year = 2023 but found %d", cal.Year)
+	}
+	if cal.Month != 10 {
+		t.Errorf("Expected month = 10 but found %d", cal.Month)
+	}
+	if cal.Day != 6 {
+		t.Errorf("Expected day = 6 but found %d.", cal.Day)
+	}
+	if cal.Hour != 16 {
+		t.Errorf("Expected hour = 16 but found %d.", cal.Hour)
+	}
+	if cal.Minute != 49 {
+		t.Errorf("Expected minute = 49 but found %d.", cal.Minute)
+	}
+	diff := math.Abs(cal.Second - 30.276975631713867)
+	if diff > 1.0e-16 {
+		t.Errorf("Excessive error calculating calendar seconds: %0.16g", diff)
+	}
+}

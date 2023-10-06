@@ -28,6 +28,7 @@ It provides a suite of well\-tested functions for calculating positions of the S
 - [type AxisInfo](<#AxisInfo>)
 - [type Body](<#Body>)
 - [type CalendarDateTime](<#CalendarDateTime>)
+  - [func CalendarFromDays\(ut float64\) \(\*CalendarDateTime, error\)](<#CalendarFromDays>)
 - [type DeltaTimeFunc](<#DeltaTimeFunc>)
 - [type Ecliptic](<#Ecliptic>)
 - [type Equatorial](<#Equatorial>)
@@ -125,7 +126,7 @@ const (
 ```
 
 <a name="AngleBetween"></a>
-## func [AngleBetween](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L466>)
+## func [AngleBetween](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L522>)
 
 ```go
 func AngleBetween(avec AstroVector, bvec AstroVector) float64
@@ -134,7 +135,7 @@ func AngleBetween(avec AstroVector, bvec AstroVector) float64
 AngleBetween calculates the angle in degrees between two vectors. Given a pair of vectors avec and bvec, this function returns the angle in degrees between the vectors in 3D space. The angle is measured in the plane that contains both vectors. The returned value is in the closed range \[0, 180\].
 
 <a name="DegreesFromRadians"></a>
-## func [DegreesFromRadians](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L452>)
+## func [DegreesFromRadians](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L508>)
 
 ```go
 func DegreesFromRadians(radians float64) float64
@@ -143,7 +144,7 @@ func DegreesFromRadians(radians float64) float64
 DegreesFromRadians converts an angle expressed in radians to an angle expressed in degrees.
 
 <a name="RadiansFromDegrees"></a>
-## func [RadiansFromDegrees](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L457>)
+## func [RadiansFromDegrees](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L513>)
 
 ```go
 func RadiansFromDegrees(degrees float64) float64
@@ -152,7 +153,7 @@ func RadiansFromDegrees(degrees float64) float64
 RadiansFromDegrees converts an angle expressed in degrees to an angle expressed in radians.
 
 <a name="AstroMoonQuarter"></a>
-## type [AstroMoonQuarter](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L372-L375>)
+## type [AstroMoonQuarter](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L428-L431>)
 
 
 
@@ -164,7 +165,7 @@ type AstroMoonQuarter struct {
 ```
 
 <a name="AstroSearchFunc"></a>
-## type [AstroSearchFunc](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L386>)
+## type [AstroSearchFunc](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L442>)
 
 
 
@@ -173,7 +174,7 @@ type AstroSearchFunc func(context interface{}, time AstroTime) float64
 ```
 
 <a name="AstroTime"></a>
-## type [AstroTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L44-L86>)
+## type [AstroTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L47-L89>)
 
 
 
@@ -221,7 +222,7 @@ type AstroTime struct {
 ```
 
 <a name="TimeFromTerrestrialDays"></a>
-### func [TimeFromTerrestrialDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L239>)
+### func [TimeFromTerrestrialDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L242>)
 
 ```go
 func TimeFromTerrestrialDays(tt float64) AstroTime
@@ -230,7 +231,7 @@ func TimeFromTerrestrialDays(tt float64) AstroTime
 
 
 <a name="TimeFromUniversalDays"></a>
-### func [TimeFromUniversalDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L235>)
+### func [TimeFromUniversalDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L238>)
 
 ```go
 func TimeFromUniversalDays(ut float64) AstroTime
@@ -239,7 +240,7 @@ func TimeFromUniversalDays(ut float64) AstroTime
 
 
 <a name="AstroTime.AddDays"></a>
-### func \(AstroTime\) [AddDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L243>)
+### func \(AstroTime\) [AddDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L246>)
 
 ```go
 func (time AstroTime) AddDays(days float64) AstroTime
@@ -248,7 +249,7 @@ func (time AstroTime) AddDays(days float64) AstroTime
 
 
 <a name="AstroVector"></a>
-## type [AstroVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L256-L261>)
+## type [AstroVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L312-L317>)
 
 
 
@@ -262,7 +263,7 @@ type AstroVector struct {
 ```
 
 <a name="AstroVector.Length"></a>
-### func \(AstroVector\) [Length](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L264>)
+### func \(AstroVector\) [Length](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L320>)
 
 ```go
 func (vec AstroVector) Length() float64
@@ -271,7 +272,7 @@ func (vec AstroVector) Length() float64
 Returns the length of vec expressed in the same distance units as vec's components.
 
 <a name="AtmosphereInfo"></a>
-## type [AtmosphereInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L359-L363>)
+## type [AtmosphereInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L415-L419>)
 
 
 
@@ -284,7 +285,7 @@ type AtmosphereInfo struct {
 ```
 
 <a name="AxisInfo"></a>
-## type [AxisInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L399-L404>)
+## type [AxisInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L455-L460>)
 
 
 
@@ -298,7 +299,7 @@ type AxisInfo struct {
 ```
 
 <a name="Body"></a>
-## type [Body](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L294>)
+## type [Body](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L350>)
 
 
 
@@ -307,23 +308,32 @@ type Body int
 ```
 
 <a name="CalendarDateTime"></a>
-## type [CalendarDateTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L247-L254>)
+## type [CalendarDateTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L252-L259>)
 
-
+CalendarDateTime represents a Gregorian calendar date and time within plus or minus 1 million years from the year 0.
 
 ```go
 type CalendarDateTime struct {
-    Year   int
-    Month  int
-    Day    int
-    Hour   int
-    Minute int
-    Second float64
+    Year   int     // The year value in the range -999999 to +999999.
+    Month  int     // The calendar month in the range 1..12.
+    Day    int     // The day of the month in the range 1..31.
+    Hour   int     // The hour in the range 0..23.
+    Minute int     // The minute in the range 0..59.
+    Second float64 // The real-valued second in the half-open range [0, 60).
 }
 ```
 
+<a name="CalendarFromDays"></a>
+### func [CalendarFromDays](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L262>)
+
+```go
+func CalendarFromDays(ut float64) (*CalendarDateTime, error)
+```
+
+CalendarFromDays converts a J2000 day value to a Gregorian calendar date and time.
+
 <a name="DeltaTimeFunc"></a>
-## type [DeltaTimeFunc](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L388>)
+## type [DeltaTimeFunc](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L444>)
 
 
 
@@ -332,7 +342,7 @@ type DeltaTimeFunc func(ut float64) float64
 ```
 
 <a name="Ecliptic"></a>
-## type [Ecliptic](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L334-L338>)
+## type [Ecliptic](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L390-L394>)
 
 
 
@@ -345,7 +355,7 @@ type Ecliptic struct {
 ```
 
 <a name="Equatorial"></a>
-## type [Equatorial](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L327-L332>)
+## type [Equatorial](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L383-L388>)
 
 
 
@@ -359,7 +369,7 @@ type Equatorial struct {
 ```
 
 <a name="JupiterMoonsInfo"></a>
-## type [JupiterMoonsInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L432-L437>)
+## type [JupiterMoonsInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L488-L493>)
 
 
 
@@ -373,7 +383,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="LibrationInfo"></a>
-## type [LibrationInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L390-L397>)
+## type [LibrationInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L446-L453>)
 
 
 
@@ -389,7 +399,7 @@ type LibrationInfo struct {
 ```
 
 <a name="NodeEventInfo"></a>
-## type [NodeEventInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L414-L417>)
+## type [NodeEventInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L470-L473>)
 
 
 
@@ -401,7 +411,7 @@ type NodeEventInfo struct {
 ```
 
 <a name="NodeEventKind"></a>
-## type [NodeEventKind](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L406>)
+## type [NodeEventKind](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L462>)
 
 
 
@@ -410,7 +420,7 @@ type NodeEventKind int
 ```
 
 <a name="Observer"></a>
-## type [Observer](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L321-L325>)
+## type [Observer](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L377-L381>)
 
 
 
@@ -423,7 +433,7 @@ type Observer struct {
 ```
 
 <a name="Refraction"></a>
-## type [Refraction](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L351>)
+## type [Refraction](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L407>)
 
 
 
@@ -442,7 +452,7 @@ const (
 ```
 
 <a name="RotationMatrix"></a>
-## type [RotationMatrix](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L347-L349>)
+## type [RotationMatrix](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L403-L405>)
 
 
 
@@ -453,7 +463,7 @@ type RotationMatrix struct {
 ```
 
 <a name="SeasonsInfo"></a>
-## type [SeasonsInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L365-L370>)
+## type [SeasonsInfo](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L421-L426>)
 
 
 
@@ -467,7 +477,7 @@ type SeasonsInfo struct {
 ```
 
 <a name="Spherical"></a>
-## type [Spherical](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L288-L292>)
+## type [Spherical](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L344-L348>)
 
 
 
@@ -480,7 +490,7 @@ type Spherical struct {
 ```
 
 <a name="StateVector"></a>
-## type [StateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L268-L276>)
+## type [StateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L324-L332>)
 
 
 
@@ -497,7 +507,7 @@ type StateVector struct {
 ```
 
 <a name="StateVector.Position"></a>
-### func \(StateVector\) [Position](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L279>)
+### func \(StateVector\) [Position](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L335>)
 
 ```go
 func (state StateVector) Position() AstroVector
@@ -506,7 +516,7 @@ func (state StateVector) Position() AstroVector
 Position returns the position vector inside a state vector.
 
 <a name="StateVector.Velocity"></a>
-### func \(StateVector\) [Velocity](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L284>)
+### func \(StateVector\) [Velocity](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L340>)
 
 ```go
 func (state StateVector) Velocity() AstroVector
@@ -515,7 +525,7 @@ func (state StateVector) Velocity() AstroVector
 Position returns the velocity vector inside a state vector.
 
 <a name="TimeFormat"></a>
-## type [TimeFormat](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L377>)
+## type [TimeFormat](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L433>)
 
 
 
@@ -535,7 +545,7 @@ const (
 ```
 
 <a name="Topocentric"></a>
-## type [Topocentric](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L340-L345>)
+## type [Topocentric](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L396-L401>)
 
 
 

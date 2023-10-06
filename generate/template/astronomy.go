@@ -7,7 +7,10 @@
 // [Astronomy Engine]: https://github.com/cosinekitty/astronomy
 package astronomy
 
-import "math"
+import (
+	"errors"
+	"math"
+)
 
 const (
 	DaysPerTropicalYear       = 365.24217                                 // the number of days in one tropical year
@@ -244,13 +247,66 @@ func (time AstroTime) AddDays(days float64) AstroTime {
 	return TimeFromUniversalDays(time.Ut + days)
 }
 
+// CalendarDateTime represents a Gregorian calendar date and time within
+// plus or minus 1 million years from the year 0.
 type CalendarDateTime struct {
-	Year   int
-	Month  int
-	Day    int
-	Hour   int
-	Minute int
-	Second float64
+	Year   int     // The year value in the range -999999 to +999999.
+	Month  int     // The calendar month in the range 1..12.
+	Day    int     // The day of the month in the range 1..31.
+	Hour   int     // The hour in the range 0..23.
+	Minute int     // The minute in the range 0..59.
+	Second float64 // The real-valued second in the half-open range [0, 60).
+}
+
+// CalendarFromDays converts a J2000 day value to a Gregorian calendar date and time.
+func CalendarFromDays(ut float64) (*CalendarDateTime, error) {
+	// Adapted from the NOVAS C 3.1 function cal_date().
+	// Convert fractional days since J2000 into Gregorian calendar date/time.
+	djd := ut + 2451545.5
+	jd := int64(math.Floor(djd))
+	var x float64
+	x = 24.0 * math.Mod(djd, 1.0)
+	if x < 0.0 {
+		x += 24.0
+	}
+	hour := int(x)
+	x = 60.0 * math.Mod(x, 1.0)
+	minute := int(x)
+	second := 60.0 * math.Mod(x, 1.0)
+
+	// This is my own adjustment to the NOVAS cal_date logic
+	// so that it can handle dates much farther back in the past.
+	// I add c*400 years worth of days at the front,
+	// then subtract c*400 years at the back,
+	// which avoids negative values in the formulas that mess up
+	// the calendar date calculations.
+	// Any multiple of 400 years has the same number of days,
+	// because it eliminates all the special cases for leap years.
+	const c = 2500
+
+	var k, n, m int64
+	k = jd + (68569 + c*146097)
+	n = (4 * k) / 146097
+	k = k - (146097*n+3)/4
+	m = (4000 * (k + 1)) / 1461001
+	k = k - (1461*m)/4 + 31
+
+	month := (int)((80 * k) / 2447)
+	day := (int)(k - int64(2447*month)/80)
+	k = int64(month / 11)
+
+	month = int(int64(month+2) - 12*k)
+	year := int(100*(n-49) + m + k - 400*c)
+
+	if year < -999999 || year > +999999 {
+		return nil, errors.New("The supplied time is too far from the year 2000 to be represented.")
+	}
+
+	if month < 1 || month > 12 || day < 1 || day > 31 {
+		return nil, errors.New("Internal error: invalid calendar date calculated.")
+	}
+
+	return &CalendarDateTime{year, month, day, hour, minute, second}, nil
 }
 
 type AstroVector struct {

@@ -1,0 +1,4 @@
+#!/bin/bash
+./generate source || exit 1
+./unit_test_golang || exit 1
+exit 0
