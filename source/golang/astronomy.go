@@ -22,6 +22,7 @@ const (
 	MercuryPolarRadiusKm      = 2438.3                                    // the polar radius of Mercury in kilometers
 	VenusRadiusKm             = 6051.8                                    // the radius of Venus in kilometers
 	EarthEquatorialRadiusKm   = 6378.1366                                 // the equatorial radius of the Earth in kilometers
+	EarthEquatorialRadiusAu   = EarthEquatorialRadiusKm / KmPerAu         //the equatorial radius of the Earth in astronomical units
 	EarthFlattening           = 0.996647180302104                         // the ratio of the Earth's polar radius to its equatorial radius
 	EarthPolarRadiusKm        = EarthEquatorialRadiusKm * EarthFlattening // the polar radius of the Earth in kilometers
 	MoonEquatorialRadiusKm    = 1738.1                                    // the Moon's equatorial radius in kilometers
@@ -45,7 +46,8 @@ const (
 )
 
 const (
-	asecToRad = 4.848136811095359935899141e-6
+	arc       = 3600.0 * 180.0 / math.Pi // arcseconds per radian
+	asecToRad = 1.0 / arc                // radians per arcsecond
 )
 
 type AstroTime struct {
@@ -697,6 +699,239 @@ func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector {
 	}
 }
 
+type addSolTerm struct {
+	coeffl float64
+	coeffs float64
+	coeffg float64
+	coeffp float64
+	p      int
+	q      int
+	r      int
+	s      int
+}
+
+type pascalArray struct {
+	array [13][4]float64
+}
+
+func (p *pascalArray) access(x, y int) *float64 {
+	return &p.array[x+6][y-1]
+}
+
+type moonContext struct {
+	T                        float64
+	DGAM                     float64
+	DLAM, N, GAM1C, SINPI    float64
+	L0, L, LS, F, D, S       float64
+	DL0, DL, DLS, DF, DD, DS float64
+	CO                       pascalArray
+	SI                       pascalArray
+}
+
+func addThe(c1, s1, c2, s2 float64, c, s *float64) {
+	*c = c1*c2 - s1*s2
+	*s = s1*c2 + c1*s2
+}
+
+func sineRev(phi float64) float64 {
+	// sine of phi in revolutions, not radians
+	return math.Sin(2.0 * math.Pi * phi)
+}
+
+func (mc *moonContext) longPeriodic() {
+	S1 := sineRev(0.19833 + 0.05611*mc.T)
+	S2 := sineRev(0.27869 + 0.04508*mc.T)
+	S3 := sineRev(0.16827 - 0.36903*mc.T)
+	S4 := sineRev(0.34734 - 5.37261*mc.T)
+	S5 := sineRev(0.10498 - 5.37899*mc.T)
+	S6 := sineRev(0.42681 - 0.41855*mc.T)
+	S7 := sineRev(0.14943 - 5.37511*mc.T)
+
+	mc.DL0 = 0.84*S1 + 0.31*S2 + 14.27*S3 + 7.26*S4 + 0.28*S5 + 0.24*S6
+	mc.DL = 2.94*S1 + 0.31*S2 + 14.27*S3 + 9.34*S4 + 1.12*S5 + 0.83*S6
+	mc.DLS = -6.40*S1 - 1.89*S6
+	mc.DF = 0.21*S1 + 0.31*S2 + 14.27*S3 - 88.70*S4 - 15.30*S5 + 0.24*S6 - 1.86*S7
+	mc.DD = mc.DL0 - mc.DLS
+	mc.DGAM = -3332e-9*sineRev(0.59734-5.37261*mc.T) - 539e-9*sineRev(0.35498-5.37899*mc.T) - 64e-9*sineRev(0.39943-5.37511*mc.T)
+}
+
+func (mc *moonContext) term(p, q, r, s int, x, y *float64) {
+	*x = 1.0
+	*y = 0.0
+	if p != 0 {
+		addThe(*x, *y, *mc.CO.access(p, 1), *mc.SI.access(p, 1), x, y)
+	}
+	if q != 0 {
+		addThe(*x, *y, *mc.CO.access(q, 2), *mc.SI.access(q, 2), x, y)
+	}
+	if r != 0 {
+		addThe(*x, *y, *mc.CO.access(r, 3), *mc.SI.access(r, 3), x, y)
+	}
+	if s != 0 {
+		addThe(*x, *y, *mc.CO.access(s, 4), *mc.SI.access(s, 4), x, y)
+	}
+}
+
+func (mc *moonContext) addSol(coeffl, coeffs, coeffg, coeffp float64, p, q, r, s int) {
+	var x, y float64
+	mc.term(p, q, r, s, &x, &y)
+	mc.DLAM += coeffl * y
+	mc.DS += coeffs * y
+	mc.GAM1C += coeffg * x
+	mc.SINPI += coeffp * x
+}
+
+func (mc *moonContext) addn(coeffn float64, p, q, r, s int) {
+	var x, y float64
+	mc.term(p, q, r, s, &x, &y)
+	mc.N += coeffn * y
+}
+
+func (mc *moonContext) solarn() {
+	mc.N = 0.0
+	mc.addn(-526.069, 0, 0, 1, -2)
+	mc.addn(-3.352, 0, 0, 1, -4)
+	mc.addn(+44.297, +1, 0, 1, -2)
+	mc.addn(-6.000, +1, 0, 1, -4)
+	mc.addn(+20.599, -1, 0, 1, 0)
+	mc.addn(-30.598, -1, 0, 1, -2)
+	mc.addn(-24.649, -2, 0, 1, 0)
+	mc.addn(-2.000, -2, 0, 1, -2)
+	mc.addn(-22.571, 0, +1, 1, -2)
+	mc.addn(+10.985, 0, -1, 1, -2)
+}
+
+func (mc *moonContext) planetary() {
+	mc.DLAM += +0.82*sineRev(0.7736-62.5512*mc.T) + 0.31*sineRev(0.0466-125.1025*mc.T)
+	mc.DLAM += +0.35*sineRev(0.5785-25.1042*mc.T) + 0.66*sineRev(0.4591+1335.8075*mc.T)
+	mc.DLAM += +0.64*sineRev(0.3130-91.5680*mc.T) + 1.14*sineRev(0.1480+1331.2898*mc.T)
+	mc.DLAM += +0.21*sineRev(0.5918+1056.5859*mc.T) + 0.44*sineRev(0.5784+1322.8595*mc.T)
+	mc.DLAM += +0.24*sineRev(0.2275-5.7374*mc.T) + 0.28*sineRev(0.2965+2.6929*mc.T)
+	mc.DLAM += +0.33 * sineRev(0.3132+6.3368*mc.T)
+}
+
+func twoPiFrac(x float64) float64 {
+	return (2.0 * math.Pi) * (x - math.Floor(x))
+}
+
+func makeMoonContext(centuriesSinceJ2000 float64) *moonContext {
+	var I, J, MAX int
+	var T2, ARG, FAC float64
+	var c, s float64
+
+	mc := moonContext{}
+
+	mc.T = centuriesSinceJ2000
+	T2 = mc.T * mc.T
+	mc.DLAM = 0.0
+	mc.DS = 0.0
+	mc.GAM1C = 0
+	mc.SINPI = 3422.7
+	mc.longPeriodic()
+	mc.L0 = twoPiFrac(0.60643382+1336.85522467*mc.T-0.00000313*T2) + mc.DL0/arc
+	mc.L = twoPiFrac(0.37489701+1325.55240982*mc.T+0.00002565*T2) + mc.DL/arc
+	mc.LS = twoPiFrac(0.99312619+99.99735956*mc.T-0.00000044*T2) + mc.DLS/arc
+	mc.F = twoPiFrac(0.25909118+1342.22782980*mc.T-0.00000892*T2) + mc.DF/arc
+	mc.D = twoPiFrac(0.82736186+1236.85308708*mc.T-0.00000397*T2) + mc.DD/arc
+
+	for I = 1; I <= 4; I += 1 {
+		switch I {
+		case 1:
+			{
+				ARG = mc.L
+				MAX = 4
+				FAC = 1.000002208
+			}
+		case 2:
+			{
+				ARG = mc.LS
+				MAX = 3
+				FAC = 0.997504612 - 0.002495388*mc.T
+			}
+		case 3:
+			{
+				ARG = mc.F
+				MAX = 4
+				FAC = 1.000002708 + 139.978*mc.DGAM
+			}
+		default:
+			{
+				ARG = mc.D
+				MAX = 6
+				FAC = 1.0
+			}
+		}
+		*mc.CO.access(0, I) = 1.0
+		*mc.CO.access(1, I) = math.Cos(ARG) * FAC
+		*mc.SI.access(0, I) = 0.0
+		*mc.SI.access(1, I) = math.Sin(ARG) * FAC
+
+		for J = 2; J <= MAX; J += 1 {
+			addThe(*mc.CO.access(J-1, I), *mc.SI.access(J-1, I), *mc.CO.access(1, I), *mc.SI.access(1, I), &c, &s)
+			*mc.CO.access(J, I) = c
+			*mc.SI.access(J, I) = s
+		}
+
+		for J = 1; J <= MAX; J += 1 {
+			*mc.CO.access(-J, I) = +*mc.CO.access(J, I)
+			*mc.SI.access(-J, I) = -*mc.SI.access(J, I)
+		}
+	}
+
+	return &mc
+}
+
+type moonResult struct {
+	geoEclipLon float64
+	geoEclipLat float64
+	distanceAu  float64
+}
+
+func (mc *moonContext) calcMoon() moonResult {
+	for _, t := range moonAddSolTerms {
+		mc.addSol(t.coeffl, t.coeffs, t.coeffg, t.coeffp, t.p, t.q, t.r, t.s)
+	}
+	mc.solarn()
+	mc.planetary()
+	mc.S = mc.F + mc.DS/arc
+	latSeconds := (1.000002708+139.978*mc.DGAM)*(18518.511+1.189+mc.GAM1C)*math.Sin(mc.S) - 6.24*math.Sin(3*mc.S) + mc.N
+	return moonResult{
+		twoPiFrac((mc.L0 + mc.DLAM/arc) / (2.0 * math.Pi)),
+		latSeconds / arc,
+		(arc * EarthEquatorialRadiusAu) / (0.999953253 * mc.SINPI),
+	}
+}
+
+// GeoMoon calculates the equatorial geocentric position of the Moon at a given time.
+// The returned vector indicates the Moon's center relative to the Earth's center.
+// The vector components are expressed in AU (astronomical units).
+// The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+// In Astronomy Engine, this orientation is called EQJ.
+func GeoMoon(time AstroTime) AstroVector {
+	mc := makeMoonContext(time.Tt / 36525.0)
+	moon := mc.calcMoon()
+
+	// Convert geocentric ecliptic spherical coordinates to Cartesian coordinates.
+	distCosLat := moon.distanceAu * math.Cos(moon.geoEclipLat)
+
+	gepos := AstroVector{
+		distCosLat * math.Cos(moon.geoEclipLon),
+		distCosLat * math.Sin(moon.geoEclipLon),
+		moon.distanceAu * math.Sin(moon.geoEclipLat),
+		time,
+	}
+
+	// Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
+	mpos1 := eclToEquVec(gepos)
+
+	// Convert from mean equinox of date to J2000.
+	mpos2 := precession(mpos1, into2000)
+
+	return mpos2
+}
+
+//--- Generated code begins here ------------------------------------------------------------------
+
 var constelNames = [...]constelInfo{
 	{"And", "Andromeda"},
 	{"Ant", "Antila"},
@@ -1146,4 +1381,112 @@ var constelBounds = [...]constelBoundary{
 	{2, 4920, 6480, -1980},    // Aps
 	{52, 1260, 2760, -2040},   // Men
 	{57, 0, 8640, -2160},      // Oct
+}
+
+var moonAddSolTerms = [...]addSolTerm{
+
+	{13.9020, 14.0600, -0.0010, 0.2607, 0, 0, 0, 4},
+	{0.4030, -4.0100, 0.3940, 0.0023, 0, 0, 0, 3},
+	{2369.9120, 2373.3600, 0.6010, 28.2333, 0, 0, 0, 2},
+	{-125.1540, -112.7900, -0.7250, -0.9781, 0, 0, 0, 1},
+	{1.9790, 6.9800, -0.4450, 0.0433, 1, 0, 0, 4},
+	{191.9530, 192.7200, 0.0290, 3.0861, 1, 0, 0, 2},
+	{-8.4660, -13.5100, 0.4550, -0.1093, 1, 0, 0, 1},
+	{22639.5000, 22609.0700, 0.0790, 186.5398, 1, 0, 0, 0},
+	{18.6090, 3.5900, -0.0940, 0.0118, 1, 0, 0, -1},
+	{-4586.4650, -4578.1300, -0.0770, 34.3117, 1, 0, 0, -2},
+	{3.2150, 5.4400, 0.1920, -0.0386, 1, 0, 0, -3},
+	{-38.4280, -38.6400, 0.0010, 0.6008, 1, 0, 0, -4},
+	{-0.3930, -1.4300, -0.0920, 0.0086, 1, 0, 0, -6},
+	{-0.2890, -1.5900, 0.1230, -0.0053, 0, 1, 0, 4},
+	{-24.4200, -25.1000, 0.0400, -0.3000, 0, 1, 0, 2},
+	{18.0230, 17.9300, 0.0070, 0.1494, 0, 1, 0, 1},
+	{-668.1460, -126.9800, -1.3020, -0.3997, 0, 1, 0, 0},
+	{0.5600, 0.3200, -0.0010, -0.0037, 0, 1, 0, -1},
+	{-165.1450, -165.0600, 0.0540, 1.9178, 0, 1, 0, -2},
+	{-1.8770, -6.4600, -0.4160, 0.0339, 0, 1, 0, -4},
+	{0.2130, 1.0200, -0.0740, 0.0054, 2, 0, 0, 4},
+	{14.3870, 14.7800, -0.0170, 0.2833, 2, 0, 0, 2},
+	{-0.5860, -1.2000, 0.0540, -0.0100, 2, 0, 0, 1},
+	{769.0160, 767.9600, 0.1070, 10.1657, 2, 0, 0, 0},
+	{1.7500, 2.0100, -0.0180, 0.0155, 2, 0, 0, -1},
+	{-211.6560, -152.5300, 5.6790, -0.3039, 2, 0, 0, -2},
+	{1.2250, 0.9100, -0.0300, -0.0088, 2, 0, 0, -3},
+	{-30.7730, -34.0700, -0.3080, 0.3722, 2, 0, 0, -4},
+	{-0.5700, -1.4000, -0.0740, 0.0109, 2, 0, 0, -6},
+	{-2.9210, -11.7500, 0.7870, -0.0484, 1, 1, 0, 2},
+	{1.2670, 1.5200, -0.0220, 0.0164, 1, 1, 0, 1},
+	{-109.6730, -115.1800, 0.4610, -0.9490, 1, 1, 0, 0},
+	{-205.9620, -182.3600, 2.0560, 1.4437, 1, 1, 0, -2},
+	{0.2330, 0.3600, 0.0120, -0.0025, 1, 1, 0, -3},
+	{-4.3910, -9.6600, -0.4710, 0.0673, 1, 1, 0, -4},
+	{0.2830, 1.5300, -0.1110, 0.0060, 1, -1, 0, 4},
+	{14.5770, 31.7000, -1.5400, 0.2302, 1, -1, 0, 2},
+	{147.6870, 138.7600, 0.6790, 1.1528, 1, -1, 0, 0},
+	{-1.0890, 0.5500, 0.0210, 0.0000, 1, -1, 0, -1},
+	{28.4750, 23.5900, -0.4430, -0.2257, 1, -1, 0, -2},
+	{-0.2760, -0.3800, -0.0060, -0.0036, 1, -1, 0, -3},
+	{0.6360, 2.2700, 0.1460, -0.0102, 1, -1, 0, -4},
+	{-0.1890, -1.6800, 0.1310, -0.0028, 0, 2, 0, 2},
+	{-7.4860, -0.6600, -0.0370, -0.0086, 0, 2, 0, 0},
+	{-8.0960, -16.3500, -0.7400, 0.0918, 0, 2, 0, -2},
+	{-5.7410, -0.0400, 0.0000, -0.0009, 0, 0, 2, 2},
+	{0.2550, 0.0000, 0.0000, 0.0000, 0, 0, 2, 1},
+	{-411.6080, -0.2000, 0.0000, -0.0124, 0, 0, 2, 0},
+	{0.5840, 0.8400, 0.0000, 0.0071, 0, 0, 2, -1},
+	{-55.1730, -52.1400, 0.0000, -0.1052, 0, 0, 2, -2},
+	{0.2540, 0.2500, 0.0000, -0.0017, 0, 0, 2, -3},
+	{0.0250, -1.6700, 0.0000, 0.0031, 0, 0, 2, -4},
+	{1.0600, 2.9600, -0.1660, 0.0243, 3, 0, 0, 2},
+	{36.1240, 50.6400, -1.3000, 0.6215, 3, 0, 0, 0},
+	{-13.1930, -16.4000, 0.2580, -0.1187, 3, 0, 0, -2},
+	{-1.1870, -0.7400, 0.0420, 0.0074, 3, 0, 0, -4},
+	{-0.2930, -0.3100, -0.0020, 0.0046, 3, 0, 0, -6},
+	{-0.2900, -1.4500, 0.1160, -0.0051, 2, 1, 0, 2},
+	{-7.6490, -10.5600, 0.2590, -0.1038, 2, 1, 0, 0},
+	{-8.6270, -7.5900, 0.0780, -0.0192, 2, 1, 0, -2},
+	{-2.7400, -2.5400, 0.0220, 0.0324, 2, 1, 0, -4},
+	{1.1810, 3.3200, -0.2120, 0.0213, 2, -1, 0, 2},
+	{9.7030, 11.6700, -0.1510, 0.1268, 2, -1, 0, 0},
+	{-0.3520, -0.3700, 0.0010, -0.0028, 2, -1, 0, -1},
+	{-2.4940, -1.1700, -0.0030, -0.0017, 2, -1, 0, -2},
+	{0.3600, 0.2000, -0.0120, -0.0043, 2, -1, 0, -4},
+	{-1.1670, -1.2500, 0.0080, -0.0106, 1, 2, 0, 0},
+	{-7.4120, -6.1200, 0.1170, 0.0484, 1, 2, 0, -2},
+	{-0.3110, -0.6500, -0.0320, 0.0044, 1, 2, 0, -4},
+	{0.7570, 1.8200, -0.1050, 0.0112, 1, -2, 0, 2},
+	{2.5800, 2.3200, 0.0270, 0.0196, 1, -2, 0, 0},
+	{2.5330, 2.4000, -0.0140, -0.0212, 1, -2, 0, -2},
+	{-0.3440, -0.5700, -0.0250, 0.0036, 0, 3, 0, -2},
+	{-0.9920, -0.0200, 0.0000, 0.0000, 1, 0, 2, 2},
+	{-45.0990, -0.0200, 0.0000, -0.0010, 1, 0, 2, 0},
+	{-0.1790, -9.5200, 0.0000, -0.0833, 1, 0, 2, -2},
+	{-0.3010, -0.3300, 0.0000, 0.0014, 1, 0, 2, -4},
+	{-6.3820, -3.3700, 0.0000, -0.0481, 1, 0, -2, 2},
+	{39.5280, 85.1300, 0.0000, -0.7136, 1, 0, -2, 0},
+	{9.3660, 0.7100, 0.0000, -0.0112, 1, 0, -2, -2},
+	{0.2020, 0.0200, 0.0000, 0.0000, 1, 0, -2, -4},
+	{0.4150, 0.1000, 0.0000, 0.0013, 0, 1, 2, 0},
+	{-2.1520, -2.2600, 0.0000, -0.0066, 0, 1, 2, -2},
+	{-1.4400, -1.3000, 0.0000, 0.0014, 0, 1, -2, 2},
+	{0.3840, -0.0400, 0.0000, 0.0000, 0, 1, -2, -2},
+	{1.9380, 3.6000, -0.1450, 0.0401, 4, 0, 0, 0},
+	{-0.9520, -1.5800, 0.0520, -0.0130, 4, 0, 0, -2},
+	{-0.5510, -0.9400, 0.0320, -0.0097, 3, 1, 0, 0},
+	{-0.4820, -0.5700, 0.0050, -0.0045, 3, 1, 0, -2},
+	{0.6810, 0.9600, -0.0260, 0.0115, 3, -1, 0, 0},
+	{-0.2970, -0.2700, 0.0020, -0.0009, 2, 2, 0, -2},
+	{0.2540, 0.2100, -0.0030, 0.0000, 2, -2, 0, -2},
+	{-0.2500, -0.2200, 0.0040, 0.0014, 1, 3, 0, -2},
+	{-3.9960, 0.0000, 0.0000, 0.0004, 2, 0, 2, 0},
+	{0.5570, -0.7500, 0.0000, -0.0090, 2, 0, 2, -2},
+	{-0.4590, -0.3800, 0.0000, -0.0053, 2, 0, -2, 2},
+	{-1.2980, 0.7400, 0.0000, 0.0004, 2, 0, -2, 0},
+	{0.5380, 1.1400, 0.0000, -0.0141, 2, 0, -2, -2},
+	{0.2630, 0.0200, 0.0000, 0.0000, 1, 1, 2, 0},
+	{0.4260, 0.0700, 0.0000, -0.0006, 1, 1, -2, -2},
+	{-0.3040, 0.0300, 0.0000, 0.0003, 1, -1, 2, 0},
+	{-0.3720, -0.1900, 0.0000, -0.0027, 1, -1, -2, 2},
+	{0.4180, 0.0000, 0.0000, 0.0000, 0, 0, 4, 0},
+	{-0.3300, -0.0400, 0.0000, 0.0000, 3, 0, 2, 0},
 }

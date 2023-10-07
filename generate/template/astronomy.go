@@ -22,6 +22,7 @@ const (
 	MercuryPolarRadiusKm      = 2438.3                                    // the polar radius of Mercury in kilometers
 	VenusRadiusKm             = 6051.8                                    // the radius of Venus in kilometers
 	EarthEquatorialRadiusKm   = 6378.1366                                 // the equatorial radius of the Earth in kilometers
+	EarthEquatorialRadiusAu   = EarthEquatorialRadiusKm / KmPerAu         //the equatorial radius of the Earth in astronomical units
 	EarthFlattening           = 0.996647180302104                         // the ratio of the Earth's polar radius to its equatorial radius
 	EarthPolarRadiusKm        = EarthEquatorialRadiusKm * EarthFlattening // the polar radius of the Earth in kilometers
 	MoonEquatorialRadiusKm    = 1738.1                                    // the Moon's equatorial radius in kilometers
@@ -45,7 +46,8 @@ const (
 )
 
 const (
-	asecToRad = 4.848136811095359935899141e-6
+	arc       = 3600.0 * 180.0 / math.Pi // arcseconds per radian
+	asecToRad = 1.0 / arc                // radians per arcsecond
 )
 
 type AstroTime struct {
@@ -697,4 +699,241 @@ func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector {
 	}
 }
 
+type addSolTerm struct {
+	coeffl float64
+	coeffs float64
+	coeffg float64
+	coeffp float64
+	p      int
+	q      int
+	r      int
+	s      int
+}
+
+type pascalArray struct {
+	array [13][4]float64
+}
+
+func (p *pascalArray) access(x, y int) *float64 {
+	return &p.array[x+6][y-1]
+}
+
+type moonContext struct {
+	T                        float64
+	DGAM                     float64
+	DLAM, N, GAM1C, SINPI    float64
+	L0, L, LS, F, D, S       float64
+	DL0, DL, DLS, DF, DD, DS float64
+	CO                       pascalArray
+	SI                       pascalArray
+}
+
+func addThe(c1, s1, c2, s2 float64, c, s *float64) {
+	*c = c1*c2 - s1*s2
+	*s = s1*c2 + c1*s2
+}
+
+func sineRev(phi float64) float64 {
+	// sine of phi in revolutions, not radians
+	return math.Sin(2.0 * math.Pi * phi)
+}
+
+func (mc *moonContext) longPeriodic() {
+	S1 := sineRev(0.19833 + 0.05611*mc.T)
+	S2 := sineRev(0.27869 + 0.04508*mc.T)
+	S3 := sineRev(0.16827 - 0.36903*mc.T)
+	S4 := sineRev(0.34734 - 5.37261*mc.T)
+	S5 := sineRev(0.10498 - 5.37899*mc.T)
+	S6 := sineRev(0.42681 - 0.41855*mc.T)
+	S7 := sineRev(0.14943 - 5.37511*mc.T)
+
+	mc.DL0 = 0.84*S1 + 0.31*S2 + 14.27*S3 + 7.26*S4 + 0.28*S5 + 0.24*S6
+	mc.DL = 2.94*S1 + 0.31*S2 + 14.27*S3 + 9.34*S4 + 1.12*S5 + 0.83*S6
+	mc.DLS = -6.40*S1 - 1.89*S6
+	mc.DF = 0.21*S1 + 0.31*S2 + 14.27*S3 - 88.70*S4 - 15.30*S5 + 0.24*S6 - 1.86*S7
+	mc.DD = mc.DL0 - mc.DLS
+	mc.DGAM = -3332e-9*sineRev(0.59734-5.37261*mc.T) - 539e-9*sineRev(0.35498-5.37899*mc.T) - 64e-9*sineRev(0.39943-5.37511*mc.T)
+}
+
+func (mc *moonContext) term(p, q, r, s int, x, y *float64) {
+	*x = 1.0
+	*y = 0.0
+	if p != 0 {
+		addThe(*x, *y, *mc.CO.access(p, 1), *mc.SI.access(p, 1), x, y)
+	}
+	if q != 0 {
+		addThe(*x, *y, *mc.CO.access(q, 2), *mc.SI.access(q, 2), x, y)
+	}
+	if r != 0 {
+		addThe(*x, *y, *mc.CO.access(r, 3), *mc.SI.access(r, 3), x, y)
+	}
+	if s != 0 {
+		addThe(*x, *y, *mc.CO.access(s, 4), *mc.SI.access(s, 4), x, y)
+	}
+}
+
+func (mc *moonContext) addSol(coeffl, coeffs, coeffg, coeffp float64, p, q, r, s int) {
+	var x, y float64
+	mc.term(p, q, r, s, &x, &y)
+	mc.DLAM += coeffl * y
+	mc.DS += coeffs * y
+	mc.GAM1C += coeffg * x
+	mc.SINPI += coeffp * x
+}
+
+func (mc *moonContext) addn(coeffn float64, p, q, r, s int) {
+	var x, y float64
+	mc.term(p, q, r, s, &x, &y)
+	mc.N += coeffn * y
+}
+
+func (mc *moonContext) solarn() {
+	mc.N = 0.0
+	mc.addn(-526.069, 0, 0, 1, -2)
+	mc.addn(-3.352, 0, 0, 1, -4)
+	mc.addn(+44.297, +1, 0, 1, -2)
+	mc.addn(-6.000, +1, 0, 1, -4)
+	mc.addn(+20.599, -1, 0, 1, 0)
+	mc.addn(-30.598, -1, 0, 1, -2)
+	mc.addn(-24.649, -2, 0, 1, 0)
+	mc.addn(-2.000, -2, 0, 1, -2)
+	mc.addn(-22.571, 0, +1, 1, -2)
+	mc.addn(+10.985, 0, -1, 1, -2)
+}
+
+func (mc *moonContext) planetary() {
+	mc.DLAM += +0.82*sineRev(0.7736-62.5512*mc.T) + 0.31*sineRev(0.0466-125.1025*mc.T)
+	mc.DLAM += +0.35*sineRev(0.5785-25.1042*mc.T) + 0.66*sineRev(0.4591+1335.8075*mc.T)
+	mc.DLAM += +0.64*sineRev(0.3130-91.5680*mc.T) + 1.14*sineRev(0.1480+1331.2898*mc.T)
+	mc.DLAM += +0.21*sineRev(0.5918+1056.5859*mc.T) + 0.44*sineRev(0.5784+1322.8595*mc.T)
+	mc.DLAM += +0.24*sineRev(0.2275-5.7374*mc.T) + 0.28*sineRev(0.2965+2.6929*mc.T)
+	mc.DLAM += +0.33 * sineRev(0.3132+6.3368*mc.T)
+}
+
+func twoPiFrac(x float64) float64 {
+	return (2.0 * math.Pi) * (x - math.Floor(x))
+}
+
+func makeMoonContext(centuriesSinceJ2000 float64) *moonContext {
+	var I, J, MAX int
+	var T2, ARG, FAC float64
+	var c, s float64
+
+	mc := moonContext{}
+
+	mc.T = centuriesSinceJ2000
+	T2 = mc.T * mc.T
+	mc.DLAM = 0.0
+	mc.DS = 0.0
+	mc.GAM1C = 0
+	mc.SINPI = 3422.7
+	mc.longPeriodic()
+	mc.L0 = twoPiFrac(0.60643382+1336.85522467*mc.T-0.00000313*T2) + mc.DL0/arc
+	mc.L = twoPiFrac(0.37489701+1325.55240982*mc.T+0.00002565*T2) + mc.DL/arc
+	mc.LS = twoPiFrac(0.99312619+99.99735956*mc.T-0.00000044*T2) + mc.DLS/arc
+	mc.F = twoPiFrac(0.25909118+1342.22782980*mc.T-0.00000892*T2) + mc.DF/arc
+	mc.D = twoPiFrac(0.82736186+1236.85308708*mc.T-0.00000397*T2) + mc.DD/arc
+
+	for I = 1; I <= 4; I += 1 {
+		switch I {
+		case 1:
+			{
+				ARG = mc.L
+				MAX = 4
+				FAC = 1.000002208
+			}
+		case 2:
+			{
+				ARG = mc.LS
+				MAX = 3
+				FAC = 0.997504612 - 0.002495388*mc.T
+			}
+		case 3:
+			{
+				ARG = mc.F
+				MAX = 4
+				FAC = 1.000002708 + 139.978*mc.DGAM
+			}
+		default:
+			{
+				ARG = mc.D
+				MAX = 6
+				FAC = 1.0
+			}
+		}
+		*mc.CO.access(0, I) = 1.0
+		*mc.CO.access(1, I) = math.Cos(ARG) * FAC
+		*mc.SI.access(0, I) = 0.0
+		*mc.SI.access(1, I) = math.Sin(ARG) * FAC
+
+		for J = 2; J <= MAX; J += 1 {
+			addThe(*mc.CO.access(J-1, I), *mc.SI.access(J-1, I), *mc.CO.access(1, I), *mc.SI.access(1, I), &c, &s)
+			*mc.CO.access(J, I) = c
+			*mc.SI.access(J, I) = s
+		}
+
+		for J = 1; J <= MAX; J += 1 {
+			*mc.CO.access(-J, I) = +*mc.CO.access(J, I)
+			*mc.SI.access(-J, I) = -*mc.SI.access(J, I)
+		}
+	}
+
+	return &mc
+}
+
+type moonResult struct {
+	geoEclipLon float64
+	geoEclipLat float64
+	distanceAu  float64
+}
+
+func (mc *moonContext) calcMoon() moonResult {
+	for _, t := range moonAddSolTerms {
+		mc.addSol(t.coeffl, t.coeffs, t.coeffg, t.coeffp, t.p, t.q, t.r, t.s)
+	}
+	mc.solarn()
+	mc.planetary()
+	mc.S = mc.F + mc.DS/arc
+	latSeconds := (1.000002708+139.978*mc.DGAM)*(18518.511+1.189+mc.GAM1C)*math.Sin(mc.S) - 6.24*math.Sin(3*mc.S) + mc.N
+	return moonResult{
+		twoPiFrac((mc.L0 + mc.DLAM/arc) / (2.0 * math.Pi)),
+		latSeconds / arc,
+		(arc * EarthEquatorialRadiusAu) / (0.999953253 * mc.SINPI),
+	}
+}
+
+// GeoMoon calculates the equatorial geocentric position of the Moon at a given time.
+// The returned vector indicates the Moon's center relative to the Earth's center.
+// The vector components are expressed in AU (astronomical units).
+// The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
+// In Astronomy Engine, this orientation is called EQJ.
+func GeoMoon(time AstroTime) AstroVector {
+	mc := makeMoonContext(time.Tt / 36525.0)
+	moon := mc.calcMoon()
+
+	// Convert geocentric ecliptic spherical coordinates to Cartesian coordinates.
+	distCosLat := moon.distanceAu * math.Cos(moon.geoEclipLat)
+
+	gepos := AstroVector{
+		distCosLat * math.Cos(moon.geoEclipLon),
+		distCosLat * math.Sin(moon.geoEclipLon),
+		moon.distanceAu * math.Sin(moon.geoEclipLat),
+		time,
+	}
+
+	// Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
+	mpos1 := eclToEquVec(gepos)
+
+	// Convert from mean equinox of date to J2000.
+	mpos2 := precession(mpos1, into2000)
+
+	return mpos2
+}
+
+//--- Generated code begins here ------------------------------------------------------------------
+
 //$ASTRO_CONSTEL()
+
+var moonAddSolTerms = [...]addSolTerm{
+	//$ASTRO_ADDSOL()
+}

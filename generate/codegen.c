@@ -1123,6 +1123,24 @@ static int OptAddSolJS(cg_context_t *context, const double *data)
     return 0;
 }
 
+static int OptAddSolGo(cg_context_t *context, const double *data)
+{
+    /* In the Go version, we generate a data table at the end of the source. */
+
+    int i;
+
+    fprintf(context->outfile, "    {%11.4lf", data[0]);
+
+    for (i=1; i < 4; ++i)
+        fprintf(context->outfile, ",%11.4lf", data[i]);
+
+    for(; i < 8; ++i)
+        fprintf(context->outfile, ",%2.0lf", data[i]);
+
+    fprintf(context->outfile, "},\n");
+    return 0;
+}
+
 static int OptAddSol(cg_context_t *context)
 {
     int error = 1;
@@ -1158,6 +1176,10 @@ static int OptAddSol(cg_context_t *context)
 
         case CODEGEN_LANGUAGE_JS:
             CHECK(OptAddSolJS(context, data));
+            break;
+
+        case CODEGEN_LANGUAGE_GO:
+            CHECK(OptAddSolGo(context, data));
             break;
 
         case CODEGEN_LANGUAGE_KOTLIN:

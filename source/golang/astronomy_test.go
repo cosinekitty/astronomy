@@ -78,6 +78,15 @@ func TestMoon(t *testing.T) {
 		t.Errorf("Excessive tt diff = %g", ttdiff)
 	}
 
+	vec := GeoMoon(time)
+
 	// GeoMoon should return:
 	// Vector(0.002674037026701135, -0.0001531610316600666, -0.00031501599270694294, Time('2019-06-24T15:45:37.000Z'))
+	dx := (vec.X - (0.002674037026701135))
+	dy := (vec.Y - (-0.0001531610316600666))
+	dz := (vec.Z - (-0.00031501599270694294))
+	diff := math.Sqrt(dx*dx + dy*dy + dz*dz)
+	if diff > 4.34e-19 {
+		t.Errorf("Excessive position error for Moon: %g, x=%g, y=%g, z=%g", diff, vec.X, vec.Y, vec.Z)
+	}
 }
