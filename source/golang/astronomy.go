@@ -44,6 +44,10 @@ const (
 	PlutoRadiusKm             = 1188.3                                    // the radius of Pluto in kilometers
 )
 
+const (
+	asecToRad = 4.848136811095359935899141e-6
+)
+
 type AstroTime struct {
 	// Ut holds the floating point number of days of Universal Time since noon UTC January 1, 2000.
 	// Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
@@ -574,6 +578,123 @@ func AngleBetween(avec AstroVector, bvec AstroVector) float64 {
 		return 0.0
 	}
 	return DegreesFromRadians(math.Acos(dot))
+}
+
+func eclOblToEquVec(ecl AstroVector, obl float64) AstroVector {
+	c := math.Cos(obl)
+	s := math.Sin(obl)
+	return AstroVector{
+		ecl.X,
+		ecl.Y*c - ecl.Z*s,
+		ecl.Y*s + ecl.Z*c,
+		ecl.T,
+	}
+}
+
+func meanObliq(tt float64) float64 {
+	t := tt / 36525.0
+	asec := ((((-0.0000000434*t-0.000000576)*t+0.00200340)*t-0.0001831)*t-46.836769)*t + 84381.406
+	return asec / 3600.0
+}
+
+func eclToEquVec(ecl AstroVector) AstroVector {
+	oblDeg := meanObliq(ecl.T.Tt)
+	oblRad := RadiansFromDegrees(oblDeg)
+	return eclOblToEquVec(ecl, oblRad)
+}
+
+type precessDirection int
+
+const (
+	from2000 precessDirection = 0
+	into2000
+)
+
+func precessionRot(time AstroTime, dir precessDirection) RotationMatrix {
+	t := time.Tt / 36525.0
+
+	var eps0, psia, omegaa, chia float64
+
+	eps0 = 84381.406
+
+	psia = (((((-0.0000000951*t+0.000132851)*t-0.00114045)*t-1.0790069)*t + 5038.481507) * t)
+
+	omegaa = (((((+0.0000003337*t-0.000000467)*t-0.00772503)*t+0.0512623)*t-0.025754)*t + eps0)
+
+	chia = (((((-0.0000000560*t+0.000170663)*t-0.00121197)*t-2.3814292)*t + 10.556403) * t)
+
+	eps0 *= asecToRad
+	psia *= asecToRad
+	omegaa *= asecToRad
+	chia *= asecToRad
+
+	sa := math.Sin(eps0)
+	ca := math.Cos(eps0)
+	sb := math.Sin(-psia)
+	cb := math.Cos(-psia)
+	sc := math.Sin(-omegaa)
+	cc := math.Cos(-omegaa)
+	sd := math.Sin(chia)
+	cd := math.Cos(chia)
+
+	xx := cd*cb - sb*sd*cc
+	yx := cd*sb*ca + sd*cc*cb*ca - sa*sd*sc
+	zx := cd*sb*sa + sd*cc*cb*sa + ca*sd*sc
+	xy := -sd*cb - sb*cd*cc
+	yy := -sd*sb*ca + cd*cc*cb*ca - sa*cd*sc
+	zy := -sd*sb*sa + cd*cc*cb*sa + ca*cd*sc
+	xz := sb * sc
+	yz := -sc*cb*ca - sa*cc
+	zz := -sc*cb*sa + cc*ca
+
+	rot := RotationMatrix{}
+	switch {
+	case dir == into2000:
+		{
+			// Perform rotation from other epoch to J2000.0.
+			rot.Rot[0][0] = xx
+			rot.Rot[0][1] = yx
+			rot.Rot[0][2] = zx
+			rot.Rot[1][0] = xy
+			rot.Rot[1][1] = yy
+			rot.Rot[1][2] = zy
+			rot.Rot[2][0] = xz
+			rot.Rot[2][1] = yz
+			rot.Rot[2][2] = zz
+		}
+	case dir == from2000:
+		{
+			// Perform rotation from J2000.0 to other epoch.
+			rot.Rot[0][0] = xx
+			rot.Rot[0][1] = xy
+			rot.Rot[0][2] = xz
+			rot.Rot[1][0] = yx
+			rot.Rot[1][1] = yy
+			rot.Rot[1][2] = yz
+			rot.Rot[2][0] = zx
+			rot.Rot[2][1] = zy
+			rot.Rot[2][2] = zz
+
+		}
+	default:
+		panic("Unsupported precession direction")
+	}
+	return rot
+}
+
+func precession(pos AstroVector, dir precessDirection) AstroVector {
+	r := precessionRot(pos.T, dir)
+	return RotateVector(r, pos)
+}
+
+// RotateVector applies a rotation to a vector, yielding a vector in another orientation system.
+func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector {
+	return AstroVector{
+		rotation.Rot[0][0]*vector.X + rotation.Rot[1][0]*vector.Y + rotation.Rot[2][0]*vector.Z,
+		rotation.Rot[0][1]*vector.X + rotation.Rot[1][1]*vector.Y + rotation.Rot[2][1]*vector.Z,
+		rotation.Rot[0][2]*vector.X + rotation.Rot[1][2]*vector.Y + rotation.Rot[2][2]*vector.Z,
+		vector.T,
+	}
 }
 
 var constelNames = [...]constelInfo{
