@@ -66,3 +66,18 @@ func TestCalendar(t *testing.T) {
 		t.Errorf("Excessive error calculating calendar seconds: %0.16g", diff)
 	}
 }
+
+func TestMoon(t *testing.T) {
+	time := TimeFromCalendar(2019, 6, 24, 15, 45, 37.0)
+	utdiff := math.Abs(time.Ut - 7114.156678240741)
+	if utdiff > 1.0e-16 {
+		t.Errorf("Excessive ut diff = %g", utdiff)
+	}
+	ttdiff := math.Abs(time.Tt - 7114.157503413434)
+	if ttdiff > 1.0e-16 {
+		t.Errorf("Excessive tt diff = %g", ttdiff)
+	}
+
+	// GeoMoon should return:
+	// Vector(0.002674037026701135, -0.0001531610316600666, -0.00031501599270694294, Time('2019-06-24T15:45:37.000Z'))
+}

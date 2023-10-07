@@ -235,14 +235,20 @@ func deltaTime(ut float64) float64 {
 	return -20 + (32 * u * u)
 }
 
+// TimeFromUniversalDays converts a UTC number of days since January 1, 2000
+// into an AstroTime value that can be used for astronomy calculations.
 func TimeFromUniversalDays(ut float64) AstroTime {
 	return makeTime(ut, terrestrialTime(ut))
 }
 
+// TimeFromTerrestrialDays converts a Terrestrial Time (TT) day value,
+// also known as ephemeris days, to an AstroTime value that can be used for astronomy calculations.
 func TimeFromTerrestrialDays(tt float64) AstroTime {
 	return makeTime(universalTime(tt), tt)
 }
 
+// Given an AstroTime value, creates a new AstroTime value that is the
+// specified number of UT days in the future (positive) or past (negative).
 func (time AstroTime) AddDays(days float64) AstroTime {
 	return TimeFromUniversalDays(time.Ut + days)
 }
@@ -309,6 +315,34 @@ func CalendarFromDays(ut float64) (*CalendarDateTime, error) {
 	return &CalendarDateTime{year, month, day, hour, minute, second}, nil
 }
 
+func DaysFromCalendar(year, month, day, hour, minute int, second float64) float64 {
+	// This formula is adapted from NOVAS C 3.1 function julian_date(),
+	// which in turn comes from Henry F. Fliegel & Thomas C. Van Flendern:
+	// Communications of the ACM, Vol 11, No 10, October 1968, p. 657.
+	// See: https://dl.acm.org/doi/pdf/10.1145/364096.364097
+	//
+	// [Don Cross - 2023-02-25] I modified the formula so that it will
+	// work correctly with years as far back as -999999.
+	y := int64(year)
+	m := int64(month)
+	d := int64(day)
+	f := (14 - m) / 12
+	y2000 := (d - 365972956) + (1461*(y+1000000-f))/4 + (367*(m-2+12*f))/12 - (3*((y+1000100-f)/100))/4
+	ut := (float64(y2000) - 0.5) + (float64(hour) / 24.0) + (float64(minute) / 1440.0) + (second / 86400.0)
+	return ut
+}
+
+// TimeFromCalendar returns an AstroTime value for a date and time expressed in civil UTC.
+func TimeFromCalendar(year, month, day, hour, minute int, second float64) AstroTime {
+	ut := DaysFromCalendar(year, month, day, hour, minute, second)
+	return TimeFromUniversalDays(ut)
+}
+
+// AstroVector represents a position in 3D space at a given time.
+// Usually the distance components are expressed in astronomical units (AU).
+// The origin and orientation system depends on context.
+// Occasionally AstroVector is used to represent a velocity vector,
+// in which case the component units are astronomical units per day.
 type AstroVector struct {
 	X float64
 	Y float64
@@ -321,6 +355,7 @@ func (vec AstroVector) Length() float64 {
 	return math.Sqrt(vec.X*vec.X + vec.Y*vec.Y + vec.Z*vec.Z)
 }
 
+// StateVector represents the combined position and velocity of a body at a given moment of time.
 type StateVector struct {
 	X  float64
 	Y  float64
@@ -341,65 +376,72 @@ func (state StateVector) Velocity() AstroVector {
 	return AstroVector{state.Vx, state.Vy, state.Vz, state.T}
 }
 
+// Spherical coordinates for a body in space
 type Spherical struct {
-	Lat  float64
-	Lon  float64
-	Dist float64
+	Lat  float64 // a latitude-like angle expressed in degrees
+	Lon  float64 // a longitude-like angle expressed in degrees
+	Dist float64 // a distance expressed in astronomical units
 }
 
 type Body int
 
 const (
-	InvalidBody Body = -1
-	Mercury          = 0
-	Venus
-	Earth
-	Mars
-	Jupiter
-	Saturn
-	Uranus
-	Neptune
-	Pluto
-	Sun
-	Moon
-	Emb
-	Ssb
-	Star1 = 101
-	Star2
-	Star3
-	Star4
-	Star5
-	Star6
-	Star7
-	Star8
+	InvalidBody Body  = -1
+	Mercury           = 0 // The planet Mercury
+	Venus                 // The planet Venus
+	Earth                 // The planet Earth
+	Mars                  // The planet Mars
+	Jupiter               // The planet Jupiter
+	Saturn                // The planet Saturn
+	Uranus                // The planet Uranus
+	Neptune               // The planet Neptune
+	Pluto                 // The dwarf planet Pluto
+	Sun                   // The Sun
+	Moon                  // The Earth's Moon
+	Emb                   // The Earth/Moon Barycenter
+	Ssb                   // The Solar System Barycenter
+	Star1       = 101     // User-defined star #1
+	Star2                 // User-defined star #2
+	Star3                 // User-defined star #3
+	Star4                 // User-defined star #4
+	Star5                 // User-defined star #5
+	Star6                 // User-defined star #6
+	Star7                 // User-defined star #7
+	Star8                 // User-defined star #8
 )
 
+// The location of a point on or near the surface of the Earth
 type Observer struct {
-	Latitude  float64
-	Longitude float64
-	Height    float64
+	Latitude  float64 // Latitude degrees north (positive) or south (negative) of the equator
+	Longitude float64 // Longitude east (positive) or west (negative) of the prime meridian passing through Greenwich, England
+	Height    float64 // Height above mean sea level in meters
 }
 
+// A location of a body expressed in angular coordinates relative to the Earth's equator
 type Equatorial struct {
-	Ra   float64
-	Dec  float64
-	Dist float64
-	Vec  AstroVector
+	Ra   float64     // Right Ascension in sidereal hours, in the half-open range [0, 24)
+	Dec  float64     // Declination in degrees north (positive) or south (negative) of the celestial equator, in the closed range [-90, +90].
+	Dist float64     // Distance of an object in astronomical units [AU]
+	Vec  AstroVector // The position expressed as a Cartesian vector in the same equatorial orientation system
 }
 
+// A location of a body expressed in angular coordinates relative to the plane of the Earth's orbit around the Sun
 type Ecliptic struct {
-	Vec  AstroVector
-	Elat float64
-	Elon float64
+	Vec  AstroVector // The object position expressed as a Cartesian vector in the same ecliptic orientation system
+	Elat float64     // Eclilptic latitude in degrees north (positive) or south (negative) with respect to the ecliptic plane, in the closed range [-90, +90].
+	Elon float64     // Ecliptic longitude in degrees, in the half-open range [0, 360).
 }
 
+// A location of a body as seen from an observer's point of view on or near the surface of the Earth.
+// The topocentric position can optionally be corrected for atmospheric refraction.
 type Topocentric struct {
-	Azimuth  float64
-	Altitude float64
-	Ra       float64
-	Dec      float64
+	Azimuth  float64 // The compass direction of the object, where north = 0, east = 90, south = 180, and west = 270.
+	Altitude float64 // The angle above (positive) or below (negative) the observer's horizon in degrees, in the range [-90, +90].
+	Ra       float64 // The body's apparent right ascension
+	Dec      float64 // The body's apparent declination
 }
 
+// RotationMatrix is a 3x3 matrix used to convert a vector from one orientation system to another.
 type RotationMatrix struct {
 	Rot [3][3]float64
 }
