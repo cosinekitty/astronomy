@@ -612,6 +612,14 @@ func RadiansFromDegrees(degrees float64) float64 {
 	return degrees * (math.Pi / 180.0)
 }
 
+func dcos(degrees float64) float64 {
+	return math.Cos(RadiansFromDegrees(degrees))
+}
+
+func dsin(degrees float64) float64 {
+	return math.Sin(RadiansFromDegrees(degrees))
+}
+
 // AngleBetween calculates the angle in degrees between two vectors.
 // Given a pair of vectors avec and bvec, this function returns the
 // angle in degrees between the vectors in 3D space.
@@ -647,6 +655,86 @@ func meanObliq(tt float64) float64 {
 	t := tt / 36525.0
 	asec := ((((-0.0000000434*t-0.000000576)*t+0.00200340)*t-0.0001831)*t-46.836769)*t + 84381.406
 	return asec / 3600.0
+}
+
+func iau2000b(time *AstroTime) {
+	// Earth axis nutation function.
+	// Adapted from the NOVAS C 3.1 function of the same name.
+	// Lazy-evaluates nutation angles only if not yet calculated.
+	if math.IsNaN(time.psi) {
+		t := time.Tt / 36525.0
+		const asec = 360.0 * 3600.0
+		elp := math.Mod(1287104.79305+t*129596581.0481, asec) * asecToRad
+		f := math.Mod(335779.526232+t*1739527262.8478, asec) * asecToRad
+		d := math.Mod(1072260.70369+t*1602961601.2090, asec) * asecToRad
+		om := math.Mod(450160.398036-t*6962890.5431, asec) * asecToRad
+
+		sarg := math.Sin(om)
+		carg := math.Cos(om)
+		dp := (-172064161.0-174666.0*t)*sarg + 33386.0*carg
+		de := (92052331.0+9086.0*t)*carg + 15377.0*sarg
+
+		arg := 2.0 * (f - d + om)
+		sarg = math.Sin(arg)
+		carg = math.Cos(arg)
+		dp += (-13170906.0-1675.0*t)*sarg - 13696.0*carg
+		de += (5730336.0-3015.0*t)*carg - 4587.0*sarg
+
+		arg = 2.0 * (f + om)
+		sarg = math.Sin(arg)
+		carg = math.Cos(arg)
+		dp += (-2276413.0-234.0*t)*sarg + 2796.0*carg
+		de += (978459.0-485.0*t)*carg + 1374.0*sarg
+
+		arg = 2.0 * om
+		sarg = math.Sin(arg)
+		carg = math.Cos(arg)
+		dp += (2074554.0+207.0*t)*sarg - 698.0*carg
+		de += (-897492.0+470.0*t)*carg - 291.0*sarg
+
+		sarg = math.Sin(elp)
+		carg = math.Cos(elp)
+		dp += (1475877.0-3633.0*t)*sarg + 11817.0*carg
+		de += (73871.0-184.0*t)*carg - 1924.0*sarg
+
+		time.psi = -0.000135 + (dp * 1.0e-7)
+		time.eps = +0.000388 + (de * 1.0e-7)
+	}
+}
+
+type earthTiltInfo struct {
+	Tt   float64
+	Dpsi float64
+	Deps float64
+	Ee   float64
+	Mobl float64
+	Tobl float64
+}
+
+func etilt(time *AstroTime) earthTiltInfo {
+	iau2000b(time)
+	mobl := meanObliq(time.Tt)
+	tobl := mobl + (time.eps / 3600.0)
+	ee := time.psi + dcos(mobl)/15.0
+	return earthTiltInfo{
+		time.Tt,
+		time.psi,
+		time.eps,
+		ee,
+		mobl,
+		tobl,
+	}
+}
+
+// Earth Rotation Angle
+func era(ut float64) float64 {
+	thet1 := 0.7790572732640 + 0.00273781191135448*ut
+	thet3 := math.Mod(ut, 1.0)
+	theta := 360.0 * math.Mod(thet1+thet3, 1.0)
+	if theta < 0.0 {
+		theta += 360.0
+	}
+	return theta
 }
 
 func eclToEquVec(ecl AstroVector) AstroVector {
