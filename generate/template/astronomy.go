@@ -715,7 +715,7 @@ func etilt(time *AstroTime) earthTiltInfo {
 	iau2000b(time)
 	mobl := meanObliq(time.Tt)
 	tobl := mobl + (time.eps / 3600.0)
-	ee := time.psi + dcos(mobl)/15.0
+	ee := time.psi * dcos(mobl) / 15.0
 	return earthTiltInfo{
 		time.Tt,
 		time.psi,
@@ -741,6 +741,37 @@ func eclToEquVec(ecl AstroVector) AstroVector {
 	oblDeg := meanObliq(ecl.T.Tt)
 	oblRad := RadiansFromDegrees(oblDeg)
 	return eclOblToEquVec(ecl, oblRad)
+}
+
+// Given a date and time, SiderealTime calculates the rotation of the
+// Earth, represented by the equatorial angle of the Greenwich prime meridian
+// with respect to distant stars (not the Sun, which moves relative to background
+// stars by almost one degree per day).
+// This angle is called Greenwich Apparent Sidereal Time (GAST).
+// GAST is measured in sidereal hours in the half-open range [0, 24).
+// When GAST = 0, it means the prime meridian is aligned with the of-date equinox,
+// corrected at that time for precession and nutation of the Earth's axis.
+// In this context, the "equinox" is the direction in space where the Earth's
+// orbital plane (the ecliptic) intersects with the plane of the Earth's equator,
+// at the location on the Earth's orbit of the (seasonal) March equinox.
+// As the Earth rotates, GAST increases from 0 up to 24 sidereal hours,
+// then starts over at 0.
+// To convert to degrees, multiply the return value by 15.
+// As an optimization, this function caches the sidereal time value in the time parameter.
+// The value is reused later as needed, to avoid redundant calculations.
+func SiderealTime(time *AstroTime) float64 {
+	if math.IsNaN(time.st) {
+		t := time.Tt / 36525.0
+		eqeq := 15.0 * etilt(time).Ee // Replace with eqeq=0 to get GMST instead of GAST (if we ever need it)
+		theta := era(time.Ut)
+		st := (eqeq + 0.014506 + ((((-0.0000000368*t-0.000029956)*t-0.00000044)*t+1.3915817)*t+4612.156534)*t)
+		gst := math.Mod(st/3600.0+theta, 360.0) / 15.0
+		if gst < 0.0 {
+			gst += 24.0
+		}
+		time.st = gst
+	}
+	return time.st
 }
 
 type precessDirection int

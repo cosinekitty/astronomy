@@ -17,6 +17,7 @@ It provides a suite of well\-tested functions for calculating positions of the S
 - [func DaysFromCalendar\(year, month, day, hour, minute int, second float64\) float64](<#DaysFromCalendar>)
 - [func DegreesFromRadians\(radians float64\) float64](<#DegreesFromRadians>)
 - [func RadiansFromDegrees\(degrees float64\) float64](<#RadiansFromDegrees>)
+- [func SiderealTime\(time \*AstroTime\) float64](<#SiderealTime>)
 - [type AstroMoonQuarter](<#AstroMoonQuarter>)
 - [type AstroSearchFunc](<#AstroSearchFunc>)
 - [type AstroTime](<#AstroTime>)
@@ -167,6 +168,15 @@ func RadiansFromDegrees(degrees float64) float64
 
 RadiansFromDegrees converts an angle expressed in degrees to an angle expressed in radians.
 
+<a name="SiderealTime"></a>
+## func [SiderealTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L762>)
+
+```go
+func SiderealTime(time *AstroTime) float64
+```
+
+Given a date and time, SiderealTime calculates the rotation of the Earth, represented by the equatorial angle of the Greenwich prime meridian with respect to distant stars \(not the Sun, which moves relative to background stars by almost one degree per day\). This angle is called Greenwich Apparent Sidereal Time \(GAST\). GAST is measured in sidereal hours in the half\-open range \[0, 24\). When GAST = 0, it means the prime meridian is aligned with the of\-date equinox, corrected at that time for precession and nutation of the Earth's axis. In this context, the "equinox" is the direction in space where the Earth's orbital plane \(the ecliptic\) intersects with the plane of the Earth's equator, at the location on the Earth's orbit of the \(seasonal\) March equinox. As the Earth rotates, GAST increases from 0 up to 24 sidereal hours, then starts over at 0. To convert to degrees, multiply the return value by 15. As an optimization, this function caches the sidereal time value in the time parameter. The value is reused later as needed, to avoid redundant calculations.
+
 <a name="AstroMoonQuarter"></a>
 ## type [AstroMoonQuarter](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L526-L529>)
 
@@ -287,7 +297,7 @@ type AstroVector struct {
 ```
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1048>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1079>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -296,7 +306,7 @@ func GeoMoon(time AstroTime) AstroVector
 GeoMoon calculates the equatorial geocentric position of the Moon at a given time. The returned vector indicates the Moon's center relative to the Earth's center. The vector components are expressed in AU \(astronomical units\). The coordinates are oriented with respect to the Earth's equator at the J2000 epoch. In Astronomy Engine, this orientation is called EQJ.
 
 <a name="RotateVector"></a>
-### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L831>)
+### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L862>)
 
 ```go
 func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector

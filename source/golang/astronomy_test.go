@@ -159,3 +159,42 @@ func TestAtmosphere(t *testing.T) {
 		t.Errorf("Expected 34 test cases but processed %d", ncases)
 	}
 }
+
+func TestSiderealTime(t *testing.T) {
+	const correct = 9.3983699280076483
+	var diff float64
+	time := TimeFromCalendar(2022, 3, 15, 21, 50, 0.0)
+	t.Logf("time.tt = %0.16f, time.ut = %0.16f", time.Tt, time.Ut)
+	et := etilt(&time)
+	t.Logf("etilt tt=%0.16f, dpsi=%0.16f, deps=%0.16f, ee=%0.16f, mobl=%0.16f, tobl=%0.16f", et.Tt, et.Dpsi, et.Deps, et.Ee, et.Mobl, et.Tobl)
+	diff = math.Abs(et.Tt - 8109.4105648890845)
+	if diff > 1.0e-16 {
+		t.Errorf("et.Tt error = %g", diff)
+	}
+	diff = math.Abs(et.Dpsi - (-13.38138780522237))
+	if diff > 1.0e-16 {
+		t.Errorf("et.Dpsi error = %g", diff)
+	}
+	diff = math.Abs(et.Deps - 5.8448952225938449)
+	if diff > 1.0e-16 {
+		t.Errorf("et.Deps error = %g", diff)
+	}
+	diff = math.Abs(et.Ee - (-0.8184968463212278))
+	if diff > 1.0e-16 {
+		t.Errorf("et.Ee error = %g", diff)
+	}
+	diff = math.Abs(et.Mobl - 23.436390874072426)
+	if diff > 1.0e-16 {
+		t.Errorf("et.Mobl error = %g", diff)
+	}
+	diff = math.Abs(et.Tobl - 23.4380144560787)
+	if diff > 1.0e-16 {
+		t.Errorf("et.Tobl error = %g", diff)
+	}
+	gast := SiderealTime(&time)
+	diff = math.Abs(gast - correct)
+	t.Logf("gast=%0.16f, correct=%0.16f, diff=%g", gast, correct, diff)
+	if diff > 1.0e-15 {
+		t.Error("Excessive sidereal time error")
+	}
+}
