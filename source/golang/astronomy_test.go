@@ -1,7 +1,11 @@
 package astronomy
 
 import (
+	"bufio"
 	"math"
+	"os"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -88,5 +92,70 @@ func TestMoon(t *testing.T) {
 	diff := math.Sqrt(dx*dx + dy*dy + dz*dz)
 	if diff > 4.34e-19 {
 		t.Errorf("Excessive position error for Moon: %g, x=%g, y=%g, z=%g", diff, vec.X, vec.Y, vec.Z)
+	}
+}
+
+func float(s string) float64 {
+	x, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		panic("Cannot parse float")
+	}
+	return x
+}
+
+func TestAtmosphere(t *testing.T) {
+	const filename = "../../generate/riseset/atmosphere.csv"
+	const tolerance = 8.8e-11
+	file, err := os.Open(filename)
+	if err != nil {
+		t.Errorf("Cannot open file: %s", filename)
+	}
+	lnum := 0
+	scanner := bufio.NewScanner(file)
+	maxdiff := 0.0
+	ncases := 0
+	for scanner.Scan() {
+		lnum += 1
+		line := scanner.Text()
+		if lnum > 1 {
+			tokens := strings.Split(line, ",")
+			if len(tokens) != 5 {
+				t.Errorf("%s line %d: expected 5 numeric tokens, found %d", filename, lnum, len(tokens))
+			}
+			elevation := float(tokens[0])
+			temperature := float(tokens[1])
+			pressure := float(tokens[2])
+			// ignore tokens[3] = absolute density
+			relativeDensity := float(tokens[4])
+			atmos, err := Atmosphere(elevation)
+			if err != nil {
+				t.Error(err)
+			}
+
+			var diff float64
+			diff = math.Abs(atmos.Temperature - temperature)
+			maxdiff = math.Max(maxdiff, diff)
+			if diff > tolerance {
+				t.Errorf("Excessive temperature diff = %g", diff)
+			}
+
+			diff = math.Abs(atmos.Pressure - pressure)
+			maxdiff = math.Max(maxdiff, diff)
+			if diff > tolerance {
+				t.Errorf("Excessive pressure diff = %g", diff)
+			}
+
+			diff = math.Abs(atmos.Density - relativeDensity)
+			maxdiff = math.Max(maxdiff, diff)
+			if diff > tolerance {
+				t.Errorf("Excessive density diff = %g", diff)
+			}
+
+			ncases += 1
+		}
+	}
+	t.Logf("maxdiff = %g", maxdiff)
+	if ncases != 34 {
+		t.Errorf("Expected 34 test cases but processed %d", ncases)
 	}
 }

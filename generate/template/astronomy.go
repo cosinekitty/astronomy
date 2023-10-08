@@ -50,6 +50,10 @@ const (
 	asecToRad = 1.0 / arc                // radians per arcsecond
 )
 
+func isfinite(x float64) bool {
+	return !math.IsInf(x, 0) && !math.IsNaN(x)
+}
+
 type AstroTime struct {
 	// Ut holds the floating point number of days of Universal Time since noon UTC January 1, 2000.
 	// Astronomy Engine approximates UTC and UT1 as being the same thing, although they are
@@ -272,6 +276,10 @@ type CalendarDateTime struct {
 
 // CalendarFromDays converts a J2000 day value to a Gregorian calendar date and time.
 func CalendarFromDays(ut float64) (*CalendarDateTime, error) {
+	if !isfinite(ut) {
+		return nil, errors.New("Non-finite value of ut")
+	}
+
 	// Adapted from the NOVAS C 3.1 function cal_date().
 	// Convert fractional days since J2000 into Gregorian calendar date/time.
 	djd := ut + 2451545.5
@@ -342,6 +350,47 @@ func DaysFromCalendar(year, month, day, hour, minute int, second float64) float6
 func TimeFromCalendar(year, month, day, hour, minute int, second float64) AstroTime {
 	ut := DaysFromCalendar(year, month, day, hour, minute, second)
 	return TimeFromUniversalDays(ut)
+}
+
+// Atmosphere calculates U.S. Standard Atmosphere (1976) variables as a function of elevation.
+// elevationMeters is the elevation above sea level at which to calculate atmospheric variables.
+// It must be in the range -500 to +100000 or an error will occur.
+// 1. COESA, U.S. Standard Atmosphere, 1976, U.S. Government Printing Office, Washington, DC, 1976.
+// 2. Jursa, A. S., Ed., Handbook of Geophysics and the Space Environment, Air Force Geophysics Laboratory, 1985.
+// See:
+// https://hbcp.chemnetbase.com/faces/documents/14_12/14_12_0001.xhtml
+// https://ntrs.nasa.gov/api/citations/19770009539/downloads/19770009539.pdf
+// https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf
+func Atmosphere(elevationMeters float64) (AtmosphereInfo, error) {
+	if !isfinite(elevationMeters) || elevationMeters < -500.0 || elevationMeters > 100000.0 {
+		return AtmosphereInfo{}, errors.New("Invalid elevation")
+	}
+	const P0 = 101325.0 // pressure at sea level [pascals]
+	const T0 = 288.15   // temperature at sea level [kelvins]
+	const T1 = 216.65   // temperature between 20 km and 32 km [kelvins]
+
+	var temperature, pressure float64
+	switch {
+	case elevationMeters <= 11000.0:
+		{
+			temperature = T0 - 0.0065*elevationMeters
+			pressure = P0 * math.Pow(T0/temperature, -5.25577)
+		}
+	case elevationMeters <= 20000.0:
+		{
+			temperature = T1
+			pressure = 22632.0 * math.Exp(-0.00015768832*(elevationMeters-11000.0))
+		}
+	default:
+		{
+			temperature = T1 + 0.001*(elevationMeters-20000.0)
+			pressure = 5474.87 * math.Pow(T1/temperature, 34.16319)
+		}
+	}
+	// The density is calculated relative to the sea level value.
+	// Using the ideal gas law PV=nRT, we deduce that density is proportional to P/T.
+	density := (pressure / temperature) / (P0 / T0)
+	return AtmosphereInfo{pressure, temperature, density}, nil
 }
 
 // AstroVector represents a position in 3D space at a given time.
@@ -460,10 +509,11 @@ const (
 	JplHorizonsRefraction
 )
 
+// AtmosphereInfo contains information about idealized atmospheric variables at a given elevation.
 type AtmosphereInfo struct {
-	Pressure    float64
-	Temperature float64
-	Density     float64
+	Pressure    float64 // atmospheric pressure in pascals
+	Temperature float64 // atmospheric temperature in kelvins
+	Density     float64 // atmospheric density relative to sea level
 }
 
 type SeasonsInfo struct {
