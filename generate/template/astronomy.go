@@ -405,9 +405,14 @@ type AstroVector struct {
 	T AstroTime
 }
 
+// Returns the scalar dot product of two vectors.
+func Dot(a, b AstroVector) float64 {
+	return a.X*b.X + a.Y*b.Y + a.Z*b.Z
+}
+
 // Returns the length of vec expressed in the same distance units as vec's components.
 func (vec AstroVector) Length() float64 {
-	return math.Sqrt(vec.X*vec.X + vec.Y*vec.Y + vec.Z*vec.Z)
+	return math.Sqrt(Dot(vec, vec))
 }
 
 // StateVector represents the combined position and velocity of a body at a given moment of time.
@@ -1097,6 +1102,27 @@ func GeoMoon(time AstroTime) AstroVector {
 	mpos2 := precession(mpos1, into2000)
 
 	return mpos2
+}
+
+type shadowInfo struct {
+	time   AstroTime
+	u      float64     // dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
+	r      float64     // km distance between center of Moon and the line passing through the centers of the Sun and Earth.
+	k      float64     // umbra radius in km, at the shadow plane
+	p      float64     // penumbra radius in km, at the shadow plane
+	target AstroVector // coordinates of target body relative to shadow-casting body at 'time'
+	dir    AstroVector // heliocentric coordinates of shadow-casting body at 'time'
+}
+
+func calcShadow(bodyRadiusKm float64, time AstroTime, target AstroVector, dir AstroVector) shadowInfo {
+	u := Dot(dir, target) / Dot(dir, dir)
+	dx := (u * dir.X) - target.X
+	dy := (u * dir.Y) - target.Y
+	dz := (u * dir.Z) - target.Z
+	r := KmPerAu * math.Sqrt(dx*dx+dy*dy+dz*dz)
+	k := +SunRadiusKm - (1.0+u)*(SunRadiusKm-bodyRadiusKm)
+	p := -SunRadiusKm + (1.0+u)*(SunRadiusKm-bodyRadiusKm)
+	return shadowInfo{time, u, r, k, p, target, dir}
 }
 
 //--- Generated code begins here ------------------------------------------------------------------
