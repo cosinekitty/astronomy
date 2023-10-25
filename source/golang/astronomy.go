@@ -17,6 +17,7 @@ const (
 	SpeedOfLightAuPerDay      = 173.1446326846693                         // the speed of light in vacuum expressed in astronomical units per day
 	KmPerAu                   = 1.4959787069098932e+8                     // the number of kilometers in one astronomical unit
 	AuPerLightYear            = 63241.07708807546                         // the number of astronomical units in one light year
+	AsecToRad                 = 4.848136811095359935899141e-6             // factor to convert arcseconds to radians
 	SunRadiusKm               = 695700.0                                  // the radius of the Sun in kilometers
 	MercuryEquatorialRadiusKm = 2440.5                                    // the equatorial radius of Mercury in kilometers
 	MercuryPolarRadiusKm      = 2438.3                                    // the polar radius of Mercury in kilometers
@@ -863,6 +864,75 @@ func precession(pos AstroVector, dir precessDirection) AstroVector {
 	return RotateVector(r, pos)
 }
 
+func nutationRot(time *AstroTime, dir precessDirection) RotationMatrix {
+	tilt := etilt(time)
+	oblm := RadiansFromDegrees(tilt.Mobl)
+	oblt := RadiansFromDegrees(tilt.Tobl)
+	psi := tilt.Dpsi * AsecToRad
+
+	cobm := math.Cos(oblm)
+	sobm := math.Sin(oblm)
+	cobt := math.Cos(oblt)
+	sobt := math.Sin(oblt)
+	cpsi := math.Cos(psi)
+	spsi := math.Sin(psi)
+
+	xx := cpsi
+	yx := -spsi * cobm
+	zx := -spsi * sobm
+	xy := spsi * cobt
+	yy := cpsi*cobm*cobt + sobm*sobt
+	zy := cpsi*sobm*cobt - cobm*sobt
+	xz := spsi * sobt
+	yz := cpsi*cobm*sobt - sobm*cobt
+	zz := cpsi*sobm*sobt + cobm*cobt
+
+	r := RotationMatrix{}
+
+	switch {
+	case dir == from2000:
+		{
+			// convert J2000 to of-date
+			r.Rot[0][0] = xx
+			r.Rot[0][1] = xy
+			r.Rot[0][2] = xz
+			r.Rot[1][0] = yx
+			r.Rot[1][1] = yy
+			r.Rot[1][2] = yz
+			r.Rot[2][0] = zx
+			r.Rot[2][1] = zy
+			r.Rot[2][2] = zz
+		}
+	case dir == into2000:
+		{
+			// convert of-date to J2000
+			r.Rot[0][0] = xx
+			r.Rot[0][1] = yx
+			r.Rot[0][2] = zx
+			r.Rot[1][0] = xy
+			r.Rot[1][1] = yy
+			r.Rot[1][2] = zy
+			r.Rot[2][0] = xz
+			r.Rot[2][1] = yz
+			r.Rot[2][2] = zz
+		}
+	default:
+		panic("Invalid precess direction.")
+	}
+
+	return r
+}
+
+func nutation(pos AstroVector, dir precessDirection) AstroVector {
+	rot := nutationRot(&pos.T, dir)
+	return RotateVector(rot, pos)
+}
+
+func nutationPosVel(state StateVector, dir precessDirection) StateVector {
+	rot := nutationRot(&state.T, dir)
+	return RotateState(rot, state)
+}
+
 // RotateVector applies a rotation to a vector, yielding a vector in another orientation system.
 func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector {
 	return AstroVector{
@@ -871,6 +941,47 @@ func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector {
 		rotation.Rot[0][2]*vector.X + rotation.Rot[1][2]*vector.Y + rotation.Rot[2][2]*vector.Z,
 		vector.T,
 	}
+}
+
+func RotateState(rotation RotationMatrix, state StateVector) StateVector {
+	return StateVector{
+		rotation.Rot[0][0]*state.X + rotation.Rot[1][0]*state.Y + rotation.Rot[2][0]*state.Z,
+		rotation.Rot[0][1]*state.X + rotation.Rot[1][1]*state.Y + rotation.Rot[2][1]*state.Z,
+		rotation.Rot[0][2]*state.X + rotation.Rot[1][2]*state.Y + rotation.Rot[2][2]*state.Z,
+		rotation.Rot[0][0]*state.Vx + rotation.Rot[1][0]*state.Vy + rotation.Rot[2][0]*state.Vz,
+		rotation.Rot[0][1]*state.Vx + rotation.Rot[1][1]*state.Vy + rotation.Rot[2][1]*state.Vz,
+		rotation.Rot[0][2]*state.Vx + rotation.Rot[1][2]*state.Vy + rotation.Rot[2][2]*state.Vz,
+		state.T,
+	}
+}
+
+// CombineRotation combines the effects of two consecutive rotation matrices into a single rotation matrix.
+func CombineRotation(a, b RotationMatrix) RotationMatrix {
+
+	// Use matrix multiplication: c = b*a.
+	// We put 'b' on the left and 'a' on the right because,
+	// just like when you use a matrix M to rotate a vector V,
+	// you put the M on the left in the product M*V.
+	// We can think of this as 'b' rotating all the 3 column vectors in 'a'.
+
+	c := RotationMatrix{}
+	c.Rot[0][0] = b.Rot[0][0]*a.Rot[0][0] + b.Rot[1][0]*a.Rot[0][1] + b.Rot[2][0]*a.Rot[0][2]
+	c.Rot[1][0] = b.Rot[0][0]*a.Rot[1][0] + b.Rot[1][0]*a.Rot[1][1] + b.Rot[2][0]*a.Rot[1][2]
+	c.Rot[2][0] = b.Rot[0][0]*a.Rot[2][0] + b.Rot[1][0]*a.Rot[2][1] + b.Rot[2][0]*a.Rot[2][2]
+	c.Rot[0][1] = b.Rot[0][1]*a.Rot[0][0] + b.Rot[1][1]*a.Rot[0][1] + b.Rot[2][1]*a.Rot[0][2]
+	c.Rot[1][1] = b.Rot[0][1]*a.Rot[1][0] + b.Rot[1][1]*a.Rot[1][1] + b.Rot[2][1]*a.Rot[1][2]
+	c.Rot[2][1] = b.Rot[0][1]*a.Rot[2][0] + b.Rot[1][1]*a.Rot[2][1] + b.Rot[2][1]*a.Rot[2][2]
+	c.Rot[0][2] = b.Rot[0][2]*a.Rot[0][0] + b.Rot[1][2]*a.Rot[0][1] + b.Rot[2][2]*a.Rot[0][2]
+	c.Rot[1][2] = b.Rot[0][2]*a.Rot[1][0] + b.Rot[1][2]*a.Rot[1][1] + b.Rot[2][2]*a.Rot[1][2]
+	c.Rot[2][2] = b.Rot[0][2]*a.Rot[2][0] + b.Rot[1][2]*a.Rot[2][1] + b.Rot[2][2]*a.Rot[2][2]
+	return c
+}
+
+// Calculates a rotation matrix that converts equator-of-date (EQD) to J2000 mean equator (EQJ).
+func RotationEqdEqj(time *AstroTime) RotationMatrix {
+	prec := precessionRot(*time, from2000)
+	nut := nutationRot(time, from2000)
+	return CombineRotation(prec, nut)
 }
 
 type addSolTerm struct {
