@@ -507,6 +507,21 @@ type RotationMatrix struct {
 	Rot [3][3]float64
 }
 
+// Creates a rotation matrix that represents no rotation at all.
+func IdentityMatrix() RotationMatrix {
+	r := RotationMatrix{}
+	r.Rot[0][0] = 1.0
+	r.Rot[0][1] = 0.0
+	r.Rot[0][2] = 0.0
+	r.Rot[1][0] = 0.0
+	r.Rot[1][1] = 1.0
+	r.Rot[1][2] = 0.0
+	r.Rot[2][0] = 0.0
+	r.Rot[2][1] = 0.0
+	r.Rot[2][2] = 1.0
+	return r
+}
+
 type Refraction int
 
 const (
