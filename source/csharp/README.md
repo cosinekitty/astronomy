@@ -957,7 +957,7 @@ with `Body.Jupiter` to get Jupiter's heliocentric position, then
 add the jovicentric positions. Likewise, you can call [`Astronomy.GeoVector`](#Astronomy.GeoVector)
 to convert to geocentric positions; however, you will have to manually
 correct for light travel time from the Jupiter system to Earth to
-figure out what time to pass to `jupiterMoons` to get an accurate picture
+figure out what time to pass to `JupiterMoons` to get an accurate picture
 of how Jupiter and its moons look from Earth.
 
 | Type | Parameter | Description |

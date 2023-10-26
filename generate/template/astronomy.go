@@ -642,6 +642,36 @@ type JupiterMoonsInfo struct {
 	Callisto StateVector
 }
 
+type vsopTerm struct {
+	amplitude float64
+	phase     float64
+	frequency float64
+}
+
+type vsopSeries struct {
+	term []vsopTerm
+}
+
+type vsopFormula struct {
+	series []vsopSeries
+}
+
+type vsopModel struct {
+	lon vsopFormula
+	lat vsopFormula
+	rad vsopFormula
+}
+
+type jupiterMoon struct {
+	mu   float64
+	al0  float64
+	al1  float64
+	a    []vsopTerm
+	l    []vsopTerm
+	z    []vsopTerm
+	zeta []vsopTerm
+}
+
 type constelInfo struct {
 	symbol string
 	name   string
@@ -1338,10 +1368,134 @@ func calcShadow(bodyRadiusKm float64, time AstroTime, target AstroVector, dir As
 	return shadowInfo{time, u, r, k, p, target, dir}
 }
 
+func jupiterMoonElemToPv(time AstroTime, mu, A, AL, K, H, Q, P float64) StateVector {
+	// Translation of FORTRAN subroutine ELEM2PV from:
+	// https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+	AN := math.Sqrt(mu / (A * A * A))
+
+	var CE, SE, DE float64
+	EE := AL + K*math.Sin(AL) - H*math.Cos(AL)
+	for {
+		CE = math.Cos(EE)
+		SE = math.Sin(EE)
+		DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE)
+		EE += DE
+		if math.Abs(DE) < 1.0e-12 {
+			break
+		}
+	}
+
+	CE = math.Cos(EE)
+	SE = math.Sin(EE)
+	DLE := H*CE - K*SE
+	RSAM1 := -K*CE - H*SE
+	ASR := 1.0 / (1.0 + RSAM1)
+	PHI := math.Sqrt(1.0 - K*K - H*H)
+	PSI := 1.0 / (1.0 + PHI)
+	X1 := A * (CE - K - PSI*H*DLE)
+	Y1 := A * (SE - H + PSI*K*DLE)
+	VX1 := AN * ASR * A * (-SE - PSI*H*RSAM1)
+	VY1 := AN * ASR * A * (+CE + PSI*K*RSAM1)
+	F2 := 2.0 * math.Sqrt(1.0-Q*Q-P*P)
+	P2 := 1.0 - 2.0*P*P
+	Q2 := 1.0 - 2.0*Q*Q
+	PQ := 2.0 * P * Q
+
+	return StateVector{
+		X1*P2 + Y1*PQ,
+		X1*PQ + Y1*Q2,
+		(Q*Y1 - X1*P) * F2,
+		VX1*P2 + VY1*PQ,
+		VX1*PQ + VY1*Q2,
+		(Q*VY1 - VX1*P) * F2,
+		time,
+	}
+}
+
+func calcJupiterMoon(time AstroTime, m *jupiterMoon) StateVector {
+	// This is a translation of FORTRAN code by Duriez, Lainey, and Vienne:
+	// https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
+
+	t := time.Tt + 18262.5 // number of days since 1950-01-01T00:00:00Z
+
+	// Calculate 6 orbital elements at the given time t.
+	elem0 := 0.0
+	for _, term := range m.a {
+		elem0 += term.amplitude * math.Cos(term.phase+(t*term.frequency))
+	}
+
+	elem1 := m.al0 + (t * m.al1)
+	for _, term := range m.l {
+		elem1 += term.amplitude * math.Sin(term.phase+(t*term.frequency))
+	}
+
+	elem1 = math.Mod(elem1, 2.0*math.Pi)
+	if elem1 < 0 {
+		elem1 += 2.0 * math.Pi
+	}
+
+	elem2 := 0.0
+	elem3 := 0.0
+	for _, term := range m.z {
+		arg := term.phase + (t * term.frequency)
+		elem2 += term.amplitude * math.Cos(arg)
+		elem3 += term.amplitude * math.Sin(arg)
+	}
+
+	elem4 := 0.0
+	elem5 := 0.0
+	for _, term := range m.zeta {
+		arg := term.phase + (t * term.frequency)
+		elem4 += term.amplitude * math.Cos(arg)
+		elem5 += term.amplitude * math.Sin(arg)
+	}
+
+	// Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
+	state := jupiterMoonElemToPv(time, m.mu, elem0, elem1, elem2, elem3, elem4, elem5)
+
+	// Re-orient position and velocity vectors from Jupiter-equatorial (JUP) to Earth-equatorial in J2000 (EQJ).
+	return RotateState(rotationJupEqj, state)
+}
+
+// Calculates Jovicentric positoins and velocities of Jupiter's largest 4 moons.
+// Calculates position and velocity vectors for Jupiter's moons
+// Io, Europa, Ganymede, and Callisto, at the given date and time.
+// The vectors are jovicentric (relative to the center of Jupiter).
+// Their orientation is the Earth's equatorial system at the J2000 epoch (EQJ).
+// The position components are expressed in astronomical units (AU), and
+// the velocity components are in AU/day.
+// To convert to heliocentric position vectors, call HelioVector with
+// Jupiter as the body to get Jupiter's heliocentric position,
+// then add the jovicentric moon positions.
+// Likewise, you can call #Astronomy.GeoVector
+// to convert to geocentric positions; however, you will have to manually
+// correct for light travel time from the Jupiter system to Earth to
+// figure out what time to pass to `JupiterMoons` to get an accurate picture
+// of how Jupiter and its moons look from Earth.
+func JupiterMoons(time AstroTime) JupiterMoonsInfo {
+	return JupiterMoonsInfo{
+		Io:       calcJupiterMoon(time, &jupiterMoonModel[0]),
+		Europa:   calcJupiterMoon(time, &jupiterMoonModel[1]),
+		Ganymede: calcJupiterMoon(time, &jupiterMoonModel[2]),
+		Callisto: calcJupiterMoon(time, &jupiterMoonModel[3]),
+	}
+}
+
 //--- Generated code begins here ------------------------------------------------------------------
 
 //$ASTRO_CONSTEL()
 
 var moonAddSolTerms = [...]addSolTerm{
 	//$ASTRO_ADDSOL()
+}
+
+var jupiterMoonModel = [...]jupiterMoon{
+	//$ASTRO_JUPITER_MOONS()
+}
+
+var rotationJupEqj = RotationMatrix{
+	[3][3]float64{
+		//$ASTRO_JUP_EQJ_ROT()
+	},
 }

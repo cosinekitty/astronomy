@@ -1969,7 +1969,7 @@ static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *mod
 static int JupiterMoons_CSharp(cg_context_t *context, const jupiter_moon_model_t *model)
 {
     int mindex, var, i;
-    vsop_series_t series[4];
+    vsop_series_t series[NUM_JUPITER_MOONS];
     const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
     const char *var_name[] = { "a", "l", "z", "zeta" };
 
@@ -2012,6 +2012,46 @@ static int JupiterMoons_CSharp(cg_context_t *context, const jupiter_moon_model_t
         fprintf(context->outfile, "            }%s\n", ((mindex+1 < NUM_JUPITER_MOONS) ? ",\n" : ""));
     }
     fprintf(context->outfile, "        }");
+    return 0;
+}
+
+
+static int JupiterMoons_Go(cg_context_t *context, const jupiter_moon_model_t *model)
+{
+    int mindex, var, i;
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+    vsop_series_t series[NUM_JUPITER_MOONS];
+
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        fprintf(context->outfile, "    // [%d] %s\n", mindex, moon_name[mindex]);
+        fprintf(context->outfile, "    {\n");
+        fprintf(context->outfile, "        mu: %23.16le,\n", model->moon[mindex].mu);
+        fprintf(context->outfile, "        al0: %23.16le,\n", model->moon[mindex].al[0]);
+        fprintf(context->outfile, "        al1: %23.16le,\n", model->moon[mindex].al[1]);
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            int nterms = series[var].nterms_total;
+            fprintf(context->outfile, "        %s: []vsopTerm{\n", var_name[var]);
+            for (i = 0; i < nterms; ++i)
+            {
+                const vsop_term_t *term = &series[var].term[i];
+                fprintf(context->outfile, "            {%19.16lf, %23.16le, %23.16le},\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency
+                );
+            }
+            fprintf(context->outfile, "        },\n");
+        }
+        fprintf(context->outfile, "    },\n");
+    }
+
     return 0;
 }
 
@@ -2175,6 +2215,10 @@ static int JupiterMoons(cg_context_t *context)
         CHECK(JupiterMoons_CSharp(context, model));
         break;
 
+    case CODEGEN_LANGUAGE_GO:
+        CHECK(JupiterMoons_Go(context, model));
+        break;
+
     case CODEGEN_LANGUAGE_JS:
         CHECK(JupiterMoons_JS(context, model));
         break;
@@ -2190,6 +2234,27 @@ static int JupiterMoons(cg_context_t *context)
     default:
         CHECK(LogError(context, "JupiterMoons: Unsupported target language %d", context->language));
     }
+
+    error = 0;
+fail:
+    free(model);
+    return error;
+}
+
+
+static int JupEqjRot(cg_context_t *context)
+{
+    int error;
+    jupiter_moon_model_t *model;
+
+    model = calloc(1, sizeof(jupiter_moon_model_t));
+    if (model == NULL)
+        FAIL("JupEqjRot: memory allocation failure!\n");
+
+    CHECK(LoadJupiterMoonModel("output/jupiter_moons.txt", model));
+    fprintf(context->outfile, "        {%21.14le, %21.14le, %21.14le},\n",  model->rot[0][0], model->rot[0][1], model->rot[0][2]);
+    fprintf(context->outfile, "        {%21.14le, %21.14le, %21.14le},\n",  model->rot[1][0], model->rot[1][1], model->rot[1][2]);
+    fprintf(context->outfile, "        {%21.14le, %21.14le, %21.14le},\n",  model->rot[2][0], model->rot[2][1], model->rot[2][2]);
 
     error = 0;
 fail:
@@ -2225,6 +2290,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "C_PLUTO_CONST",      PlutoConstants_C    },
     { "PLUTO_TABLE",        PlutoStateTable     },
     { "JUPITER_MOONS",      JupiterMoons        },
+    { "JUP_EQJ_ROT",        JupEqjRot           },
     { NULL, NULL }  /* Marks end of list */
 };
 
