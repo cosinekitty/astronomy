@@ -646,6 +646,49 @@ func AngleBetween(avec AstroVector, bvec AstroVector) float64 {
 	return DegreesFromRadians(math.Acos(dot))
 }
 
+type starDef struct {
+	ra   float64
+	dec  float64
+	dist float64
+}
+
+var starTable [8]starDef
+
+func getStar(body Body) *starDef {
+	if body >= Star1 && body <= Star8 {
+		return &starTable[body-Star1]
+	}
+	return nil
+}
+
+func userDefinedStar(body Body) *starDef {
+	star := getStar(body)
+	if star != nil && star.dist > 0.0 {
+		return star
+	}
+	return nil
+}
+
+func DefineStar(body Body, ra, dec, distanceLightYears float64) error {
+	star := getStar(body)
+	if star == nil {
+		return errors.New("Invalid body value for a user-defined star.")
+	}
+	if !isfinite(ra) || ra < 0.0 || ra >= 24.0 {
+		return errors.New("Invalid right ascension for user-defined star.")
+	}
+	if !isfinite(dec) || dec < -90.0 || dec > +90.0 {
+		return errors.New("Invalid declination for user-defined star.")
+	}
+	if !isfinite(distanceLightYears) || distanceLightYears < 1.0 {
+		return errors.New("Invalid heliocentric distance for user-defined star. Must be at least 1 light year.")
+	}
+	star.ra = ra
+	star.dec = dec
+	star.dist = distanceLightYears * AuPerLightYear
+	return nil // success
+}
+
 func eclOblToEquVec(ecl AstroVector, obl float64) AstroVector {
 	c := math.Cos(obl)
 	s := math.Sin(obl)
