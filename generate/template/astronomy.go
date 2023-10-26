@@ -582,6 +582,20 @@ type terseVector struct {
 	Z float64
 }
 
+type bodyState struct {
+	Tt float64     // Terrestrial Time in J2000 days
+	R  terseVector // position [au]
+	V  terseVector // velocity [au/day]
+}
+
+func exportState(terse bodyState, time AstroTime) StateVector {
+	return StateVector{
+		terse.R.X, terse.R.Y, terse.R.Z,
+		terse.V.X, terse.V.Y, terse.V.Z,
+		time,
+	}
+}
+
 type bodyGravCalc struct {
 	Tt float64     // J2000 terrestrial time [days]
 	R  terseVector // Position [au]
