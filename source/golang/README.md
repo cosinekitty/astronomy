@@ -106,27 +106,27 @@ const (
 ```go
 const (
     InvalidBody Body  = -1
-    Mercury           = 0 // The planet Mercury
-    Venus                 // The planet Venus
-    Earth                 // The planet Earth
-    Mars                  // The planet Mars
-    Jupiter               // The planet Jupiter
-    Saturn                // The planet Saturn
-    Uranus                // The planet Uranus
-    Neptune               // The planet Neptune
-    Pluto                 // The dwarf planet Pluto
-    Sun                   // The Sun
-    Moon                  // The Earth's Moon
-    Emb                   // The Earth/Moon Barycenter
-    Ssb                   // The Solar System Barycenter
-    Star1       = 101     // User-defined star #1
-    Star2                 // User-defined star #2
-    Star3                 // User-defined star #3
-    Star4                 // User-defined star #4
-    Star5                 // User-defined star #5
-    Star6                 // User-defined star #6
-    Star7                 // User-defined star #7
-    Star8                 // User-defined star #8
+    Mercury           = iota // The planet Mercury
+    Venus                    // The planet Venus
+    Earth                    // The planet Earth
+    Mars                     // The planet Mars
+    Jupiter                  // The planet Jupiter
+    Saturn                   // The planet Saturn
+    Uranus                   // The planet Uranus
+    Neptune                  // The planet Neptune
+    Pluto                    // The dwarf planet Pluto
+    Sun                      // The Sun
+    Moon                     // The Earth's Moon
+    Emb                      // The Earth/Moon Barycenter
+    Ssb                      // The Solar System Barycenter
+    Star1       = 101        // User-defined star #1
+    Star2       = 102        // User-defined star #2
+    Star3       = 103        // User-defined star #3
+    Star4       = 104        // User-defined star #4
+    Star5       = 105        // User-defined star #5
+    Star6       = 106        // User-defined star #6
+    Star7       = 107        // User-defined star #7
+    Star8       = 108        // User-defined star #8
 )
 ```
 
@@ -195,7 +195,7 @@ func RadiansFromDegrees(degrees float64) float64
 RadiansFromDegrees converts an angle expressed in degrees to an angle expressed in radians.
 
 <a name="SiderealTime"></a>
-## func [SiderealTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L857>)
+## func [SiderealTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L870>)
 
 ```go
 func SiderealTime(time *AstroTime) float64
@@ -323,7 +323,7 @@ type AstroVector struct {
 ```
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1284>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1297>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -332,7 +332,7 @@ func GeoMoon(time AstroTime) AstroVector
 GeoMoon calculates the equatorial geocentric position of the Moon at a given time. The returned vector indicates the Moon's center relative to the Earth's center. The vector components are expressed in AU \(astronomical units\). The coordinates are oriented with respect to the Earth's equator at the J2000 epoch. In Astronomy Engine, this orientation is called EQJ.
 
 <a name="RotateVector"></a>
-### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1026>)
+### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1039>)
 
 ```go
 func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector
@@ -550,7 +550,7 @@ type RotationMatrix struct {
 ```
 
 <a name="CombineRotation"></a>
-### func [CombineRotation](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1048>)
+### func [CombineRotation](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1061>)
 
 ```go
 func CombineRotation(a, b RotationMatrix) RotationMatrix
@@ -577,7 +577,7 @@ func InverseRotation(rotation RotationMatrix) RotationMatrix
 Calculates the inverse of a rotation matrix. Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that transform.
 
 <a name="RotationEqdEqj"></a>
-### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1070>)
+### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1083>)
 
 ```go
 func RotationEqdEqj(time *AstroTime) RotationMatrix
@@ -630,7 +630,7 @@ type StateVector struct {
 ```
 
 <a name="RotateState"></a>
-### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1035>)
+### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1048>)
 
 ```go
 func RotateState(rotation RotationMatrix, state StateVector) StateVector

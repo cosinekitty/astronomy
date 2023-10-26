@@ -448,27 +448,27 @@ type Body int
 
 const (
 	InvalidBody Body  = -1
-	Mercury           = 0 // The planet Mercury
-	Venus                 // The planet Venus
-	Earth                 // The planet Earth
-	Mars                  // The planet Mars
-	Jupiter               // The planet Jupiter
-	Saturn                // The planet Saturn
-	Uranus                // The planet Uranus
-	Neptune               // The planet Neptune
-	Pluto                 // The dwarf planet Pluto
-	Sun                   // The Sun
-	Moon                  // The Earth's Moon
-	Emb                   // The Earth/Moon Barycenter
-	Ssb                   // The Solar System Barycenter
-	Star1       = 101     // User-defined star #1
-	Star2                 // User-defined star #2
-	Star3                 // User-defined star #3
-	Star4                 // User-defined star #4
-	Star5                 // User-defined star #5
-	Star6                 // User-defined star #6
-	Star7                 // User-defined star #7
-	Star8                 // User-defined star #8
+	Mercury           = iota // The planet Mercury
+	Venus                    // The planet Venus
+	Earth                    // The planet Earth
+	Mars                     // The planet Mars
+	Jupiter                  // The planet Jupiter
+	Saturn                   // The planet Saturn
+	Uranus                   // The planet Uranus
+	Neptune                  // The planet Neptune
+	Pluto                    // The dwarf planet Pluto
+	Sun                      // The Sun
+	Moon                     // The Earth's Moon
+	Emb                      // The Earth/Moon Barycenter
+	Ssb                      // The Solar System Barycenter
+	Star1       = 101        // User-defined star #1
+	Star2       = 102        // User-defined star #2
+	Star3       = 103        // User-defined star #3
+	Star4       = 104        // User-defined star #4
+	Star5       = 105        // User-defined star #5
+	Star6       = 106        // User-defined star #6
+	Star7       = 107        // User-defined star #7
+	Star8       = 108        // User-defined star #8
 )
 
 // The location of a point on or near the surface of the Earth
@@ -733,6 +733,19 @@ func DefineStar(body Body, ra, dec, distanceLightYears float64) error {
 	star.dec = dec
 	star.dist = distanceLightYears * AuPerLightYear
 	return nil // success
+}
+
+func isSuperiorPlanet(body Body) bool {
+	switch body {
+	case Mars:
+	case Jupiter:
+	case Saturn:
+	case Uranus:
+	case Neptune:
+	case Pluto:
+		return true
+	}
+	return false
 }
 
 func eclOblToEquVec(ecl AstroVector, obl float64) AstroVector {
