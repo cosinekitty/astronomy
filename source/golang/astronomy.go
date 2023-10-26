@@ -522,6 +522,23 @@ func IdentityMatrix() RotationMatrix {
 	return r
 }
 
+// Calculates the inverse of a rotation matrix.
+// Given a rotation matrix that performs some coordinate transform,
+// this function returns the matrix that reverses that transform.
+func InverseRotation(rotation RotationMatrix) RotationMatrix {
+	inverse := RotationMatrix{}
+	inverse.Rot[0][0] = rotation.Rot[0][0]
+	inverse.Rot[0][1] = rotation.Rot[1][0]
+	inverse.Rot[0][2] = rotation.Rot[2][0]
+	inverse.Rot[1][0] = rotation.Rot[0][1]
+	inverse.Rot[1][1] = rotation.Rot[1][1]
+	inverse.Rot[1][2] = rotation.Rot[2][1]
+	inverse.Rot[2][0] = rotation.Rot[0][2]
+	inverse.Rot[2][1] = rotation.Rot[1][2]
+	inverse.Rot[2][2] = rotation.Rot[2][2]
+	return inverse
+}
+
 type Refraction int
 
 const (
