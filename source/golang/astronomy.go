@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	DaysPerTropicalYear       = 365.24217                                 // the number of days in one tropical year
-	SecondsPerDay             = 86400.0                                   // the number of seconds in one day
+	DaysPerTropicalYear       = 365.24217 // the number of days in one tropical year
+	SecondsPerDay             = 86400.0   // the number of seconds in one day
+	SolarDaysPerSiderealDay   = 0.9972695717592592
 	SpeedOfLightAuPerDay      = 173.1446326846693                         // the speed of light in vacuum expressed in astronomical units per day
 	KmPerAu                   = 1.4959787069098932e+8                     // the number of kilometers in one astronomical unit
 	AuPerLightYear            = 63241.07708807546                         // the number of astronomical units in one light year
@@ -1751,6 +1752,76 @@ func horizonDipAngle(observer Observer, metersAboveGround float64) float64 {
 
 	// Calculate how far below the observer's horizontal plane the observed horizon dips.
 	return DegreesFromRadians(-(math.Sqrt(2*(1-k)*metersAboveGround/radiusMeters) / (1 - k)))
+}
+
+func maxAltitudeSlope(body Body, latitude float64) float64 {
+	// Calculate the maximum possible rate that this body's altitude
+	// could change [degrees/day] as seen by this observer.
+	// First use experimentally determined extreme bounds for this body
+	// of how much topocentric RA and DEC can ever change per rate of time.
+	// We need minimum possible d(RA)/dt, and maximum possible magnitude of d(DEC)/dt.
+	// Conservatively, we round d(RA)/dt down, d(DEC)/dt up.
+	// Then calculate the resulting maximum possible altitude change rate.
+
+	var derivRa, derivDec float64
+
+	switch body {
+	case Moon:
+		derivRa = +4.5
+		derivDec = +8.2
+		break
+
+	case Sun:
+		derivRa = +0.8
+		derivDec = +0.5
+		break
+
+	case Mercury:
+		derivRa = -1.6
+		derivDec = +1.0
+		break
+
+	case Venus:
+		derivRa = -0.8
+		derivDec = +0.6
+		break
+
+	case Mars:
+		derivRa = -0.5
+		derivDec = +0.4
+		break
+
+	case Jupiter:
+	case Saturn:
+	case Uranus:
+	case Neptune:
+	case Pluto:
+		derivRa = -0.2
+		derivDec = +0.2
+		break
+
+	case Star1:
+	case Star2:
+	case Star3:
+	case Star4:
+	case Star5:
+	case Star6:
+	case Star7:
+	case Star8:
+		// The minimum allowed heliocentric distance of a user-defined star
+		// is one light-year. This can cause a tiny amount of parallax (about 0.001 degrees).
+		// Also, including stellar aberration (22 arcsec = 0.006 degrees), we provide a
+		// generous safety buffer of 0.008 degrees.
+		derivRa = -0.008
+		derivDec = +0.008
+		break
+
+	default:
+		return -1.0 // invalid body
+	}
+
+	latrad := RadiansFromDegrees(latitude)
+	return math.Abs(((360.0/SolarDaysPerSiderealDay)-derivRa)*math.Cos(latrad)) + math.Abs(derivDec*math.Sin(latrad))
 }
 
 //--- Generated code begins here ------------------------------------------------------------------
