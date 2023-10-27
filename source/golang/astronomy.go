@@ -1824,6 +1824,18 @@ func maxAltitudeSlope(body Body, latitude float64) float64 {
 	return math.Abs(((360.0/SolarDaysPerSiderealDay)-derivRa)*math.Cos(latrad)) + math.Abs(derivDec*math.Sin(latrad))
 }
 
+func moonMagnitude(phase float64, helioDist float64, geoDist float64) float64 {
+	// https://astronomy.stackexchange.com/questions/10246/is-there-a-simple-analytical-formula-for-the-lunar-phase-brightness-curve
+	rad := RadiansFromDegrees(phase)
+	rad2 := rad * rad
+	rad4 := rad2 * rad2
+	mag := -12.717 + 1.49*math.Abs(rad) + 0.0431*rad4
+	moonMeanDistanceAu := 385000.6 / KmPerAu
+	geo_au := geoDist / moonMeanDistanceAu
+	mag += 5.0 * math.Log10(helioDist*geo_au)
+	return mag
+}
+
 //--- Generated code begins here ------------------------------------------------------------------
 
 var constelNames = [...]constelInfo{
