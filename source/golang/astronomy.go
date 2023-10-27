@@ -1605,6 +1605,32 @@ func findAscent(depth int, context SearchContext, maxDerivAlt float64, t1, t2 As
 	return ascent
 }
 
+func horizonDipAngle(observer Observer, metersAboveGround float64) float64 {
+	// Calculate the effective radius of the Earth at ground level below the observer.
+	// Correct for the Earth's oblateness.
+	phi := RadiansFromDegrees(observer.Latitude)
+	sinphi := math.Sin(phi)
+	cosphi := math.Cos(phi)
+	c := 1.0 / math.Hypot(cosphi, sinphi*EarthFlattening)
+	s := c * (EarthFlattening * EarthFlattening)
+	htkm := (observer.Height - metersAboveGround) / 1000.0 // height of ground above sea level
+	ach := EarthEquatorialRadiusKm*c + htkm
+	ash := EarthEquatorialRadiusKm*s + htkm
+	radiusMeters := 1000.0 * math.Hypot(ach*cosphi, ash*sinphi)
+
+	// Correct refraction of a ray of light traveling tangent to the Earth's surface.
+	// Based on: https://www.largeformatphotography.info/sunmooncalc/SMCalc.js
+	// which in turn derives from:
+	// Sweer, John. 1938.  The Path of a Ray of Light Tangent to the Surface of the Earth.
+	// Journal of the Optical Society of America 28 (September):327-329.
+
+	// k = refraction index
+	k := 0.175 * math.Pow(1.0-(6.5e-3/283.15)*(observer.Height-(2.0/3.0)*metersAboveGround), 3.256)
+
+	// Calculate how far below the observer's horizontal plane the observed horizon dips.
+	return DegreesFromRadians(-(math.Sqrt(2*(1-k)*metersAboveGround/radiusMeters) / (1 - k)))
+}
+
 //--- Generated code begins here ------------------------------------------------------------------
 
 var constelNames = [...]constelInfo{
