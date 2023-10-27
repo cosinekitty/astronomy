@@ -14,6 +14,7 @@ import (
 
 const (
 	DaysPerTropicalYear       = 365.24217                                 // the number of days in one tropical year
+	SecondsPerDay             = 86400.0                                   // the number of seconds in one day
 	SpeedOfLightAuPerDay      = 173.1446326846693                         // the speed of light in vacuum expressed in astronomical units per day
 	KmPerAu                   = 1.4959787069098932e+8                     // the number of kilometers in one astronomical unit
 	AuPerLightYear            = 63241.07708807546                         // the number of astronomical units in one light year
@@ -1522,6 +1523,87 @@ func clampIndex(frac float64, nsteps int) int {
 }
 
 //--- Pluto calc ends
+
+type ascentInfo struct {
+	valid bool
+	tx    AstroTime
+	ty    AstroTime
+	ax    float64
+	ay    float64
+}
+
+type SearchContext interface {
+	Eval(time AstroTime) (float64, error)
+}
+
+func findAscent(depth int, context SearchContext, maxDerivAlt float64, t1, t2 AstroTime, a1, a2 float64) ascentInfo {
+	// See if we can find any time interval where the altitude-diff function
+	// rises from non-positive to positive.
+
+	if a1 < 0.0 && a2 >= 0.0 {
+		// Trivial success case: the endpoints already rise through zero.
+		return ascentInfo{valid: true, tx: t1, ty: t2, ax: a1, ay: a2}
+	}
+
+	if a1 >= 0.0 && a2 < 0.0 {
+		// Trivial failure case: Assume Nyquist condition prevents an ascent.
+		return ascentInfo{valid: false}
+	}
+
+	if depth > 17 {
+		// Safety valve: do not allow unlimited recursion.
+		// This should never happen if the rest of the logic is working correctly,
+		// so fail the whole search if it does happen. It's a bug!
+		panic("Excessive recursion in rise/set ascent search.")
+	}
+
+	// Both altitudes are on the same side of zero: both are negative, or both are non-negative.
+	// There could be a convex "hill" or a concave "valley" that passes through zero.
+	// In polar regions sometimes there is a rise/set or set/rise pair within minutes of each other.
+	// For example, the Moon can be below the horizon, then the very top of it becomes
+	// visible (moonrise) for a few minutes, then it moves sideways and down below
+	// the horizon again (moonset). We want to catch these cases.
+	// However, for efficiency and practicality concerns, because the rise/set search itself
+	// has a 0.1 second threshold, we do not worry about rise/set pairs that are less than
+	// one second apart. These are marginal cases that are rendered highly uncertain
+	// anyway, due to unpredictable atmospheric refraction conditions (air temperature and pressure).
+
+	dt := t2.Ut - t1.Ut
+	if dt*SecondsPerDay < 1.0 {
+		return ascentInfo{valid: false}
+	}
+
+	// Is it possible to reach zero from the altitude that is closer to zero?
+	da := math.Min(math.Abs(a1), math.Abs(a2))
+
+	// Without loss of generality, assume |a1| <= |a2|.
+	// (Reverse the argument in the case |a2| < |a1|.)
+	// Imagine you have to "drive" from a1 to 0, then back to a2.
+	// You can't go faster than max_deriv_alt. If you can't reach 0 in half the time,
+	// you certainly don't have time to reach 0, turn around, and still make your way
+	// back up to a2 (which is at least as far from 0 than a1 is) in the time interval dt.
+	// Therefore, the time threshold is half the time interval, or dt/2.
+	if da > maxDerivAlt*(dt/2) {
+		// Prune: the altitude cannot change fast enough to reach zero.
+		return ascentInfo{valid: false}
+	}
+
+	// Bisect the time interval and evaluate the altitude at the midpoint.
+	tmid := TimeFromUniversalDays((t1.Ut + t2.Ut) / 2.0)
+	amid, err := context.Eval(tmid)
+	if err != nil {
+		panic("Altitude context should not have failed to evaluate.")
+	}
+
+	// Recurse to the left interval.
+	ascent := findAscent(1+depth, context, maxDerivAlt, t1, tmid, a1, amid)
+	if !ascent.valid {
+		// Recurse to the right interval.
+		ascent = findAscent(1+depth, context, maxDerivAlt, tmid, t2, amid, a2)
+	}
+
+	return ascent
+}
 
 //--- Generated code begins here ------------------------------------------------------------------
 
