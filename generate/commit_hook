@@ -1,0 +1,7 @@
+#/bin/bash
+[[ -d generate ]] && cd generate
+rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt
+./run || exit $?
+./verify_clean || exit $?
+echo "commit_hook: SUCCESS"
+exit 0
