@@ -829,6 +829,16 @@ func longitudeOffset(diff float64) float64 {
 	return offset
 }
 
+func normalizeLongitude(lon float64) float64 {
+	for lon < 0.0 {
+		lon += 360.0
+	}
+	for lon >= 360.0 {
+		lon -= 360.0
+	}
+	return lon
+}
+
 func dcos(degrees float64) float64 {
 	return math.Cos(RadiansFromDegrees(degrees))
 }

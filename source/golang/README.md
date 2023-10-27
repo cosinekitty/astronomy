@@ -159,7 +159,7 @@ const (
 ```
 
 <a name="AngleBetween"></a>
-## func [AngleBetween](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L845>)
+## func [AngleBetween](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L855>)
 
 ```go
 func AngleBetween(avec AstroVector, bvec AstroVector) float64
@@ -177,7 +177,7 @@ func DaysFromCalendar(year, month, day, hour, minute int, second float64) float6
 
 
 <a name="DefineStar"></a>
-## func [DefineStar](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L883>)
+## func [DefineStar](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L893>)
 
 ```go
 func DefineStar(body Body, ra, dec, distanceLightYears float64) error
@@ -222,7 +222,7 @@ func RadiansFromDegrees(degrees float64) float64
 RadiansFromDegrees converts an angle expressed in degrees to an angle expressed in radians.
 
 <a name="SiderealTime"></a>
-## func [SiderealTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1035>)
+## func [SiderealTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1045>)
 
 ```go
 func SiderealTime(time *AstroTime) float64
@@ -350,7 +350,7 @@ type AstroVector struct {
 ```
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1462>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1472>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -359,7 +359,7 @@ func GeoMoon(time AstroTime) AstroVector
 GeoMoon calculates the equatorial geocentric position of the Moon at a given time. The returned vector indicates the Moon's center relative to the Earth's center. The vector components are expressed in AU \(astronomical units\). The coordinates are oriented with respect to the Earth's equator at the J2000 epoch. In Astronomy Engine, this orientation is called EQJ.
 
 <a name="RotateVector"></a>
-### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1204>)
+### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1214>)
 
 ```go
 func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector
@@ -506,7 +506,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="JupiterMoons"></a>
-### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1625>)
+### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1635>)
 
 ```go
 func JupiterMoons(time AstroTime) JupiterMoonsInfo
@@ -595,7 +595,7 @@ type RotationMatrix struct {
 ```
 
 <a name="CombineRotation"></a>
-### func [CombineRotation](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1226>)
+### func [CombineRotation](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1236>)
 
 ```go
 func CombineRotation(a, b RotationMatrix) RotationMatrix
@@ -622,7 +622,7 @@ func InverseRotation(rotation RotationMatrix) RotationMatrix
 Calculates the inverse of a rotation matrix. Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that transform.
 
 <a name="RotationEqdEqj"></a>
-### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1248>)
+### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1258>)
 
 ```go
 func RotationEqdEqj(time *AstroTime) RotationMatrix
@@ -631,7 +631,7 @@ func RotationEqdEqj(time *AstroTime) RotationMatrix
 Calculates a rotation matrix that converts equator\-of\-date \(EQD\) to J2000 mean equator \(EQJ\).
 
 <a name="SearchContext"></a>
-## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1658-L1660>)
+## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1668-L1670>)
 
 
 
@@ -686,7 +686,7 @@ type StateVector struct {
 ```
 
 <a name="RotateState"></a>
-### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1213>)
+### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1223>)
 
 ```go
 func RotateState(rotation RotationMatrix, state StateVector) StateVector
