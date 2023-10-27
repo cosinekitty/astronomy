@@ -48,6 +48,33 @@ const (
 )
 
 const (
+	//  Masses of the Sun and outer planets, used for:
+	//  (1) Calculating the Solar System Barycenter
+	//  (2) Integrating the movement of Pluto
+	//
+	//  https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+	//
+	//  Page 10 in the above document describes the constants used in the DE405 ephemeris.
+	//  The following are G*M values (gravity constant * mass) in [au^3 / day^2].
+	//  This side-steps issues of not knowing the exact values of G and masses M[i];
+	//  the products GM[i] are known extremely accurately.
+
+	earthMoonMassRatio = 81.30056
+
+	gmSun     = 0.2959122082855911e-03
+	gmMercury = 0.4912547451450812e-10
+	gmVenus   = 0.7243452486162703e-09
+	gmEarth   = 0.8887692390113509e-09
+	gmMoon    = gmEarth / earthMoonMassRatio
+	gmMars    = 0.9549535105779258e-10
+	gmJupiter = 0.2825345909524226e-06
+	gmSaturn  = 0.8459715185680659e-07
+	gmUranus  = 0.1292024916781969e-07
+	gmNeptune = 0.1524358900784276e-07
+	gmPluto   = 0.2188699765425970e-11
+)
+
+const (
 	arc       = 3600.0 * 180.0 / math.Pi // arcseconds per radian
 	asecToRad = 1.0 / arc                // radians per arcsecond
 )
@@ -626,10 +653,55 @@ type terseVector struct {
 	Z float64
 }
 
+func (tv *terseVector) increment(other terseVector) {
+	tv.X += other.X
+	tv.Y += other.Y
+	tv.Z += other.Z
+}
+
+func (left terseVector) sub(right terseVector) terseVector {
+	return terseVector{left.X - right.X, left.Y - right.Y, left.Z - right.Z}
+}
+
+func (tv terseVector) quadrature() float64 {
+	return tv.X*tv.X + tv.Y*tv.Y + tv.Z*tv.Z
+}
+
+func (tv terseVector) timesScalar(k float64) terseVector {
+	return terseVector{k * tv.X, k * tv.Y, k * tv.Z}
+}
+
 type bodyState struct {
 	Tt float64     // Terrestrial Time in J2000 days
 	R  terseVector // position [au]
 	V  terseVector // velocity [au/day]
+}
+
+type majorBodies struct {
+	Sun     bodyState
+	Jupiter bodyState
+	Saturn  bodyState
+	Uranus  bodyState
+	Neptune bodyState
+}
+
+func (m *majorBodies) accelerationIncrement(smallBodyPos terseVector, gm float64, majorBodyPos terseVector) terseVector {
+	var delta terseVector
+	delta = majorBodyPos.sub(smallBodyPos)
+	r2 := delta.quadrature()
+	return delta.timesScalar(gm / (r2 * math.Sqrt(r2)))
+}
+
+func (m *majorBodies) majorBodiesAcceleration(smallBodyPos terseVector) terseVector {
+	// Use barycentric coordinates of the Sun and major planets to calculate
+	// the gravitational acceleration vector experienced by a small body at location 'smallBodyPos'.
+	var accel terseVector
+	accel = m.accelerationIncrement(smallBodyPos, gmSun, m.Sun.R)
+	accel.increment(m.accelerationIncrement(smallBodyPos, gmJupiter, m.Jupiter.R))
+	accel.increment(m.accelerationIncrement(smallBodyPos, gmSaturn, m.Saturn.R))
+	accel.increment(m.accelerationIncrement(smallBodyPos, gmUranus, m.Uranus.R))
+	accel.increment(m.accelerationIncrement(smallBodyPos, gmNeptune, m.Neptune.R))
+	return accel
 }
 
 func exportState(terse bodyState, time AstroTime) StateVector {
@@ -704,6 +776,17 @@ func DegreesFromRadians(radians float64) float64 {
 // RadiansFromDegrees converts an angle expressed in degrees to an angle expressed in radians.
 func RadiansFromDegrees(degrees float64) float64 {
 	return degrees * (math.Pi / 180.0)
+}
+
+func longitudeOffset(diff float64) float64 {
+	offset := diff
+	for offset <= -180.0 {
+		offset += 360.0
+	}
+	for offset > 180.0 {
+		offset -= 360.0
+	}
+	return offset
 }
 
 func dcos(degrees float64) float64 {
