@@ -778,6 +778,45 @@ func RadiansFromDegrees(degrees float64) float64 {
 	return degrees * (math.Pi / 180.0)
 }
 
+// Returns the product of mass and universal gravitational constant of a Solar System body.
+// For problems involving the gravitational interactions of Solar System bodies,
+// it is helpful to know the product GM, where G = the universal gravitational constant
+// and M = the mass of the body. In practice, GM is known to a higher precision than
+// either G or M alone, and thus using the product results in the most accurate results.
+// This function returns the product GM in the units au^3/day^2.
+// The values come from page 10 of a JPL memorandum regarding the DE405/LE405 ephemeris:
+// https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
+func MassProduct(body Body) float64 {
+	switch body {
+	case Sun:
+		return gmSun
+	case Mercury:
+		return gmMercury
+	case Venus:
+		return gmVenus
+	case Earth:
+		return gmEarth
+	case Moon:
+		return gmMoon
+	case Emb:
+		return gmEarth + gmMoon
+	case Mars:
+		return gmMars
+	case Jupiter:
+		return gmJupiter
+	case Saturn:
+		return gmSaturn
+	case Uranus:
+		return gmUranus
+	case Neptune:
+		return gmNeptune
+	case Pluto:
+		return gmPluto
+	default:
+		return -1.0 // invalid body
+	}
+}
+
 func longitudeOffset(diff float64) float64 {
 	offset := diff
 	for offset <= -180.0 {
