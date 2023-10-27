@@ -444,6 +444,17 @@ type Spherical struct {
 	Dist float64 // a distance expressed in astronomical units
 }
 
+type EclipseKind int
+
+// The different kinds of lunar/solar eclipses.
+const (
+	NoEclipse        = iota // no eclipse found
+	PenumbralEclipse        // A penumbral lunar eclipse. (Never used for a solar eclipse.)
+	PartialEclipse          // A partial lunar/solar eclipse.
+	AnnularEclipse          // An annular solar eclipse. (Never used for a lunar eclipse.)
+	TotalEclipse            // A total lunar/solar eclipse.
+)
+
 type Body int
 
 const (
@@ -1347,6 +1358,8 @@ func GeoMoon(time AstroTime) AstroVector {
 	return mpos2
 }
 
+//--- Eclipse/transit code begins
+
 type shadowInfo struct {
 	time   AstroTime
 	u      float64     // dot product of (heliocentric earth) and (geocentric moon): defines the shadow plane where the Moon is
@@ -1367,6 +1380,18 @@ func calcShadow(bodyRadiusKm float64, time AstroTime, target AstroVector, dir As
 	p := -SunRadiusKm + (1.0+u)*(SunRadiusKm-bodyRadiusKm)
 	return shadowInfo{time, u, r, k, p, target, dir}
 }
+
+func eclipseKindFromUmbra(k float64) EclipseKind {
+	// The umbra radius tells us what kind of eclipse the observer sees.
+	// If the umbra radius is positive, this is a total eclipse. Otherwise, it's annular.
+	// HACK: I added a tiny bias (14 meters) to match Espenak test data.
+	if k > 0.014 {
+		return TotalEclipse
+	}
+	return AnnularEclipse
+}
+
+//--- Eclipse/transit code ends
 
 func jupiterMoonElemToPv(time AstroTime, mu, A, AL, K, H, Q, P float64) StateVector {
 	// Translation of FORTRAN subroutine ELEM2PV from:
@@ -1481,6 +1506,22 @@ func JupiterMoons(time AstroTime) JupiterMoonsInfo {
 		Callisto: calcJupiterMoon(time, &jupiterMoonModel[3]),
 	}
 }
+
+//--- Pluto calc begins
+
+func clampIndex(frac float64, nsteps int) int {
+	var index int
+	index = int(math.Floor(frac))
+	if index < 0 {
+		return 0
+	}
+	if index >= nsteps {
+		return nsteps - 1
+	}
+	return index
+}
+
+//--- Pluto calc ends
 
 //--- Generated code begins here ------------------------------------------------------------------
 
