@@ -76,8 +76,10 @@ const (
 )
 
 const (
-	arc       = 3600.0 * 180.0 / math.Pi // arcseconds per radian
-	asecToRad = 1.0 / arc                // radians per arcsecond
+	arc                  = 3600.0 * 180.0 / math.Pi // arcseconds per radian
+	asecToRad            = 1.0 / arc                // radians per arcsecond
+	earthOrbitalPeriod   = 365.256
+	neptuneOrbitalPeriod = 60189.0
 )
 
 func isfinite(x float64) bool {
@@ -777,6 +779,32 @@ func DegreesFromRadians(radians float64) float64 {
 // RadiansFromDegrees converts an angle expressed in degrees to an angle expressed in radians.
 func RadiansFromDegrees(degrees float64) float64 {
 	return degrees * (math.Pi / 180.0)
+}
+
+// PlanetOrbitalPeriod returns the average number of days it takes for a planet to orbit the Sun.
+func PlanetOrbitalPeriod(body Body) float64 {
+	switch body {
+	case Mercury:
+		return 87.969
+	case Venus:
+		return 224.701
+	case Earth:
+		return earthOrbitalPeriod
+	case Mars:
+		return 686.980
+	case Jupiter:
+		return 4332.589
+	case Saturn:
+		return 10759.22
+	case Uranus:
+		return 30685.4
+	case Neptune:
+		return neptuneOrbitalPeriod
+	case Pluto:
+		return 90560.0
+	default:
+		return -1.0 // invalid body
+	}
 }
 
 // Returns the product of mass and universal gravitational constant of a Solar System body.
