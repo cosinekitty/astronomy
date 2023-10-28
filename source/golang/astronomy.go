@@ -1552,6 +1552,26 @@ func RotationEqjGal() RotationMatrix {
 	return r
 }
 
+func RotationGalEqj() RotationMatrix {
+	r := RotationMatrix{}
+
+	// This rotation matrix was calculated by the following script
+	// in this same source code repository:
+	// demo/python/galeqj_matrix.py
+
+	r.Rot[0][0] = -0.0548624779711344
+	r.Rot[0][1] = -0.8734572784246782
+	r.Rot[0][2] = -0.4838000529948520
+	r.Rot[1][0] = +0.4941095946388765
+	r.Rot[1][1] = -0.4447938112296831
+	r.Rot[1][2] = +0.7470034631630423
+	r.Rot[2][0] = -0.8676668813529025
+	r.Rot[2][1] = -0.1980677870294097
+	r.Rot[2][2] = +0.4559861124470794
+
+	return r
+}
+
 type addSolTerm struct {
 	coeffl float64
 	coeffs float64
