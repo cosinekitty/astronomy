@@ -3068,7 +3068,7 @@ Given a date and time, this function calculates the rotation of the Earth, repre
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time for which to find GAST. The parameter is passed by address because it can be modified by the call: As an optimization, this function caches the sidereal time value in `time`, unless it has already been cached, in which case the cached value is reused. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time for which to find GAST. The parameter is passed by address because it can be modified by the call: As an optimization, this function caches the sidereal time value in `time`, unless it has already been cached, in which case the cached value is reused. If the `time` pointer is NULL, this function returns a NAN value. | 
 
 
 
