@@ -1996,6 +1996,53 @@ func moonMagnitude(phase float64, helioDist float64, geoDist float64) float64 {
 	return mag
 }
 
+//--- Search code begins here ---------------------------------------------------------------------
+
+func quadInterp(tm, dt, fa, fm, fb float64) (bool, float64, float64) {
+	var Q, R, S, u, ru, x, x1, x2, outT, outDfDt float64
+
+	Q = (fb+fa)/2.0 - fm
+	R = (fb - fa) / 2.0
+	S = fm
+
+	if Q == 0.0 {
+		// This is a line, not a parabola.
+		if R == 0.0 {
+			return false, 0.0, 0.0 // This is a HORIZONTAL line... can't make progress!
+		}
+		x = -S / R
+		if x < -1.0 || x > +1.0 {
+			return false, 0.0, 0.0 // out of bounds
+		}
+	} else {
+		// This really is a parabola. Find roots x1, x2.
+		u = R*R - 4*Q*S
+		if u <= 0.0 {
+			return false, 0.0, 0.0 // can't solve if imaginary, or if vertex of parabola is tangent.
+		}
+
+		ru = math.Sqrt(u)
+		x1 = (-R + ru) / (2.0 * Q)
+		x2 = (-R - ru) / (2.0 * Q)
+		if -1.0 <= x1 && x1 <= +1.0 {
+			if -1.0 <= x2 && x2 <= +1.0 {
+				return false, 0.0, 0.0 // two roots are within bounds; we require a unique zero-crossing.
+			}
+			x = x1
+		} else if -1.0 <= x2 && x2 <= +1.0 {
+			x = x2
+		} else {
+			return false, 0.0, 0.0 // neither root is within bounds
+		}
+	}
+
+	outT = tm + x*dt
+	outDfDt = (2*Q*x + R) / dt
+	return true, outT, outDfDt
+}
+
+//--- Search code ends here ---------------------------------------------------------------------
+
 //--- Generated code begins here ------------------------------------------------------------------
 
 var constelNames = [...]constelInfo{
