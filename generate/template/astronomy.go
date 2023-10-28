@@ -847,6 +847,55 @@ func dsin(degrees float64) float64 {
 	return math.Sin(RadiansFromDegrees(degrees))
 }
 
+func obscuration(a, b, c float64) float64 {
+	if a <= 0.0 {
+		panic("Radius of first disc must be positive.")
+	}
+	if b <= 0.0 {
+		panic("Radius of second disc must be positive.")
+	}
+	if c < 0.0 {
+		panic("Distance between discs is not allowed to be negative.")
+	}
+	if c >= a+b {
+		// The discs are too far apart to have any overlapping area.
+		return 0.0
+	}
+
+	if c == 0.0 {
+		// The discs have a common center. Therefore, one disc is inside the other.
+		if a <= b {
+			return 1.0
+		}
+		return (b * b) / (a * a)
+	}
+
+	x := (a*a - b*b + c*c) / (2 * c)
+	radicand := a*a - x*x
+	if radicand <= 0.0 {
+		// The circumferences do not intersect, or are tangent.
+		// We already ruled out the case of non-overlapping discs.
+		// Therefore, one disc is inside the other.
+		if a <= b {
+			return 1.0
+		}
+		return (b * b) / (a * a)
+	}
+
+	// The discs overlap fractionally in a pair of lens-shaped areas.
+
+	y := math.Sqrt(radicand)
+
+	// Return the overlapping fractional area.
+	// There are two lens-shaped areas, one to the left of x, the other to the right of x.
+	// Each part is calculated by subtracting a triangular area from a sector's area.
+	lens1 := a*a*math.Acos(x/a) - x*y
+	lens2 := b*b*math.Acos((c-x)/b) - (c-x)*y
+
+	// Find the fractional area with respect to the first disc.
+	return (lens1 + lens2) / (math.Pi * a * a)
+}
+
 // AngleBetween calculates the angle in degrees between two vectors.
 // Given a pair of vectors avec and bvec, this function returns the
 // angle in degrees between the vectors in 3D space.
