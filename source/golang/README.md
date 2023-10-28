@@ -59,6 +59,7 @@ It provides a suite of well\-tested functions for calculating positions of the S
   - [func Pivot\(rotation RotationMatrix, axis int, angle float64\) \(\*RotationMatrix, error\)](<#Pivot>)
   - [func RotationEclEqj\(\) RotationMatrix](<#RotationEclEqj>)
   - [func RotationEqdEqj\(time \*AstroTime\) RotationMatrix](<#RotationEqdEqj>)
+  - [func RotationEqjEcl\(\) RotationMatrix](<#RotationEqjEcl>)
 - [type SearchContext](<#SearchContext>)
 - [type SeasonsInfo](<#SeasonsInfo>)
 - [type Spherical](<#Spherical>)
@@ -382,7 +383,7 @@ type AstroVector struct {
 ```
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1722>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1742>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -538,7 +539,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="JupiterMoons"></a>
-### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1885>)
+### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1905>)
 
 ```go
 func JupiterMoons(time AstroTime) JupiterMoonsInfo
@@ -680,8 +681,17 @@ func RotationEqdEqj(time *AstroTime) RotationMatrix
 
 Calculates a rotation matrix that converts equator\-of\-date \(EQD\) to J2000 mean equator \(EQJ\).
 
+<a name="RotationEqjEcl"></a>
+### func [RotationEqjEcl](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1515>)
+
+```go
+func RotationEqjEcl() RotationMatrix
+```
+
+Calculates a rotation matrix from J2000 mean equator \(EQJ\) to J2000 mean ecliptic \(ECL\).
+
 <a name="SearchContext"></a>
-## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1918-L1920>)
+## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1938-L1940>)
 
 
 

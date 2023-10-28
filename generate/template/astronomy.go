@@ -1511,6 +1511,26 @@ func RotationEclEqj() RotationMatrix {
 	return r
 }
 
+// Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL).
+func RotationEqjEcl() RotationMatrix {
+	// ob = mean obliquity of the J2000 ecliptic = 0.40909260059599012 radians.
+	const c = 0.9174821430670688 // cos(ob)
+	const s = 0.3977769691083922 // sin(ob)
+
+	r := RotationMatrix{}
+	r.Rot[0][0] = 1.0
+	r.Rot[1][0] = 0.0
+	r.Rot[2][0] = 0.0
+	r.Rot[0][1] = 0.0
+	r.Rot[1][1] = +c
+	r.Rot[2][1] = +s
+	r.Rot[0][2] = 0.0
+	r.Rot[1][2] = -s
+	r.Rot[2][2] = +c
+
+	return r
+}
+
 type addSolTerm struct {
 	coeffl float64
 	coeffs float64
