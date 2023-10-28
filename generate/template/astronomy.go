@@ -929,6 +929,10 @@ func dtan(degrees float64) float64 {
 	return math.Tan(RadiansFromDegrees(degrees))
 }
 
+func datan2(y, x float64) float64 {
+	return DegreesFromRadians(math.Atan2(y, x))
+}
+
 func obscuration(a, b, c float64) float64 {
 	if a <= 0.0 {
 		panic("Radius of first disc must be positive.")
@@ -1178,6 +1182,28 @@ func eclToEquVec(ecl AstroVector) AstroVector {
 	oblDeg := meanObliq(ecl.T.Tt)
 	oblRad := RadiansFromDegrees(oblDeg)
 	return eclOblToEquVec(ecl, oblRad)
+}
+
+func rotateEquatorialToEcliptic(pos AstroVector, obliqRadians float64) Ecliptic {
+	cosOb := math.Cos(obliqRadians)
+	sinOb := math.Sin(obliqRadians)
+
+	ex := +pos.X
+	ey := +pos.Y*cosOb + pos.Z*sinOb
+	ez := -pos.Y*sinOb + pos.Z*cosOb
+
+	xyproj := math.Hypot(ex, ey)
+	elon := 0.0
+	if xyproj > 0.0 {
+		elon = datan2(ey, ex)
+		if elon < 0.0 {
+			elon += 360.0
+		}
+	}
+
+	elat := datan2(ez, xyproj)
+	vec := AstroVector{ex, ey, ez, pos.T}
+	return Ecliptic{vec, elat, elon}
 }
 
 // Given a date and time, SiderealTime calculates the rotation of the
