@@ -1326,6 +1326,56 @@ func CombineRotation(a, b RotationMatrix) RotationMatrix {
 	return c
 }
 
+// Pivot re-orients a rotation matrix by pivoting it by an angle around one of its axes.
+// Given a rotation matrix, a selected coordinate axis, and an angle in degrees,
+// this function pivots the rotation matrix by that angle around that coordinate axis.
+// For example, if you have rotation matrix that converts ecliptic coordinates (ECL)
+// to horizontal coordinates (HOR), but you really want to convert ECL to the orientation
+// of a telescope camera pointed at a given body, you can use Pivot twice:
+// (1) pivot around the zenith axis by the body's azimuth, then (2) pivot around the
+// western axis by the body's altitude angle. The resulting rotation matrix will then
+// reorient ECL coordinates to the orientation of your telescope camera.
+// The axis parameter is an integer that selects which axis to pivot about: 0=x, 1=y, 2=z.
+// The angle parameter is an angle in degrees indicating the amount of rotation around the specified axis.
+// Positive angles indicate rotation counterclockwise as seen from the positive
+// direction along that axis, looking towards the origin point of the orientation system.
+// Any finite number of degrees is allowed, but best precision will result from keeping angle
+// in the range [-360, +360].
+func Pivot(rotation RotationMatrix, axis int, angle float64) (*RotationMatrix, error) {
+	if axis < 0 || axis > 2 {
+		return nil, errors.New("Invalid coordinate axis for Pivot. Must be 0..2.")
+	}
+	if !isfinite(angle) {
+		return nil, errors.New("Angle is not a finite number. Not valid for Pivot.")
+	}
+	c := dcos(angle)
+	s := dsin(angle)
+
+	// We need to maintain the "right-hand" rule, no matter which
+	// axis was selected. That means we pick (i, j, k) axis order
+	// such that the following vector cross product is satisfied:
+	// i x j = k
+	i := (axis + 1) % 3
+	j := (axis + 2) % 3
+	k := axis
+
+	r := RotationMatrix{}
+
+	r.Rot[i][i] = c*rotation.Rot[i][i] - s*rotation.Rot[i][j]
+	r.Rot[i][j] = s*rotation.Rot[i][i] + c*rotation.Rot[i][j]
+	r.Rot[i][k] = rotation.Rot[i][k]
+
+	r.Rot[j][i] = c*rotation.Rot[j][i] - s*rotation.Rot[j][j]
+	r.Rot[j][j] = s*rotation.Rot[j][i] + c*rotation.Rot[j][j]
+	r.Rot[j][k] = rotation.Rot[j][k]
+
+	r.Rot[k][i] = c*rotation.Rot[k][i] - s*rotation.Rot[k][j]
+	r.Rot[k][j] = s*rotation.Rot[k][i] + c*rotation.Rot[k][j]
+	r.Rot[k][k] = rotation.Rot[k][k]
+
+	return &r, nil
+}
+
 // Calculates a rotation matrix that converts equator-of-date (EQD) to J2000 mean equator (EQJ).
 func RotationEqdEqj(time *AstroTime) RotationMatrix {
 	prec := precessionRot(*time, from2000)

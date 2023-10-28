@@ -54,6 +54,7 @@ It provides a suite of well\-tested functions for calculating positions of the S
   - [func CombineRotation\(a, b RotationMatrix\) RotationMatrix](<#CombineRotation>)
   - [func IdentityMatrix\(\) RotationMatrix](<#IdentityMatrix>)
   - [func InverseRotation\(rotation RotationMatrix\) RotationMatrix](<#InverseRotation>)
+  - [func Pivot\(rotation RotationMatrix, axis int, angle float64\) \(\*RotationMatrix, error\)](<#Pivot>)
   - [func RotationEqdEqj\(time \*AstroTime\) RotationMatrix](<#RotationEqdEqj>)
 - [type SearchContext](<#SearchContext>)
 - [type SeasonsInfo](<#SeasonsInfo>)
@@ -360,7 +361,7 @@ type AstroVector struct {
 ```
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1544>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1594>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -516,7 +517,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="JupiterMoons"></a>
-### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1707>)
+### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1757>)
 
 ```go
 func JupiterMoons(time AstroTime) JupiterMoonsInfo
@@ -631,8 +632,17 @@ func InverseRotation(rotation RotationMatrix) RotationMatrix
 
 Calculates the inverse of a rotation matrix. Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that transform.
 
+<a name="Pivot"></a>
+### func [Pivot](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1344>)
+
+```go
+func Pivot(rotation RotationMatrix, axis int, angle float64) (*RotationMatrix, error)
+```
+
+Pivot re\-orients a rotation matrix by pivoting it by an angle around one of its axes. Given a rotation matrix, a selected coordinate axis, and an angle in degrees, this function pivots the rotation matrix by that angle around that coordinate axis. For example, if you have rotation matrix that converts ecliptic coordinates \(ECL\) to horizontal coordinates \(HOR\), but you really want to convert ECL to the orientation of a telescope camera pointed at a given body, you can use Pivot twice: \(1\) pivot around the zenith axis by the body's azimuth, then \(2\) pivot around the western axis by the body's altitude angle. The resulting rotation matrix will then reorient ECL coordinates to the orientation of your telescope camera. The axis parameter is an integer that selects which axis to pivot about: 0=x, 1=y, 2=z. The angle parameter is an angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping angle in the range \[\-360, \+360\].
+
 <a name="RotationEqdEqj"></a>
-### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1330>)
+### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1380>)
 
 ```go
 func RotationEqdEqj(time *AstroTime) RotationMatrix
@@ -641,7 +651,7 @@ func RotationEqdEqj(time *AstroTime) RotationMatrix
 Calculates a rotation matrix that converts equator\-of\-date \(EQD\) to J2000 mean equator \(EQJ\).
 
 <a name="SearchContext"></a>
-## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1740-L1742>)
+## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1790-L1792>)
 
 
 
