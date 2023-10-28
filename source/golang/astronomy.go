@@ -589,6 +589,56 @@ const (
 	JplHorizonsRefraction
 )
 
+// RefractionAngle calculates the amount of "lift" to an altitude angle caused by atmospheric refraction.
+// Given an altitude angle and a refraction option, calculates
+// the amount of "lift" caused by atmospheric refraction.
+// This is the number of degrees higher in the sky an object appears
+// due to the lensing of the Earth's atmosphere.
+// This function works best near sea level.
+// To correct for higher elevations, call Atmosphere for that
+// elevation and multiply the refraction angle by the resulting relative density.
+// The refraction parameter specifies which refraction correction to use.
+// If set to NormalRefraction, uses a well-behaved refraction model that works well for
+// all valid values (-90 to +90) of altitude.
+// If set to JplHorizonsRefraction, this function returns a value compatible with the JPL Horizons tool.
+// This is provided for internal unit tests that compare against JPL Horizons data.
+// Any other value, including NoRefraction, causes this function to return 0.0.
+// The return value is a non-negative value expressed in degrees of refraction above the horizontal.
+func RefractionAngle(refraction Refraction, altitude float64) float64 {
+	if altitude < -90.0 || altitude > +90.0 {
+		return 0.0 // no attempt to correct an invalid altitude
+	}
+	var refr float64
+	if refraction == NormalRefraction || refraction == JplHorizonsRefraction {
+		// http://extras.springer.com/1999/978-1-4471-0555-8/chap4/horizons/horizons.pdf
+		// JPL Horizons says it uses refraction algorithm from
+		// Meeus "Astronomical Algorithms", 1991, p. 101-102.
+		// I found the following Go implementation:
+		// https://github.com/soniakeys/meeus/blob/master/v3/refraction/refract.go
+		// This is a translation from the function "Saemundsson" there.
+		// I found experimentally that JPL Horizons clamps the angle to 1 degree below the horizon.
+		// This is important because the 'refr' formula below goes crazy near hd = -5.11.
+		hd := altitude
+		if hd < -1.0 {
+			hd = -1.0
+		}
+
+		refr = (1.02 / dtan(hd+10.3/(hd+5.11))) / 60.0
+
+		if refraction == NormalRefraction && altitude < -1.0 {
+			// In "normal" mode we gradually reduce refraction toward the nadir
+			// so that we never get an altitude angle less than -90 degrees.
+			// When horizon angle is -1 degrees, the factor is exactly 1.
+			// As altitude approaches -90 (the nadir), the fraction approaches 0 linearly.
+			refr *= (altitude + 90.0) / 89.0
+		}
+	} else {
+		// No refraction, or the refraction option is invalid.
+		refr = 0.0
+	}
+	return refr
+}
+
 // AtmosphereInfo contains information about idealized atmospheric variables at a given elevation.
 type AtmosphereInfo struct {
 	Pressure    float64 // atmospheric pressure in pascals
@@ -873,6 +923,10 @@ func dcos(degrees float64) float64 {
 
 func dsin(degrees float64) float64 {
 	return math.Sin(RadiansFromDegrees(degrees))
+}
+
+func dtan(degrees float64) float64 {
+	return math.Tan(RadiansFromDegrees(degrees))
 }
 
 func obscuration(a, b, c float64) float64 {

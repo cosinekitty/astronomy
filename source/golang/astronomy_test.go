@@ -376,5 +376,21 @@ func TestObserverGravity(t *testing.T) {
 	gravityCheck(t, 88.0000, 0.0, 9.832121)
 	gravityCheck(t, 89.0000, 0.0, 9.832169)
 	gravityCheck(t, 90.0000, 0.0, 9.832185)
+}
 
+func refractionCheck(t *testing.T, refraction Refraction, altitude, expected float64) {
+	actual := RefractionAngle(refraction, altitude)
+	diff := math.Abs(expected - actual)
+	if diff > 1.0e-16 {
+		t.Errorf("Refraction discrepancy = %g", diff)
+	}
+}
+
+func TestRefraction(t *testing.T) {
+	refractionCheck(t, NormalRefraction, 0.0, 0.4830321230741662)
+	refractionCheck(t, NoRefraction, 0.0, 0.0)
+	refractionCheck(t, NormalRefraction, 10.0, 0.09012801338558875)
+	refractionCheck(t, NormalRefraction, 20.0, 0.04568673807086863)
+	refractionCheck(t, NormalRefraction, -80.0, 0.0726495079641601)
+	refractionCheck(t, NormalRefraction, -90.0, 0.0)
 }
