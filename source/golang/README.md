@@ -19,6 +19,7 @@ It provides a suite of well\-tested functions for calculating positions of the S
 - [func DegreesFromRadians\(radians float64\) float64](<#DegreesFromRadians>)
 - [func Dot\(a, b AstroVector\) float64](<#Dot>)
 - [func MassProduct\(body Body\) float64](<#MassProduct>)
+- [func ObserverGravity\(latitude, height float64\) float64](<#ObserverGravity>)
 - [func RadiansFromDegrees\(degrees float64\) float64](<#RadiansFromDegrees>)
 - [func SiderealTime\(time \*AstroTime\) float64](<#SiderealTime>)
 - [type AstroMoonQuarter](<#AstroMoonQuarter>)
@@ -177,7 +178,7 @@ func DaysFromCalendar(year, month, day, hour, minute int, second float64) float6
 
 
 <a name="DefineStar"></a>
-## func [DefineStar](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L942>)
+## func [DefineStar](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L965>)
 
 ```go
 func DefineStar(body Body, ra, dec, distanceLightYears float64) error
@@ -212,6 +213,15 @@ func MassProduct(body Body) float64
 
 Returns the product of mass and universal gravitational constant of a Solar System body. For problems involving the gravitational interactions of Solar System bodies, it is helpful to know the product GM, where G = the universal gravitational constant and M = the mass of the body. In practice, GM is known to a higher precision than either G or M alone, and thus using the product results in the most accurate results. This function returns the product GM in the units au^3/day^2. The values come from page 10 of a JPL memorandum regarding the DE405/LE405 ephemeris: https://web.archive.org/web/20120220062549/http://iau-comm4.jpl.nasa.gov/de405iom/de405iom.pdf
 
+<a name="ObserverGravity"></a>
+## func [ObserverGravity](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L935>)
+
+```go
+func ObserverGravity(latitude, height float64) float64
+```
+
+Calculates the gravitational acceleration experienced by an observer on the Earth. This function implements the WGS 84 Ellipsoidal Gravity Formula. The result is a combination of inward gravitational acceleration with outward centrifugal acceleration, as experienced by an observer in the Earth's rotating frame of reference. The resulting value increases toward the Earth's poles and decreases toward the equator, consistent with changes of the weight measured by a spring scale of a fixed mass moved to different latitudes and heights on the Earth. The latitude is of the observer in degrees north or south of the equator. By formula symmetry, positive latitudes give the same answer as negative latitudes, so the sign does not matter. The height is specified above the sea level geoid in meters. No range checking is done; however, accuracy is only valid in the range 0 to 100000 meters. The return value is the gravitational acceleration expressed in meters per second squared.
+
 <a name="RadiansFromDegrees"></a>
 ## func [RadiansFromDegrees](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L778>)
 
@@ -222,7 +232,7 @@ func RadiansFromDegrees(degrees float64) float64
 RadiansFromDegrees converts an angle expressed in degrees to an angle expressed in radians.
 
 <a name="SiderealTime"></a>
-## func [SiderealTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1094>)
+## func [SiderealTime](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1117>)
 
 ```go
 func SiderealTime(time *AstroTime) float64
@@ -350,7 +360,7 @@ type AstroVector struct {
 ```
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1521>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1544>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -359,7 +369,7 @@ func GeoMoon(time AstroTime) AstroVector
 GeoMoon calculates the equatorial geocentric position of the Moon at a given time. The returned vector indicates the Moon's center relative to the Earth's center. The vector components are expressed in AU \(astronomical units\). The coordinates are oriented with respect to the Earth's equator at the J2000 epoch. In Astronomy Engine, this orientation is called EQJ.
 
 <a name="RotateVector"></a>
-### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1263>)
+### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1286>)
 
 ```go
 func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector
@@ -506,7 +516,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="JupiterMoons"></a>
-### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1684>)
+### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1707>)
 
 ```go
 func JupiterMoons(time AstroTime) JupiterMoonsInfo
@@ -595,7 +605,7 @@ type RotationMatrix struct {
 ```
 
 <a name="CombineRotation"></a>
-### func [CombineRotation](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1285>)
+### func [CombineRotation](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1308>)
 
 ```go
 func CombineRotation(a, b RotationMatrix) RotationMatrix
@@ -622,7 +632,7 @@ func InverseRotation(rotation RotationMatrix) RotationMatrix
 Calculates the inverse of a rotation matrix. Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that transform.
 
 <a name="RotationEqdEqj"></a>
-### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1307>)
+### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1330>)
 
 ```go
 func RotationEqdEqj(time *AstroTime) RotationMatrix
@@ -631,7 +641,7 @@ func RotationEqdEqj(time *AstroTime) RotationMatrix
 Calculates a rotation matrix that converts equator\-of\-date \(EQD\) to J2000 mean equator \(EQJ\).
 
 <a name="SearchContext"></a>
-## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1717-L1719>)
+## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1740-L1742>)
 
 
 
@@ -686,7 +696,7 @@ type StateVector struct {
 ```
 
 <a name="RotateState"></a>
-### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1272>)
+### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1295>)
 
 ```go
 func RotateState(rotation RotationMatrix, state StateVector) StateVector
