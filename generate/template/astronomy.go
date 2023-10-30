@@ -864,6 +864,27 @@ type vsopModel struct {
 	rad vsopFormula
 }
 
+func vsopDerivCalc(formula *vsopFormula, t float64) float64 {
+	tpower := 1.0 // t^2
+	dpower := 0.0 // t^(s-1)
+	deriv := 0.0
+	for s, series := range formula.series {
+		sinSum := 0.0
+		cosSum := 0.0
+		for _, term := range series.term {
+			angle := term.phase + (t * term.frequency)
+			sinSum += term.amplitude * term.frequency * math.Sin(angle)
+			if s > 0 {
+				cosSum += term.amplitude * math.Cos(angle)
+			}
+		}
+		deriv += (float64(s) * dpower * cosSum) - (tpower * sinSum)
+		dpower = tpower
+		tpower *= t
+	}
+	return deriv
+}
+
 type jupiterMoon struct {
 	mu   float64
 	al0  float64
