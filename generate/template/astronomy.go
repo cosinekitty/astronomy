@@ -864,6 +864,25 @@ type vsopModel struct {
 	rad vsopFormula
 }
 
+func vsopFormulaCalc(formula *vsopFormula, t float64, clampAngle bool) float64 {
+	coord := 0.0
+	tpower := 1.0
+	for _, series := range formula.series {
+		sum := 0.0
+		for _, term := range series.term {
+			sum += term.amplitude * math.Cos(term.phase+(t*term.frequency))
+		}
+		incr := tpower * sum
+		if clampAngle {
+			// improve precision: longitude angles can be hundreds of radians
+			incr = math.Mod(incr, 2.0*math.Pi)
+		}
+		coord += incr
+		tpower *= t
+	}
+	return coord
+}
+
 func vsopDerivCalc(formula *vsopFormula, t float64) float64 {
 	tpower := 1.0 // t^2
 	dpower := 0.0 // t^(s-1)
