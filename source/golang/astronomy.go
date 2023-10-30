@@ -760,6 +760,22 @@ func (tv terseVector) timesScalar(k float64) terseVector {
 	return terseVector{k * tv.X, k * tv.Y, k * tv.Z}
 }
 
+func updatePosition(dt float64, r, v, a terseVector) terseVector {
+	return terseVector{
+		r.X + dt*(v.X+dt*a.X/2.0),
+		r.Y + dt*(v.Y+dt*a.Y/2.0),
+		r.Z + dt*(v.Z+dt*a.Z/2.0),
+	}
+}
+
+func updateVelocity(dt float64, v, a terseVector) terseVector {
+	return terseVector{
+		v.X + dt*a.X,
+		v.Y + dt*a.Y,
+		v.Z + dt*a.Z,
+	}
+}
+
 type bodyState struct {
 	Tt float64     // Terrestrial Time in J2000 days
 	R  terseVector // position [au]
