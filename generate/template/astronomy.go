@@ -912,6 +912,15 @@ func vsopRotate(eclip terseVector) terseVector {
 	}
 }
 
+func vsopSphereToRect(lon, lat, radius float64) terseVector {
+	rcoslat := radius * math.Cos(lat)
+	return terseVector{
+		rcoslat * math.Cos(lon),
+		rcoslat * math.Sin(lon),
+		radius * math.Sin(lat),
+	}
+}
+
 type jupiterMoon struct {
 	mu   float64
 	al0  float64
