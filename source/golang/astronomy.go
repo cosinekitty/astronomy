@@ -2222,6 +2222,58 @@ func moonMagnitude(phase float64, helioDist float64, geoDist float64) float64 {
 	return mag
 }
 
+func visualMagnitude(body Body, phase, helioDist, geoDist float64) (float64, error) {
+	// For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
+	c0 := 0.0
+	c1 := 0.0
+	c2 := 0.0
+	c3 := 0.0
+	switch body {
+	case Mercury:
+		c0 = -0.60
+		c1 = +4.98
+		c2 = -4.88
+		c3 = +3.02
+		break
+	case Venus:
+		if phase < 163.6 {
+			c0 = -4.47
+			c1 = +1.03
+			c2 = +0.57
+			c3 = +0.13
+		} else {
+			c0 = 0.98
+			c1 = -1.02
+		}
+		break
+	case Mars:
+		c0 = -1.52
+		c1 = +1.60
+		break
+	case Jupiter:
+		c0 = -9.40
+		c1 = +0.50
+		break
+	case Uranus:
+		c0 = -7.19
+		c1 = +0.25
+		break
+	case Neptune:
+		c0 = -6.87
+		break
+	case Pluto:
+		c0 = -1.00
+		c1 = +4.00
+		break
+	default:
+		return 0.0, errors.New("Invalid body for visual magnitude")
+	}
+	x := phase / 100.0
+	mag := c0 + x*(c1+x*(c2+x*c3))
+	mag += 5.0 * math.Log10(helioDist*geoDist)
+	return mag, nil
+}
+
 //--- Search code begins here ---------------------------------------------------------------------
 
 func quadInterp(tm, dt, fa, fm, fb float64) (bool, float64, float64) {
