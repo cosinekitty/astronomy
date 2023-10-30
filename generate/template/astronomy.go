@@ -475,6 +475,32 @@ type Spherical struct {
 	Dist float64 // a distance expressed in astronomical units
 }
 
+// Converts Cartesian coordinates to spherical coordinates.
+func SphereFromVector(vector AstroVector) Spherical {
+	xyproj := vector.X*vector.X + vector.Y*vector.Y
+	dist := math.Sqrt(xyproj + vector.Z*vector.Z)
+	var lat, lon float64
+	if xyproj == 0.0 {
+		if vector.Z == 0.0 {
+			// Indeterminate coordinates; pos vector has zero length.
+			return Spherical{0.0, 0.0, 0.0}
+		}
+		lon = 0.0
+		if vector.Z < 0.0 {
+			lat = -90.0
+		} else {
+			lat = +90.0
+		}
+	} else {
+		lon = datan2(vector.Y, vector.X)
+		if lon < 0.0 {
+			lon += 360.0
+		}
+		lat = datan2(vector.Z, math.Sqrt(xyproj))
+	}
+	return Spherical{lat, lon, dist}
+}
+
 type EclipseKind int
 
 // The different kinds of lunar/solar eclipses.
