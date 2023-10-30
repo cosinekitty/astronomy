@@ -904,6 +904,14 @@ func vsopDerivCalc(formula *vsopFormula, t float64) float64 {
 	return deriv
 }
 
+func vsopRotate(eclip terseVector) terseVector {
+	return terseVector{
+		eclip.X + 0.000000440360*eclip.Y - 0.000000190919*eclip.Z,
+		-0.000000479966*eclip.X + 0.917482137087*eclip.Y - 0.397776982902*eclip.Z,
+		0.397776982902*eclip.Y + 0.917482137087*eclip.Z,
+	}
+}
+
 type jupiterMoon struct {
 	mu   float64
 	al0  float64
