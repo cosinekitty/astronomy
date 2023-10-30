@@ -501,6 +501,19 @@ func SphereFromVector(vector AstroVector) Spherical {
 	return Spherical{lat, lon, dist}
 }
 
+// Converts spherical coordinates to Cartesian coordinates.
+func VectorFromSphere(sphere Spherical, time AstroTime) AstroVector {
+	radlat := RadiansFromDegrees(sphere.Lat)
+	radlon := RadiansFromDegrees(sphere.Lon)
+	rcoslat := sphere.Dist * math.Cos(radlat)
+	return AstroVector{
+		rcoslat * math.Cos(radlon),
+		rcoslat * math.Sin(radlon),
+		sphere.Dist * math.Sin(radlat),
+		time,
+	}
+}
+
 func toggleAzimuthDirection(az float64) float64 {
 	az = 360.0 - az
 	if az >= 360.0 {
