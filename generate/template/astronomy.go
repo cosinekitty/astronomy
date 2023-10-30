@@ -501,6 +501,16 @@ func SphereFromVector(vector AstroVector) Spherical {
 	return Spherical{lat, lon, dist}
 }
 
+func toggleAzimuthDirection(az float64) float64 {
+	az = 360.0 - az
+	if az >= 360.0 {
+		az -= 360.0
+	} else if az < 0.0 {
+		az += 360.0
+	}
+	return az
+}
+
 type EclipseKind int
 
 // The different kinds of lunar/solar eclipses.
