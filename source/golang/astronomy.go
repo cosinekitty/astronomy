@@ -1512,6 +1512,17 @@ func nutationPosVel(state StateVector, dir precessDirection) StateVector {
 	return RotateState(rot, state)
 }
 
+func spin(angle float64, pos AstroVector) AstroVector {
+	cosang := dcos(angle)
+	sinang := dsin(angle)
+	return AstroVector{
+		+cosang*pos.X + sinang*pos.Y,
+		-sinang*pos.X + cosang*pos.Y,
+		pos.Z,
+		pos.T,
+	}
+}
+
 // RotateVector applies a rotation to a vector, yielding a vector in another orientation system.
 func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector {
 	return AstroVector{
