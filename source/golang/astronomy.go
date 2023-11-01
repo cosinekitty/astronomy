@@ -513,6 +513,34 @@ func EquatorFromVector(vector AstroVector) Equatorial {
 	}
 }
 
+// Converts cartesian coordinates to horizontal coordinates.
+// Given a horizontal Cartesian vector, returns horizontal azimuth and altitude.
+//
+// IMPORTANT: This function differs from SphereFromVector in two ways:
+//   - SphereFromVector returns a `Lon` value that represents azimuth defined counterclockwise
+//     from north (e.g., west = +90), but this function represents a clockwise rotation
+//     (e.g., east = +90). The difference is because `SphereFromVector` is intended
+//     to preserve the vector "right-hand rule", while this function defines azimuth in a more
+//     traditional way as used in navigation and cartography.
+//   - This function optionally corrects for atmospheric refraction, while `SphereFromVector`
+//     does not.
+//
+// The returned structure contains the azimuth in `Lon`.
+// It is measured in degrees clockwise from north: east = +90 degrees, west = +270 degrees.
+//
+// The altitude is stored in `Lat`.
+//
+// The distance to the observed object is stored in `Dist`,
+// and is expressed in astronomical units (AU).
+func HorizonFromVector(vector AstroVector, refraction Refraction) Spherical {
+	sphere := SphereFromVector(vector)
+	return Spherical{
+		sphere.Lat + RefractionAngle(refraction, sphere.Lat),
+		toggleAzimuthDirection(sphere.Lon),
+		sphere.Dist,
+	}
+}
+
 // Converts spherical coordinates to Cartesian coordinates.
 func VectorFromSphere(sphere Spherical, time AstroTime) AstroVector {
 	radlat := RadiansFromDegrees(sphere.Lat)
