@@ -952,6 +952,45 @@ func calcVsop(model *vsopModel, time AstroTime) AstroVector {
 	return vsopRotate(eclip).toAstroVector(time)
 }
 
+func calcVsopPosVel(model *vsopModel, tt float64) bodyState {
+	t := tt / daysPerMillennium // millennia since 2000
+
+	// Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
+	lon := vsopFormulaCalc(&model.lon, t, true)
+	lat := vsopFormulaCalc(&model.lat, t, false)
+	rad := vsopFormulaCalc(&model.rad, t, false)
+
+	eclipPos := vsopSphereToRect(lon, lat, rad)
+
+	dlonDt := vsopDerivCalc(&model.lon, t)
+	dlatDt := vsopDerivCalc(&model.lat, t)
+	dradDt := vsopDerivCalc(&model.rad, t)
+
+	// Use spherical coords and spherical derivatives to calculate
+	// the velocity vector in rectangular coordinates.
+
+	coslon := math.Cos(lon)
+	sinlon := math.Sin(lon)
+	coslat := math.Cos(lat)
+	sinlat := math.Sin(lat)
+
+	vx := +(dradDt * coslat * coslon) - (rad * sinlat * coslon * dlatDt) - (rad * coslat * sinlon * dlonDt)
+	vy := +(dradDt * coslat * sinlon) - (rad * sinlat * sinlon * dlatDt) + (rad * coslat * coslon * dlonDt)
+	vz := +(dradDt * sinlat) + (rad * coslat * dlatDt)
+
+	// Convert speed units from [AU/millennium] to [AU/day].
+	eclipVel := terseVector{
+		vx / daysPerMillennium,
+		vy / daysPerMillennium,
+		vz / daysPerMillennium,
+	}
+
+	// Rotate the vectors from ecliptic to equatorial coordinates.
+	equPos := vsopRotate(eclipPos)
+	equVel := vsopRotate(eclipVel)
+	return bodyState{tt, equPos, equVel}
+}
+
 type jupiterMoon struct {
 	mu   float64
 	al0  float64
