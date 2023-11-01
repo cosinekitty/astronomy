@@ -80,6 +80,7 @@ const (
 	asecToRad            = 1.0 / arc                // radians per arcsecond
 	earthOrbitalPeriod   = 365.256
 	neptuneOrbitalPeriod = 60189.0
+	daysPerMillennium    = 365250.0
 )
 
 func isfinite(x float64) bool {
@@ -501,6 +502,17 @@ func SphereFromVector(vector AstroVector) Spherical {
 	return Spherical{lat, lon, dist}
 }
 
+// Given an equatorial vector, calculates equatorial angular coordinates.
+func EquatorFromVector(vector AstroVector) Equatorial {
+	sphere := SphereFromVector(vector)
+	return Equatorial{
+		Ra:   sphere.Lon / 15.0, // convert degrees to sidereal hours
+		Dec:  sphere.Lat,
+		Dist: sphere.Dist,
+		Vec:  vector,
+	}
+}
+
 // Converts spherical coordinates to Cartesian coordinates.
 func VectorFromSphere(sphere Spherical, time AstroTime) AstroVector {
 	radlat := RadiansFromDegrees(sphere.Lat)
@@ -755,6 +767,10 @@ type terseVector struct {
 	Z float64
 }
 
+func (tv terseVector) toAstroVector(time AstroTime) AstroVector {
+	return AstroVector{tv.X, tv.Y, tv.Z, time}
+}
+
 func (tv *terseVector) increment(other terseVector) {
 	tv.X += other.X
 	tv.Y += other.Y
@@ -919,6 +935,21 @@ func vsopSphereToRect(lon, lat, radius float64) terseVector {
 		rcoslat * math.Sin(lon),
 		radius * math.Sin(lat),
 	}
+}
+
+func calcVsop(model *vsopModel, time AstroTime) AstroVector {
+	t := time.Tt / daysPerMillennium // millennia since 2000
+
+	// Calculate the VSOP "B" trigonometric series to obtain ecliptic spherical coordinates.
+	lon := vsopFormulaCalc(&model.lon, t, true)
+	lat := vsopFormulaCalc(&model.lat, t, false)
+	rad := vsopFormulaCalc(&model.rad, t, false)
+
+	// Convert ecliptic spherical coordinates to ecliptic Cartesian coordinates.
+	eclip := vsopSphereToRect(lon, lat, rad)
+
+	// Convert ecliptic Cartesian coordinates to equatorial Cartesian coordinates.
+	return vsopRotate(eclip).toAstroVector(time)
 }
 
 type jupiterMoon struct {
