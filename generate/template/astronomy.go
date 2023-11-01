@@ -991,6 +991,61 @@ func calcVsopPosVel(model *vsopModel, tt float64) bodyState {
 	return bodyState{tt, equPos, equVel}
 }
 
+// The function CorrectLightTravel solves a generalized problem of
+// deducing how far in the past light must have left a target object
+// to be seen by an observer at a specified time.
+// This interface expresses an arbitrary position function as
+// a function of time that is passed to CorrectLightTravel.
+type PositionFunction interface {
+	Position(time AstroTime) (AstroVector, error)
+}
+
+// Solves for light travel time, given a vector function representing distance as a function of time.
+//
+// When observing a distant object, for example Jupiter as seen from Earth,
+// the amount of time it takes for light to travel from the object to the
+// observer can significantly affect the object's apparent position.
+// This function is a generic solver that figures out how long in the
+// past light must have left the observed object to reach the observer
+// at the specified observation time. It uses PositionFunction
+// to express an arbitrary position vector as a function of time.
+//
+// This function repeatedly calls `func.Position`, passing a series of time
+// estimates in the past. Then `func.Position` must return a relative state vector between
+// the observer and the target. `CorrectLightTravel` keeps calling
+// `func.Position` with more and more refined estimates of the time light must have
+// left the target to arrive at the observer.
+//
+// For common use cases, it is simpler to use BackdatePosition
+// for calculating the light travel time correction of one body observing another body.
+//
+// For geocentric calculations, GeoVector also backdates the returned
+// position vector for light travel time, only it returns the observation time in
+// the returned vector's `t` field rather than the backdated time.
+func CorrectLightTravel(posFunc PositionFunction, time AstroTime) (*AstroVector, error) {
+	ltime := time
+	for iter := 0; iter < 10; iter++ {
+		pos, err := posFunc.Position(ltime)
+		if err != nil {
+			return nil, err
+		}
+		// This solver does not support more than one light-day of distance,
+		// because that would cause convergence problems and inaccurate
+		// values for stellar aberration angles.
+		lt := pos.Length() / SpeedOfLightAuPerDay
+		if lt > 1.0 {
+			return nil, errors.New("Object is too distant for light-travel solver.")
+		}
+		ltime2 := time.AddDays(-lt)
+		dt := math.Abs(ltime2.Tt - ltime.Tt)
+		if dt < 1.0e-9 { // 86.4 microseconds
+			return &pos, nil
+		}
+		ltime = ltime2
+	}
+	return nil, errors.New("Light travel time correction did not converge.")
+}
+
 type jupiterMoon struct {
 	mu   float64
 	al0  float64
