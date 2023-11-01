@@ -310,7 +310,7 @@ type CalendarDateTime struct {
 // CalendarFromDays converts a J2000 day value to a Gregorian calendar date and time.
 func CalendarFromDays(ut float64) (*CalendarDateTime, error) {
 	if !isfinite(ut) {
-		return nil, errors.New("Non-finite value of ut")
+		return nil, errors.New("non-finite value of ut")
 	}
 
 	// Adapted from the NOVAS C 3.1 function cal_date().
@@ -352,11 +352,11 @@ func CalendarFromDays(ut float64) (*CalendarDateTime, error) {
 	year := int(100*(n-49) + m + k - 400*c)
 
 	if year < -999999 || year > +999999 {
-		return nil, errors.New("The supplied time is too far from the year 2000 to be represented.")
+		return nil, errors.New("the supplied time is too far from the year 2000 to be represented.")
 	}
 
 	if month < 1 || month > 12 || day < 1 || day > 31 {
-		return nil, errors.New("Internal error: invalid calendar date calculated.")
+		return nil, errors.New("internal error: invalid calendar date calculated.")
 	}
 
 	return &CalendarDateTime{year, month, day, hour, minute, second}, nil
@@ -396,7 +396,7 @@ func TimeFromCalendar(year, month, day, hour, minute int, second float64) AstroT
 // https://www.ngdc.noaa.gov/stp/space-weather/online-publications/miscellaneous/us-standard-atmosphere-1976/us-standard-atmosphere_st76-1562_noaa.pdf
 func Atmosphere(elevationMeters float64) (AtmosphereInfo, error) {
 	if !isfinite(elevationMeters) || elevationMeters < -500.0 || elevationMeters > 100000.0 {
-		return AtmosphereInfo{}, errors.New("Invalid elevation")
+		return AtmosphereInfo{}, errors.New("invalid elevation")
 	}
 	const P0 = 101325.0 // pressure at sea level [pascals]
 	const T0 = 288.15   // temperature at sea level [kelvins]
@@ -1034,7 +1034,7 @@ func CorrectLightTravel(posFunc PositionFunction, time AstroTime) (*AstroVector,
 		// values for stellar aberration angles.
 		lt := pos.Length() / SpeedOfLightAuPerDay
 		if lt > 1.0 {
-			return nil, errors.New("Object is too distant for light-travel solver.")
+			return nil, errors.New("object is too distant for light-travel solver.")
 		}
 		ltime2 := time.AddDays(-lt)
 		dt := math.Abs(ltime2.Tt - ltime.Tt)
@@ -1043,7 +1043,115 @@ func CorrectLightTravel(posFunc PositionFunction, time AstroTime) (*AstroVector,
 		}
 		ltime = ltime2
 	}
-	return nil, errors.New("Light travel time correction did not converge.")
+	return nil, errors.New("light travel time correction did not converge.")
+}
+
+func Horizon(time AstroTime, observer Observer, ra, dec float64, refraction Refraction) (*Topocentric, error) {
+	sinlat := dsin(observer.Latitude)
+	coslat := dcos(observer.Latitude)
+	sinlon := dsin(observer.Longitude)
+	coslon := dcos(observer.Longitude)
+	sindc := dsin(dec)
+	cosdc := dcos(dec)
+	sinra := dsin(ra * 15.0)
+	cosra := dcos(ra * 15.0)
+
+	// Calculate three mutually perpendicular unit vectors
+	// in equatorial coordinates: uze, une, uwe.
+	//
+	// uze = The direction of the observer's local zenith (straight up).
+	// une = The direction toward due north on the observer's horizon.
+	// uwe = The direction toward due west on the observer's horizon.
+	//
+	// HOWEVER, these are uncorrected for the Earth's rotation due to the time of day.
+	//
+	// The components of these 3 vectors are as follows:
+	// x = direction from center of Earth toward 0 degrees longitude (the prime meridian) on equator.
+	// y = direction from center of Earth toward 90 degrees west longitude on equator.
+	// z = direction from center of Earth toward the north pole.
+	uze := AstroVector{coslat * coslon, coslat * sinlon, sinlat, time}
+	une := AstroVector{-sinlat * coslon, -sinlat * sinlon, coslat, time}
+	uwe := AstroVector{sinlon, -coslon, 0.0, time}
+
+	// Correct the vectors uze, une, uwe for the Earth's rotation by calculating
+	// sidereal time. Call spin() for each uncorrected vector to rotate about
+	// the Earth's axis to yield corrected unit vectors uz, un, uw.
+	// Multiply sidereal hours by -15 to convert to degrees and flip eastward
+	// rotation of the Earth to westward apparent movement of objects with time.
+	angle := -15.0 * SiderealTime(&time)
+	uz := spin(angle, uze)
+	un := spin(angle, une)
+	uw := spin(angle, uwe)
+
+	// Convert angular equatorial coordinates (RA, DEC) to
+	// cartesian equatorial coordinates in 'p', using the
+	// same orientation system as uze, une, uwe.
+	p := AstroVector{cosdc * cosra, cosdc * sinra, sindc, time}
+
+	// Use dot products of p with the zenith, north, and west
+	// vectors to obtain the cartesian coordinates of the body in
+	// the observer's horizontal orientation system.
+	// pz = zenith component [-1, +1]
+	// pn = north  component [-1, +1]
+	// pw = west   component [-1, +1]
+	pz := p.X*uz.X + p.Y*uz.Y + p.Z*uz.Z
+	pn := p.X*un.X + p.Y*un.Y + p.Z*un.Z
+	pw := p.X*uw.X + p.Y*uw.Y + p.Z*uw.Z
+
+	// proj is the "shadow" of the body vector along the observer's flat ground.
+	proj := math.Hypot(pn, pw)
+
+	// Calculate az = azimuth (compass direction clockwise from East.)
+	var az float64
+	if proj > 0.0 {
+		// If the body is not exactly straight up/down, it has an azimuth.
+		// Invert the angle to produce degrees eastward from north.
+		az = -datan2(pw, pn)
+		if az < 0.0 {
+			az += 360.0
+		}
+	} else {
+		// The body is straight up/down, so it does not have an azimuth.
+		// Report an arbitrary but reasonable value.
+		az = 0.0
+	}
+
+	// zd = the angle of the body away from the observer's zenith, in degrees.
+	zd := datan2(proj, pz)
+	horRa := ra
+	horDec := dec
+
+	if refraction == NormalRefraction || refraction == JplHorizonsRefraction {
+		zd0 := zd
+		refr := RefractionAngle(refraction, 90.0-zd)
+		zd -= refr
+
+		if refr > 0.0 && zd > 3.0e-4 {
+			sinzd := dsin(zd)
+			coszd := dcos(zd)
+			sinzd0 := dsin(zd0)
+			coszd0 := dcos(zd0)
+
+			prx := ((p.X-coszd0*uz.X)/sinzd0)*sinzd + uz.X*coszd
+			pry := ((p.Y-coszd0*uz.Y)/sinzd0)*sinzd + uz.Y*coszd
+			prz := ((p.Z-coszd0*uz.Z)/sinzd0)*sinzd + uz.Z*coszd
+
+			proj = math.Hypot(prx, pry)
+			if proj > 0.0 {
+				horRa = datan2(pry, prx) / 15.0
+				if horRa < 0.0 {
+					horRa += 24.0
+				}
+			} else {
+				horRa = 0.0
+			}
+			horDec = datan2(prz, proj)
+		}
+	} else if refraction != NoRefraction {
+		return nil, errors.New("unsupported refraction option.")
+	}
+
+	return &Topocentric{az, 90.0 - zd, horRa, horDec}, nil
 }
 
 type jupiterMoon struct {
@@ -1298,16 +1406,16 @@ func userDefinedStar(body Body) *starDef {
 func DefineStar(body Body, ra, dec, distanceLightYears float64) error {
 	star := getStar(body)
 	if star == nil {
-		return errors.New("Invalid body value for a user-defined star.")
+		return errors.New("invalid body value for a user-defined star.")
 	}
 	if !isfinite(ra) || ra < 0.0 || ra >= 24.0 {
-		return errors.New("Invalid right ascension for user-defined star.")
+		return errors.New("invalid right ascension for user-defined star.")
 	}
 	if !isfinite(dec) || dec < -90.0 || dec > +90.0 {
-		return errors.New("Invalid declination for user-defined star.")
+		return errors.New("invalid declination for user-defined star.")
 	}
 	if !isfinite(distanceLightYears) || distanceLightYears < 1.0 {
-		return errors.New("Invalid heliocentric distance for user-defined star. Must be at least 1 light year.")
+		return errors.New("invalid heliocentric distance for user-defined star. Must be at least 1 light year.")
 	}
 	star.ra = ra
 	star.dec = dec
@@ -1709,10 +1817,10 @@ func CombineRotation(a, b RotationMatrix) RotationMatrix {
 // in the range [-360, +360].
 func Pivot(rotation RotationMatrix, axis int, angle float64) (*RotationMatrix, error) {
 	if axis < 0 || axis > 2 {
-		return nil, errors.New("Invalid coordinate axis for Pivot. Must be 0..2.")
+		return nil, errors.New("invalid coordinate axis for Pivot. Must be 0..2.")
 	}
 	if !isfinite(angle) {
-		return nil, errors.New("Angle is not a finite number. Not valid for Pivot.")
+		return nil, errors.New("angle is not a finite number. Not valid for Pivot.")
 	}
 	c := dcos(angle)
 	s := dsin(angle)
@@ -2459,7 +2567,7 @@ func visualMagnitude(body Body, phase, helioDist, geoDist float64) (float64, err
 		c1 = +4.00
 		break
 	default:
-		return 0.0, errors.New("Invalid body for visual magnitude")
+		return 0.0, errors.New("invalid body for visual magnitude")
 	}
 	x := phase / 100.0
 	mag := c0 + x*(c1+x*(c2+x*c3))

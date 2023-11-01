@@ -394,3 +394,46 @@ func TestRefraction(t *testing.T) {
 	refractionCheck(t, NormalRefraction, -80.0, 0.0726495079641601)
 	refractionCheck(t, NormalRefraction, -90.0, 0.0)
 }
+
+func TestHorizon(t *testing.T) {
+	// Test case generated using the Python version of Astronomy Engine.
+	// 2023-11-01T18:07:13.348Z
+	time := TimeFromCalendar(2023, 11, 1, 18, 7, 13.348)
+	ttExpected := 8705.255869201963
+	if diff := math.Abs(ttExpected - time.Tt); diff > 1.0e-16 {
+		t.Errorf("excessive tt diff = %g", diff)
+	}
+	utExpected := 8705.255015601851
+	if diff := math.Abs(utExpected - time.Ut); diff > 1.0e-16 {
+		t.Errorf("excessive ut diff = %g", diff)
+	}
+
+	observer := Observer{Latitude: 35.0, Longitude: -87.0, Height: 0.0}
+	ra := 12.0
+	dec := 5.0
+	topo, err := Horizon(time, observer, ra, dec, NormalRefraction)
+	if err != nil {
+		t.Fatal(err)
+	} else {
+		azimuthExpected := 245.2118420327564
+		altitudeExpected := 38.42409530728063
+		raExpected := 12.001062402159066
+		decExpected := 5.014149039382782
+
+		if diff := math.Abs(topo.Azimuth - azimuthExpected); diff > 1.0e-13 {
+			t.Errorf("excessive azimuth diff = %g, calculated = %g", diff, topo.Azimuth)
+		}
+
+		if diff := math.Abs(topo.Altitude - altitudeExpected); diff > 3.0e-14 {
+			t.Errorf("excessive altitude diff = %g, calculated = %g", diff, topo.Altitude)
+		}
+
+		if diff := math.Abs(topo.Ra - raExpected); diff > 1.0e-16 {
+			t.Errorf("excessive RA diff = %g, calculated = %g", diff, topo.Ra)
+		}
+
+		if diff := math.Abs(topo.Dec - decExpected); diff > 1.0e-16 {
+			t.Errorf("excessive DEC diff = %g, calculated = %g", diff, topo.Dec)
+		}
+	}
+}
