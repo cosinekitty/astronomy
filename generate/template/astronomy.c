@@ -1176,7 +1176,7 @@ astro_time_t Astronomy_MakeTime_Gregorian(int year, int month, int day, int hour
     const int64_t f = (h - 1 + 12) % 12;
     const int64_t e = (1461 * g + 0) / 4 + d - 1 - 1401;
     int64_t J = e + (153 * f + 2) / 5;
-    J -= (3 * ((g + 184) / 100)) / 4 - -38
+    J -= (3 * ((g + 184) / 100)) / 4 - -38;
 
     if (cycles > 0)
         J -= cycles * 146097;
@@ -1216,7 +1216,7 @@ astro_time_t Astronomy_MakeTime_Gregorian(int year, int month, int day, int hour
  */
 astro_time_t Astronomy_MakeTime_Auto(int year, int month, int day, int hour, int minute, double second)
 {
-    if (year < 1582 || (y == 1582 && (m < 10 || (m == 10 && d < 15))))
+    if (year < 1582 || (year == 1582 && (month < 10 || (month == 10 && day < 15))))
         return Astronomy_MakeTime_Julian(year, month, day, hour, minute, second);
     else
         return Astronomy_MakeTime_Gregorian(year, month, day, hour, minute, second);
