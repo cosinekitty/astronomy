@@ -384,6 +384,12 @@ func refractionCheck(t *testing.T, refraction Refraction, altitude, expected flo
 	if diff > 1.0e-16 {
 		t.Errorf("Refraction discrepancy = %g", diff)
 	}
+
+	check := InverseRefractionAngle(refraction, altitude+actual)
+	diff = math.Abs(expected + check)
+	if diff > 2.6e-15 {
+		t.Errorf("Inverse refraction discrepancy = %g, expected = %g, check = %g", diff, expected, check)
+	}
 }
 
 func TestRefraction(t *testing.T) {

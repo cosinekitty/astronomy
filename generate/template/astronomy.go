@@ -728,6 +728,28 @@ func RefractionAngle(refraction Refraction, altitude float64) float64 {
 	return refr
 }
 
+// Calculates the inverse of an atmospheric refraction angle.
+// Given an observed altitude angle that includes atmospheric refraction,
+// calculates the negative angular correction to obtain the unrefracted
+// altitude. This is useful for cases where observed horizontal
+// coordinates are to be converted to another orientation system,
+// but refraction first must be removed from the observed position.
+func InverseRefractionAngle(refraction Refraction, bentAltitude float64) float64 {
+	if bentAltitude < -90.0 || bentAltitude > +90.0 {
+		return 0.0 // no attempt to correct an invalid altitude
+	}
+
+	// Find the pre-adjusted altitude whose refraction correction leads to 'altitude'.
+	altitude := bentAltitude - RefractionAngle(refraction, bentAltitude)
+	for {
+		diff := (altitude + RefractionAngle(refraction, altitude)) - bentAltitude
+		if math.Abs(diff) < 1.0e-14 {
+			return altitude - bentAltitude
+		}
+		altitude -= diff
+	}
+}
+
 // AtmosphereInfo contains information about idealized atmospheric variables at a given elevation.
 type AtmosphereInfo struct {
 	Pressure    float64 // atmospheric pressure in pascals
