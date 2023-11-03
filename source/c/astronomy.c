@@ -1032,9 +1032,9 @@ astro_time_t Astronomy_CurrentTime(void)
 #endif
 
 /**
- * @brief Creates an #astro_time_t value from a given calendar date and time.
+ * @brief Creates an #astro_time_t value from a given Gregorian calendar date and time.
  *
- * Given a UTC calendar date and time, calculates an #astro_time_t value that can
+ * Given a Gregorian calendar date and time in UTC, calculates an #astro_time_t value that can
  * be passed to other Astronomy Engine functions for performing various calculations
  * relating to that date and time.
  *
@@ -1043,9 +1043,9 @@ astro_time_t Astronomy_CurrentTime(void)
  * and this function never returns any indication of an error.
  * Invalid values, for example passing in February 31, may cause unexpected return values.
  *
- * @param year      The UTC calendar year, e.g. 2019.
- * @param month     The UTC calendar month in the range 1..12.
- * @param day       The UTC calendar day in the range 1..31.
+ * @param year      The calendar year, e.g. 2019.
+ * @param month     The calendar month in the range 1..12.
+ * @param day       The calendar day in the range 1..31.
  * @param hour      The UTC hour of the day in the range 0..23.
  * @param minute    The UTC minute in the range 0..59.
  * @param second    The UTC floating-point second in the range [0, 60).
@@ -1081,6 +1081,94 @@ astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minu
     time.psi = time.eps = time.st = NAN;
 
     return time;
+}
+
+/**
+ * @brief Creates an #astro_time_t value from a given Julian calendar date and time.
+ *
+ * Given a Julian calendar date and time, calculates an #astro_time_t value that can
+ * be passed to other Astronomy Engine functions for performing various calculations
+ * relating to that date and time.
+ *
+ * It is the caller's responsibility to ensure that the parameter values are correct.
+ * The parameters are not checked for validity,
+ * and this function never returns any indication of an error.
+ * Invalid values, for example passing in February 31, may cause unexpected return values.
+ *
+ * @param year      The Julian calendar year, e.g. 2019.
+ * @param month     The Julian calendar month in the range 1..12.
+ * @param day       The Julian calendar day in the range 1..31.
+ * @param hour      The UTC hour of the day in the range 0..23.
+ * @param minute    The UTC minute in the range 0..59.
+ * @param second    The UTC floating-point second in the range [0, 60).
+ *
+ * @return  An #astro_time_t value that represents the given Julian calendar date and time.
+ */
+astro_time_t Astronomy_MakeTime_Julian(int year, int month, int day, int hour, int minute, double second)
+{
+    astro_time_t time;
+    int64_t y = (int64_t)year;
+    int64_t m = (int64_t)month;
+    int64_t d = (int64_t)day;
+    int64_t cycles = 0;
+
+    /*
+        Algorithm adapted from Richards, E.G. 2012, "Calendars," from the Explanatory Supplement to the Astronomical Almanac, 3rd edition, S.E Urban and P.K. Seidelmann eds., (Mill Valley, CA: University Science Books), Chapter 15, pp. 585-624.
+        See: https://aa.usno.navy.mil/downloads/c15_usb_online.pdf
+    */
+    if (y < -4712) {
+        cycles = (-4713 - y) / 4 + 1;
+        y += cycles * 4;
+    }
+
+    const int64_t h = m - 2;
+    const int64_t g = y + 4716 - (12 - h) / 12;
+    const int64_t f = (h - 1 + 12) % 12;
+    const int64_t e = (1461 * g + 0) / 4 + d - 1 - 1401;
+    int64_t J = e + (153 * f + 2) / 5;
+
+    if (cycles > 0)
+        J -= cycles * 1461;
+
+    int64_t y2000 = J - 2451545;
+
+    time.ut = (y2000 - 0.5) + (hour / 24.0) + (minute / 1440.0) + (second / 86400.0);
+    time.tt = TerrestrialTime(time.ut);
+    time.psi = time.eps = time.st = NAN;
+
+    return time;
+}
+
+/**
+ * @brief Creates an #astro_time_t value from a given calendar date and time.
+ *
+ * Given a calendar date and time, calculates an #astro_time_t value that can
+ * be passed to other Astronomy Engine functions for performing various calculations
+ * relating to that date and time.
+ *
+ * Dates before the Julian to Gregorian calender changeover (1582-10-15) are treated
+ * as dates in the Julian calendar, while later dates are treated as dates in the Gregorian calendar.
+ *
+ * It is the caller's responsibility to ensure that the parameter values are correct.
+ * The parameters are not checked for validity,
+ * and this function never returns any indication of an error.
+ * Invalid values, for example passing in February 31, may cause unexpected return values.
+ *
+ * @param year      The calendar year, e.g. 2019.
+ * @param month     The calendar month in the range 1..12.
+ * @param day       The calendar day in the range 1..31.
+ * @param hour      The UTC hour of the day in the range 0..23.
+ * @param minute    The UTC minute in the range 0..59.
+ * @param second    The UTC floating-point second in the range [0, 60).
+ *
+ * @return  An #astro_time_t value that represents the given calendar date and time.
+ */
+astro_time_t Astronomy_MakeTime_Auto(int year, int month, int day, int hour, int minute, double second)
+{
+    if (year < 1582 || (year == 1582 && (month < 10 || (month == 10 && day < 15))))
+        return Astronomy_MakeTime_Julian(year, month, day, hour, minute, second);
+    else
+        return Astronomy_MakeTime(year, month, day, hour, minute, second);
 }
 
 /**
