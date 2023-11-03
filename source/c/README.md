@@ -1510,11 +1510,11 @@ Some Astronomy Engine functions calculate values pertaining to an observer on th
 <a name="Astronomy_MakeTime"></a>
 ### Astronomy_MakeTime(year, month, day, hour, minute, second) &#8658; [`astro_time_t`](#astro_time_t)
 
-**Creates an [`astro_time_t`](#astro_time_t) value from a given calendar date and time.** 
+**Creates an [`astro_time_t`](#astro_time_t) value from a given Gregorian calendar date and time.** 
 
 
 
-Given a UTC calendar date and time, calculates an [`astro_time_t`](#astro_time_t) value that can be passed to other Astronomy Engine functions for performing various calculations relating to that date and time.
+Given a Gregorian calendar date and time in UTC, calculates an [`astro_time_t`](#astro_time_t) value that can be passed to other Astronomy Engine functions for performing various calculations relating to that date and time.
 
 It is the caller's responsibility to ensure that the parameter values are correct. The parameters are not checked for validity, and this function never returns any indication of an error. Invalid values, for example passing in February 31, may cause unexpected return values.
 
@@ -1526,9 +1526,9 @@ It is the caller's responsibility to ensure that the parameter values are correc
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| `int` | `year` |  The UTC calendar year, e.g. 2019.  | 
-| `int` | `month` |  The UTC calendar month in the range 1..12.  | 
-| `int` | `day` |  The UTC calendar day in the range 1..31.  | 
+| `int` | `year` |  The calendar year, e.g. 2019.  | 
+| `int` | `month` |  The calendar month in the range 1..12.  | 
+| `int` | `day` |  The calendar day in the range 1..31.  | 
 | `int` | `hour` |  The UTC hour of the day in the range 0..23.  | 
 | `int` | `minute` |  The UTC minute in the range 0..59.  | 
 | `double` | `second` |  The UTC floating-point second in the range [0, 60). | 
