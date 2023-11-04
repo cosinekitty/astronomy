@@ -1350,7 +1350,7 @@ astro_utc_t Astronomy_UtcFromTime_Julian(astro_time_t time)
  */
 astro_utc_t Astronomy_UtcFromTime_Auto(astro_time_t time)
 {
-    if (time.ut < -746558.5)
+    if (time.ut < -152384.5)
         return Astronomy_UtcFromTime_Julian(time);
     else
        return Astronomy_UtcFromTime(time);
