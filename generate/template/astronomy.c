@@ -1312,10 +1312,10 @@ astro_utc_t Astronomy_UtcFromTime_Julian(astro_time_t time)
     const int64_t h = 5 * g + 2;
     utc.day = (h % 153) / 5 + 1;
     utc.month = ((h / 153 + 2) % 12) + 1;
-    utc.year = e / 1461 - 4716 + (12 + 2 - utc.month) / 12;
+    utc.year = (int)(e / 1461 - 4716 + (12 + 2 - utc.month) / 12);
 
     if (cycles > 0)
-        utc.year -= cycles * 4;
+        utc.year -= (int)(cycles * 4);
 
     double ignore;
     double dayFraction = modf(julianDatePlus12Hours, &ignore);
