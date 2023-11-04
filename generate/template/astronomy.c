@@ -1220,12 +1220,12 @@ astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc)
 }
 
 /**
- * @brief Determines the calendar year, month, day, and time from an #astro_time_t value.
+ * @brief Determines the Gregorian calendar year, month, day, and time from an #astro_time_t value.
  *
  * After calculating the date and time of an astronomical event in the form of
  * an #astro_time_t value, it is often useful to display the result in a human-readable
  * form. This function converts the linear time scales in the `ut` field of #astro_time_t
- * into a calendar date and time: year, month, day, hours, minutes, and seconds, expressed
+ * into a Gregorian calendar date and time: year, month, day, hours, minutes, and seconds, expressed
  * in UTC.
  *
  * @param time  The astronomical time value to be converted to calendar date and time.
@@ -1276,51 +1276,98 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
     return utc;
 }
 
+/**
+ * @brief Determines the Julian calendar year, month, day, and time from an #astro_time_t value.
+ *
+ * After calculating the date and time of an astronomical event in the form of
+ * an #astro_time_t value, it is often useful to display the result in a human-readable
+ * form. This function converts the linear time scales in the `ut` field of #astro_time_t
+ * into a Julian calendar date and time: year, month, day, hours, minutes, and seconds, expressed
+ * in UTC.
+ *
+ * @param time  The astronomical time value to be converted to calendar date and time.
+ * @return  A date and time broken out into conventional year, month, day, hour, minute, and second.
+ */
+astro_utc_t Astronomy_UtcFromTime_Julian(astro_time_t time)
+{
+    astro_utc_t utc;
+
+    double julianDatePlus12Hours = time.ut + 2451545 + 0.5;
+    int64_t J = (int64_t)floor(julianDatePlus12Hours);
+
+    /*
+        Algorithm adapted from Richards, E.G. 2012, "Calendars," from the Explanatory Supplement to the Astronomical Almanac, 3rd edition, S.E Urban and P.K. Seidelmann eds., (Mill Valley, CA: University Science Books), Chapter 15, pp. 585-624.
+        See: https://aa.usno.navy.mil/downloads/c15_usb_online.pdf
+     */
+    int64_t cycles = 0;
+
+    if (J < 0) {
+        cycles = -J / 1461 + 1;
+        J += cycles * 1461;
+    }
+
+    const int64_t f = J + 1401;
+    const int64_t e = 4 * f + 3;
+    const int64_t g = (e % 1461) / 4;
+    const int64_t h = 5 * g + 2;
+    utc.day = (h % 153) / 5 + 1;
+    utc.month = ((h / 153 + 2) % 12) + 1;
+    utc.year = e / 1461 - 4716 + (12 + 2 - utc.month) / 12;
+
+    if (cycles > 0)
+        utc.year -= cycles * 4;
+
+    double ignore;
+    double dayFraction = modf(julianDatePlus12Hours, &ignore);
+    if (dayFraction < 0)
+        dayFraction += 1;
+
+    double hour, minute;
+    double hourFraction = modf(dayFraction * 24, &hour);
+    double minuteFraction = modf(hourFraction * 60, &minute);
+
+    utc.hour = (int)hour;
+    utc.minute = (int)minute;
+    utc.second = minuteFraction * 60;
+
+    return utc;
+}
 
 /**
- * @brief Formats an #astro_time_t value as an ISO 8601 string.
+ * @brief Determines the Julian or Gregorian calendar year, month, day, and time from an #astro_time_t value.
  *
- * Given an #astro_time_t value `time`, formats it as an ISO 8601
- * string to the resolution specified by the `format` parameter.
- * The result is stored in the `text` buffer whose capacity in bytes
- * is specified by `size`.
+ * Dates before the Julian to Gregorian calender changeover (1582-10-15) are treated
+ * as dates in the Julian calendar, while later dates are treated as dates in the Gregorian calendar.
  *
- * @param time
- *      The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string.
- *      If the civil time is outside the year range -999999 to +999999, the function fails
- *      and returns `ASTRO_BAD_TIME`. Years prior to 1583 are treated as if they are
- *      using the modern Gregorian calendar, even when the Julian calendar was actually in effect.
- *      The year before 1 AD, commonly known as 1 BC, is represented by the value 0.
- *      The year 2 BC is represented by -1, etc.
+ * After calculating the date and time of an astronomical event in the form of
+ * an #astro_time_t value, it is often useful to display the result in a human-readable
+ * form. This function converts the linear time scales in the `ut` field of #astro_time_t
+ * into a Julian or Gregorian calendar date and time: year, month, day, hours, minutes, and seconds, expressed
+ * in UTC.
  *
- * @param format
- *      Specifies the resolution to which the date and time should be formatted,
- *      as explained at #astro_time_format_t.
- *      If the value of `format` is not recognized, the function fails and
- *      returns `ASTRO_INVALID_PARAMETER`.
- *
- * @param text
- *      A pointer to a text buffer to receive the output.
- *      If `text` is `NULL`, this function returns `ASTRO_INVALID_PARAMETER`.
- *      If the function fails for any reason, and `text` is not `NULL`,
- *      and `size` is greater than 0, the `text` buffer is set to an empty string.
- *
- * @param size
- *      The size in bytes of the buffer pointed to by `text`. The buffer must
- *      be large enough to accomodate the output format selected by the
- *      `format` parameter, as specified at #astro_time_format_t.
- *      If `size` is too small to hold the string as specified by `format`,
- *      the `text` buffer is set to `""` (if possible)
- *      and the function returns `ASTRO_BUFFER_TOO_SMALL`.
- *      A buffer that is `TIME_TEXT_BYTES` (28) bytes or larger is always large enough for this function.
- *
- * @return `ASTRO_SUCCESS` on success; otherwise an error as described in the parameter notes.
+ * @param time  The astronomical time value to be converted to calendar date and time.
+ * @return  A date and time broken out into conventional year, month, day, hour, minute, and second.
  */
-astro_status_t Astronomy_FormatTime(
+astro_utc_t Astronomy_UtcFromTime_Auto(astro_time_t time)
+{
+    if (time.ut < -152384.5)
+        return Astronomy_UtcFromTime_Julian(time);
+    else
+       return Astronomy_UtcFromTime(time);
+}
+
+/* @param calendar
+ *      The calendar to use for date formatting.
+ *      0 = automatic determination based on date
+ *      1 = Julian calendar
+ *      2 = Gregorian calendar
+ */
+static astro_status_t FormatTime(
     astro_time_t time,
     astro_time_format_t format,
     char *text,
-    size_t size)
+    size_t size,
+    int calendar)
 {
     int nprinted;
     double rounding;
@@ -1366,8 +1413,13 @@ astro_status_t Astronomy_FormatTime(
     /* Perform rounding. */
     time.ut += rounding;
 
-    /* Convert linear J2000 days to Gregorian UTC date/time. */
-    utc = Astronomy_UtcFromTime(time);
+    /* Convert linear J2000 days to Julian or Gregorian UTC date/time. */
+    if (calendar == 0)
+        utc = Astronomy_UtcFromTime_Auto(time);
+    else if (calendar == 1)
+        utc = Astronomy_UtcFromTime_Julian(time);
+    else
+        utc = Astronomy_UtcFromTime(time);
     if (utc.year < -999999 || utc.year > +999999)
         return ASTRO_BAD_TIME;
 
@@ -1430,6 +1482,152 @@ astro_status_t Astronomy_FormatTime(
     return ASTRO_SUCCESS;
 }
 
+/**
+ * @brief Formats an #astro_time_t value as an ISO 8601 string using the Gregorian calendar.
+ *
+ * Given an #astro_time_t value `time`, formats it as an ISO 8601
+ * string to the resolution specified by the `format` parameter.
+ * The result is stored in the `text` buffer whose capacity in bytes
+ * is specified by `size`.
+ *
+ * @param time
+ *      The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string.
+ *      If the civil time is outside the year range -999999 to +999999, the function fails
+ *      and returns `ASTRO_BAD_TIME`. Dates before the Julian to Gregorian calender changeover
+ *      (1582-10-15) are treated as dates in the Gregorian calendar even though the Julian
+ *      calendar was actually in effect.
+ *      The year before 1 AD, commonly known as 1 BC, is represented by the value 0.
+ *      The year 2 BC is represented by -1, etc.
+ *
+ * @param format
+ *      Specifies the resolution to which the date and time should be formatted,
+ *      as explained at #astro_time_format_t.
+ *      If the value of `format` is not recognized, the function fails and
+ *      returns `ASTRO_INVALID_PARAMETER`.
+ *
+ * @param text
+ *      A pointer to a text buffer to receive the output.
+ *      If `text` is `NULL`, this function returns `ASTRO_INVALID_PARAMETER`.
+ *      If the function fails for any reason, and `text` is not `NULL`,
+ *      and `size` is greater than 0, the `text` buffer is set to an empty string.
+ *
+ * @param size
+ *      The size in bytes of the buffer pointed to by `text`. The buffer must
+ *      be large enough to accomodate the output format selected by the
+ *      `format` parameter, as specified at #astro_time_format_t.
+ *      If `size` is too small to hold the string as specified by `format`,
+ *      the `text` buffer is set to `""` (if possible)
+ *      and the function returns `ASTRO_BUFFER_TOO_SMALL`.
+ *      A buffer that is `TIME_TEXT_BYTES` (28) bytes or larger is always large enough for this function.
+ *
+ * @return `ASTRO_SUCCESS` on success; otherwise an error as described in the parameter notes.
+ */
+astro_status_t Astronomy_FormatTime(
+    astro_time_t time,
+    astro_time_format_t format,
+    char *text,
+    size_t size)
+{
+    return FormatTime(time, format, text, size, 2);
+}
+
+/**
+ * @brief Formats an #astro_time_t value as an ISO 8601 string using the Julian calendar.
+ *
+ * Given an #astro_time_t value `time`, formats it as an ISO 8601
+ * string to the resolution specified by the `format` parameter.
+ * The result is stored in the `text` buffer whose capacity in bytes
+ * is specified by `size`.
+ *
+ * @param time
+ *      The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string.
+ *      If the civil time is outside the year range -999999 to +999999, the function fails
+ *      and returns `ASTRO_BAD_TIME`. Dates after the Julian to Gregorian calender changeover
+ *      (1582-10-15) are treated as dates in the Julian calendar even though the Gregorian
+ *      calendar was actually in effect.
+ *      The year before 1 AD, commonly known as 1 BC, is represented by the value 0.
+ *      The year 2 BC is represented by -1, etc.
+ *
+ * @param format
+ *      Specifies the resolution to which the date and time should be formatted,
+ *      as explained at #astro_time_format_t.
+ *      If the value of `format` is not recognized, the function fails and
+ *      returns `ASTRO_INVALID_PARAMETER`.
+ *
+ * @param text
+ *      A pointer to a text buffer to receive the output.
+ *      If `text` is `NULL`, this function returns `ASTRO_INVALID_PARAMETER`.
+ *      If the function fails for any reason, and `text` is not `NULL`,
+ *      and `size` is greater than 0, the `text` buffer is set to an empty string.
+ *
+ * @param size
+ *      The size in bytes of the buffer pointed to by `text`. The buffer must
+ *      be large enough to accomodate the output format selected by the
+ *      `format` parameter, as specified at #astro_time_format_t.
+ *      If `size` is too small to hold the string as specified by `format`,
+ *      the `text` buffer is set to `""` (if possible)
+ *      and the function returns `ASTRO_BUFFER_TOO_SMALL`.
+ *      A buffer that is `TIME_TEXT_BYTES` (28) bytes or larger is always large enough for this function.
+ *
+ * @return `ASTRO_SUCCESS` on success; otherwise an error as described in the parameter notes.
+ */
+astro_status_t Astronomy_FormatTime_Julian(
+    astro_time_t time,
+    astro_time_format_t format,
+    char *text,
+    size_t size)
+{
+    return FormatTime(time, format, text, size, 1);
+}
+
+/**
+ * @brief Formats an #astro_time_t value as an ISO 8601 string using the Julian or Gregorian calendar.
+ *
+ * Given an #astro_time_t value `time`, formats it as an ISO 8601
+ * string to the resolution specified by the `format` parameter.
+ * The result is stored in the `text` buffer whose capacity in bytes
+ * is specified by `size`.
+ *
+ * @param time
+ *      The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string.
+ *      If the civil time is outside the year range -999999 to +999999, the function fails
+ *      and returns `ASTRO_BAD_TIME`. Dates before the Julian to Gregorian calender changeover
+ *      (1582-10-15) are treated as dates in the Julian calendar, while later dates are treated
+ *      as dates in the Gregorian calendar.
+ *      The year before 1 AD, commonly known as 1 BC, is represented by the value 0.
+ *      The year 2 BC is represented by -1, etc.
+ *
+ * @param format
+ *      Specifies the resolution to which the date and time should be formatted,
+ *      as explained at #astro_time_format_t.
+ *      If the value of `format` is not recognized, the function fails and
+ *      returns `ASTRO_INVALID_PARAMETER`.
+ *
+ * @param text
+ *      A pointer to a text buffer to receive the output.
+ *      If `text` is `NULL`, this function returns `ASTRO_INVALID_PARAMETER`.
+ *      If the function fails for any reason, and `text` is not `NULL`,
+ *      and `size` is greater than 0, the `text` buffer is set to an empty string.
+ *
+ * @param size
+ *      The size in bytes of the buffer pointed to by `text`. The buffer must
+ *      be large enough to accomodate the output format selected by the
+ *      `format` parameter, as specified at #astro_time_format_t.
+ *      If `size` is too small to hold the string as specified by `format`,
+ *      the `text` buffer is set to `""` (if possible)
+ *      and the function returns `ASTRO_BUFFER_TOO_SMALL`.
+ *      A buffer that is `TIME_TEXT_BYTES` (28) bytes or larger is always large enough for this function.
+ *
+ * @return `ASTRO_SUCCESS` on success; otherwise an error as described in the parameter notes.
+ */
+astro_status_t Astronomy_FormatTime_Auto(
+    astro_time_t time,
+    astro_time_format_t format,
+    char *text,
+    size_t size)
+{
+    return FormatTime(time, format, text, size, 0);
+}
 
 /**
  * @brief   Creates an observer object that represents a location on or near the surface of the Earth.

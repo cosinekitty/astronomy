@@ -763,7 +763,7 @@ Correction for aberration is optional, using the `aberration` parameter.
 <a name="Astronomy_FormatTime"></a>
 ### Astronomy_FormatTime(time, format, text, size) &#8658; [`astro_status_t`](#astro_status_t)
 
-**Formats an [`astro_time_t`](#astro_time_t) value as an ISO 8601 string.** 
+**Formats an [`astro_time_t`](#astro_time_t) value as an ISO 8601 string using the Gregorian calendar.** 
 
 
 
@@ -777,7 +777,7 @@ Given an [`astro_time_t`](#astro_time_t) value `time`, formats it as an ISO 8601
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| [`astro_time_t`](#astro_time_t) | `time` |  The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string. If the civil time is outside the year range -999999 to +999999, the function fails and returns `ASTRO_BAD_TIME`. Years prior to 1583 are treated as if they are using the modern Gregorian calendar, even when the Julian calendar was actually in effect. The year before 1 AD, commonly known as 1 BC, is represented by the value 0. The year 2 BC is represented by -1, etc. | 
+| [`astro_time_t`](#astro_time_t) | `time` |  The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string. If the civil time is outside the year range -999999 to +999999, the function fails and returns `ASTRO_BAD_TIME`. Dates before the Julian to Gregorian calender changeover (1582-10-15) are treated as dates in the Gregorian calendar even though the Julian calendar was actually in effect. The year before 1 AD, commonly known as 1 BC, is represented by the value 0. The year 2 BC is represented by -1, etc. | 
 | [`astro_time_format_t`](#astro_time_format_t) | `format` |  Specifies the resolution to which the date and time should be formatted, as explained at [`astro_time_format_t`](#astro_time_format_t). If the value of `format` is not recognized, the function fails and returns `ASTRO_INVALID_PARAMETER`. | 
 | `char *` | `text` |  A pointer to a text buffer to receive the output. If `text` is `NULL`, this function returns `ASTRO_INVALID_PARAMETER`. If the function fails for any reason, and `text` is not `NULL`, and `size` is greater than 0, the `text` buffer is set to an empty string. | 
 | `size_t` | `size` |  The size in bytes of the buffer pointed to by `text`. The buffer must be large enough to accomodate the output format selected by the `format` parameter, as specified at [`astro_time_format_t`](#astro_time_format_t). If `size` is too small to hold the string as specified by `format`, the `text` buffer is set to `""` (if possible) and the function returns `ASTRO_BUFFER_TOO_SMALL`. A buffer that is `TIME_TEXT_BYTES` (28) bytes or larger is always large enough for this function. | 
@@ -3202,11 +3202,11 @@ This function is similar to [`Astronomy_MakeTime`](#Astronomy_MakeTime), only it
 <a name="Astronomy_UtcFromTime"></a>
 ### Astronomy_UtcFromTime(time) &#8658; [`astro_utc_t`](#astro_utc_t)
 
-**Determines the calendar year, month, day, and time from an [`astro_time_t`](#astro_time_t) value.** 
+**Determines the Gregorian calendar year, month, day, and time from an [`astro_time_t`](#astro_time_t) value.** 
 
 
 
-After calculating the date and time of an astronomical event in the form of an [`astro_time_t`](#astro_time_t) value, it is often useful to display the result in a human-readable form. This function converts the linear time scales in the `ut` field of [`astro_time_t`](#astro_time_t) into a calendar date and time: year, month, day, hours, minutes, and seconds, expressed in UTC.
+After calculating the date and time of an astronomical event in the form of an [`astro_time_t`](#astro_time_t) value, it is often useful to display the result in a human-readable form. This function converts the linear time scales in the `ut` field of [`astro_time_t`](#astro_time_t) into a Gregorian calendar date and time: year, month, day, hours, minutes, and seconds, expressed in UTC.
 
 
 
