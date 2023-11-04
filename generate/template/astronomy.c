@@ -1357,7 +1357,7 @@ astro_utc_t Astronomy_UtcFromTime_Auto(astro_time_t time)
 }
 
 /* @param calendar
- *      The calendar to use for date formatting. 
+ *      The calendar to use for date formatting.
  *      0 = automatic determination based on date
  *      1 = Julian calendar
  *      2 = Gregorian calendar
@@ -1494,7 +1494,7 @@ static astro_status_t FormatTime(
  *      The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string.
  *      If the civil time is outside the year range -999999 to +999999, the function fails
  *      and returns `ASTRO_BAD_TIME`. Dates before the Julian to Gregorian calender changeover
- *      (1582-10-15) are treated as dates in the Gregorian calendar even though the Julian 
+ *      (1582-10-15) are treated as dates in the Gregorian calendar even though the Julian
  *      calendar was actually in effect.
  *      The year before 1 AD, commonly known as 1 BC, is represented by the value 0.
  *      The year 2 BC is represented by -1, etc.
@@ -1543,7 +1543,7 @@ astro_status_t Astronomy_FormatTime(
  *      The date and time whose civil time `time.ut` is to be formatted as an ISO 8601 string.
  *      If the civil time is outside the year range -999999 to +999999, the function fails
  *      and returns `ASTRO_BAD_TIME`. Dates after the Julian to Gregorian calender changeover
- *      (1582-10-15) are treated as dates in the Julian calendar even though the Gregorian 
+ *      (1582-10-15) are treated as dates in the Julian calendar even though the Gregorian
  *      calendar was actually in effect.
  *      The year before 1 AD, commonly known as 1 BC, is represented by the value 0.
  *      The year 2 BC is represented by -1, etc.
