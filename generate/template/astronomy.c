@@ -1296,10 +1296,9 @@ astro_utc_t Astronomy_UtcFromTime_Julian(astro_time_t time)
     int64_t J = (int64_t)floor(julianDatePlus12Hours);
 
     /*
-     Algorithm adapted from Richards, E.G. 2012, "Calendars," from the Explanatory Supplement to the Astronomical Almanac, 3rd edition, S.E Urban and P.K. Seidelmann eds., (Mill Valley, CA: University Science Books), Chapter 15, pp. 585-624.
-     See: https://aa.usno.navy.mil/downloads/c15_usb_online.pdf
+        Algorithm adapted from Richards, E.G. 2012, "Calendars," from the Explanatory Supplement to the Astronomical Almanac, 3rd edition, S.E Urban and P.K. Seidelmann eds., (Mill Valley, CA: University Science Books), Chapter 15, pp. 585-624.
+        See: https://aa.usno.navy.mil/downloads/c15_usb_online.pdf
      */
-
 	int64_t cycles = 0;
 
     if (J < 0) {
@@ -1318,13 +1317,14 @@ astro_utc_t Astronomy_UtcFromTime_Julian(astro_time_t time)
     if (cycles > 0)
         utc.year -= cycles * 4;
 
-    double dayFraction = modf(julianDatePlus12Hours, NULL);
+    double ignore;
+    double dayFraction = modf(julianDatePlus12Hours, &ignore);
     if (dayFraction < 0)
         dayFraction += 1;
 
     double hour, minute;
     double hourFraction = modf(dayFraction * 24, &hour);
-    double minuteFraction = modf(hourFraction * 60 * 24, &minute);
+    double minuteFraction = modf(hourFraction * 60, &minute);
 
     utc.hour = (int)hour;
     utc.minute = (int)minute;
