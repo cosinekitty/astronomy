@@ -1226,12 +1226,12 @@ astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc)
 }
 
 /**
- * @brief Determines the calendar year, month, day, and time from an #astro_time_t value.
+ * @brief Determines the Gregorian calendar year, month, day, and time from an #astro_time_t value.
  *
  * After calculating the date and time of an astronomical event in the form of
  * an #astro_time_t value, it is often useful to display the result in a human-readable
  * form. This function converts the linear time scales in the `ut` field of #astro_time_t
- * into a calendar date and time: year, month, day, hours, minutes, and seconds, expressed
+ * into a Gregorian calendar date and time: year, month, day, hours, minutes, and seconds, expressed
  * in UTC.
  *
  * @param time  The astronomical time value to be converted to calendar date and time.
@@ -1282,6 +1282,85 @@ astro_utc_t Astronomy_UtcFromTime(astro_time_t time)
     return utc;
 }
 
+/**
+ * @brief Determines the Julian calendar year, month, day, and time from an #astro_time_t value.
+ *
+ * After calculating the date and time of an astronomical event in the form of
+ * an #astro_time_t value, it is often useful to display the result in a human-readable
+ * form. This function converts the linear time scales in the `ut` field of #astro_time_t
+ * into a Julian calendar date and time: year, month, day, hours, minutes, and seconds, expressed
+ * in UTC.
+ *
+ * @param time  The astronomical time value to be converted to calendar date and time.
+ * @return  A date and time broken out into conventional year, month, day, hour, minute, and second.
+ */
+astro_utc_t Astronomy_UtcFromTime_Julian(astro_time_t time)
+{
+    astro_utc_t utc;
+
+    double julianDatePlus12Hours = time.ut + 2451545 + 0.5;
+    int64_t J = (int64_t)floor(julianDatePlus12Hours);
+
+    /*
+     Algorithm adapted from Richards, E.G. 2012, "Calendars," from the Explanatory Supplement to the Astronomical Almanac, 3rd edition, S.E Urban and P.K. Seidelmann eds., (Mill Valley, CA: University Science Books), Chapter 15, pp. 585-624.
+     See: https://aa.usno.navy.mil/downloads/c15_usb_online.pdf
+     */
+
+    int64_t cycles = 0
+
+    if J < 0 {
+        cycles = -J / 1461 + 1;
+        J += cycles * 1461;
+    }
+
+    const int64_t f = J + 1401;
+    const int64_t e = 4 * f + 3;
+    const int64_t g = (e % 1461) / 4;
+    const int64_t h = 5 * g + 2;
+    utc.day = (h % 153) / 5 + 1;
+    utc.month = ((h / 153 + 2) % 12) + 1;
+    utc.year = e / 1461 - 4716 + (12 + 2 - utc.month) / 12;
+
+    if cycles > 0
+        utc.year -= cycles * 4;
+
+    double dayFraction = modf(julianDatePlus12Hours, NULL);
+    if dayFraction < 0
+        dayFraction += 1;
+
+    double hour, minute;
+    double hourFraction = modf(dayFraction * 24, &hour);
+    double minuteFraction = modf(hourFraction * 60 * 24, &minute);
+
+    utc.hour = (int)hour;
+    utc.minute = (int)minute;
+    utc.second = minuteFraction * 60;
+
+    return utc;
+}
+
+/**
+ * @brief Determines the Julian or Gregorian calendar year, month, day, and time from an #astro_time_t value.
+ *
+ * Dates before the Julian to Gregorian calender changeover (1582-10-15) are treated
+ * as dates in the Julian calendar, while later dates are treated as dates in the Gregorian calendar.
+
+ * After calculating the date and time of an astronomical event in the form of
+ * an #astro_time_t value, it is often useful to display the result in a human-readable
+ * form. This function converts the linear time scales in the `ut` field of #astro_time_t
+ * into a Julian or Gregorian calendar date and time: year, month, day, hours, minutes, and seconds, expressed
+ * in UTC.
+ *
+ * @param time  The astronomical time value to be converted to calendar date and time.
+ * @return  A date and time broken out into conventional year, month, day, hour, minute, and second.
+ */
+astro_utc_t Astronomy_UtcFromTime_Auto(astro_time_t time)
+{
+    if (time.ut < -746558.5)
+        return Astronomy_UtcFromTime_Julian(time);
+    else
+       return Astronomy_UtcFromTime(time);
+}
 
 /**
  * @brief Formats an #astro_time_t value as an ISO 8601 string.
