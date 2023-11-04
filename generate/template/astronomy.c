@@ -1356,6 +1356,132 @@ astro_utc_t Astronomy_UtcFromTime_Auto(astro_time_t time)
        return Astronomy_UtcFromTime(time);
 }
 
+/* @param calendar
+ *      The calendar to use for date formatting. 
+ *      0 = automatic determination based on date
+ *      1 = Julian calendar
+ *      2 = Gregorian calendar
+ */
+static astro_status_t FormatTime(
+    astro_time_t time,
+    astro_time_format_t format,
+    char *text,
+    size_t size,
+    int calendar)
+{
+    int nprinted;
+    double rounding;
+    size_t min_size;
+    astro_utc_t utc;
+    char ytext[20];   /* worst case: "+999999" = 8 characters including terminal '\0'. But gcc 12.2 still complains! */
+
+    if (text == NULL)
+        return ASTRO_INVALID_PARAMETER;
+
+    if (size == 0)
+        return ASTRO_BUFFER_TOO_SMALL;
+
+    text[0] = '\0';     /* initialize to empty string, in case an error occurs */
+
+    /* Validate 'size' parameter and perform date/time rounding. */
+    switch (format)
+    {
+    case TIME_FORMAT_DAY:
+        min_size = 11;                          /* "2020-12-31" */
+        rounding = 0.0;                         /* no rounding */
+        break;
+
+    case TIME_FORMAT_MINUTE:
+        min_size = 18;                          /* "2020-12-31T15:47Z" */
+        rounding = 0.5 / (24.0 * 60.0);         /* round to nearest minute */
+        break;
+
+    case TIME_FORMAT_SECOND:
+        min_size = 21;                          /* "2020-12-31T15:47:59Z" */
+        rounding = 0.5 / (24.0 * 3600.0);       /* round to nearest second */
+        break;
+
+    case TIME_FORMAT_MILLI:
+        min_size = 25;                          /* "2020-12-31T15:47:59.123Z" */
+        rounding = 0.5 / (24.0 * 3600000.0);    /* round to nearest millisecond */
+        break;
+
+    default:
+        return ASTRO_INVALID_PARAMETER;
+    }
+
+    /* Perform rounding. */
+    time.ut += rounding;
+
+    /* Convert linear J2000 days to Julian or Gregorian UTC date/time. */
+    if (calendar == 0)
+        utc = Astronomy_UtcFromTime_Auto(time);
+    else if (calendar == 1)
+        utc = Astronomy_UtcFromTime_Julian(time);
+    else
+        utc = Astronomy_UtcFromTime(time);
+    if (utc.year < -999999 || utc.year > +999999)
+        return ASTRO_BAD_TIME;
+
+    if (utc.year < 0)
+    {
+        snprintf(ytext, sizeof(ytext), "-%06d", -utc.year);
+        min_size += 3;  /* '-' prefix and two extra year digits. */
+    }
+    else if (utc.year <= 9999)
+    {
+        snprintf(ytext, sizeof(ytext), "%04d", utc.year);
+    }
+    else
+    {
+        snprintf(ytext, sizeof(ytext), "+%06d", utc.year);
+        min_size += 3;  /* '+' prefix and two extra year digits. */
+    }
+
+    /* Check for insufficient buffer size. */
+    if (size < min_size)
+        return ASTRO_BUFFER_TOO_SMALL;
+
+    /* Format the string. */
+    switch (format)
+    {
+    case TIME_FORMAT_DAY:
+        nprinted = snprintf(text, size, "%s-%02d-%02d",
+            ytext, utc.month, utc.day);
+        break;
+
+    case TIME_FORMAT_MINUTE:
+        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02dZ",
+            ytext, utc.month, utc.day,
+            utc.hour, utc.minute);
+        break;
+
+    case TIME_FORMAT_SECOND:
+        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02d:%02.0lfZ",
+            ytext, utc.month, utc.day,
+            utc.hour, utc.minute, floor(utc.second));
+        break;
+
+    case TIME_FORMAT_MILLI:
+        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02d:%06.3lfZ",
+            ytext, utc.month, utc.day,
+            utc.hour, utc.minute, floor(1000.0 * utc.second) / 1000.0);
+        break;
+
+    default:
+        /* We should have already failed for any unknown 'format' value. */
+        return ASTRO_INTERNAL_ERROR;
+    }
+
+    if (nprinted < 0)
+        return ASTRO_INTERNAL_ERROR;    /* should not be possible for snprintf to return a negative number */
+
+    if ((size_t)(1+nprinted) != min_size)
+        return ASTRO_INTERNAL_ERROR;    /* there must be a bug calculating min_size or formatting the string */
+
+    return ASTRO_SUCCESS;
+}
+
 /**
  * @brief Formats an #astro_time_t value as an ISO 8601 string using the Gregorian calendar.
  *
@@ -1502,133 +1628,6 @@ astro_status_t Astronomy_FormatTime_Auto(
 {
     return FormatTime(time, format, text, size, 0);
 }
-
-/* @param calendar
- *      The calendar to use for date formatting. 
- *      0 = automatic determination based on date
- *      1 = Julian calendar
- *      2 = Gregorian calendar
- */
-static astro_status_t FormatTime(
-    astro_time_t time,
-    astro_time_format_t format,
-    char *text,
-    size_t size,
-    int calendar)
-{
-    int nprinted;
-    double rounding;
-    size_t min_size;
-    astro_utc_t utc;
-    char ytext[20];   /* worst case: "+999999" = 8 characters including terminal '\0'. But gcc 12.2 still complains! */
-
-    if (text == NULL)
-        return ASTRO_INVALID_PARAMETER;
-
-    if (size == 0)
-        return ASTRO_BUFFER_TOO_SMALL;
-
-    text[0] = '\0';     /* initialize to empty string, in case an error occurs */
-
-    /* Validate 'size' parameter and perform date/time rounding. */
-    switch (format)
-    {
-    case TIME_FORMAT_DAY:
-        min_size = 11;                          /* "2020-12-31" */
-        rounding = 0.0;                         /* no rounding */
-        break;
-
-    case TIME_FORMAT_MINUTE:
-        min_size = 18;                          /* "2020-12-31T15:47Z" */
-        rounding = 0.5 / (24.0 * 60.0);         /* round to nearest minute */
-        break;
-
-    case TIME_FORMAT_SECOND:
-        min_size = 21;                          /* "2020-12-31T15:47:59Z" */
-        rounding = 0.5 / (24.0 * 3600.0);       /* round to nearest second */
-        break;
-
-    case TIME_FORMAT_MILLI:
-        min_size = 25;                          /* "2020-12-31T15:47:59.123Z" */
-        rounding = 0.5 / (24.0 * 3600000.0);    /* round to nearest millisecond */
-        break;
-
-    default:
-        return ASTRO_INVALID_PARAMETER;
-    }
-
-    /* Perform rounding. */
-    time.ut += rounding;
-
-    /* Convert linear J2000 days to Julian or Gregorian UTC date/time. */
-    if (calendar == 0)
-        utc = Astronomy_UtcFromTime_Auto(time);
-    else if (calendar == 1)
-        utc = Astronomy_UtcFromTime_Julian(time);
-    else
-        utc = Astronomy_UtcFromTime(time);
-    if (utc.year < -999999 || utc.year > +999999)
-        return ASTRO_BAD_TIME;
-
-    if (utc.year < 0)
-    {
-        snprintf(ytext, sizeof(ytext), "-%06d", -utc.year);
-        min_size += 3;  /* '-' prefix and two extra year digits. */
-    }
-    else if (utc.year <= 9999)
-    {
-        snprintf(ytext, sizeof(ytext), "%04d", utc.year);
-    }
-    else
-    {
-        snprintf(ytext, sizeof(ytext), "+%06d", utc.year);
-        min_size += 3;  /* '+' prefix and two extra year digits. */
-    }
-
-    /* Check for insufficient buffer size. */
-    if (size < min_size)
-        return ASTRO_BUFFER_TOO_SMALL;
-
-    /* Format the string. */
-    switch (format)
-    {
-    case TIME_FORMAT_DAY:
-        nprinted = snprintf(text, size, "%s-%02d-%02d",
-            ytext, utc.month, utc.day);
-        break;
-
-    case TIME_FORMAT_MINUTE:
-        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02dZ",
-            ytext, utc.month, utc.day,
-            utc.hour, utc.minute);
-        break;
-
-    case TIME_FORMAT_SECOND:
-        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02d:%02.0lfZ",
-            ytext, utc.month, utc.day,
-            utc.hour, utc.minute, floor(utc.second));
-        break;
-
-    case TIME_FORMAT_MILLI:
-        nprinted = snprintf(text, size, "%s-%02d-%02dT%02d:%02d:%06.3lfZ",
-            ytext, utc.month, utc.day,
-            utc.hour, utc.minute, floor(1000.0 * utc.second) / 1000.0);
-        break;
-
-    default:
-        /* We should have already failed for any unknown 'format' value. */
-        return ASTRO_INTERNAL_ERROR;
-    }
-
-    if (nprinted < 0)
-        return ASTRO_INTERNAL_ERROR;    /* should not be possible for snprintf to return a negative number */
-
-    if ((size_t)(1+nprinted) != min_size)
-        return ASTRO_INTERNAL_ERROR;    /* there must be a bug calculating min_size or formatting the string */
-
-    return ASTRO_SUCCESS;
-}
-
 
 /**
  * @brief   Creates an observer object that represents a location on or near the surface of the Earth.
