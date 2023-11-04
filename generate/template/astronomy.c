@@ -1299,7 +1299,7 @@ astro_utc_t Astronomy_UtcFromTime_Julian(astro_time_t time)
         Algorithm adapted from Richards, E.G. 2012, "Calendars," from the Explanatory Supplement to the Astronomical Almanac, 3rd edition, S.E Urban and P.K. Seidelmann eds., (Mill Valley, CA: University Science Books), Chapter 15, pp. 585-624.
         See: https://aa.usno.navy.mil/downloads/c15_usb_online.pdf
      */
-	int64_t cycles = 0;
+    int64_t cycles = 0;
 
     if (J < 0) {
         cycles = -J / 1461 + 1;
