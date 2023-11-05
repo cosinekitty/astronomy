@@ -2672,6 +2672,180 @@ func quadInterp(tm, dt, fa, fm, fb float64) (bool, float64, float64) {
 
 //--- Search code ends here ---------------------------------------------------------------------
 
+// Calculates one of the 5 Lagrange points from body masses and state vectors.
+// Given a more massive "major" body and a much less massive "minor" body,
+// calculates one of the five Lagrange points in relation to the minor body's
+// orbit around the major body. The parameter `point` is an integer that
+// selects the Lagrange point as follows:
+//
+// 1 = the Lagrange point between the major body and minor body.
+// 2 = the Lagrange point on the far side of the minor body.
+// 3 = the Lagrange point on the far side of the major body.
+// 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position.
+// 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+//
+// The caller passes in the state vector and mass for both bodies.
+// The state vectors can be in any orientation and frame of reference.
+// The body masses are expressed as GM products, where G = the universal
+// gravitation constant and M = the body's mass. Thus the units for
+// majorMass and minorMass must be au^3/day^2.
+// Use MassProduct to obtain GM values for various solar system bodies.
+//
+// The function returns the state vector for the selected Lagrange point
+// using the same orientation as the state vector parameters majorState and minorState,
+// and the position and velocity components are with respect to the major body's center.
+//
+// Consider calling LagrangePoint, instead of this function, for simpler usage in most cases.
+func LagrangePointFast(point int, majorState StateVector, majorMass float64, minorState StateVector, minorMass float64) (*StateVector, error) {
+	const cos60 = 0.5
+	const sin60 = 0.8660254037844386 // sqrt(3) / 2
+
+	if point < 1 || point > 5 {
+		return nil, errors.New("Invalid lagrange point. Must be integer 1..5.")
+	}
+
+	if !isfinite(majorMass) || majorMass <= 0.0 {
+		return nil, errors.New("Major mass must be a positive number.")
+	}
+
+	if !isfinite(minorMass) || minorMass <= 0.0 {
+		return nil, errors.New("Minor mass must be a positive number.")
+	}
+
+	// Find the relative position vector <dx, dy, dz>.
+	dx := minorState.X - majorState.X
+	dy := minorState.Y - majorState.Y
+	dz := minorState.Z - majorState.Z
+	R2 := dx*dx + dy*dy + dz*dz
+
+	// R = Total distance between the bodies.
+	R := math.Sqrt(R2)
+
+	// Find the velocity vector <vx, vy, vz>.
+	vx := minorState.Vx - majorState.Vx
+	vy := minorState.Vy - majorState.Vy
+	vz := minorState.Vz - majorState.Vz
+
+	var p StateVector
+	if point == 4 || point == 5 {
+		// For L4 and L5, we need to find points 60 degrees away from the
+		// line connecting the two bodies and in the instantaneous orbital plane.
+		// Define the instantaneous orbital plane as the unique plane that contains
+		// both the relative position vector and the relative velocity vector.
+
+		// Take the cross product of position and velocity to find a normal vector <nx, ny, nz>.
+		nx := dy*vz - dz*vy
+		ny := dz*vx - dx*vz
+		nz := dx*vy - dy*vx
+
+		// Take the cross product normal*position to get a tangential vector <ux, uy, uz>.
+		ux := ny*dz - nz*dy
+		uy := nz*dx - nx*dz
+		uz := nx*dy - ny*dx
+
+		// Convert the tangential direction vector to a unit vector.
+		U := math.Sqrt(ux*ux + uy*uy + uz*uz)
+		ux /= U
+		uy /= U
+		uz /= U
+
+		// Convert the relative position vector into a unit vector.
+		dx /= R
+		dy /= R
+		dz /= R
+
+		// Now we have two perpendicular unit vectors in the orbital plane: 'd' and 'u'.
+
+		// Create new unit vectors rotated (+/-)60 degrees from the radius/tangent directions.
+		var vert float64
+		if point == 4 {
+			vert = +sin60
+		} else {
+			vert = -sin60
+		}
+
+		// Rotated radial vector
+		Dx := cos60*dx + vert*ux
+		Dy := cos60*dy + vert*uy
+		Dz := cos60*dz + vert*uz
+
+		// Rotated tangent vector
+		Ux := cos60*ux - vert*dx
+		Uy := cos60*uy - vert*dy
+		Uz := cos60*uz - vert*dz
+
+		// Calculate L4/L5 positions relative to the major body.
+		p.X = R * Dx
+		p.Y = R * Dy
+		p.Z = R * Dz
+
+		// Use dot products to find radial and tangential components of the relative velocity.
+		vrad := vx*dx + vy*dy + vz*dz
+		vtan := vx*ux + vy*uy + vz*uz
+
+		// Calculate L4/L5 velocities.
+		p.Vx = vrad*Dx + vtan*Ux
+		p.Vy = vrad*Dy + vtan*Uy
+		p.Vz = vrad*Dz + vtan*Uz
+	} else {
+		// Calculate the distances of each body from their mutual barycenter.
+		// r1 = negative distance of major mass from barycenter (e.g. Sun to the left of barycenter)
+		// r2 = positive distance of minor mass from barycenter (e.g. Earth to the right of barycenter)
+		r1 := -R * (minorMass / (majorMass + minorMass))
+		r2 := +R * (majorMass / (majorMass + minorMass))
+
+		// Calculate the square of the angular orbital speed in [rad^2 / day^2].
+		omega2 := (majorMass + minorMass) / (R2 * R)
+
+		// Use Newton's Method to numerically solve for the location where
+		// outward centrifugal acceleration in the rotating frame of reference
+		// is equal to net inward gravitational acceleration.
+		// First derive a good initial guess based on approximate analysis.
+		var scale, numer1, numer2 float64
+		if point == 1 || point == 2 {
+			scale = (majorMass / (majorMass + minorMass)) * math.Cbrt(minorMass/(3.0*majorMass))
+			numer1 = -majorMass // The major mass is to the left of L1 and L2
+			if point == 1 {
+				scale = 1.0 - scale
+				numer2 = +minorMass // The minor mass is to the right of L1.
+			} else {
+				scale = 1.0 + scale
+				numer2 = -minorMass // The minor mass is to the left of L2.
+			}
+		} else { // point == 3
+			scale = ((7.0/12.0)*minorMass - majorMass) / (minorMass + majorMass)
+			numer1 = +majorMass // major mass is to the right of L3.
+			numer2 = +minorMass // minor mass is to the right of L3.
+		}
+
+		// Iterate Newton's Method until it converges.
+		x := R*scale - r1
+		var deltax float64
+		for {
+			dr1 := x - r1
+			dr2 := x - r2
+			accel := omega2*x + numer1/(dr1*dr1) + numer2/(dr2*dr2)
+			deriv := omega2 - 2*numer1/(dr1*dr1*dr1) - 2*numer2/(dr2*dr2*dr2)
+			deltax = accel / deriv
+			x -= deltax
+			if math.Abs(deltax/R) < 1.0e-14 {
+				break
+			}
+		}
+
+		scale = (x - r1) / R
+
+		p.X = scale * dx
+		p.Y = scale * dy
+		p.Z = scale * dz
+		p.Vx = scale * vx
+		p.Vy = scale * vy
+		p.Vz = scale * vz
+	}
+	p.T = majorState.T
+	return &p, nil
+}
+
 //--- Generated code begins here ------------------------------------------------------------------
 
 var constelNames = [...]constelInfo{

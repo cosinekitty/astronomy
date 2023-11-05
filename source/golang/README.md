@@ -73,6 +73,7 @@ It provides a suite of well\-tested functions for calculating positions of the S
   - [func HorizonFromVector\(vector AstroVector, refraction Refraction\) Spherical](<#HorizonFromVector>)
   - [func SphereFromVector\(vector AstroVector\) Spherical](<#SphereFromVector>)
 - [type StateVector](<#StateVector>)
+  - [func LagrangePointFast\(point int, majorState StateVector, majorMass float64, minorState StateVector, minorMass float64\) \(\*StateVector, error\)](<#LagrangePointFast>)
   - [func RotateState\(rotation RotationMatrix, state StateVector\) StateVector](<#RotateState>)
   - [func \(state StateVector\) Position\(\) AstroVector](<#StateVector.Position>)
   - [func \(state StateVector\) Velocity\(\) AstroVector](<#StateVector.Velocity>)
@@ -856,6 +857,23 @@ type StateVector struct {
     T   AstroTime
 }
 ```
+
+<a name="LagrangePointFast"></a>
+### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2699>)
+
+```go
+func LagrangePointFast(point int, majorState StateVector, majorMass float64, minorState StateVector, minorMass float64) (*StateVector, error)
+```
+
+Calculates one of the 5 Lagrange points from body masses and state vectors. Given a more massive "major" body and a much less massive "minor" body, calculates one of the five Lagrange points in relation to the minor body's orbit around the major body. The parameter \`point\` is an integer that selects the Lagrange point as follows:
+
+1 = the Lagrange point between the major body and minor body. 2 = the Lagrange point on the far side of the minor body. 3 = the Lagrange point on the far side of the major body. 4 = the Lagrange point 60 degrees ahead of the minor body's orbital position. 5 = the Lagrange point 60 degrees behind the minor body's orbital position.
+
+The caller passes in the state vector and mass for both bodies. The state vectors can be in any orientation and frame of reference. The body masses are expressed as GM products, where G = the universal gravitation constant and M = the body's mass. Thus the units for majorMass and minorMass must be au^3/day^2. Use MassProduct to obtain GM values for various solar system bodies.
+
+The function returns the state vector for the selected Lagrange point using the same orientation as the state vector parameters majorState and minorState, and the position and velocity components are with respect to the major body's center.
+
+Consider calling LagrangePoint, instead of this function, for simpler usage in most cases.
 
 <a name="RotateState"></a>
 ### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1819>)
