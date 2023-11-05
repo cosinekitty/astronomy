@@ -30,22 +30,23 @@ const (
 	EarthPolarRadiusKm        = EarthEquatorialRadiusKm * EarthFlattening // the polar radius of the Earth in kilometers
 	MoonEquatorialRadiusKm    = 1738.1                                    // the Moon's equatorial radius in kilometers
 	MoonPolarRadiusKm         = 1736.0                                    // the Moon's polar radius in kilometers
-	MarsEquatorialRadiusKm    = 3396.2                                    // the equatorial radius of Mars in kilometers
-	MarsPolarRadiusKm         = 3376.2                                    // the polar radius of Mars in kilometers
-	JupiterEquatorialRadiusKm = 71492.0                                   // the equatorial radius of Jupiter in kilometers
-	JupiterPolarRadiusKm      = 66854.0                                   // the polar radius of Jupiter in kilometers
-	JupiterMeanRadiusKm       = 69911.0                                   // the volumetric mean radius of Jupiter in kilometers
-	IoRadiusKm                = 1821.6                                    // the radius of Jupiter's moon Io in kilometers
-	EuropaRadiusKm            = 1560.8                                    // the radius of Jupiter's moon Europa in kilometers
-	GanymedeRadiusKm          = 2631.2                                    // the radius of Jupiter's moon Ganymede in kilometers
-	CallistoRadiusKm          = 2410.3                                    // the radius of Jupiter's moon Callisto in kilometers
-	SaturnEquatorialRadiusKm  = 60268.0                                   // the equatorial radius of Saturn in kilometers
-	SaturnPolarRadiusKm       = 54364.0                                   // the polar radius of Saturn in kilometers
-	UranusEquatorialRadiusKm  = 25559.0                                   // the equatorial radius of Uranus in kilometers
-	UranusPolarRadiusKm       = 24973.0                                   // the polar radius of Uranus in kilometers
-	NeptuneEquatorialRadiusKm = 24764.0                                   // the equatorial radius of Neptune in kilometers
-	NeptunePolarRadiusKm      = 24341.0                                   // the polar radius of Neptune in kilometers
-	PlutoRadiusKm             = 1188.3                                    // the radius of Pluto in kilometers
+	MoonMeanRadiusKm          = 1737.4
+	MarsEquatorialRadiusKm    = 3396.2  // the equatorial radius of Mars in kilometers
+	MarsPolarRadiusKm         = 3376.2  // the polar radius of Mars in kilometers
+	JupiterEquatorialRadiusKm = 71492.0 // the equatorial radius of Jupiter in kilometers
+	JupiterPolarRadiusKm      = 66854.0 // the polar radius of Jupiter in kilometers
+	JupiterMeanRadiusKm       = 69911.0 // the volumetric mean radius of Jupiter in kilometers
+	IoRadiusKm                = 1821.6  // the radius of Jupiter's moon Io in kilometers
+	EuropaRadiusKm            = 1560.8  // the radius of Jupiter's moon Europa in kilometers
+	GanymedeRadiusKm          = 2631.2  // the radius of Jupiter's moon Ganymede in kilometers
+	CallistoRadiusKm          = 2410.3  // the radius of Jupiter's moon Callisto in kilometers
+	SaturnEquatorialRadiusKm  = 60268.0 // the equatorial radius of Saturn in kilometers
+	SaturnPolarRadiusKm       = 54364.0 // the polar radius of Saturn in kilometers
+	UranusEquatorialRadiusKm  = 25559.0 // the equatorial radius of Uranus in kilometers
+	UranusPolarRadiusKm       = 24973.0 // the polar radius of Uranus in kilometers
+	NeptuneEquatorialRadiusKm = 24764.0 // the equatorial radius of Neptune in kilometers
+	NeptunePolarRadiusKm      = 24341.0 // the polar radius of Neptune in kilometers
+	PlutoRadiusKm             = 1188.3  // the radius of Pluto in kilometers
 )
 
 const (
@@ -1334,6 +1335,10 @@ func dtan(degrees float64) float64 {
 	return math.Tan(RadiansFromDegrees(degrees))
 }
 
+func datan(x float64) float64 {
+	return DegreesFromRadians(math.Atan(x))
+}
+
 func datan2(y, x float64) float64 {
 	return DegreesFromRadians(math.Atan2(y, x))
 }
@@ -2217,6 +2222,118 @@ func GeoMoon(time AstroTime) AstroVector {
 	mpos2 := precession(mpos1, into2000)
 
 	return mpos2
+}
+
+// Calculates the Moon's libration angles at a given moment in time.
+// Libration is an observed back-and-forth wobble of the portion of the
+// Moon visible from the Earth. It is caused by the imperfect tidal locking
+// of the Moon's fixed rotation rate, compared to its variable angular speed
+// of orbit around the Earth.
+// This function calculates a pair of perpendicular libration angles,
+// one representing rotation of the Moon in ecliptic longitude `Elon`, the other
+// in ecliptic latitude `Elat`, both relative to the Moon's mean Earth-facing position.
+// This function also returns the geocentric position of the Moon
+// expressed in ecliptic longitude `Mlon`, ecliptic latitude `Mlat`, the
+// distance `DistKm` between the centers of the Earth and Moon expressed in kilometers,
+// and the apparent angular diameter of the Moon `DiamDeg`.
+func Libration(time AstroTime) LibrationInfo {
+	t := time.Tt / 36525.0
+	t2 := t * t
+	t3 := t2 * t
+	t4 := t2 * t2
+
+	context := makeMoonContext(t)
+	moon := context.calcMoon()
+
+	lib := LibrationInfo{}
+	lib.Mlon = DegreesFromRadians(moon.geoEclipLon)
+	lib.Mlat = DegreesFromRadians(moon.geoEclipLat)
+	lib.DistKm = moon.distanceAu * KmPerAu
+	lib.DiamDeg = 2.0 * datan(MoonMeanRadiusKm/math.Sqrt(lib.DistKm*lib.DistKm-MoonMeanRadiusKm*MoonMeanRadiusKm))
+
+	// Inclination angle
+	I := RadiansFromDegrees(1.543)
+
+	// Moon's argument of latitude in radians.
+	f := RadiansFromDegrees(normalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000))
+
+	// Moon's ascending node's mean longitude in radians.
+	omega := RadiansFromDegrees(normalizeLongitude(125.0445479 - 1934.1362891*t + 0.0020754*t2 + t3/467441 - t4/60616000))
+
+	// Sun's mean anomaly.
+	m := RadiansFromDegrees(normalizeLongitude(357.5291092 + 35999.0502909*t - 0.0001536*t2 + t3/24490000))
+
+	// Moon's mean anomaly.
+	mdash := RadiansFromDegrees(normalizeLongitude(134.9633964 + 477198.8675055*t + 0.0087414*t2 + t3/69699 - t4/14712000))
+
+	// Moon's mean elongation.
+	d := RadiansFromDegrees(normalizeLongitude(297.8501921 + 445267.1114034*t - 0.0018819*t2 + t3/545868 - t4/113065000))
+
+	// Eccentricity of the Earth's orbit.
+	e := 1.0 - 0.002516*t - 0.0000074*t2
+
+	// Optical librations
+	w := moon.geoEclipLon - omega
+	a := math.Atan2(math.Sin(w)*math.Cos(moon.geoEclipLat)*math.Cos(I)-math.Sin(moon.geoEclipLat)*math.Sin(I), math.Cos(w)*math.Cos(moon.geoEclipLat))
+	ldash := longitudeOffset(DegreesFromRadians(a - f))
+	bdash := math.Asin(-math.Sin(w)*math.Cos(moon.geoEclipLat)*math.Sin(I) - math.Sin(moon.geoEclipLat)*math.Cos(I))
+
+	// Physical librations
+	k1 := RadiansFromDegrees(119.75 + 131.849*t)
+	k2 := RadiansFromDegrees(72.56 + 20.186*t)
+
+	rho := (-0.02752*math.Cos(mdash) +
+		-0.02245*math.Sin(f) +
+		+0.00684*math.Cos(mdash-2*f) +
+		-0.00293*math.Cos(2*f) +
+		-0.00085*math.Cos(2*f-2*d) +
+		-0.00054*math.Cos(mdash-2*d) +
+		-0.00020*math.Sin(mdash+f) +
+		-0.00020*math.Cos(mdash+2*f) +
+		-0.00020*math.Cos(mdash-f) +
+		+0.00014*math.Cos(mdash+2*f-2*d))
+
+	sigma := (-0.02816*math.Sin(mdash) +
+		+0.02244*math.Cos(f) +
+		-0.00682*math.Sin(mdash-2*f) +
+		-0.00279*math.Sin(2*f) +
+		-0.00083*math.Sin(2*f-2*d) +
+		+0.00069*math.Sin(mdash-2*d) +
+		+0.00040*math.Cos(mdash+f) +
+		-0.00025*math.Sin(2*mdash) +
+		-0.00023*math.Sin(mdash+2*f) +
+		+0.00020*math.Cos(mdash-f) +
+		+0.00019*math.Sin(mdash-f) +
+		+0.00013*math.Sin(mdash+2*f-2*d) +
+		-0.00010*math.Cos(mdash-3*f))
+
+	tau := (+0.02520*e*math.Sin(m) +
+		+0.00473*math.Sin(2*mdash-2*f) +
+		-0.00467*math.Sin(mdash) +
+		+0.00396*math.Sin(k1) +
+		+0.00276*math.Sin(2*mdash-2*d) +
+		+0.00196*math.Sin(omega) +
+		-0.00183*math.Cos(mdash-f) +
+		+0.00115*math.Sin(mdash-2*d) +
+		-0.00096*math.Sin(mdash-d) +
+		+0.00046*math.Sin(2*f-2*d) +
+		-0.00039*math.Sin(mdash-f) +
+		-0.00032*math.Sin(mdash-m-d) +
+		+0.00027*math.Sin(2*mdash-m-2*d) +
+		+0.00023*math.Sin(k2) +
+		-0.00014*math.Sin(2*d) +
+		+0.00014*math.Cos(2*mdash-2*f) +
+		-0.00012*math.Sin(mdash-2*f) +
+		-0.00012*math.Sin(2*mdash) +
+		+0.00011*math.Sin(2*mdash-2*m-2*d))
+
+	ldash2 := -tau + (rho*math.Cos(a)+sigma*math.Sin(a))*math.Tan(bdash)
+	bdash = DegreesFromRadians(bdash)
+	bdash2 := sigma*math.Cos(a) - rho*math.Sin(a)
+
+	lib.Elon = ldash + ldash2
+	lib.Elat = bdash + bdash2
+	return lib
 }
 
 //--- Eclipse/transit code begins
