@@ -95,6 +95,25 @@ func TestMoon(t *testing.T) {
 	}
 }
 
+func TestEclipticGeoMoon(t *testing.T) {
+	time := TimeFromUniversalDays(8710.229045938935) // 2023-11-06T17:29:49.569Z
+	sphere := EclipticGeoMoon(time)
+	const (
+		expectedLat  = 4.358316503018247
+		expectedLon  = 148.93768765040494
+		expectedDist = 0.00270415804347072
+	)
+	if diff := math.Abs(expectedLat - sphere.Lat); diff > 2.0e-15 {
+		t.Errorf("Excessive latitude error %g", diff)
+	}
+	if diff := math.Abs(expectedLon - sphere.Lon); diff > 0.0 {
+		t.Errorf("Excessive longitude error %g", diff)
+	}
+	if diff := math.Abs(expectedDist - sphere.Dist); diff > 5.0e-19 {
+		t.Errorf("Excessive distance error %g", diff)
+	}
+}
+
 func float(s string) float64 {
 	x, err := strconv.ParseFloat(s, 64)
 	if err != nil {

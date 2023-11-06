@@ -71,6 +71,7 @@ It provides a suite of well\-tested functions for calculating positions of the S
 - [type SearchContext](<#SearchContext>)
 - [type SeasonsInfo](<#SeasonsInfo>)
 - [type Spherical](<#Spherical>)
+  - [func EclipticGeoMoon\(time AstroTime\) Spherical](<#EclipticGeoMoon>)
   - [func HorizonFromVector\(vector AstroVector, refraction Refraction\) Spherical](<#HorizonFromVector>)
   - [func SphereFromVector\(vector AstroVector\) Spherical](<#SphereFromVector>)
 - [type StateVector](<#StateVector>)
@@ -422,7 +423,7 @@ For common use cases, it is simpler to use BackdatePosition for calculating the 
 For geocentric calculations, GeoVector also backdates the returned position vector for light travel time, only it returns the observation time in the returned vector's \`t\` field rather than the backdated time.
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2214>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2261>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -596,7 +597,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="JupiterMoons"></a>
-### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2489>)
+### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2536>)
 
 ```go
 func JupiterMoons(time AstroTime) JupiterMoonsInfo
@@ -621,7 +622,7 @@ type LibrationInfo struct {
 ```
 
 <a name="Libration"></a>
-### func [Libration](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2249>)
+### func [Libration](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2296>)
 
 ```go
 func Libration(time AstroTime) LibrationInfo
@@ -786,7 +787,7 @@ func RotationGalEqj() RotationMatrix
 
 
 <a name="SearchContext"></a>
-## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2522-L2524>)
+## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2569-L2571>)
 
 
 
@@ -822,6 +823,21 @@ type Spherical struct {
     Dist float64 // a distance expressed in astronomical units
 }
 ```
+
+<a name="EclipticGeoMoon"></a>
+### func [EclipticGeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2226>)
+
+```go
+func EclipticGeoMoon(time AstroTime) Spherical
+```
+
+Calculates spherical ecliptic geocentric position of the Moon. Given a time of observation, calculates the Moon's geocentric position in ecliptic spherical coordinates. Provides the ecliptic latitude and longitude in degrees, and the geocentric distance in astronomical units \(AU\).
+
+The ecliptic angles are measured in "ECT": relative to the true ecliptic plane and equatorial plane at the specified time. This means the Earth's equator is corrected for precession and nutation, and the plane of the Earth's orbit is corrected for gradual obliquity drift.
+
+This algorithm is based on the Nautical Almanac Office's \*Improved Lunar Ephemeris\* of 1954, which in turn derives from E. W. Brown's lunar theories from the early twentieth century. It is adapted from Turbo Pascal code from the book Astronomy on the Personal Computer by Montenbruck and Pfleger: https://www.springer.com/us/book/9783540672210
+
+To calculate a J2000 mean equator vector instead, use GeoMoon.
 
 <a name="HorizonFromVector"></a>
 ### func [HorizonFromVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L536>)
@@ -870,7 +886,7 @@ type StateVector struct {
 ```
 
 <a name="LagrangePointFast"></a>
-### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2826>)
+### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2873>)
 
 ```go
 func LagrangePointFast(point int, majorState StateVector, majorMass float64, minorState StateVector, minorMass float64) (*StateVector, error)

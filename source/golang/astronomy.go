@@ -2206,6 +2206,53 @@ func moonEclipticLatitudeDegrees(time AstroTime) float64 {
 	return DegreesFromRadians(moon.geoEclipLat)
 }
 
+// Calculates spherical ecliptic geocentric position of the Moon.
+// Given a time of observation, calculates the Moon's geocentric position
+// in ecliptic spherical coordinates. Provides the ecliptic latitude and
+// longitude in degrees, and the geocentric distance in astronomical units (AU).
+//
+// The ecliptic angles are measured in "ECT": relative to the true ecliptic plane and
+// equatorial plane at the specified time. This means the Earth's equator
+// is corrected for precession and nutation, and the plane of the Earth's
+// orbit is corrected for gradual obliquity drift.
+//
+// This algorithm is based on the Nautical Almanac Office's *Improved Lunar Ephemeris* of 1954,
+// which in turn derives from E. W. Brown's lunar theories from the early twentieth century.
+// It is adapted from Turbo Pascal code from the book
+// Astronomy on the Personal Computer by Montenbruck and Pfleger:
+// https://www.springer.com/us/book/9783540672210
+//
+// To calculate a J2000 mean equator vector instead, use GeoMoon.
+func EclipticGeoMoon(time AstroTime) Spherical {
+	context := makeMoonContextFromTime(time)
+	moon := context.calcMoon()
+
+	// Convert spherical coordinates to a vector.
+	// The moonResult angles are already expressed in radians.
+	distCosLat := moon.distanceAu * math.Cos(moon.geoEclipLat)
+	ecm := AstroVector{
+		distCosLat * math.Cos(moon.geoEclipLon),
+		distCosLat * math.Sin(moon.geoEclipLon),
+		moon.distanceAu * math.Sin(moon.geoEclipLat),
+		time,
+	}
+
+	// Obtain true and mean obliquity angles for the given time.
+	// This serves to pre-calculate the nutation also, and cache it in `time`.
+	et := etilt(&time)
+
+	// Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
+	eqm := eclToEquVec(ecm)
+
+	// Add nutation to convert ECM to true equatorial coordinates of date (EQD).
+	eqd := nutation(eqm, from2000)
+
+	// Convert back to ecliptic, this time in true equinox of date (ECT).
+	eclip := rotateEquatorialToEcliptic(eqd, RadiansFromDegrees(et.Tobl))
+
+	return Spherical{eclip.Elat, eclip.Elon, moon.distanceAu}
+}
+
 // GeoMoon calculates the equatorial geocentric position of the Moon at a given time.
 // The returned vector indicates the Moon's center relative to the Earth's center.
 // The vector components are expressed in AU (astronomical units).
