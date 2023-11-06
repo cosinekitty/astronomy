@@ -671,6 +671,38 @@ func InverseRotation(rotation RotationMatrix) RotationMatrix {
 	return inverse
 }
 
+// Calculates a rotation matrix from equatorial of-date (EQD) to horizontal (HOR).
+func RotationEqdHor(time AstroTime, observer Observer) RotationMatrix {
+	sinlat := dsin(observer.Latitude)
+	coslat := dcos(observer.Latitude)
+	sinlon := dsin(observer.Longitude)
+	coslon := dcos(observer.Longitude)
+
+	uze := AstroVector{coslat * coslon, coslat * sinlon, sinlat, time}
+	une := AstroVector{-sinlat * coslon, -sinlat * sinlon, coslat, time}
+	uwe := AstroVector{sinlon, -coslon, 0.0, time}
+
+	// Multiply sidereal hours by -15 to convert to degrees and flip eastward
+	// rotation of the Earth to westward apparent movement of objects with time.
+	angle := -15.0 * SiderealTime(&time)
+	uz := spin(angle, uze)
+	un := spin(angle, une)
+	uw := spin(angle, uwe)
+
+	r := RotationMatrix{}
+	r.Rot[0][0] = un.X
+	r.Rot[1][0] = un.Y
+	r.Rot[2][0] = un.X
+	r.Rot[0][1] = uw.X
+	r.Rot[1][1] = uw.Y
+	r.Rot[2][1] = uw.Z
+	r.Rot[0][2] = uz.X
+	r.Rot[1][2] = uz.Y
+	r.Rot[2][2] = uz.Z
+
+	return r
+}
+
 type Refraction int
 
 const (
