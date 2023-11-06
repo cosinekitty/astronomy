@@ -2602,6 +2602,132 @@ type SearchContext interface {
 	Eval(time AstroTime) (float64, error)
 }
 
+// Searches for a time at which a function's value increases through zero.
+// Certain astronomy calculations involve finding a time when an event occurs.
+// Often such events can be defined as the root of a function:
+// the time at which the function's value becomes zero.
+//
+// Search finds the *ascending root* of a function: the time at which
+// the function's value becomes zero while having a positive slope. That is, as time increases,
+// the function transitions from a negative value, through zero at a specific moment,
+// to a positive value later. The goal of the search is to find that specific moment.
+//
+// Search uses a combination of bisection and quadratic interpolation
+// to minimize the number of function calls. However, it is critical that the
+// supplied time window be small enough that there cannot be more than one root
+// (ascending or descending) within it; otherwise the search can fail.
+// Beyond that, it helps to make the time window as small as possible, ideally
+// such that the function itself resembles a smooth parabolic curve within that window.
+//
+// If an ascending root is not found, or more than one root
+// (ascending and/or descending) exists within the window `t1`..`t2`,
+// the search will return `null`.
+//
+// If the search does not converge within 20 iterations, it will return an error.
+func Search(context SearchContext, t1, t2 AstroTime, dtToleranceSeconds float64) (*AstroTime, error) {
+	const iterLimit = 20
+	dtDays := math.Abs(dtToleranceSeconds / SecondsPerDay)
+	f1, e1 := context.Eval(t1)
+	if e1 != nil {
+		return nil, e1
+	}
+	f2, e2 := context.Eval(t2)
+	if e2 != nil {
+		return nil, e2
+	}
+	iter := 0
+	calcFmid := true
+	fmid := 0.0
+	for {
+		iter++
+		if iter > iterLimit {
+			return nil, errors.New("Search did not converge within 20 iterations")
+		}
+
+		dt := (t2.Tt - t1.Tt) / 2.0
+		tmid := t1.AddDays(dt)
+		if math.Abs(dt) < dtDays {
+			// We are close enough to the event to stop the search.
+			return &tmid, nil
+		}
+
+		if calcFmid {
+			if f3, e3 := context.Eval(tmid); e3 != nil {
+				return nil, e3
+			} else {
+				fmid = f3
+			}
+		} else {
+			calcFmid = true // we already have the correct value of fmid from the previous loop
+		}
+
+		// Quadratic interpolation:
+		// Try to find a parabola that passes through the 3 points we have sampled:
+		// (t1,f1), (tmid,fmid), (t2,f2)
+
+		if success, qUt, qDfDt := quadInterp(tmid.Ut, t2.Ut-tmid.Ut, f1, fmid, f2); success {
+			tq := TimeFromUniversalDays(qUt)
+			fq, eq := context.Eval(tq)
+			if eq != nil {
+				return nil, eq
+			}
+			if qDfDt != 0.0 {
+				dtGuess := math.Abs(fq / qDfDt)
+				if dtGuess < dtDays {
+					// The estimated time error is small enough that we can quit now.
+					return &tq, nil
+				}
+
+				// Try guessing a tighter boundary with the interpolated root at the center.
+				dtGuess *= 1.2
+				if dtGuess < dt/10.0 {
+					tleft := tq.AddDays(-dtGuess)
+					tright := tq.AddDays(+dtGuess)
+					if (tleft.Ut-t1.Ut)*(tleft.Ut-t2.Ut) < 0.0 {
+						if (tright.Ut-t1.Ut)*(tright.Ut-t2.Ut) < 0.0 {
+							fleft, eleft := context.Eval(tleft)
+							if eleft != nil {
+								return nil, eleft
+							}
+							fright, eright := context.Eval(tright)
+							if eright != nil {
+								return nil, eright
+							}
+							if fleft < 0.0 && fright >= 0.0 {
+								f1 = fleft
+								f2 = fright
+								t1 = tleft
+								t2 = tright
+								fmid = fq
+								calcFmid = false // save a little work -- no need to re-calculate fmid next time around the loop
+								continue
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// After quadratic interpolation attempt.
+		// Now just divide the region in two parts and pick whichever one appears to contain a root.
+		if f1 < 0.0 && fmid >= 0.0 {
+			t2 = tmid
+			f2 = fmid
+			continue
+		}
+
+		if fmid < 0.0 && f2 >= 0.0 {
+			t1 = tmid
+			f1 = fmid
+			continue
+		}
+
+		// Either there is no ascending zero-crossing in this range
+		// or the search window is too wide (more than one zero-crossing).
+		return nil, nil
+	}
+}
+
 func findAscent(depth int, context SearchContext, maxDerivAlt float64, t1, t2 AstroTime, a1, a2 float64) ascentInfo {
 	// See if we can find any time interval where the altitude-diff function
 	// rises from non-positive to positive.

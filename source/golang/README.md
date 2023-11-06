@@ -28,6 +28,7 @@ It provides a suite of well\-tested functions for calculating positions of the S
 - [type AstroMoonQuarter](<#AstroMoonQuarter>)
 - [type AstroSearchFunc](<#AstroSearchFunc>)
 - [type AstroTime](<#AstroTime>)
+  - [func Search\(context SearchContext, t1, t2 AstroTime, dtToleranceSeconds float64\) \(\*AstroTime, error\)](<#Search>)
   - [func TimeFromCalendar\(year, month, day, hour, minute int, second float64\) AstroTime](<#TimeFromCalendar>)
   - [func TimeFromTerrestrialDays\(tt float64\) AstroTime](<#TimeFromTerrestrialDays>)
   - [func TimeFromUniversalDays\(ut float64\) AstroTime](<#TimeFromUniversalDays>)
@@ -355,6 +356,23 @@ type AstroTime struct {
     // contains filtered or unexported fields
 }
 ```
+
+<a name="Search"></a>
+### func [Search](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2627>)
+
+```go
+func Search(context SearchContext, t1, t2 AstroTime, dtToleranceSeconds float64) (*AstroTime, error)
+```
+
+Searches for a time at which a function's value increases through zero. Certain astronomy calculations involve finding a time when an event occurs. Often such events can be defined as the root of a function: the time at which the function's value becomes zero.
+
+Search finds the \*ascending root\* of a function: the time at which the function's value becomes zero while having a positive slope. That is, as time increases, the function transitions from a negative value, through zero at a specific moment, to a positive value later. The goal of the search is to find that specific moment.
+
+Search uses a combination of bisection and quadratic interpolation to minimize the number of function calls. However, it is critical that the supplied time window be small enough that there cannot be more than one root \(ascending or descending\) within it; otherwise the search can fail. Beyond that, it helps to make the time window as small as possible, ideally such that the function itself resembles a smooth parabolic curve within that window.
+
+If an ascending root is not found, or more than one root \(ascending and/or descending\) exists within the window \`t1\`..\`t2\`, the search will return \`null\`.
+
+If the search does not converge within 20 iterations, it will return an error.
 
 <a name="TimeFromCalendar"></a>
 ### func [TimeFromCalendar](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L384>)
@@ -896,7 +914,7 @@ type StateVector struct {
 ```
 
 <a name="LagrangePointFast"></a>
-### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2905>)
+### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L3031>)
 
 ```go
 func LagrangePointFast(point int, majorState StateVector, majorMass float64, minorState StateVector, minorMass float64) (*StateVector, error)

@@ -6936,7 +6936,7 @@ namespace CosineKitty
         /// `Search` uses a combination of bisection and quadratic interpolation
         /// to minimize the number of function calls. However, it is critical that the
         /// supplied time window be small enough that there cannot be more than one root
-        /// (ascedning or descending) within it; otherwise the search can fail.
+        /// (ascending or descending) within it; otherwise the search can fail.
         /// Beyond that, it helps to make the time window as small as possible, ideally
         /// such that the function itself resembles a smooth parabolic curve within that window.
         ///
