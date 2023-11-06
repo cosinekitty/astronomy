@@ -422,7 +422,7 @@ For common use cases, it is simpler to use BackdatePosition for calculating the 
 For geocentric calculations, GeoVector also backdates the returned position vector for light travel time, only it returns the observation time in the returned vector's \`t\` field rather than the backdated time.
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2204>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2214>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -596,7 +596,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="JupiterMoons"></a>
-### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2479>)
+### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2489>)
 
 ```go
 func JupiterMoons(time AstroTime) JupiterMoonsInfo
@@ -621,7 +621,7 @@ type LibrationInfo struct {
 ```
 
 <a name="Libration"></a>
-### func [Libration](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2239>)
+### func [Libration](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2249>)
 
 ```go
 func Libration(time AstroTime) LibrationInfo
@@ -786,7 +786,7 @@ func RotationGalEqj() RotationMatrix
 
 
 <a name="SearchContext"></a>
-## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2512-L2514>)
+## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2522-L2524>)
 
 
 
@@ -870,7 +870,7 @@ type StateVector struct {
 ```
 
 <a name="LagrangePointFast"></a>
-### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2816>)
+### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2826>)
 
 ```go
 func LagrangePointFast(point int, majorState StateVector, majorMass float64, minorState StateVector, minorMass float64) (*StateVector, error)

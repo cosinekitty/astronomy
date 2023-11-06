@@ -2108,6 +2108,10 @@ func twoPiFrac(x float64) float64 {
 	return (2.0 * math.Pi) * (x - math.Floor(x))
 }
 
+func makeMoonContextFromTime(time AstroTime) *moonContext {
+	return makeMoonContext(time.Tt / 36525.0)
+}
+
 func makeMoonContext(centuriesSinceJ2000 float64) *moonContext {
 	var I, J, MAX int
 	var T2, ARG, FAC float64
@@ -2196,13 +2200,19 @@ func (mc *moonContext) calcMoon() moonResult {
 	}
 }
 
+func moonEclipticLatitudeDegrees(time AstroTime) float64 {
+	context := makeMoonContextFromTime(time)
+	moon := context.calcMoon()
+	return DegreesFromRadians(moon.geoEclipLat)
+}
+
 // GeoMoon calculates the equatorial geocentric position of the Moon at a given time.
 // The returned vector indicates the Moon's center relative to the Earth's center.
 // The vector components are expressed in AU (astronomical units).
 // The coordinates are oriented with respect to the Earth's equator at the J2000 epoch.
 // In Astronomy Engine, this orientation is called EQJ.
 func GeoMoon(time AstroTime) AstroVector {
-	mc := makeMoonContext(time.Tt / 36525.0)
+	mc := makeMoonContextFromTime(time)
 	moon := mc.calcMoon()
 
 	// Convert geocentric ecliptic spherical coordinates to Cartesian coordinates.
