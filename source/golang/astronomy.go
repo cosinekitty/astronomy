@@ -16,6 +16,7 @@ const (
 	DaysPerTropicalYear       = 365.24217 // the number of days in one tropical year
 	SecondsPerDay             = 86400.0   // the number of seconds in one day
 	SolarDaysPerSiderealDay   = 0.9972695717592592
+	MeanSynodicMonth          = 29.530588                     // average number of days for Moon to return to the same phase
 	SpeedOfLightAuPerDay      = 173.1446326846693             // the speed of light in vacuum expressed in astronomical units per day
 	KmPerAu                   = 1.4959787069098932e+8         // the number of kilometers in one astronomical unit
 	AuPerLightYear            = 63241.07708807546             // the number of astronomical units in one light year
@@ -1304,6 +1305,18 @@ func PlanetOrbitalPeriod(body Body) float64 {
 	default:
 		return -1.0 // invalid body
 	}
+}
+
+func synodicPeriod(body Body) float64 {
+	// The Earth does not have a synodic period as seen from itself.
+	if body == Earth {
+		return 0.0
+	}
+	if body == Moon {
+		return MeanSynodicMonth
+	}
+	tp := PlanetOrbitalPeriod(body)
+	return math.Abs(earthOrbitalPeriod / (earthOrbitalPeriod/tp - 1.0))
 }
 
 // Returns the product of mass and universal gravitational constant of a Solar System body.
