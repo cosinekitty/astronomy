@@ -1788,6 +1788,11 @@ func precession(pos AstroVector, dir precessDirection) AstroVector {
 	return RotateVector(r, pos)
 }
 
+func precessionPosVel(state StateVector, dir precessDirection) StateVector {
+	rot := precessionRot(state.T, dir)
+	return RotateState(rot, state)
+}
+
 func nutationRot(time *AstroTime, dir precessDirection) RotationMatrix {
 	tilt := etilt(time)
 	oblm := RadiansFromDegrees(tilt.Mobl)
