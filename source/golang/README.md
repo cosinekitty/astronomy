@@ -362,7 +362,7 @@ type AstroTime struct {
 ```
 
 <a name="Search"></a>
-### func [Search](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2956>)
+### func [Search](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L3030>)
 
 ```go
 func Search(context SearchContext, t1, t2 AstroTime, dtToleranceSeconds float64) (*AstroTime, error)
@@ -446,7 +446,7 @@ For common use cases, it is simpler to use BackdatePosition for calculating the 
 For geocentric calculations, GeoVector also backdates the returned position vector for light travel time, only it returns the observation time in the returned vector's \`t\` field rather than the backdated time.
 
 <a name="GeoMoon"></a>
-### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2348>)
+### func [GeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2422>)
 
 ```go
 func GeoMoon(time AstroTime) AstroVector
@@ -455,7 +455,7 @@ func GeoMoon(time AstroTime) AstroVector
 GeoMoon calculates the equatorial geocentric position of the Moon at a given time. The returned vector indicates the Moon's center relative to the Earth's center. The vector components are expressed in AU \(astronomical units\). The coordinates are oriented with respect to the Earth's equator at the J2000 epoch. In Astronomy Engine, this orientation is called EQJ.
 
 <a name="RotateVector"></a>
-### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1902>)
+### func [RotateVector](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1976>)
 
 ```go
 func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector
@@ -629,7 +629,7 @@ type JupiterMoonsInfo struct {
 ```
 
 <a name="JupiterMoons"></a>
-### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2623>)
+### func [JupiterMoons](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2697>)
 
 ```go
 func JupiterMoons(time AstroTime) JupiterMoonsInfo
@@ -654,7 +654,7 @@ type LibrationInfo struct {
 ```
 
 <a name="Libration"></a>
-### func [Libration](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2383>)
+### func [Libration](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2457>)
 
 ```go
 func Libration(time AstroTime) LibrationInfo
@@ -738,7 +738,7 @@ type RotationMatrix struct {
 ```
 
 <a name="CombineRotation"></a>
-### func [CombineRotation](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1924>)
+### func [CombineRotation](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1998>)
 
 ```go
 func CombineRotation(a, b RotationMatrix) RotationMatrix
@@ -765,7 +765,7 @@ func InverseRotation(rotation RotationMatrix) RotationMatrix
 Calculates the inverse of a rotation matrix. Given a rotation matrix that performs some coordinate transform, this function returns the matrix that reverses that transform.
 
 <a name="Pivot"></a>
-### func [Pivot](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1960>)
+### func [Pivot](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2034>)
 
 ```go
 func Pivot(rotation RotationMatrix, axis int, angle float64) (*RotationMatrix, error)
@@ -774,7 +774,7 @@ func Pivot(rotation RotationMatrix, axis int, angle float64) (*RotationMatrix, e
 Pivot re\-orients a rotation matrix by pivoting it by an angle around one of its axes. Given a rotation matrix, a selected coordinate axis, and an angle in degrees, this function pivots the rotation matrix by that angle around that coordinate axis. For example, if you have rotation matrix that converts ecliptic coordinates \(ECL\) to horizontal coordinates \(HOR\), but you really want to convert ECL to the orientation of a telescope camera pointed at a given body, you can use Pivot twice: \(1\) pivot around the zenith axis by the body's azimuth, then \(2\) pivot around the western axis by the body's altitude angle. The resulting rotation matrix will then reorient ECL coordinates to the orientation of your telescope camera. The axis parameter is an integer that selects which axis to pivot about: 0=x, 1=y, 2=z. The angle parameter is an angle in degrees indicating the amount of rotation around the specified axis. Positive angles indicate rotation counterclockwise as seen from the positive direction along that axis, looking towards the origin point of the orientation system. Any finite number of degrees is allowed, but best precision will result from keeping angle in the range \[\-360, \+360\].
 
 <a name="RotationEclEqj"></a>
-### func [RotationEclEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2003>)
+### func [RotationEclEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2077>)
 
 ```go
 func RotationEclEqj() RotationMatrix
@@ -783,7 +783,7 @@ func RotationEclEqj() RotationMatrix
 Calculates a rotation matrix from J2000 mean ecliptic \(ECL\) to J2000 mean equator \(EQJ\).
 
 <a name="RotationEqdEqj"></a>
-### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1996>)
+### func [RotationEqdEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2070>)
 
 ```go
 func RotationEqdEqj(time *AstroTime) RotationMatrix
@@ -801,7 +801,7 @@ func RotationEqdHor(time AstroTime, observer Observer) RotationMatrix
 Calculates a rotation matrix from equatorial of\-date \(EQD\) to horizontal \(HOR\).
 
 <a name="RotationEqjEcl"></a>
-### func [RotationEqjEcl](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2023>)
+### func [RotationEqjEcl](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2097>)
 
 ```go
 func RotationEqjEcl() RotationMatrix
@@ -810,7 +810,7 @@ func RotationEqjEcl() RotationMatrix
 Calculates a rotation matrix from J2000 mean equator \(EQJ\) to J2000 mean ecliptic \(ECL\).
 
 <a name="RotationEqjGal"></a>
-### func [RotationEqjGal](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2043>)
+### func [RotationEqjGal](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2117>)
 
 ```go
 func RotationEqjGal() RotationMatrix
@@ -819,7 +819,7 @@ func RotationEqjGal() RotationMatrix
 Calculates a rotation matrix from J2000 mean equator \(EQJ\) to galactic \(GAL\).
 
 <a name="RotationGalEqj"></a>
-### func [RotationGalEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2063>)
+### func [RotationGalEqj](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2137>)
 
 ```go
 func RotationGalEqj() RotationMatrix
@@ -828,7 +828,7 @@ func RotationGalEqj() RotationMatrix
 
 
 <a name="SearchContext"></a>
-## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2656-L2658>)
+## type [SearchContext](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2730-L2732>)
 
 
 
@@ -866,7 +866,7 @@ type Spherical struct {
 ```
 
 <a name="EclipticGeoMoon"></a>
-### func [EclipticGeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2313>)
+### func [EclipticGeoMoon](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2387>)
 
 ```go
 func EclipticGeoMoon(time AstroTime) Spherical
@@ -927,7 +927,7 @@ type StateVector struct {
 ```
 
 <a name="LagrangePointFast"></a>
-### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L3109>)
+### func [LagrangePointFast](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L3183>)
 
 ```go
 func LagrangePointFast(point int, majorState StateVector, majorMass float64, minorState StateVector, minorMass float64) (*StateVector, error)
@@ -944,7 +944,7 @@ The function returns the state vector for the selected Lagrange point using the 
 Consider calling LagrangePoint, instead of this function, for simpler usage in most cases.
 
 <a name="RotateState"></a>
-### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1911>)
+### func [RotateState](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L1985>)
 
 ```go
 func RotateState(rotation RotationMatrix, state StateVector) StateVector

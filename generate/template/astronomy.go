@@ -1886,7 +1886,6 @@ func terra(observer Observer, time *AstroTime) StateVector {
 	stlocl := RadiansFromDegrees(15.0*st + observer.Longitude)
 	sinst := math.Sin(stlocl)
 	cosst := math.Cos(stlocl)
-
 	return StateVector{
 		ach * cosphi * cosst / KmPerAu,
 		ach * cosphi * sinst / KmPerAu,
@@ -1896,6 +1895,81 @@ func terra(observer Observer, time *AstroTime) StateVector {
 		0.0,
 		*time,
 	}
+}
+
+func inverseTerra(ovec AstroVector) Observer {
+	var lon_deg, lat_deg, height_km float64
+
+	// Convert from AU to kilometers.
+	x := ovec.X * KmPerAu
+	y := ovec.Y * KmPerAu
+	z := ovec.Z * KmPerAu
+	p := math.Hypot(x, y)
+	if p < 1.0e-6 {
+		// Special case: within 1 millimeter of a pole!
+		// Use arbitrary longitude, and latitude determined by polarity of z.
+		lon_deg = 0.0
+		if z > 0.0 {
+			lat_deg = +90.0
+		} else {
+			lat_deg = -90.0
+		}
+		// Elevation is calculated directly from z
+		height_km = math.Abs(z) - EarthPolarRadiusKm
+	} else {
+		stlocl := math.Atan2(y, x)
+		st := SiderealTime(&ovec.T)
+		// Calculate exact longitude.
+		lon_deg := DegreesFromRadians(stlocl - (15.0 * st))
+		// Normalize longitude to the range (-180, +180].
+		for lon_deg <= -180.0 {
+			lon_deg += 360.0
+		}
+		for lon_deg > +180.0 {
+			lon_deg -= 360.0
+		}
+		// Numerically solve for exact latitude, using Newton's Method.
+		F := EarthFlattening * EarthFlattening
+		// Start with initial latitude estimate, based on a spherical Earth.
+		lat := math.Atan2(z, p)
+		var c, s, denom float64
+		count := 0
+		for {
+			count++
+			if count > 10 {
+				panic("inverse_terra solver failed to converge.")
+			}
+			// Calculate the error function W(lat).
+			// We try to find the root of W, meaning where the error is 0.
+			c = math.Cos(lat)
+			s = math.Sin(lat)
+			factor := (F - 1) * EarthEquatorialRadiusKm
+			c2 := c * c
+			s2 := s * s
+			radicand := c2 + F*s2
+			denom = math.Sqrt(radicand)
+			W := (factor*s*c)/denom - z*c + p*s
+			if math.Abs(W) < 1.0e-8 {
+				break // The error is now negligible.
+			}
+			// Error is still too large. Find the next estimate.
+			// Calculate D = the derivative of W with respect to lat.
+			D := factor*((c2-s2)/denom-s2*c2*(F-1)/(factor*radicand)) + z*s + p*c
+			lat -= W / D
+		}
+		// We now have a solution for the latitude in radians.
+		lat_deg = DegreesFromRadians(lat)
+		// Solve for exact height in kilometers.
+		// There are two formulas I can use. Use whichever has the less risky denominator.
+		adjust := EarthEquatorialRadiusKm / denom
+		if math.Abs(s) > math.Abs(c) {
+			height_km = z/s - F*adjust
+		} else {
+			height_km = p/c - adjust
+		}
+	}
+
+	return Observer{lat_deg, lon_deg, 1000.0 * height_km}
 }
 
 // RotateVector applies a rotation to a vector, yielding a vector in another orientation system.
