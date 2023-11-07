@@ -85,6 +85,7 @@ const (
 	earthOrbitalPeriod   = 365.256
 	neptuneOrbitalPeriod = 60189.0
 	daysPerMillennium    = 365250.0
+	angVel               = 7.2921150e-5
 )
 
 func isfinite(x float64) bool {
@@ -1864,6 +1865,31 @@ func spin(angle float64, pos AstroVector) AstroVector {
 		-sinang*pos.X + cosang*pos.Y,
 		pos.Z,
 		pos.T,
+	}
+}
+
+func terra(observer Observer, time *AstroTime) StateVector {
+	st := SiderealTime(time)
+	phi := RadiansFromDegrees(observer.Latitude)
+	sinphi := math.Sin(phi)
+	cosphi := math.Cos(phi)
+	c := 1.0 / math.Hypot(cosphi, EarthFlattening*sinphi)
+	s := (EarthFlattening * EarthFlattening) * c
+	htKm := observer.Height / 1000.0
+	ach := EarthEquatorialRadiusKm*c + htKm
+	ash := EarthEquatorialRadiusKm*s + htKm
+	stlocl := RadiansFromDegrees(15.0*st + observer.Longitude)
+	sinst := math.Sin(stlocl)
+	cosst := math.Cos(stlocl)
+
+	return StateVector{
+		ach * cosphi * cosst / KmPerAu,
+		ach * cosphi * sinst / KmPerAu,
+		ash * sinphi / KmPerAu,
+		-(angVel * 86400.0 / KmPerAu) * ach * cosphi * sinst,
+		+(angVel * 86400.0 / KmPerAu) * ach * cosphi * cosst,
+		0.0,
+		*time,
 	}
 }
 
