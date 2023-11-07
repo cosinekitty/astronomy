@@ -16,11 +16,12 @@ const (
 	DaysPerTropicalYear       = 365.24217 // the number of days in one tropical year
 	SecondsPerDay             = 86400.0   // the number of seconds in one day
 	SolarDaysPerSiderealDay   = 0.9972695717592592
-	SpeedOfLightAuPerDay      = 173.1446326846693                         // the speed of light in vacuum expressed in astronomical units per day
-	KmPerAu                   = 1.4959787069098932e+8                     // the number of kilometers in one astronomical unit
-	AuPerLightYear            = 63241.07708807546                         // the number of astronomical units in one light year
-	AsecToRad                 = 4.848136811095359935899141e-6             // factor to convert arcseconds to radians
-	SunRadiusKm               = 695700.0                                  // the radius of the Sun in kilometers
+	SpeedOfLightAuPerDay      = 173.1446326846693             // the speed of light in vacuum expressed in astronomical units per day
+	KmPerAu                   = 1.4959787069098932e+8         // the number of kilometers in one astronomical unit
+	AuPerLightYear            = 63241.07708807546             // the number of astronomical units in one light year
+	AsecToRad                 = 4.848136811095359935899141e-6 // factor to convert arcseconds to radians
+	SunRadiusKm               = 695700.0                      // the radius of the Sun in kilometers
+	SunRadiusAu               = SunRadiusKm / KmPerAu
 	MercuryEquatorialRadiusKm = 2440.5                                    // the equatorial radius of Mercury in kilometers
 	MercuryPolarRadiusKm      = 2438.3                                    // the polar radius of Mercury in kilometers
 	VenusRadiusKm             = 6051.8                                    // the radius of Venus in kilometers
@@ -31,6 +32,7 @@ const (
 	MoonEquatorialRadiusKm    = 1738.1                                    // the Moon's equatorial radius in kilometers
 	MoonPolarRadiusKm         = 1736.0                                    // the Moon's polar radius in kilometers
 	MoonMeanRadiusKm          = 1737.4
+	MoonPolarRadiusAu         = MoonPolarRadiusKm / KmPerAu
 	MarsEquatorialRadiusKm    = 3396.2  // the equatorial radius of Mars in kilometers
 	MarsPolarRadiusKm         = 3376.2  // the polar radius of Mars in kilometers
 	JupiterEquatorialRadiusKm = 71492.0 // the equatorial radius of Jupiter in kilometers
@@ -447,6 +449,15 @@ func Dot(a, b AstroVector) float64 {
 // Returns the length of vec expressed in the same distance units as vec's components.
 func (vec AstroVector) Length() float64 {
 	return math.Sqrt(Dot(vec, vec))
+}
+
+func (a AstroVector) Add(b AstroVector) AstroVector {
+	return AstroVector{
+		a.X + b.X,
+		a.Y + b.Y,
+		a.Z + b.Z,
+		a.T,
+	}
 }
 
 // StateVector represents the combined position and velocity of a body at a given moment of time.
@@ -3000,6 +3011,29 @@ func Search(context SearchContext, t1, t2 AstroTime, dtToleranceSeconds float64)
 		// or the search window is too wide (more than one zero-crossing).
 		return nil, nil
 	}
+}
+
+func solarEclipseObscuration(hm, lo AstroVector) float64 {
+	// hm = heliocentric moon
+	// lo = lunacentric observer
+	// Find heliocentric observer.
+	ho := hm.Add(lo)
+
+	// Calculate the apparent angular radius of the Sun for the observer.
+	sunRadius := math.Asin(SunRadiusAu / ho.Length())
+
+	// Calculate the apparent angular radius of the Moon for the observer.
+	moonRadius := math.Asin(MoonPolarRadiusAu / lo.Length())
+
+	// Calculate the apparent angular separation between the Sun's center and the Moon's center.
+	sunMoonSeparation := AngleBetween(lo, ho)
+
+	// Find the fraction of the Sun's apparent disc area that is covered by the Moon.
+	obscuration := obscuration(sunRadius, moonRadius, RadiansFromDegrees(sunMoonSeparation))
+
+	// HACK: In marginal cases, we need to clamp obscuration to less than 1.0.
+	// This function is never called for total eclipses, so it should never return 1.0.
+	return math.Min(0.9999, obscuration)
 }
 
 //--- Search code ends here ---------------------------------------------------------------------
