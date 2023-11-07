@@ -358,7 +358,7 @@ type AstroTime struct {
 ```
 
 <a name="Search"></a>
-### func [Search](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2627>)
+### func [Search](<https://github.com/cosinekitty/astronomy/blob/golang/source/golang/astronomy.go#L2901>)
 
 ```go
 func Search(context SearchContext, t1, t2 AstroTime, dtToleranceSeconds float64) (*AstroTime, error)
