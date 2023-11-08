@@ -616,6 +616,13 @@ const (
 	Star8       = 108        // User-defined star #8
 )
 
+type Direction int
+
+const (
+	Rise = +1
+	Set  = -1
+)
+
 // The location of a point on or near the surface of the Earth
 type Observer struct {
 	Latitude  float64 // Latitude degrees north (positive) or south (negative) of the equator
@@ -1898,7 +1905,7 @@ func terra(observer Observer, time *AstroTime) StateVector {
 }
 
 func inverseTerra(ovec AstroVector) Observer {
-	var lon_deg, lat_deg, height_km float64
+	var lonDeg, latDeg, heightKm float64
 
 	// Convert from AU to kilometers.
 	x := ovec.X * KmPerAu
@@ -1908,25 +1915,25 @@ func inverseTerra(ovec AstroVector) Observer {
 	if p < 1.0e-6 {
 		// Special case: within 1 millimeter of a pole!
 		// Use arbitrary longitude, and latitude determined by polarity of z.
-		lon_deg = 0.0
+		lonDeg = 0.0
 		if z > 0.0 {
-			lat_deg = +90.0
+			latDeg = +90.0
 		} else {
-			lat_deg = -90.0
+			latDeg = -90.0
 		}
 		// Elevation is calculated directly from z
-		height_km = math.Abs(z) - EarthPolarRadiusKm
+		heightKm = math.Abs(z) - EarthPolarRadiusKm
 	} else {
 		stlocl := math.Atan2(y, x)
 		st := SiderealTime(&ovec.T)
 		// Calculate exact longitude.
-		lon_deg := DegreesFromRadians(stlocl - (15.0 * st))
+		lonDeg = DegreesFromRadians(stlocl - (15.0 * st))
 		// Normalize longitude to the range (-180, +180].
-		for lon_deg <= -180.0 {
-			lon_deg += 360.0
+		for lonDeg <= -180.0 {
+			lonDeg += 360.0
 		}
-		for lon_deg > +180.0 {
-			lon_deg -= 360.0
+		for lonDeg > +180.0 {
+			lonDeg -= 360.0
 		}
 		// Numerically solve for exact latitude, using Newton's Method.
 		F := EarthFlattening * EarthFlattening
@@ -1958,18 +1965,17 @@ func inverseTerra(ovec AstroVector) Observer {
 			lat -= W / D
 		}
 		// We now have a solution for the latitude in radians.
-		lat_deg = DegreesFromRadians(lat)
+		latDeg = DegreesFromRadians(lat)
 		// Solve for exact height in kilometers.
 		// There are two formulas I can use. Use whichever has the less risky denominator.
 		adjust := EarthEquatorialRadiusKm / denom
 		if math.Abs(s) > math.Abs(c) {
-			height_km = z/s - F*adjust
+			heightKm = z/s - F*adjust
 		} else {
-			height_km = p/c - adjust
+			heightKm = p/c - adjust
 		}
 	}
-
-	return Observer{lat_deg, lon_deg, 1000.0 * height_km}
+	return Observer{latDeg, lonDeg, 1000.0 * heightKm}
 }
 
 // RotateVector applies a rotation to a vector, yielding a vector in another orientation system.
@@ -3130,6 +3136,92 @@ func Search(context SearchContext, t1, t2 AstroTime, dtToleranceSeconds float64)
 		return nil, nil
 	}
 }
+
+const riseSetDt = 0.42 // 10.08 hours: Nyquist-safe for 22-hour period.
+
+type searchContextAltitude struct {
+	body           Body
+	direction      Direction
+	observer       Observer
+	bodyRadiusAu   float64
+	targetAltitude float64
+}
+
+/*
+func (context *searchContextAltitude) Eval(time AstroTime) (float64, error) {
+	ofdate := Equator(context.body, time, context.observer, EquatorEpoch.OfDate, Aberration.Corrected)
+}
+
+func internalSearchAltitude(
+	body Body,
+	observer Observer,
+	direction Direction,
+	startTime AstroTime,
+	limitDays, bodyRadiusAu, targetAltitude float64) (*AstroTime, error) {
+	max_deriv_alt := maxAltitudeSlope(body, observer.Latitude)
+	context := searchContextAltitude{body, direction, observer, bodyRadiusAu, targetAltitude}
+
+	// We allow searching forward or backward in time.
+	// But we want to keep t1 < t2, so we need a few if/else statements.
+	t1 := startTime
+	t2 := t1
+	a1 := context.Eval(t1)
+	a2 := a1
+
+	for {
+		if limitDays < 0.0 {
+			t1 = t2.AddDays(-riseSetDt)
+			a1 = context.Eval(t1)
+		} else {
+			t2 = t1.AddDays(+riseSetDt)
+			a2 = context.Eval(t2)
+		}
+
+		ascent := findAscent(0, context, max_deriv_alt, t1, t2, a1, a2)
+		if ascent.valid {
+			// We found a time interval [t1, t2] that contains an alt-diff
+			// rising from negative a1 to non-negative a2.
+			// Search for the time where the root occurs.
+			time, error := Search(context, ascent.tx, ascent.ty, 0.1)
+			if time != nil {
+				// Now that we have a solution, we have to check whether it goes outside the time bounds.
+				if limitDays < 0.0 {
+					if time.ut < startTime.ut+limitDays {
+						return nil, nil
+					}
+				} else {
+					if time.ut > startTime.ut+limitDays {
+						return nil, nil
+					}
+				}
+				return time, nil // success
+			}
+
+			if error != nil {
+				return nil, error
+			}
+
+			// The search should have succeeded. Something is wrong with the ascent finder!
+			panic("Rise/set search failed after finding an ascent.")
+		}
+
+		// There is no ascent in this interval, so keep searching.
+		if limitDays < 0.0 {
+			if t1.Ut < startTime.Ut+limitDays {
+				return nil, nil
+			}
+			t2 = t1
+			a2 = a1
+		} else {
+			if t2.Ut > startTime.Ut+limitDays {
+				return nil, nil
+			}
+			t1 = t2
+			a1 = a2
+		}
+	}
+}
+*/
 
 func solarEclipseObscuration(hm, lo AstroVector) float64 {
 	// hm = heliocentric moon
