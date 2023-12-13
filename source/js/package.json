@@ -38,7 +38,8 @@
   "exports": {
     ".": {
       "require": "./astronomy.js",
-      "import": "./esm/astronomy.js"
+      "import": "./esm/astronomy.js",
+      "types": "./astronomy.d.ts"
     }
   },
   "main": "./astronomy.js",
