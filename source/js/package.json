@@ -1,6 +1,6 @@
 {
   "name": "astronomy-engine",
-  "version": "2.1.17",
+  "version": "2.1.18",
   "description": "Astronomy calculation for Sun, Moon, and planets.",
   "author": "Donald Cross",
   "license": "MIT",
@@ -38,7 +38,8 @@
   "exports": {
     ".": {
       "require": "./astronomy.js",
-      "import": "./esm/astronomy.js"
+      "import": "./esm/astronomy.js",
+      "types": "./astronomy.d.ts"
     }
   },
   "main": "./astronomy.js",
