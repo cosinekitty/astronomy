@@ -7,7 +7,7 @@
   "homepage": "https://github.com/cosinekitty/astronomy#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cosinekitty/astronomy"
+    "url": "git+https://github.com/cosinekitty/astronomy.git"
   },
   "bugs": {
     "url": "https://github.com/cosinekitty/astronomy/issues"
@@ -27,6 +27,7 @@
     "constellation",
     "orbit"
   ],
+  "scripts": {},
   "files": [
     "esm/astronomy.js",
     "astronomy.d.ts",
