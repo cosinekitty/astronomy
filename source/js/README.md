@@ -119,8 +119,10 @@ and some [Node.js examples](../../demo/nodejs/).
 | [SunPosition](#SunPosition) | Calculates the Sun's apparent true ecliptic of date (ECT) coordinates as seen from the Earth. |
 
 ### Date and time
-The Astronomy.js library performs its calculations in UTC through the use of the AstroTime class, which does not contain timezone information.
-AstroTime objects can be created in several ways, including through a Javascript Date object.
+
+Astronomy Engine performs its calculations in UTC using the [`AstroTime`](#AstroTime) class,
+which does not contain timezone information.
+AstroTime objects can be created in several ways, including through a Javascript `Date` object.
 
 A JavaScript Date object in UTC can be created using:
 - a Z-terminating string: <code>new Date('2024-07-01T09:00:00Z')</code>
@@ -128,7 +130,7 @@ A JavaScript Date object in UTC can be created using:
 
 Both examples create a Date object set to July 1st 2024 at 9:00:00 UTC.
 
-Note that, when displaying Date objects as strings (with <code>toUTCString()</code> for instance), JavaScript incorrecly refers to UTC as 'GMT'.
+Note that, when displaying Date objects as strings (with `toUTCString()` for instance), JavaScript incorrectly refers to UTC as 'GMT'.
 
 ### Coordinate transforms
 
