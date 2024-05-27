@@ -1435,7 +1435,7 @@ def _inverse_terra(ovec: List[float], st: float) -> Observer:
         # Start with initial latitude estimate, based on a spherical Earth.
         lat = math.atan2(z, p)
         count = 0
-        distanceAu = max(1.0, math.hypot(ovec[0], ovec[1], ovec[2]))
+        distanceAu = max(1.0, math.sqrt(ovec[0]**2 + ovec[1]**2 + ovec[2]**2))
         while True:
             count += 1
             if count > 10:
