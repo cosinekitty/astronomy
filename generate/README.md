@@ -20,7 +20,6 @@ The following tools are required for developers:
 - npm (needed to install other tools like TypeScript, jsdoc2md, ...)
 - Python 3.7+ and the following modules:
     - [mypy](https://pypi.org/project/mypy/)
-    - [pylint](https://pypi.org/project/pylint/)
 - Microsoft .NET 7 SDK
 - doxygen
 - xsltproc
@@ -52,7 +51,6 @@ The following tools are required for developers:
 - npm (needed to install other tools like TypeScript, jsdoc2md, ...)
 - Python 3.7+ and the following modules:
     - [mypy](https://pypi.org/project/mypy/)
-    - [pylint](https://pypi.org/project/pylint/)
 - doxygen
 - xsltproc  (Follow instructions at https://www.zlatkovic.com/libxml.en.html)
 

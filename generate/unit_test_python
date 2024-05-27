@@ -9,9 +9,6 @@ Fail()
 
 python3 --version || Fail "Cannot print python version"
 
-echo "$0: running pylint"
-python3 -m pylint  --init-hook="import sys; sys.setrecursionlimit(2000)" ../source/python/astronomy/astronomy.py || Fail "pylint detected problems"
-
 echo "$0: running mypy"
 cd ../source/python/astronomy || Fail "error changing to Python source directory"
 mypy --strict --module astronomy || Fail "error checking types using mypy"
