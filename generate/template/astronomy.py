@@ -1449,7 +1449,7 @@ def _inverse_terra(ovec: List[float], st: float) -> Observer:
             radicand = cos2 + _EARTH_FLATTENING_SQUARED*sin2
             denom = math.sqrt(radicand)
             W = (factor*sin*cos)/denom - z*cos + p*sin
-            if abs(W) < 1.0e-8:
+            if abs(W) < 2.0e-8:
                 # The error is now negligible
                 break
             # Error is still too large. Find the next estimate.

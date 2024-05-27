@@ -1388,7 +1388,7 @@ function inverse_terra(ovec: ArrayVector, st: number): Observer {
             const radicand = cos2 + EARTH_FLATTENING_SQUARED*sin2;
             denom = Math.sqrt(radicand);
             const W = (factor*sin*cos)/denom - z*cos + p*sin;
-            if (Math.abs(W) < 1.0e-8)
+            if (Math.abs(W) < 2.0e-8)
                 break;  // The error is now negligible
             // Error is still too large. Find the next estimate.
             // Calculate D = the derivative of W with respect to lat.

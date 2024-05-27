@@ -5310,7 +5310,7 @@ namespace CosineKitty
                     double radicand = c2 + F*s2;
                     denom = Math.Sqrt(radicand);
                     double W = (factor*s*c)/denom - z*c + p*s;
-                    if (Math.Abs(W) < 1.0e-8)
+                    if (Math.Abs(W) < 2.0e-8)
                         break;  // The error is now negligible.
                     // Error is still too large. Find the next estimate.
                     // Calculate D = the derivative of W with respect to lat.

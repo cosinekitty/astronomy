@@ -2847,6 +2847,21 @@ function TwilightTest() {
 }
 
 
+function VectorObserverIssue347() {
+    // https://github.com/cosinekitty/astronomy/issues/347
+    const body = Astronomy.Body.Sun
+    for (let ts = 1717780096000; ts <= 1717780096200; ts++) {
+       var date = new Date(ts);
+       var vect = Astronomy.GeoVector(body, date, true)
+       //console.log('ts, date, vector', ts, date.valueOf(), vect)
+       var point = Astronomy.VectorObserver(vect)
+       //console.log('point', point)
+       //console.log('*')
+    }
+    return Pass('VectorObserverIssue347');
+}
+
+
 function Libration(filename) {
     const lines = ReadLines(filename);
     let max_diff_elon = 0.0;
@@ -3665,6 +3680,7 @@ const UnitTests = {
     topostate:              TopoStateTest,
     transit:                Transit,
     twilight:               TwilightTest,
+    vecobs:                 VectorObserverIssue347,
 };
 
 
