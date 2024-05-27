@@ -1809,7 +1809,7 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
 {
     double x, y, z, p, F, W, D, c, s, c2, s2;
     double lon_deg, lat_deg, lat, radicand, factor, denom, adjust;
-    double height_km, stlocl;
+    double height_km, stlocl, distance_au;
     astro_observer_t observer;
     int count;
 
@@ -1841,6 +1841,9 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
         F = EARTH_FLATTENING * EARTH_FLATTENING;
         /* Start with initial latitude estimate, based on a spherical Earth. */
         lat = atan2(z, p);
+        distance_au = sqrt(ovec[0]*ovec[0] + ovec[1]*ovec[1] + ovec[2]*ovec[2]);
+        if (distance_au < 1.0)
+            distance_au = 1.0;
         for (count = 0; ; ++count)
         {
             if (count > 10)
@@ -1859,7 +1862,7 @@ static astro_observer_t inverse_terra(const double ovec[3], double st)
             radicand = c2 + F*s2;
             denom = sqrt(radicand);
             W = (factor*s*c)/denom - z*c + p*s;
-            if (fabs(W) < 2.0e-8)
+            if (fabs(W) < distance_au * 2.0e-8)
                 break;  /* The error is now negligible. */
             /* Error is still too large. Find the next estimate. */
             /* Calculate D = the derivative of W with respect to lat. */

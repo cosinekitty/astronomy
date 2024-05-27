@@ -1435,6 +1435,7 @@ def _inverse_terra(ovec: List[float], st: float) -> Observer:
         # Start with initial latitude estimate, based on a spherical Earth.
         lat = math.atan2(z, p)
         count = 0
+        distanceAu = max(1.0, math.hypot(ovec[0], ovec[1], ovec[2]))
         while True:
             count += 1
             if count > 10:
@@ -1449,7 +1450,7 @@ def _inverse_terra(ovec: List[float], st: float) -> Observer:
             radicand = cos2 + _EARTH_FLATTENING_SQUARED*sin2
             denom = math.sqrt(radicand)
             W = (factor*sin*cos)/denom - z*cos + p*sin
-            if abs(W) < 2.0e-8:
+            if abs(W) < distanceAu * 2.0e-8:
                 # The error is now negligible
                 break
             # Error is still too large. Find the next estimate.

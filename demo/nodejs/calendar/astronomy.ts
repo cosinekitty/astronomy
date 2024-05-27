@@ -2108,9 +2108,12 @@ function inverse_terra(ovec: ArrayVector, st: number): Observer {
         let lat = Math.atan2(z, p);
         let cos:number, sin:number, denom:number;
         let count = 0;
+        let W = 0;
+        const distanceAu = Math.max(1, Math.hypot(ovec[0], ovec[1], ovec[2]));
         for(;;) {
-            if (++count > 10)
-                throw `inverse_terra failed to converge.`;
+            if (++count > 10) {
+                throw `inverse_terra failed to converge: W=${W}, distanceAu=${distanceAu}`;
+            }
             // Calculate the error function W(lat).
             // We try to find the root of W, meaning where the error is 0.
             cos = Math.cos(lat);
@@ -2120,8 +2123,8 @@ function inverse_terra(ovec: ArrayVector, st: number): Observer {
             const sin2 = sin*sin;
             const radicand = cos2 + EARTH_FLATTENING_SQUARED*sin2;
             denom = Math.sqrt(radicand);
-            const W = (factor*sin*cos)/denom - z*cos + p*sin;
-            if (Math.abs(W) < 2.0e-8)
+            W = (factor*sin*cos)/denom - z*cos + p*sin;
+            if (Math.abs(W) < distanceAu * 2.0e-8)
                 break;  // The error is now negligible
             // Error is still too large. Find the next estimate.
             // Calculate D = the derivative of W with respect to lat.

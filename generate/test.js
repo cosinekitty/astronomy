@@ -2847,18 +2847,28 @@ function TwilightTest() {
 }
 
 
+function VectorObserverCase(body) {
+    for (let ts = 1717780096000; ts <= 1717780096200; ts++) {
+        var date = new Date(ts);
+        var vect = Astronomy.GeoVector(body, date, true)
+        //console.log('ts, date, vector', ts, date.valueOf(), vect)
+        var point = Astronomy.VectorObserver(vect)
+        //console.log('point', point)
+        //console.log('*')
+     }
+     return Pass(`VectorObserverCase(${body})`);
+ }
+
+
 function VectorObserverIssue347() {
     // https://github.com/cosinekitty/astronomy/issues/347
-    const body = Astronomy.Body.Sun
-    for (let ts = 1717780096000; ts <= 1717780096200; ts++) {
-       var date = new Date(ts);
-       var vect = Astronomy.GeoVector(body, date, true)
-       //console.log('ts, date, vector', ts, date.valueOf(), vect)
-       var point = Astronomy.VectorObserver(vect)
-       //console.log('point', point)
-       //console.log('*')
-    }
-    return Pass('VectorObserverIssue347');
+    return (
+        VectorObserverCase(Astronomy.Body.Sun) ||
+        VectorObserverCase(Astronomy.Body.Jupiter) ||
+        VectorObserverCase(Astronomy.Body.Saturn) ||
+        VectorObserverCase(Astronomy.Body.Uranus) ||
+        VectorObserverCase(Astronomy.Body.Neptune)
+    );
 }
 
 
