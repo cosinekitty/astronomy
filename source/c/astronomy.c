@@ -148,9 +148,9 @@ static stardef_t StarTable[NSTARS];
 
 #define GetStarPointer(body)    (((body) >= BODY_STAR1) && ((body) <= BODY_STAR8) ? &StarTable[(body) - BODY_STAR1] : NULL)
 
-static stardef_t *UserDefinedStar(astro_body_t body)
+static const stardef_t *UserDefinedStar(astro_body_t body)
 {
-    stardef_t *star = GetStarPointer(body);
+    const stardef_t *star = GetStarPointer(body);
     if (star != NULL && star->dist > 0.0)
         return star;
     return NULL;
@@ -3974,7 +3974,7 @@ static body_state_t *GravSimBodyStatePtr(astro_grav_sim_t *sim, astro_body_t bod
 
 static astro_state_vector_t GravSimOriginState(astro_grav_sim_t *sim)
 {
-    body_state_t *optr;
+    const body_state_t *optr;
     astro_time_t time = sim->curr->time;
 
     if (sim->originBody == BODY_SSB)
@@ -5068,7 +5068,7 @@ astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time)
 {
     astro_vector_t vector, earth;
     body_state_t bstate;
-    stardef_t *star;
+    const stardef_t *star;
 
     star = UserDefinedStar(body);
     if (star != NULL)
@@ -5164,7 +5164,7 @@ astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time
 {
     astro_vector_t vector;
     astro_func_result_t result;
-    stardef_t *star;
+    const stardef_t *star;
 
     star = UserDefinedStar(body);
     if (star != NULL)
