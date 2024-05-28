@@ -36,8 +36,10 @@ import datetime
 import enum
 import re
 import abc
-from os import getenv
+import os
 from typing import Any, List, Tuple, Optional, Union, Callable, Dict
+
+_ProblemDebug:bool = ('1' == os.getenv('ASTRONOMY_ENGINE_PYTHON_PROBLEM'))
 
 def _cbrt(x: float) -> float:
     '''Returns the cube root of x.'''
@@ -1866,8 +1868,6 @@ def _VsopSphereToRect(lon: float, lat: float, rad: float) -> _TerseVector:
         rad * math.sin(lat)
     )
 
-_ProblemDebug:bool = ('1' == getenv('ASTRONOMY_ENGINE_PYTHON_PROBLEM'))
-
 def _CalcVsop(model: _vsop_model_t, time: Time) -> Vector:
     t = time.tt / _DAYS_PER_MILLENNIUM
     lon = _VsopFormula(model.lon, t, True)
@@ -1876,6 +1876,10 @@ def _CalcVsop(model: _vsop_model_t, time: Time) -> Vector:
     eclip = _VsopSphereToRect(lon, lat, rad)
     if _ProblemDebug:
         print('_CalcVsop: lon={:0.16g}, lat={:0.16g}, rad={:0.16g}, eclip=({:0.16g}, {:0.16g}, {:0.16g})'.format(lon, lat, rad, eclip.x, eclip.y, eclip.z))
+        print('_CalcVsop: cos(lon) = {:0.16g}'.format(math.cos(lon)))
+        print('_CalcVsop: sin(lon) = {:0.16g}'.format(math.sin(lon)))
+        print('_CalcVsop: cos(lat) = {:0.16g}'.format(math.cos(lat)))
+        print('_CalcVsop: sin(lat) = {:0.16g}'.format(math.sin(lat)))
     return _VsopRotate(eclip).ToAstroVector(time)
 
 class _body_state_t:
