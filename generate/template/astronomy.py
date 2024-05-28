@@ -36,6 +36,7 @@ import datetime
 import enum
 import re
 import abc
+from os import getenv
 from typing import Any, List, Tuple, Optional, Union, Callable, Dict
 
 def _cbrt(x: float) -> float:
@@ -1865,12 +1866,16 @@ def _VsopSphereToRect(lon: float, lat: float, rad: float) -> _TerseVector:
         rad * math.sin(lat)
     )
 
+_ProblemDebug:bool = ('1' == getenv('ASTRONOMY_ENGINE_PYTHON_PROBLEM'))
+
 def _CalcVsop(model: _vsop_model_t, time: Time) -> Vector:
     t = time.tt / _DAYS_PER_MILLENNIUM
     lon = _VsopFormula(model.lon, t, True)
     lat = _VsopFormula(model.lat, t, False)
     rad = _VsopFormula(model.rad, t, False)
     eclip = _VsopSphereToRect(lon, lat, rad)
+    if _ProblemDebug:
+        print('_CalcVsop: lon={:0.16g}, lat={:0.16g}, rad={:0.16g}, eclip=({:0.16g}, {:0.16g}, {:0.16g})'.format(lon, lat, rad, eclip.x, eclip.y, eclip.z))
     return _VsopRotate(eclip).ToAstroVector(time)
 
 class _body_state_t:

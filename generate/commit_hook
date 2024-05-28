@@ -1,6 +1,6 @@
 #/bin/bash
 [[ -d generate ]] && cd generate
-python3 test.py precision || exit $?
+ASTRONOMY_ENGINE_PYTHON_PROBLEM=1 python3 test.py precision || exit $?
 rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt
 ./run || exit $?
 ./verify_clean || exit $?

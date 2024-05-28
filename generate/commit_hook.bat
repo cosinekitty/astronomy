@@ -5,9 +5,10 @@ REM     Astronomy Engine - GitHub Actions steps for Windows.
 REM     This batch file is executed on every push to GitHub.
 REM --------------------------------------------------------------------------------
 
-REM **** HACK **** Just test the Python precision problem and quit.
 cd %~dp0
+set ASTRONOMY_ENGINE_PYTHON_PROBLEM=1
 py test.py precision || exit /b 1
+set ASTRONOMY_ENGINE_PYTHON_PROBLEM=
 
 REM Change to project/repo root directory.
 cd %~dp0\..
