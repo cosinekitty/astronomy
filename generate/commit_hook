@@ -1,5 +1,6 @@
 #/bin/bash
 [[ -d generate ]] && cd generate
+python3 test.py precision || exit $?
 rm -f output/vsop*.txt output/*.eph output/jupiter_moons.txt
 ./run || exit $?
 ./verify_clean || exit $?

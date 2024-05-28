@@ -1339,6 +1339,41 @@ def Rotation():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def PrecisionProblem():
+    # [2024-05-28] Suddenly Python calculations diverged from the other languages.
+    # This is to help me narrow in on where the numeric precisions has gone astray.
+    # First  file: temp\c_check.txt
+    # Second file: temp\py_check.txt
+    # Tolerance = 7.110e-16
+    #
+    #             lnum                 a_value                 b_value     factor       diff  name
+    # FAIL       22073  2.4668955106186205e-01  2.4668955106091364e-01    3.25733  3.089e-12  helio_x
+    #
+    # v Mercury -1.019385923567141144e+05 2.466895510618620502e-01 -2.985844027934208555e-01 -1.851362492545978455e-01
+    tt = -101938.59235671411
+    time = astronomy.Time.FromTerrestrialTime(tt)
+    #print(time)
+    vec = astronomy.HelioVector(astronomy.Body.Mercury, time)
+    print(vec)
+    # Known correct values from C code...
+    cx = +2.466895510618620502e-01
+    cy = -2.985844027934208555e-01
+    cz = -1.851362492545978455e-01
+    factor = 3.25733
+    dx = (cx - vec.x) * factor
+    dy = (cy - vec.y) * factor
+    dz = (cz - vec.z) * factor
+    tolerance = 7.110e-16
+    diff = math.sqrt(dx*dx + dy*dy + dz*dz)
+    print('PY PrecisionProblem: dx={:g}, dy={:g}, dz={:g}, diff={:g}'.format(dx, dy, dz, diff))
+    if diff > tolerance:
+        print('PY PrecisionProblem: EXCESSIVE ERROR')
+        return 1
+    print('PY PrecisionProblem: PASS')
+    return 0
+
+#-----------------------------------------------------------------------------------------------------------
+
 def Refraction():
     alt = -90.1
     while alt <= +90.1:
@@ -3358,6 +3393,7 @@ UnitTests = {
     'moonphase':                MoonPhase,
     'planet_apsis':             PlanetApsis,
     'pluto':                    PlutoCheck,
+    'precision':                PrecisionProblem,
     'refraction':               Refraction,
     'repr':                     Repr,
     'riseset':                  RiseSet,
