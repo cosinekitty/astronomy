@@ -5,6 +5,7 @@ import math
 Debug = False
 
 def xsin(angle:float) -> float:
+    angle = math.fmod(angle, 2*math.pi)
     angleSquared = angle * angle
     sum = 0.0
     fact = 1
@@ -26,6 +27,7 @@ def xsin(angle:float) -> float:
 
 
 def xcos(angle:float) -> float:
+    angle = math.fmod(angle, 2*math.pi)
     angleSquared = angle * angle
     sum = 0.0
     fact = 1
@@ -46,12 +48,12 @@ def xcos(angle:float) -> float:
     raise Exception('xcos: failure to converge')
 
 
-def _Pass(message:str) -> int:
+def Pass(message:str) -> int:
     print('trig.py PASS:', message)
     return
 
 
-def _SineTest() -> int:
+def SineTest() -> int:
     # See how long it takes to converge for a problematic value near 1.
     angle = -0.9535784309745123
     correct = math.sin(angle)
@@ -62,10 +64,10 @@ def _SineTest() -> int:
     if abs(diff) > tolerance:
         print('SineTest FAIL: EXCESSIVE ERROR')
         return 1
-    return _Pass('SineTest')
+    return Pass('SineTest')
 
 
-def _CosineTest() -> int:
+def CosineTest() -> int:
     # See how long it takes to converge for a problematic value near 1.
     angle = -0.9535784309745123
     correct = math.cos(angle)
@@ -76,17 +78,37 @@ def _CosineTest() -> int:
     if abs(diff) > tolerance:
         print('CosineTest FAIL: EXCESSIVE ERROR')
         return 1
-    return _Pass('CosineTest')
+    return Pass('CosineTest')
 
 
-def _UnitTest() -> int:
+def UnitTest() -> int:
     return (
-        _SineTest() or
-        _CosineTest() or
-        _Pass('TrigTest')
+        SineTest() or
+        CosineTest() or
+        Pass('TrigTest')
     )
+
+
+def GenerateOutputTable(filename: str) -> int:
+    # Now that we have verified xsin and xcos are consistent
+    # with math.sin and math.cos, let's generate a table of correct values
+    # using math.sin and math.cos, to automate downstream unit testing.
+    deg = -720.0
+    incr = 0.1
+    maxDeg = +720.01
+    with open(filename, 'wt') as outfile:
+        while deg <= maxDeg:
+            rad = math.radians(deg)
+            c = math.cos(rad)
+            s = math.sin(rad)
+            outfile.write('{:6.1f} {:22.16f} {:22.16f}\n'.format(deg, c, s))
+            deg += incr
+    return Pass('GenerateOutputTable')
 
 
 if __name__ == '__main__':
     Debug = True
-    sys.exit(_UnitTest())
+    sys.exit(
+        UnitTest() or
+        GenerateOutputTable('trig.txt')
+    )
