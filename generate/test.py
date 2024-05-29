@@ -6,6 +6,15 @@ import os
 from itertools import chain
 sys.path.append('../source/python')
 import astronomy
+from dontrig import xcos, xsin
+
+#-----------------------------------------------------------------------------------------------------------
+
+if os.getenv('GITHUB_JOB'):
+    # Super weird hack: re-define _sin and _cos to have exactly reproducible values.
+    print('test.py - NOTE: Detected GitHub job. Replacing trig functions...')
+    astronomy._sin = xsin
+    astronomy._cos = xcos
 
 #-----------------------------------------------------------------------------------------------------------
 
@@ -3362,6 +3371,35 @@ def RiseSetElevation():
 
 #-----------------------------------------------------------------------------------------------------------
 
+def Trigonometry() -> int:
+    tolerance = 1.0e-15
+    inFileName = 'trigonometry/trig.txt'
+    with open(inFileName, 'rt') as infile:
+        lnum = 0
+        for line in infile:
+            lnum += 1
+            line = line.strip()
+            if line == '':
+                break
+            token = [float(s) for s in line.split()]
+            print(token)
+            if len(token) != 3:
+                return Fail('Trigonometry({} line {}): incorrect number of tokens in [{}]'.format(inFileName, lnum, line))
+            (deg, cosCorrect, sinCorrect) = token
+            rad = math.radians(deg)
+            cosCalc = xcos(rad)
+            sinCalc = xsin(rad)
+            cosDiff = abs(cosCalc - cosCorrect)
+            sinDiff = abs(sinCalc - sinCorrect)
+            if (cosDiff > tolerance) or (sinDiff > tolerance):
+                return Fail(
+                    'Trigonometry({:s} line {:d})'.format(inFileName, lnum),
+                    'EXCESS ERROR - deg={:0.1f}, cosDiff={:g}, sinDiff={:g}'.format(deg, cosDiff, sinDiff)
+                )
+    return Pass('Trigonometry')
+
+#-----------------------------------------------------------------------------------------------------------
+
 
 UnitTests = {
     'aberration':               Aberration,
@@ -3408,6 +3446,7 @@ UnitTests = {
     'time':                     AstroTime,
     'topostate':                TopoState,
     'transit':                  Transit,
+    'trig':                     Trigonometry,
     'twilight':                 Twilight,
 }
 
