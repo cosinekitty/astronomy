@@ -56,6 +56,12 @@ def _cdiv(numer: int, denom: int) -> int:
     sign = -1 if (numer * denom) < 0 else +1
     return sign * (abs(numer) // abs(denom))
 
+def _sin(x:float) -> float:
+    return math.sin(x)
+
+def _cos(x:float) -> float:
+    return math.cos(x)
+
 KM_PER_AU = 1.4959787069098932e+8   #<const> The number of kilometers per astronomical unit.
 C_AUDAY   = 173.1446326846693       #<const> The speed of light expressed in astronomical units per day.
 AU_PER_LY = 63241.07708807546       #<const> The number of astronomical units in one light-year.
@@ -1063,31 +1069,31 @@ class _iau2000b:
         d   = math.fmod((1072260.70369 + t*1602961601.2090), _ASEC360) * _ASEC2RAD
         om  = math.fmod((450160.398036 - t*6962890.5431),    _ASEC360) * _ASEC2RAD
 
-        sarg = math.sin(om)
-        carg = math.cos(om)
+        sarg = _sin(om)
+        carg = _cos(om)
         dp = (-172064161.0 - 174666.0*t)*sarg + 33386.0*carg
         de = (92052331.0 + 9086.0*t)*carg + 15377.0*sarg
 
         arg = 2.0*(f - d + om)
-        sarg = math.sin(arg)
-        carg = math.cos(arg)
+        sarg = _sin(arg)
+        carg = _cos(arg)
         dp += (-13170906.0 - 1675.0*t)*sarg - 13696.0*carg
         de += (5730336.0 - 3015.0*t)*carg - 4587.0*sarg
 
         arg = 2.0*(f + om)
-        sarg = math.sin(arg)
-        carg = math.cos(arg)
+        sarg = _sin(arg)
+        carg = _cos(arg)
         dp += (-2276413.0 - 234.0*t)*sarg + 2796.0*carg
         de += (978459.0 - 485.0*t)*carg + 1374.0*sarg
 
         arg = 2.0*om
-        sarg = math.sin(arg)
-        carg = math.cos(arg)
+        sarg = _sin(arg)
+        carg = _cos(arg)
         dp += (2074554.0 + 207.0*t)*sarg - 698.0*carg
         de += (-897492.0 + 470.0*t)*carg - 291.0*sarg
 
-        sarg = math.sin(elp)
-        carg = math.cos(elp)
+        sarg = _sin(elp)
+        carg = _cos(elp)
         dp += (1475877.0 - 3633.0*t)*sarg + 11817.0*carg
         de += (73871.0 - 184.0*t)*carg - 1924.0*sarg
 
@@ -1113,12 +1119,12 @@ class _e_tilt:
         self.mobl = _mean_obliq(time.tt)
         self.tobl = self.mobl + (e.deps / 3600.0)
         self.tt = time.tt
-        self.ee = e.dpsi * math.cos(math.radians(self.mobl)) / 15.0
+        self.ee = e.dpsi * _cos(math.radians(self.mobl)) / 15.0
 
 def _obl_ecl2equ_vec(obl_deg: float, ecl: List[float]) -> List[float]:
     obl_rad = math.radians(obl_deg)
-    cos_obl = math.cos(obl_rad)
-    sin_obl = math.sin(obl_rad)
+    cos_obl = _cos(obl_rad)
+    sin_obl = _sin(obl_rad)
     return [
         ecl[0],
         ecl[1]*cos_obl - ecl[2]*sin_obl,
@@ -1155,14 +1161,14 @@ def _precession_rot(time: Time, direction: _PrecessDir) -> RotationMatrix:
     omegaa *= _ASEC2RAD
     chia *= _ASEC2RAD
 
-    sa = math.sin(eps0)
-    ca = math.cos(eps0)
-    sb = math.sin(-psia)
-    cb = math.cos(-psia)
-    sc = math.sin(-omegaa)
-    cc = math.cos(-omegaa)
-    sd = math.sin(chia)
-    cd = math.cos(chia)
+    sa = _sin(eps0)
+    ca = _cos(eps0)
+    sb = _sin(-psia)
+    cb = _cos(-psia)
+    sc = _sin(-omegaa)
+    cc = _cos(-omegaa)
+    sd = _sin(chia)
+    cd = _cos(chia)
 
     xx =  cd * cb - sb * sd * cc
     yx =  cd * sb * ca + sd * cc * cb * ca - sa * sd * sc
@@ -1311,12 +1317,12 @@ def _nutation_rot(time: Time, direction: _PrecessDir) -> RotationMatrix:
     oblm = math.radians(tilt.mobl)
     oblt = math.radians(tilt.tobl)
     psi = tilt.dpsi * _ASEC2RAD
-    cobm = math.cos(oblm)
-    sobm = math.sin(oblm)
-    cobt = math.cos(oblt)
-    sobt = math.sin(oblt)
-    cpsi = math.cos(psi)
-    spsi = math.sin(psi)
+    cobm = _cos(oblm)
+    sobm = _sin(oblm)
+    cobt = _cos(oblt)
+    sobt = _sin(oblt)
+    cpsi = _cos(psi)
+    spsi = _sin(psi)
 
     xx = cpsi
     yx = -spsi * cobm
@@ -1445,8 +1451,8 @@ def _inverse_terra(ovec: List[float], st: float) -> Observer:
                 raise NoConvergeError()
             # Calculate the error function W(lat).
             # We try to find the root of W, meaning where the error is 0.
-            cos = math.cos(lat)
-            sin = math.sin(lat)
+            cos = _cos(lat)
+            sin = _sin(lat)
             factor = (_EARTH_FLATTENING_SQUARED - 1)*_EARTH_EQUATORIAL_RADIUS_KM
             cos2 = cos*cos
             sin2 = sin*sin
@@ -1473,16 +1479,16 @@ def _inverse_terra(ovec: List[float], st: float) -> Observer:
 
 def _terra_posvel(observer: Observer, st: float) -> List[float]:
     phi = math.radians(observer.latitude)
-    sinphi = math.sin(phi)
-    cosphi = math.cos(phi)
+    sinphi = _sin(phi)
+    cosphi = _cos(phi)
     c = 1.0 / math.hypot(cosphi, sinphi*_EARTH_FLATTENING)
     s = _EARTH_FLATTENING_SQUARED * c
     ht_km = observer.height / 1000.0
     ach = _EARTH_EQUATORIAL_RADIUS_KM*c + ht_km
     ash = _EARTH_EQUATORIAL_RADIUS_KM*s + ht_km
     stlocl = math.radians(15.0*st + observer.longitude)
-    sinst = math.sin(stlocl)
-    cosst = math.cos(stlocl)
+    sinst = _sin(stlocl)
+    cosst = _cos(stlocl)
     return [
         ach * cosphi * cosst / KM_PER_AU,
         ach * cosphi * sinst / KM_PER_AU,
@@ -1504,8 +1510,8 @@ def _geo_pos(time: Time, observer: Observer) -> List[float]:
 
 def _spin(angle: float, pos1: List[float]) -> List[float]:
     angr = math.radians(angle)
-    cosang = math.cos(angr)
-    sinang = math.sin(angr)
+    cosang = _cos(angr)
+    sinang = _sin(angr)
     return [
         +cosang*pos1[0] + sinang*pos1[1],
         -sinang*pos1[0] + cosang*pos1[1],
@@ -1532,7 +1538,7 @@ def _CalcMoon(time: Time) -> _moonpos:
     ex = _Array2(-6, 6, 1, 4)
 
     def Sine(phi: float) -> float:
-        return math.sin(_PI2 * phi)
+        return _sin(_PI2 * phi)
 
     def Frac(x: float) -> float:
         return x - math.floor(x)
@@ -1576,7 +1582,7 @@ def _CalcMoon(time: Time) -> _moonpos:
             ARG=D; MAX=6; FAC=1.0
 
         ex[0][I] = complex(1, 0)
-        ex[1][I] = complex(FAC * math.cos(ARG), FAC * math.sin(ARG))
+        ex[1][I] = complex(FAC * _cos(ARG), FAC * _sin(ARG))
 
         J = 2
         while J <= MAX:
@@ -2304,7 +2310,7 @@ def _CalcMoon(time: Time) -> _moonpos:
         +0.33*Sine(0.3132   +6.3368*T)
     )
     S = F + DS/_ARC
-    lat_seconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*math.sin(S) - 6.24*math.sin(3*S) + N
+    lat_seconds = (1.000002708 + 139.978*DGAM)*(18518.511+1.189+GAM1C)*_sin(S) - 6.24*_sin(3*S) + N
     return _moonpos(
         _PI2 * Frac((L0+DLAM/_ARC) / _PI2),
         (math.pi / (180 * 3600)) * lat_seconds,
@@ -2339,11 +2345,11 @@ def GeoMoon(time: Time) -> Vector:
     m = _CalcMoon(time)
 
     # Convert geocentric ecliptic spherical coordinates to Cartesian coordinates.
-    dist_cos_lat = m.distance_au * math.cos(m.geo_eclip_lat)
+    dist_cos_lat = m.distance_au * _cos(m.geo_eclip_lat)
     gepos = [
-        dist_cos_lat * math.cos(m.geo_eclip_lon),
-        dist_cos_lat * math.sin(m.geo_eclip_lon),
-        m.distance_au * math.sin(m.geo_eclip_lat)
+        dist_cos_lat * _cos(m.geo_eclip_lon),
+        dist_cos_lat * _sin(m.geo_eclip_lon),
+        m.distance_au * _sin(m.geo_eclip_lat)
     ]
 
     # Convert ecliptic coordinates to equatorial coordinates, both in mean equinox of date.
@@ -2389,11 +2395,11 @@ def EclipticGeoMoon(time: Time) -> Spherical:
     moon = _CalcMoon(time)
 
     # Convert spherical coordinates to a vector.
-    dist_cos_lat = moon.distance_au * math.cos(moon.geo_eclip_lat)
+    dist_cos_lat = moon.distance_au * _cos(moon.geo_eclip_lat)
     ecm = [
-        dist_cos_lat * math.cos(moon.geo_eclip_lon),
-        dist_cos_lat * math.sin(moon.geo_eclip_lon),
-        moon.distance_au * math.sin(moon.geo_eclip_lat)
+        dist_cos_lat * _cos(moon.geo_eclip_lon),
+        dist_cos_lat * _sin(moon.geo_eclip_lon),
+        moon.distance_au * _sin(moon.geo_eclip_lat)
     ]
 
     # Obtain true and mean obliquity angles for the given time.
@@ -3137,7 +3143,7 @@ def _VsopFormula(formula: _vsop_formula_t, t: float, clamp_angle: bool) -> float
     tpower = 1.0
     coord = 0.0
     for series in formula.seriesList:
-        incr = tpower * sum((ampl * math.cos(phas + freq*t)) for (ampl, phas, freq) in series.termList)
+        incr = tpower * sum((ampl * _cos(phas + freq*t)) for (ampl, phas, freq) in series.termList)
         if clamp_angle:
             # Longitude angles can be hundreds of radians.
             # Improve precision by keeping each increment within [-2*pi, +2*pi].
@@ -3156,9 +3162,9 @@ def _VsopDeriv(formula: _vsop_formula_t, t: float) -> float:
         cos_sum = 0.0
         for (ampl, phas, freq) in series.termList:
             angle = phas + (t * freq)
-            sin_sum += ampl * freq * math.sin(angle)
+            sin_sum += ampl * freq * _sin(angle)
             if s > 0:
-                cos_sum += ampl * math.cos(angle)
+                cos_sum += ampl * _cos(angle)
         deriv += (s * dpower * cos_sum) - (tpower * sin_sum)
         dpower = tpower
         tpower *= t
@@ -3176,11 +3182,11 @@ def _VsopRotate(eclip: _TerseVector) -> _TerseVector:
 
 def _VsopSphereToRect(lon: float, lat: float, rad: float) -> _TerseVector:
     # Convert spherical coordinates to cartesian coordinates.
-    r_coslat = rad * math.cos(lat)
+    r_coslat = rad * _cos(lat)
     return _TerseVector(
-        r_coslat * math.cos(lon),
-        r_coslat * math.sin(lon),
-        rad * math.sin(lat)
+        r_coslat * _cos(lon),
+        r_coslat * _sin(lon),
+        rad * _sin(lat)
     )
 
 def _CalcVsop(model: _vsop_model_t, time: Time) -> Vector:
@@ -3191,10 +3197,10 @@ def _CalcVsop(model: _vsop_model_t, time: Time) -> Vector:
     eclip = _VsopSphereToRect(lon, lat, rad)
     if _ProblemDebug:
         print('_CalcVsop: lon={:0.16g}, lat={:0.16g}, rad={:0.16g}, eclip=({:0.16g}, {:0.16g}, {:0.16g})'.format(lon, lat, rad, eclip.x, eclip.y, eclip.z))
-        print('_CalcVsop: cos(lon) = {:0.16g}'.format(math.cos(lon)))
-        print('_CalcVsop: sin(lon) = {:0.16g}'.format(math.sin(lon)))
-        print('_CalcVsop: cos(lat) = {:0.16g}'.format(math.cos(lat)))
-        print('_CalcVsop: sin(lat) = {:0.16g}'.format(math.sin(lat)))
+        print('_CalcVsop: cos(lon) = {:0.16g}'.format(_cos(lon)))
+        print('_CalcVsop: sin(lon) = {:0.16g}'.format(_sin(lon)))
+        print('_CalcVsop: cos(lat) = {:0.16g}'.format(_cos(lat)))
+        print('_CalcVsop: sin(lat) = {:0.16g}'.format(_sin(lat)))
     return _VsopRotate(eclip).ToAstroVector(time)
 
 class _body_state_t:
@@ -3224,10 +3230,10 @@ def _CalcVsopPosVel(model: _vsop_model_t, tt: float) -> _body_state_t:
     # Use spherical coords and spherical derivatives to calculate
     # the velocity vector in rectangular coordinates.
 
-    coslon = math.cos(lon)
-    sinlon = math.sin(lon)
-    coslat = math.cos(lat)
-    sinlat = math.sin(lat)
+    coslon = _cos(lon)
+    sinlon = _sin(lon)
+    coslat = _cos(lat)
+    sinlat = _sin(lat)
 
     vx = (
         + (drad_dt * coslat * coslon)
@@ -3764,15 +3770,15 @@ def _JupiterMoon_elem2pv(time: Time, mu: float, A: float, AL: float, K: float, H
     # Translation of FORTRAN subroutine ELEM2PV from:
     # https://ftp.imcce.fr/pub/ephem/satel/galilean/L1/L1.2/
     AN = math.sqrt(mu / (A*A*A))
-    EE = AL + K*math.sin(AL) - H*math.cos(AL)
+    EE = AL + K*_sin(AL) - H*_cos(AL)
     DE = 1.0
     while abs(DE) >= 1.0e-12:
-        CE = math.cos(EE)
-        SE = math.sin(EE)
+        CE = _cos(EE)
+        SE = _sin(EE)
         DE = (AL - EE + K*SE - H*CE) / (1.0 - K*CE - H*SE)
         EE += DE
-    CE = math.cos(EE)
-    SE = math.sin(EE)
+    CE = _cos(EE)
+    SE = _sin(EE)
     DLE = H*CE - K*SE
     RSAM1 = -K*CE - H*SE
     ASR = 1.0/(1.0 + RSAM1)
@@ -3806,11 +3812,11 @@ def _CalcJupiterMoon(time: Time, model: _jm) -> StateVector:
     # Calculate 6 orbital elements at the given time t.
     elem0 = 0.0
     for (amplitude, phase, frequency) in model.a.series:
-        elem0 += amplitude * math.cos(phase + (t * frequency))
+        elem0 += amplitude * _cos(phase + (t * frequency))
 
     elem1 = model.al0 + (t * model.al1)
     for (amplitude, phase, frequency) in model.l.series:
-        elem1 += amplitude * math.sin(phase + (t * frequency))
+        elem1 += amplitude * _sin(phase + (t * frequency))
 
     elem1 = math.fmod(elem1, _PI2)
     if elem1 < 0:
@@ -3820,15 +3826,15 @@ def _CalcJupiterMoon(time: Time, model: _jm) -> StateVector:
     elem3 = 0.0
     for (amplitude, phase, frequency) in model.z.series:
         arg = phase + (t * frequency)
-        elem2 += amplitude * math.cos(arg)
-        elem3 += amplitude * math.sin(arg)
+        elem2 += amplitude * _cos(arg)
+        elem3 += amplitude * _sin(arg)
 
     elem4 = 0.0
     elem5 = 0.0
     for (amplitude, phase, frequency) in model.zeta.series:
         arg = phase + (t * frequency)
-        elem4 += amplitude * math.cos(arg)
-        elem5 += amplitude * math.sin(arg)
+        elem4 += amplitude * _cos(arg)
+        elem5 += amplitude * _sin(arg)
 
     # Convert the oribital elements into position vectors in the Jupiter equatorial system (JUP).
     state = _JupiterMoon_elem2pv(time, model.mu, elem0, elem1, elem2, elem3, elem4, elem5)
@@ -4742,7 +4748,7 @@ def ObserverGravity(latitude: float, height: float) -> float:
     float
         The effective gravitational acceleration expressed in meters per second squared [m/s^2].
     """
-    s2 = math.sin(math.radians(latitude)) ** 2
+    s2 = _sin(math.radians(latitude)) ** 2
     g0 = 9.7803253359 * (1.0 + 0.00193185265241*s2) / math.sqrt(1.0 - 0.00669437999013*s2)
     return g0 * (1.0 - (3.15704e-07 - 2.10269e-09*s2)*height + 7.37452e-14*height*height)
 
@@ -4861,14 +4867,14 @@ def Horizon(time: Time, observer: Observer, ra: float, dec: float, refraction: R
     decrad = math.radians(dec)
     rarad = ra * _HOUR2RAD
 
-    sinlat = math.sin(latrad)
-    coslat = math.cos(latrad)
-    sinlon = math.sin(lonrad)
-    coslon = math.cos(lonrad)
-    sindc = math.sin(decrad)
-    cosdc = math.cos(decrad)
-    sinra = math.sin(rarad)
-    cosra = math.cos(rarad)
+    sinlat = _sin(latrad)
+    coslat = _cos(latrad)
+    sinlon = _sin(lonrad)
+    coslon = _cos(lonrad)
+    sindc = _sin(decrad)
+    cosdc = _cos(decrad)
+    sinra = _sin(rarad)
+    cosra = _cos(rarad)
 
     # Calculate three mutually perpendicular unit vectors
     # in equatorial coordinates: uze, une, uwe.
@@ -4943,11 +4949,11 @@ def Horizon(time: Time, observer: Observer, ra: float, dec: float, refraction: R
         zd -= refr
         if refr > 0.0 and zd > 3.0e-4:
             zdrad = math.radians(zd)
-            sinzd = math.sin(zdrad)
-            coszd = math.cos(zdrad)
+            sinzd = _sin(zdrad)
+            coszd = _cos(zdrad)
             zd0rad = math.radians(zd0)
-            sinzd0 = math.sin(zd0rad)
-            coszd0 = math.cos(zd0rad)
+            sinzd0 = _sin(zd0rad)
+            coszd0 = _cos(zd0rad)
 
             pr = [(((p[j] - coszd0 * uz[j]) / sinzd0)*sinzd + uz[j]*coszd) for j in range(3)]
             proj = math.hypot(pr[0], pr[1])
@@ -5083,8 +5089,8 @@ class EclipticCoordinates:
         return 'EclipticCoordinates({}, elat={}, elon={})'.format(repr(self.vec), self.elat, self.elon)
 
 def _RotateEquatorialToEcliptic(pos: List[float], obliq_radians: float, time: Time) -> EclipticCoordinates:
-    cos_ob = math.cos(obliq_radians)
-    sin_ob = math.sin(obliq_radians)
+    cos_ob = _cos(obliq_radians)
+    sin_ob = _sin(obliq_radians)
     ex = +pos[0]
     ey = +pos[1]*cos_ob + pos[2]*sin_ob
     ez = -pos[1]*sin_ob + pos[2]*cos_ob
@@ -5877,7 +5883,7 @@ class IlluminationInfo:
         self.time = time
         self.mag = mag
         self.phase_angle = phase
-        self.phase_fraction = (1.0 + math.cos(math.radians(phase))) / 2.0
+        self.phase_fraction = (1.0 + _cos(math.radians(phase))) / 2.0
         self.helio_dist = helio_dist
         self.geo_dist = geo_dist
         self.hc = hc
@@ -5919,8 +5925,8 @@ def _SaturnMagnitude(phase: float, helio_dist: float, geo_dist: float, gc: Vecto
     # Find tilt of Saturn's rings, as seen from Earth.
     lat = math.radians(eclip.elat)
     lon = math.radians(eclip.elon)
-    tilt = math.asin(math.sin(lat)*math.cos(ir) - math.cos(lat)*math.sin(ir)*math.sin(lon-Nr))
-    sin_tilt = math.sin(abs(tilt))
+    tilt = math.asin(_sin(lat)*_cos(ir) - _cos(lat)*_sin(ir)*_sin(lon-Nr))
+    sin_tilt = _sin(abs(tilt))
 
     mag = -9.0 + 0.044*phase
     mag += sin_tilt*(-2.6 + 1.2*sin_tilt)
@@ -6368,7 +6374,7 @@ def _MaxAltitudeSlope(body: Body, latitude: float) -> float:
         raise InvalidBodyError(body)
 
     latrad = math.radians(latitude)
-    return abs(((360.0 / _SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra)*math.cos(latrad)) + abs(deriv_dec*math.sin(latrad))
+    return abs(((360.0 / _SOLAR_DAYS_PER_SIDEREAL_DAY) - deriv_ra)*_cos(latrad)) + abs(deriv_dec*_sin(latrad))
 
 
 def _FindAscent(depth: int, context: _altitude_context, max_deriv_alt: float, t1: Time, t2: Time, a1: float, a2: float) -> Optional[_AscentInfo]:
@@ -6487,8 +6493,8 @@ def _HorizonDipAngle(observer: Observer, metersAboveGround: float) -> float:
     # Calculate the effective radius of the Earth at ground level below the observer.
     # Correct for the Earth's oblateness.
     phi = math.radians(observer.latitude)
-    sinphi = math.sin(phi)
-    cosphi = math.cos(phi)
+    sinphi = _sin(phi)
+    cosphi = _cos(phi)
     c = 1.0 / math.hypot(cosphi, sinphi*_EARTH_FLATTENING)
     s = c * (_EARTH_FLATTENING * _EARTH_FLATTENING)
     ht_km = (observer.height - metersAboveGround) / 1000.0     # height of ground above sea level
@@ -7118,11 +7124,11 @@ def VectorFromSphere(sphere: Spherical, time: Time) -> Vector:
     """
     radlat = math.radians(sphere.lat)
     radlon = math.radians(sphere.lon)
-    rcoslat = sphere.dist * math.cos(radlat)
+    rcoslat = sphere.dist * _cos(radlat)
     return Vector(
-        rcoslat * math.cos(radlon),
-        rcoslat * math.sin(radlon),
-        sphere.dist * math.sin(radlat),
+        rcoslat * _cos(radlon),
+        rcoslat * _sin(radlon),
+        sphere.dist * _sin(radlat),
         time
     )
 
@@ -7370,8 +7376,8 @@ def Pivot(rotation: RotationMatrix, axis: int, angle: float) -> RotationMatrix:
         raise Error('Invalid axis {}. Must be [0, 1, 2].'.format(axis))
 
     radians = math.radians(angle)
-    c = math.cos(radians)
-    s = math.sin(radians)
+    c = _cos(radians)
+    s = _sin(radians)
 
     # We need to maintain the "right-hand" rule, no matter which
     # axis was selected. That means we pick (i, j, k) axis order
@@ -7618,10 +7624,10 @@ def Rotation_EQD_HOR(time: Time, observer: Observer) -> RotationMatrix:
         These components are chosen so that the "right-hand rule" works for the vector
         and so that north represents the direction where azimuth = 0.
     """
-    sinlat = math.sin(math.radians(observer.latitude))
-    coslat = math.cos(math.radians(observer.latitude))
-    sinlon = math.sin(math.radians(observer.longitude))
-    coslon = math.cos(math.radians(observer.longitude))
+    sinlat = _sin(math.radians(observer.latitude))
+    coslat = _cos(math.radians(observer.latitude))
+    sinlon = _sin(math.radians(observer.longitude))
+    coslon = _cos(math.radians(observer.longitude))
     uze = [coslat * coslon, coslat * sinlon, sinlat]
     une = [-sinlat * coslon, -sinlat * sinlon, coslat]
     uwe = [sinlon, -coslon, 0.0]
@@ -7880,8 +7886,8 @@ def Rotation_ECT_EQD(time: Time) -> RotationMatrix:
     """
     et = _e_tilt(time)
     tobl = math.radians(et.tobl)
-    c = math.cos(tobl)
-    s = math.sin(tobl)
+    c = _cos(tobl)
+    s = _sin(tobl)
     return RotationMatrix([
         [1.0, 0.0, 0.0],
         [0.0,  +c,  +s],
@@ -7908,8 +7914,8 @@ def Rotation_EQD_ECT(time: Time) -> RotationMatrix:
     """
     et = _e_tilt(time)
     tobl = math.radians(et.tobl)
-    c = math.cos(tobl)
-    s = math.sin(tobl)
+    c = _cos(tobl)
+    s = _sin(tobl)
     return RotationMatrix([
         [1.0, 0.0, 0.0],
         [0.0,  +c,  -s],
@@ -9682,68 +9688,68 @@ def Libration(time: Time) -> LibrationInfo:
 
     # Optical librations
     w = mlon - omega
-    a = math.atan2(math.sin(w)*math.cos(mlat)*math.cos(I) - math.sin(mlat)*math.sin(I), math.cos(w)*math.cos(mlat))
+    a = math.atan2(_sin(w)*_cos(mlat)*_cos(I) - _sin(mlat)*_sin(I), _cos(w)*_cos(mlat))
     ldash = _LongitudeOffset(math.degrees(a - f))
-    bdash = math.asin(-math.sin(w)*math.cos(mlat)*math.sin(I) - math.sin(mlat)*math.cos(I))
+    bdash = math.asin(-_sin(w)*_cos(mlat)*_sin(I) - _sin(mlat)*_cos(I))
 
     # Physical librations
     k1 = math.radians(119.75 + 131.849*t)
     k2 = math.radians(72.56 + 20.186*t)
 
     rho = (
-        -0.02752*math.cos(mdash) +
-        -0.02245*math.sin(f) +
-        +0.00684*math.cos(mdash - 2*f) +
-        -0.00293*math.cos(2*f) +
-        -0.00085*math.cos(2*f - 2*d) +
-        -0.00054*math.cos(mdash - 2*d) +
-        -0.00020*math.sin(mdash + f) +
-        -0.00020*math.cos(mdash + 2*f) +
-        -0.00020*math.cos(mdash - f) +
-        +0.00014*math.cos(mdash + 2*f - 2*d)
+        -0.02752*_cos(mdash) +
+        -0.02245*_sin(f) +
+        +0.00684*_cos(mdash - 2*f) +
+        -0.00293*_cos(2*f) +
+        -0.00085*_cos(2*f - 2*d) +
+        -0.00054*_cos(mdash - 2*d) +
+        -0.00020*_sin(mdash + f) +
+        -0.00020*_cos(mdash + 2*f) +
+        -0.00020*_cos(mdash - f) +
+        +0.00014*_cos(mdash + 2*f - 2*d)
     )
 
     sigma = (
-        -0.02816*math.sin(mdash) +
-        +0.02244*math.cos(f) +
-        -0.00682*math.sin(mdash - 2*f) +
-        -0.00279*math.sin(2*f) +
-        -0.00083*math.sin(2*f - 2*d) +
-        +0.00069*math.sin(mdash - 2*d) +
-        +0.00040*math.cos(mdash + f) +
-        -0.00025*math.sin(2*mdash) +
-        -0.00023*math.sin(mdash + 2*f) +
-        +0.00020*math.cos(mdash - f) +
-        +0.00019*math.sin(mdash - f) +
-        +0.00013*math.sin(mdash + 2*f - 2*d) +
-        -0.00010*math.cos(mdash - 3*f)
+        -0.02816*_sin(mdash) +
+        +0.02244*_cos(f) +
+        -0.00682*_sin(mdash - 2*f) +
+        -0.00279*_sin(2*f) +
+        -0.00083*_sin(2*f - 2*d) +
+        +0.00069*_sin(mdash - 2*d) +
+        +0.00040*_cos(mdash + f) +
+        -0.00025*_sin(2*mdash) +
+        -0.00023*_sin(mdash + 2*f) +
+        +0.00020*_cos(mdash - f) +
+        +0.00019*_sin(mdash - f) +
+        +0.00013*_sin(mdash + 2*f - 2*d) +
+        -0.00010*_cos(mdash - 3*f)
     )
 
     tau = (
-        +0.02520*e*math.sin(m) +
-        +0.00473*math.sin(2*mdash - 2*f) +
-        -0.00467*math.sin(mdash) +
-        +0.00396*math.sin(k1) +
-        +0.00276*math.sin(2*mdash - 2*d) +
-        +0.00196*math.sin(omega) +
-        -0.00183*math.cos(mdash - f) +
-        +0.00115*math.sin(mdash - 2*d) +
-        -0.00096*math.sin(mdash - d) +
-        +0.00046*math.sin(2*f - 2*d) +
-        -0.00039*math.sin(mdash - f) +
-        -0.00032*math.sin(mdash - m - d) +
-        +0.00027*math.sin(2*mdash - m - 2*d) +
-        +0.00023*math.sin(k2) +
-        -0.00014*math.sin(2*d) +
-        +0.00014*math.cos(2*mdash - 2*f) +
-        -0.00012*math.sin(mdash - 2*f) +
-        -0.00012*math.sin(2*mdash) +
-        +0.00011*math.sin(2*mdash - 2*m - 2*d)
+        +0.02520*e*_sin(m) +
+        +0.00473*_sin(2*mdash - 2*f) +
+        -0.00467*_sin(mdash) +
+        +0.00396*_sin(k1) +
+        +0.00276*_sin(2*mdash - 2*d) +
+        +0.00196*_sin(omega) +
+        -0.00183*_cos(mdash - f) +
+        +0.00115*_sin(mdash - 2*d) +
+        -0.00096*_sin(mdash - d) +
+        +0.00046*_sin(2*f - 2*d) +
+        -0.00039*_sin(mdash - f) +
+        -0.00032*_sin(mdash - m - d) +
+        +0.00027*_sin(2*mdash - m - 2*d) +
+        +0.00023*_sin(k2) +
+        -0.00014*_sin(2*d) +
+        +0.00014*_cos(2*mdash - 2*f) +
+        -0.00012*_sin(mdash - 2*f) +
+        -0.00012*_sin(2*mdash) +
+        +0.00011*_sin(2*mdash - 2*m - 2*d)
     )
 
-    ldash2 = -tau + (rho*math.cos(a) + sigma*math.sin(a))*math.tan(bdash)
+    ldash2 = -tau + (rho*_cos(a) + sigma*_sin(a))*math.tan(bdash)
     bdash = math.degrees(bdash)
-    bdash2 = sigma*math.cos(a) - rho*math.sin(a)
+    bdash2 = sigma*_cos(a) - rho*_sin(a)
     return LibrationInfo(bdash + bdash2, ldash + ldash2, math.degrees(mlat), math.degrees(mlon), dist_km, diam_deg)
 
 
@@ -9859,11 +9865,11 @@ def RotationAxis(body: Body, time: Time) -> AxisInfo:
         w = (
             329.5988
             + (6.1385108 * d)
-            + (0.01067257 * math.sin(math.radians(174.7910857 + 4.092335*d)))
-            - (0.00112309 * math.sin(math.radians(349.5821714 + 8.184670*d)))
-            - (0.00011040 * math.sin(math.radians(164.3732571 + 12.277005*d)))
-            - (0.00002539 * math.sin(math.radians(339.1643429 + 16.369340*d)))
-            - (0.00000571 * math.sin(math.radians(153.9554286 + 20.461675*d)))
+            + (0.01067257 * _sin(math.radians(174.7910857 + 4.092335*d)))
+            - (0.00112309 * _sin(math.radians(349.5821714 + 8.184670*d)))
+            - (0.00011040 * _sin(math.radians(164.3732571 + 12.277005*d)))
+            - (0.00002539 * _sin(math.radians(339.1643429 + 16.369340*d)))
+            - (0.00000571 * _sin(math.radians(153.9554286 + 20.461675*d)))
         )
     elif body == Body.Venus:
         ra = 272.76
@@ -9890,70 +9896,70 @@ def RotationAxis(body: Body, time: Time) -> AxisInfo:
 
         ra = (
             269.9949 + 0.0031*T
-            - 3.8787*math.sin(E1)
-            - 0.1204*math.sin(E2)
-            + 0.0700*math.sin(E3)
-            - 0.0172*math.sin(E4)
-            + 0.0072*math.sin(E6)
-            - 0.0052*math.sin(E10)
-            + 0.0043*math.sin(E13)
+            - 3.8787*_sin(E1)
+            - 0.1204*_sin(E2)
+            + 0.0700*_sin(E3)
+            - 0.0172*_sin(E4)
+            + 0.0072*_sin(E6)
+            - 0.0052*_sin(E10)
+            + 0.0043*_sin(E13)
         )
 
         dec = (
             66.5392 + 0.0130*T
-            + 1.5419*math.cos(E1)
-            + 0.0239*math.cos(E2)
-            - 0.0278*math.cos(E3)
-            + 0.0068*math.cos(E4)
-            - 0.0029*math.cos(E6)
-            + 0.0009*math.cos(E7)
-            + 0.0008*math.cos(E10)
-            - 0.0009*math.cos(E13)
+            + 1.5419*_cos(E1)
+            + 0.0239*_cos(E2)
+            - 0.0278*_cos(E3)
+            + 0.0068*_cos(E4)
+            - 0.0029*_cos(E6)
+            + 0.0009*_cos(E7)
+            + 0.0008*_cos(E10)
+            - 0.0009*_cos(E13)
         )
 
         w = (
             38.3213 + (13.17635815 - 1.4e-12*d)*d
-            + 3.5610*math.sin(E1)
-            + 0.1208*math.sin(E2)
-            - 0.0642*math.sin(E3)
-            + 0.0158*math.sin(E4)
-            + 0.0252*math.sin(E5)
-            - 0.0066*math.sin(E6)
-            - 0.0047*math.sin(E7)
-            - 0.0046*math.sin(E8)
-            + 0.0028*math.sin(E9)
-            + 0.0052*math.sin(E10)
-            + 0.0040*math.sin(E11)
-            + 0.0019*math.sin(E12)
-            - 0.0044*math.sin(E13)
+            + 3.5610*_sin(E1)
+            + 0.1208*_sin(E2)
+            - 0.0642*_sin(E3)
+            + 0.0158*_sin(E4)
+            + 0.0252*_sin(E5)
+            - 0.0066*_sin(E6)
+            - 0.0047*_sin(E7)
+            - 0.0046*_sin(E8)
+            + 0.0028*_sin(E9)
+            + 0.0052*_sin(E10)
+            + 0.0040*_sin(E11)
+            + 0.0019*_sin(E12)
+            - 0.0044*_sin(E13)
         )
     elif body == Body.Mars:
         ra = (
             317.269202 - 0.10927547*T
-            + 0.000068 * math.sin(math.radians(198.991226 + 19139.4819985*T))
-            + 0.000238 * math.sin(math.radians(226.292679 + 38280.8511281*T))
-            + 0.000052 * math.sin(math.radians(249.663391 + 57420.7251593*T))
-            + 0.000009 * math.sin(math.radians(266.183510 + 76560.6367950*T))
-            + 0.419057 * math.sin(math.radians(79.398797 + 0.5042615*T))
+            + 0.000068 * _sin(math.radians(198.991226 + 19139.4819985*T))
+            + 0.000238 * _sin(math.radians(226.292679 + 38280.8511281*T))
+            + 0.000052 * _sin(math.radians(249.663391 + 57420.7251593*T))
+            + 0.000009 * _sin(math.radians(266.183510 + 76560.6367950*T))
+            + 0.419057 * _sin(math.radians(79.398797 + 0.5042615*T))
         )
 
         dec = (
             54.432516 - 0.05827105*T
-            + 0.000051*math.cos(math.radians(122.433576 + 19139.9407476*T))
-            + 0.000141*math.cos(math.radians(43.058401 + 38280.8753272*T))
-            + 0.000031*math.cos(math.radians(57.663379 + 57420.7517205*T))
-            + 0.000005*math.cos(math.radians(79.476401 + 76560.6495004*T))
-            + 1.591274*math.cos(math.radians(166.325722 + 0.5042615*T))
+            + 0.000051*_cos(math.radians(122.433576 + 19139.9407476*T))
+            + 0.000141*_cos(math.radians(43.058401 + 38280.8753272*T))
+            + 0.000031*_cos(math.radians(57.663379 + 57420.7517205*T))
+            + 0.000005*_cos(math.radians(79.476401 + 76560.6495004*T))
+            + 1.591274*_cos(math.radians(166.325722 + 0.5042615*T))
         )
 
         w = (
             176.049863 + 350.891982443297*d
-            + 0.000145*math.sin(math.radians(129.071773 + 19140.0328244*T))
-            + 0.000157*math.sin(math.radians(36.352167 + 38281.0473591*T))
-            + 0.000040*math.sin(math.radians(56.668646 + 57420.9295360*T))
-            + 0.000001*math.sin(math.radians(67.364003 + 76560.2552215*T))
-            + 0.000001*math.sin(math.radians(104.792680 + 95700.4387578*T))
-            + 0.584542*math.sin(math.radians(95.391654 + 0.5042615*T))
+            + 0.000145*_sin(math.radians(129.071773 + 19140.0328244*T))
+            + 0.000157*_sin(math.radians(36.352167 + 38281.0473591*T))
+            + 0.000040*_sin(math.radians(56.668646 + 57420.9295360*T))
+            + 0.000001*_sin(math.radians(67.364003 + 76560.2552215*T))
+            + 0.000001*_sin(math.radians(104.792680 + 95700.4387578*T))
+            + 0.584542*_sin(math.radians(95.391654 + 0.5042615*T))
         )
 
     elif body == Body.Jupiter:
@@ -9965,20 +9971,20 @@ def RotationAxis(body: Body, time: Time) -> AxisInfo:
 
         ra = (
             268.056595 - 0.006499*T
-            + 0.000117*math.sin(Ja)
-            + 0.000938*math.sin(Jb)
-            + 0.001432*math.sin(Jc)
-            + 0.000030*math.sin(Jd)
-            + 0.002150*math.sin(Je)
+            + 0.000117*_sin(Ja)
+            + 0.000938*_sin(Jb)
+            + 0.001432*_sin(Jc)
+            + 0.000030*_sin(Jd)
+            + 0.002150*_sin(Je)
         )
 
         dec = (
             64.495303 + 0.002413*T
-            + 0.000050*math.cos(Ja)
-            + 0.000404*math.cos(Jb)
-            + 0.000617*math.cos(Jc)
-            - 0.000013*math.cos(Jd)
-            + 0.000926*math.cos(Je)
+            + 0.000050*_cos(Ja)
+            + 0.000404*_cos(Jb)
+            + 0.000617*_cos(Jc)
+            - 0.000013*_cos(Jd)
+            + 0.000926*_cos(Je)
         )
 
         w = 284.95 + 870.536*d
@@ -9995,9 +10001,9 @@ def RotationAxis(body: Body, time: Time) -> AxisInfo:
 
     elif body == Body.Neptune:
         N = math.radians(357.85 + 52.316*T)
-        ra = 299.36 + 0.70*math.sin(N)
-        dec = 43.46 - 0.51*math.cos(N)
-        w = 249.978 + 541.1397757*d - 0.48*math.sin(N)
+        ra = 299.36 + 0.70*_sin(N)
+        dec = 43.46 - 0.51*_cos(N)
+        w = 249.978 + 541.1397757*d - 0.48*_sin(N)
 
     elif body == Body.Pluto:
         ra = 132.993
@@ -10010,11 +10016,11 @@ def RotationAxis(body: Body, time: Time) -> AxisInfo:
     # Calculate the north pole vector using the given angles.
     radlat = math.radians(dec)
     radlon = math.radians(ra)
-    rcoslat = math.cos(radlat)
+    rcoslat = _cos(radlat)
     north = Vector(
-        rcoslat * math.cos(radlon),
-        rcoslat * math.sin(radlon),
-        math.sin(radlat),
+        rcoslat * _cos(radlon),
+        rcoslat * _sin(radlon),
+        _sin(radlat),
         time
     )
     return AxisInfo(ra/15.0, dec, w, north)
