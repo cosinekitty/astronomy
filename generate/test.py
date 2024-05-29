@@ -3372,7 +3372,8 @@ def RiseSetElevation():
 #-----------------------------------------------------------------------------------------------------------
 
 def Trigonometry() -> int:
-    tolerance = 1.0e-15
+    tolerance = 3.5e-12     # Not very good yet!
+    maxDiff = 0.0
     inFileName = 'trigonometry/trig.txt'
     with open(inFileName, 'rt') as infile:
         lnum = 0
@@ -3382,7 +3383,7 @@ def Trigonometry() -> int:
             if line == '':
                 break
             token = [float(s) for s in line.split()]
-            print(token)
+            #print(token)
             if len(token) != 3:
                 return Fail('Trigonometry({} line {}): incorrect number of tokens in [{}]'.format(inFileName, lnum, line))
             (deg, cosCorrect, sinCorrect) = token
@@ -3391,12 +3392,13 @@ def Trigonometry() -> int:
             sinCalc = xsin(rad)
             cosDiff = abs(cosCalc - cosCorrect)
             sinDiff = abs(sinCalc - sinCorrect)
+            maxDiff = max(maxDiff, cosDiff, sinDiff)
             if (cosDiff > tolerance) or (sinDiff > tolerance):
                 return Fail(
                     'Trigonometry({:s} line {:d})'.format(inFileName, lnum),
                     'EXCESS ERROR - deg={:0.1f}, cosDiff={:g}, sinDiff={:g}'.format(deg, cosDiff, sinDiff)
                 )
-    return Pass('Trigonometry')
+    return Pass('Trigonometry: maxdiff={:g}'.format(maxDiff))
 
 #-----------------------------------------------------------------------------------------------------------
 

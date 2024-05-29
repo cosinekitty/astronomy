@@ -9,38 +9,40 @@ def Pass(message:str) -> int:
     return
 
 
-def SineTest() -> int:
+def SineTest(angle:float) -> int:
     # See how long it takes to converge for a problematic value near 1.
-    angle = -0.9535784309745123
     correct = math.sin(angle)
     sum = dontrig.xsin(angle)
     diff = sum - correct
     print('SineTest: correct={:0.16f}, sum={:0.16f}, diff={:g}'.format(correct, sum, diff))
     tolerance = 1.2e-16
     if abs(diff) > tolerance:
-        print('SineTest FAIL: EXCESSIVE ERROR')
+        print('SineTest FAIL: EXCESSIVE ERROR for {:0.16g}'.format(angle))
         return 1
-    return Pass('SineTest')
+    return Pass('SineTest({:22.16e})'.format(angle))
 
 
-def CosineTest() -> int:
+def CosineTest(angle:float) -> int:
     # See how long it takes to converge for a problematic value near 1.
-    angle = -0.9535784309745123
     correct = math.cos(angle)
     sum = dontrig.xcos(angle)
     diff = sum - correct
     print('CosineTest: correct={:0.16f}, sum={:0.16f}, diff={:g}'.format(correct, sum, diff))
     tolerance = 1.2e-16
     if abs(diff) > tolerance:
-        print('CosineTest FAIL: EXCESSIVE ERROR')
+        print('CosineTest FAIL: EXCESSIVE ERROR for {:0.16g}'.format(angle))
         return 1
-    return Pass('CosineTest')
+    return Pass('CosineTest({:22.16e})'.format(angle))
 
 
 def UnitTest() -> int:
+    angle1 = -0.9535784309745123
+    angle2 = math.radians(-719.9)
     return (
-        SineTest() or
-        CosineTest() or
+        SineTest(angle1) or
+        CosineTest(angle1) or
+        SineTest(angle2) or
+        CosineTest(angle2) or
         Pass('TrigTest')
     )
 
@@ -52,14 +54,16 @@ def GenerateOutputTable(filename: str) -> int:
     deg = -720.0
     incr = 0.1
     maxDeg = +720.01
+    lnum = 0
     with open(filename, 'wt') as outfile:
         while deg <= maxDeg:
             rad = math.radians(deg)
             c = math.cos(rad)
             s = math.sin(rad)
             outfile.write('{:6.1f} {:22.16f} {:22.16f}\n'.format(deg, c, s))
+            lnum += 1
             deg += incr
-    return Pass('GenerateOutputTable')
+    return Pass('GenerateOutputTable: {:d} rows generated to {}'.format(lnum, filename))
 
 
 if __name__ == '__main__':
