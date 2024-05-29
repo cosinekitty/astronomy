@@ -7,7 +7,7 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-11, windows-latest ]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Add msbuild to path
       if: startsWith(matrix.os, 'windows')
       uses: microsoft/setup-msbuild@v1.1
@@ -16,7 +16,7 @@ jobs:
       with:
         dotnet-version: 7.0.x
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.9
     - name: Install Python tools
