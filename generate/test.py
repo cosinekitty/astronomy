@@ -3402,6 +3402,7 @@ def Trigonometry() -> int:
 
 
 UnitTests = {
+    '_trig':                    Trigonometry,
     'aberration':               Aberration,
     'atmosphere':               Atmosphere,
     'axis':                     Axis,
@@ -3446,7 +3447,6 @@ UnitTests = {
     'time':                     AstroTime,
     'topostate':                TopoState,
     'transit':                  Transit,
-    'trig':                     Trigonometry,
     'twilight':                 Twilight,
 }
 
