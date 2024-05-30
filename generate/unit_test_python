@@ -7,7 +7,7 @@ Fail()
 
 [[ "$1" == "" || "$1" == "-v" ]] || Fail "Invalid command line options."
 
-python3 --version || Fail "Cannot print python version"
+python --version || Fail "Cannot print python version"
 
 echo "$0: running mypy"
 cd ../source/python/astronomy || Fail "error changing to Python source directory"
@@ -16,13 +16,13 @@ cd ../../../generate || Fail "error changing back to generate directory"
 echo ""
 
 echo "$0: running unit tests"
-python3 test.py $1 all || Fail "Failed Python unit tests."
+python test.py $1 all || Fail "Failed Python unit tests."
 for file in temp/py_longitude_*.txt; do
     ./generate $1 check ${file} || Fail "Failed verification of file ${file}"
 done
 
 echo "$0: Generating Python test output."
-time python3 test.py astro_check > temp/py_check.txt || Fail "Failure in Python astro_check"
+time python test.py astro_check > temp/py_check.txt || Fail "Failure in Python astro_check"
 ./generate $1 check temp/py_check.txt || Fail "Verification failure for Python unit test output."
 
 echo "$0: PASS"

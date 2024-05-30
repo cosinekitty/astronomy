@@ -114,7 +114,7 @@ else
 fi
 
 echo "Generating Python documentation."
-python3 pydown/pydown.py pydown/py_prefix.md ../source/python/astronomy/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
+python pydown/pydown.py pydown/py_prefix.md ../source/python/astronomy/astronomy.py ../source/python/README.md || Fail "Error generating Markdown from Python source."
 ./check_internal_links.py ../source/python/README.md || exit 1
 
 echo "Making redundant copies of source in demo folders."

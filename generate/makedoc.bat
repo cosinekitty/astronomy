@@ -11,7 +11,7 @@ if not exist "!GENEXE!" (
     exit /b 1
 )
 
-py patch_version_numbers.py || exit /b 1
+python patch_version_numbers.py || exit /b 1
 
 echo.Trimming trailing whitespace in source code.
 for %%f in (template\astronomy.c ..\source\c\astronomy.h) do (
@@ -114,9 +114,9 @@ call npm run docs:md || (
     exit /b 1
 )
 
-py sort_js_functions.py ..\source\js\README.md || exit /b 1
+python sort_js_functions.py ..\source\js\README.md || exit /b 1
 node eol_hack.js ..\source\js\README.md || exit /b 1
-py check_internal_links.py ..\source\js\README.md || exit /b 1
+python check_internal_links.py ..\source\js\README.md || exit /b 1
 
 if exist ..\tutorials (
     echo.Making documentation in HTML format for local viewing.
@@ -177,7 +177,7 @@ if exist disable_generate_c_docs (
 )
 
 echo.Generating Python documentation.
-py pydown\pydown.py pydown\py_prefix.md ..\source\python\astronomy\astronomy.py ..\source\python\README.md || exit /b 1
+python pydown\pydown.py pydown\py_prefix.md ..\source\python\astronomy\astronomy.py ..\source\python\README.md || exit /b 1
 
 echo.Making redundant copies of source in demo folders.
 copy ..\source\js\astronomy.browser.js ..\demo\browser\ || exit /b 1

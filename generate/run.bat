@@ -10,7 +10,7 @@ set copyright=
 for /f %%f in ('git grep -l Copyright -- generate hydrogen LICENSE source/c/astronomy.h') do (
     set copyright=!copyright! %%f
 )
-py generate/update_copyrights.py !copyright!
+python generate/update_copyrights.py !copyright!
 cd generate
 
 set FASTMODE=true
@@ -25,7 +25,7 @@ if not exist "!GENEXE!" (
 )
 
 if exist constellation\test_input.txt (del constellation\test_input.txt)
-py make_constellation_data.py || exit /b 1
+python make_constellation_data.py || exit /b 1
 if not exist constellation\test_input.txt (
     echo.ERROR - file was not created: constellation\test_input.txt
     exit /b 1
@@ -103,7 +103,7 @@ for %%f in (
 ) do (
     if exist %%f (del %%f)
 )
-py norm.py || exit /b 1
+python norm.py || exit /b 1
 cd ..
 
 echo.
@@ -166,14 +166,14 @@ for %%f in (temp\c_longitude_*.txt) do (
 REM -----------------------------------------------------------------------------------------
 
 echo.Running Python tests.
-py test.py all || exit /b 1
+python test.py all || exit /b 1
 
 for %%f in (temp\py_longitude_*.txt) do (
     !GENEXE! check %%f || exit /b 1
 )
 
 echo.Generating Python test output.
-py test.py astro_check > temp\py_check.txt || exit /b 1
+python test.py astro_check > temp\py_check.txt || exit /b 1
 
 echo.Verifying Python test output.
 !GENEXE! check temp\py_check.txt || exit /b 1
@@ -197,7 +197,7 @@ call gradlew.bat assemble build test dokkaGfm jar || exit /b 1
 popd
 
 cd kotlindoc
-py format_kotlin_doc.py || exit /b 1
+python format_kotlin_doc.py || exit /b 1
 cd ..
 
 !GENEXE! check temp\k_check.txt || exit /b 1

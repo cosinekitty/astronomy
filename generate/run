@@ -76,7 +76,7 @@ rm -f constellation/test_input.txt
 ./make_constellation_data.py || Fail "Error creating constellation test data."
 
 cd .. || Fail "Cannot change to parent directory."
-python3 generate/update_copyrights.py $(git grep -l Copyright -- generate hydrogen LICENSE source/c/astronomy.h) ||
+python generate/update_copyrights.py $(git grep -l Copyright -- generate hydrogen LICENSE source/c/astronomy.h) ||
     Fail "Error updating copyrights."
 cd generate || Fail "Cannot change back to generate directory."
 
@@ -122,7 +122,7 @@ echo ""
 echo "Generating eclipse data."
 cd eclipse || Fail "Could not change to eclipse directory."
 rm -f lunar_eclipse.txt solar_eclipse.txt mercury.txt venus.txt
-python3 norm.py || Fail "Error normalizing eclipse test data."
+python norm.py || Fail "Error normalizing eclipse test data."
 cd .. || Fail "Could not change to parent directory."
 
 echo ""

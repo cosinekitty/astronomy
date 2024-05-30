@@ -27,7 +27,7 @@ call :CameraTest _ca 51.05 -114.07 2023-03-24T02:07:31.000Z || exit /b 1
 
 echo.Testing Python demo: gravity
 for /L %%x in (0, 1, 90) do (
-    py gravity.py %%x 0 >> test/gravity.txt || Fail "Error running gravity.py."
+    python gravity.py %%x 0 >> test/gravity.txt || Fail "Error running gravity.py."
 )
 fc correct\gravity.txt test\gravity.txt || exit /b 1
 echo.PASS: Python demos
@@ -45,7 +45,7 @@ exit /b 0
     echo.Testing Python demo: !name! !args!
     mypy --strict !name!.py || exit /b 1
     echo.Running !name!.py !args!
-    py !name!.py !args! > test\!name!.txt || (
+    python !name!.py !args! > test\!name!.txt || (
         echo.FATAL[demotest.bat] - error returned by !name!.py
         exit /b 1
     )
@@ -59,7 +59,7 @@ exit /b 0
     echo.Testing Python demo: !name! !args!
     mypy --strict !name!.py || exit /b 1
     echo.Running !name!.py !args!
-    py !name!.py !args! > test\!name!!suffix!.txt || (
+    python !name!.py !args! > test\!name!!suffix!.txt || (
         echo.FATAL[demotest.bat] - error returned by !name!.py
         exit /b 1
     )
