@@ -775,8 +775,8 @@ static int Diff(double tolerance, const char *a_filename, const char *b_filename
     FILE *bfile = NULL;
     char aline[300];
     char bline[300];
-    char *aread;
-    char *bread;
+    const char *aread;
+    const char *bread;
     maxdiff_column_t columns[NUM_DIFF_COLUMNS];
     double score = 0.0;
 
