@@ -6,6 +6,7 @@ REM     This batch file is executed on every push to GitHub.
 REM --------------------------------------------------------------------------------
 
 cd %~dp0
+py --version
 set ASTRONOMY_ENGINE_PYTHON_PROBLEM=1
 py test.py precision || exit /b 1
 set ASTRONOMY_ENGINE_PYTHON_PROBLEM=
