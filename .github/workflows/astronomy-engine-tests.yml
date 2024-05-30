@@ -17,6 +17,8 @@ jobs:
         dotnet-version: 7.0.x
     - name: Setup Python
       uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
     - name: Install Python tools
       run: python -m pip install --upgrade pip && pip install mypy mpmath && pip show mpmath && echo PYTHONPATH=$PYTHONPATH && python -c "import sys; print('sys.path =', sys.path)"
     - name: Install documentation tools Linux
