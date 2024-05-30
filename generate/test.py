@@ -4,10 +4,17 @@ import math
 import re
 import os
 from itertools import chain
+
+print('test.py: sys.path = [')
+for p in sys.path:
+    print('   ', p)
+print(']')
+
+import mpmath
+
 sys.path.append('../source/python')
 import astronomy
 #from dontrig import xcos, xsin
-import mpmath
 
 #-----------------------------------------------------------------------------------------------------------
 
