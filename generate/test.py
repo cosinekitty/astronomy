@@ -6,9 +6,18 @@ import os
 from itertools import chain
 sys.path.append('../source/python')
 import astronomy
-from dontrig import xcos, xsin
+#from dontrig import xcos, xsin
+import mpmath
 
 #-----------------------------------------------------------------------------------------------------------
+
+mpmath.dps = 30
+
+def xsin(angle: float) -> float:
+    return float(mpmath.sin(angle))
+
+def xcos(angle: float) -> float:
+    return float(mpmath.cos(angle))
 
 if os.getenv('GITHUB_JOB'):
     # Super weird hack: re-define _sin and _cos to have exactly reproducible values.
@@ -3375,6 +3384,7 @@ def Trigonometry() -> int:
     tolerance = 3.5e-12     # Not very good yet!
     maxDiff = 0.0
     inFileName = 'trigonometry/trig.txt'
+    worstDeg = None
     with open(inFileName, 'rt') as infile:
         lnum = 0
         for line in infile:
@@ -3392,13 +3402,16 @@ def Trigonometry() -> int:
             sinCalc = xsin(rad)
             cosDiff = abs(cosCalc - cosCorrect)
             sinDiff = abs(sinCalc - sinCorrect)
-            maxDiff = max(maxDiff, cosDiff, sinDiff)
+            diff = max(cosDiff, sinDiff)
+            if diff > maxDiff:
+                maxDiff = diff
+                worstDeg = deg
             if (cosDiff > tolerance) or (sinDiff > tolerance):
                 return Fail(
                     'Trigonometry({:s} line {:d})'.format(inFileName, lnum),
                     'EXCESS ERROR - deg={:0.1f}, cosDiff={:g}, sinDiff={:g}'.format(deg, cosDiff, sinDiff)
                 )
-    return Pass('Trigonometry: maxdiff={:g}'.format(maxDiff))
+    return Pass('Trigonometry: maxdiff={:g}, worst angle = {:0.1f} degrees'.format(maxDiff, worstDeg))
 
 #-----------------------------------------------------------------------------------------------------------
 

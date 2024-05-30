@@ -21,7 +21,7 @@ def xsin(angle:float) -> float:
         prev = sum
         sum += term
         if Debug:
-            print('xsin: n={:02d}  term={:24.16e}  sum={:20.16f}  fact={:g}  diff={:24.16e}'.format(n, term, sum, fact, sum-prev))
+            print('xsin: n={:02d}  term={:24.16e}  sum={:20.16f}  diff={:24.16e}'.format(n, term, sum, sum-prev))
         if prev == sum:
             return sum
         term *= numerator / ((n+1) * (n+2))
@@ -40,7 +40,7 @@ def xcos(angle:float) -> float:
         prev = sum
         sum += term
         if Debug:
-            print('xcos: n={:02d}  term={:24.16e}  sum={:20.16f}   fact={:g}'.format(n, term, sum, fact))
+            print('xcos: n={:02d}  term={:24.16e}  sum={:20.16f}  diff={:24.16e}'.format(n, term, sum, sum-prev))
         if prev == sum:
             return sum
         term *= numerator / ((n+1) * (n+2))
