@@ -76,7 +76,7 @@ _RAD2HOUR  =  3.819718634205488         # 12/pi = factor to convert radians to s
 _HOUR2RAD  =  0.2617993877991494365     # pi/12 = factor to convert sidereal hours to radians
 _DAYS_PER_TROPICAL_YEAR = 365.24217
 _PI2 = 2.0 * math.pi
-_EPOCH = datetime.datetime(2000, 1, 1, 12)
+_EPOCH = datetime.datetime(2000, 1, 1, 12, tzinfo = datetime.timezone.utc)
 _ASEC360 = 1296000.0
 _ASEC2RAD = 4.848136811095359935899141e-6
 _ARC = 3600.0 * 180.0 / math.pi     # arcseconds per radian
@@ -449,7 +449,7 @@ class Time:
         -------
         Time
         """
-        ut = (datetime.datetime.utcnow() - _EPOCH).total_seconds() / 86400.0
+        ut = (datetime.datetime.now(datetime.timezone.utc) - _EPOCH).total_seconds() / 86400.0
         return Time(ut)
 
     def AddDays(self, days: float) -> "Time":

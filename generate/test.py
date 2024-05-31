@@ -94,7 +94,7 @@ def AstroTime():
         print('PY AstroTime: excessive TT error {}'.format(diff))
         return 1
     s = str(time.Utc())
-    if s != '2018-12-02 18:30:12.543000':
+    if s != '2018-12-02 18:30:12.543000+00:00':
         print('PY AstroTime: Utc() returned incorrect string "{}"'.format(s))
         return 1
     time = astronomy.Time.Make(2018, 12, 31, 23, 59, 59.9999)
