@@ -6828,6 +6828,122 @@ astro_func_result_t Astronomy_HourAngle(astro_body_t body, astro_time_t *time, a
     return result;
 }
 
+/**
+ * @brief Calculates the parallactic angle `q` for a body.
+ *
+ * The parallactic angle `q` is the angle between a body's zenith (the uppermost point of the
+ * body in the sky as seen by an observer) and the northern celestial pole.
+ * `q` is the angle between a body's vertical and its hour circle.
+ *
+ * @param body
+ *     The celestial body to be observed. Not allowed to be `BODY_EARTH`.
+ * @param time
+ *     The date and time at which the observation takes place.
+ * @param observer
+ *     A location on or near the surface of the Earth.
+ * @param aberration
+ *     Selects whether or not to correct for aberration.
+ *
+ * @return
+ *     The body's parallactic angle.
+ */
+astro_angle_result_t Astronomy_ParallacticAngle(astro_body_t body, astro_time_t *time, astro_observer_t observer, astro_aberration_t aberration)
+{
+    astro_equatorial_t body_equator_of_date;
+    astro_func_result_t body_hour_angle;
+    double H, phi, delta;
+    double q;
+    astro_angle_result_t result;
+
+    if (time == NULL)
+        return AngleError(ASTRO_INVALID_PARAMETER);
+
+    body_equator_of_date = Astronomy_Equator(body, time, observer, EQUATOR_OF_DATE, aberration);
+    if (body_equator_of_date.status != ASTRO_SUCCESS)
+        return AngleError(body_equator_of_date.status);
+
+    /*
+     Calculate the parallactic angle (q) using
+     Meeus equation 14.1 (p. 98).
+     */
+    body_hour_angle = Astronomy_HourAngle(body, time, observer);
+    if (body_hour_angle.status != ASTRO_SUCCESS)
+        return AngleError(body_hour_angle.status);
+
+    H = body_hour_angle.value * HOUR2RAD;
+    phi = observer.latitude * DEG2RAD;
+    delta = body_equator_of_date.dec * DEG2RAD;
+
+    q = atan2(sin(H), tan(phi) * cos(delta) - sin(delta) * cos(H));
+
+    result.angle = q * RAD2DEG;
+    result.status = ASTRO_SUCCESS;
+
+    return result;
+}
+
+/**
+ * @brief Calculates the position angle `chi` of a body's bright limb.
+ *
+ * The angle `chi` is the position angle of the midpoint of the illuminated limb
+ * of the body reckoned eastward from the north point of the disk (not from the axis
+ * of rotation of the globe). The position angles of the cusps are `chi` ± 90°.
+ *
+ * @param body
+ *     The celestial body to be observed. Not allowed to be `BODY_EARTH`.
+ * @param time
+ *     The date and time at which the observation takes place.
+ * @param observer
+ *     A location on or near the surface of the Earth.
+ * @param aberration
+ *     Selects whether or not to correct for aberration.
+ *
+ * @return
+ *     The body's bright limb position angle.
+ */
+astro_angle_result_t Astronomy_BrightLimbAngle(astro_body_t body, astro_time_t *time, astro_observer_t observer, astro_aberration_t aberration)
+{
+    astro_equatorial_t body_equator_of_date;
+    double delta, alpha;
+    astro_equatorial_t sun_equator_of_date;
+    double delta0, alpha0;
+    double chi;
+    double body_position_angle;
+    astro_angle_result_t result;
+
+    if (time == NULL)
+        return AngleError(ASTRO_INVALID_PARAMETER);
+
+    /*
+     Calculate the position angle of the body's bright limb (chi) using
+     Meeus equation 48.5 (p. 346).
+     */
+    body_equator_of_date = Astronomy_Equator(body, time, observer, EQUATOR_OF_DATE, aberration);
+    if (body_equator_of_date.status != ASTRO_SUCCESS)
+        return AngleError(body_equator_of_date.status);
+
+    delta = body_equator_of_date.dec * DEG2RAD;
+    alpha = body_equator_of_date.ra * HOUR2RAD;
+
+    sun_equator_of_date = Astronomy_Equator(BODY_SUN, time, observer, EQUATOR_OF_DATE, aberration);
+    if (sun_equator_of_date.status != ASTRO_SUCCESS)
+        return AngleError(sun_equator_of_date.status);
+
+    delta0 = sun_equator_of_date.dec * DEG2RAD;
+    alpha0 = sun_equator_of_date.ra * HOUR2RAD;
+
+    chi = atan2(cos(delta0) * sin(alpha0 - alpha), sin(delta0) * cos(delta) - cos(delta0) * sin(delta) * cos(alpha0 - alpha));
+
+    body_position_angle = chi * RAD2DEG;
+    while (body_position_angle < 0)
+        body_position_angle += 360;
+
+    result.angle = body_position_angle;
+    result.status = ASTRO_SUCCESS;
+
+    return result;
+}
+
 
 /** @cond DOXYGEN_SKIP */
 
