@@ -82,7 +82,7 @@ cd generate || Fail "Cannot change back to generate directory."
 
 echo ""
 echo "Building C source code for 'generate' program."
-cppcheck -I . -I novas -I vsop -I top2013 --error-exitcode=9 --enable=all --suppress=variableScope --suppress=unusedStructMember --suppress=missingIncludeSystem --suppress=unusedFunction generate.c earth.c astro_vector.c chebyshev.c codegen.c ephfile.c vsop/vsop.c top2013/top2013.c || exit 1
+cppcheck -I . -I novas -I vsop -I top2013 --error-exitcode=9 --enable=all --check-level=exhaustive --suppress=variableScope --suppress=unusedStructMember --suppress=missingIncludeSystem --suppress=unusedFunction generate.c earth.c astro_vector.c chebyshev.c codegen.c ephfile.c vsop/vsop.c top2013/top2013.c || exit 1
 ./build || Fail "Could not build 'generate' program from source."
 
 mkdir -pv output temp apsides || Fail "Error creating directories."
