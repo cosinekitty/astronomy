@@ -10,7 +10,7 @@ Fail()
 
 CPPCHECK_OPTIONS="-I ../source/c --enable=all --inline-suppr --suppress=unmatchedSuppression --suppress=variableScope --suppress=shadowFunction --suppress=unusedFunction --suppress=missingIncludeSystem --suppress=constParameterCallback --error-exitcode=9"
 if [[ "${OS_NAME}" == "macOS" ]]; then
-    CPPCHECK_OPTIONS+=--check-level=exhaustive
+    CPPCHECK_OPTIONS+=" --check-level=exhaustive"
 fi
 cppcheck ${CPPCHECK_OPTIONS} ../source/c ../demo/c/*.c ctest.c || exit 1
 
