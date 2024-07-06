@@ -84,7 +84,7 @@ echo ""
 echo "Building C source code for 'generate' program."
 CPPCHECK_OPTIONS="-I . -I novas -I vsop -I top2013 --error-exitcode=9 --enable=all --suppress=variableScope --suppress=unusedStructMember --suppress=missingIncludeSystem --suppress=unusedFunction"
 if [[ "${OS_NAME}" == "macOS" ]]; then
-    CPPCHECK_OPTIONS += --check-level=exhaustive
+    CPPCHECK_OPTIONS+=--check-level=exhaustive
 fi
 cppcheck ${CPPCHECK_OPTIONS} generate.c earth.c astro_vector.c chebyshev.c codegen.c ephfile.c vsop/vsop.c top2013/top2013.c || exit 1
 ./build || Fail "Could not build 'generate' program from source."
