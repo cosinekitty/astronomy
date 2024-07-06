@@ -40,7 +40,7 @@ jobs:
 
     - name: Test Astronomy Engine Unix
       if: startsWith(matrix.os, 'windows') == false
-      run: generate/commit_hook
+      run: generate/commit_hook ${{runner.os}}
 
     - name: Test Astronomy Engine Windows
       if: startsWith(matrix.os, 'windows')
