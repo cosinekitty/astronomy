@@ -82,7 +82,7 @@ cd generate || Fail "Cannot change back to generate directory."
 
 echo ""
 echo "Building C source code for 'generate' program."
-CPPCHECK_OPTIONS=-I . -I novas -I vsop -I top2013 --error-exitcode=9 --enable=all --suppress=variableScope --suppress=unusedStructMember --suppress=missingIncludeSystem --suppress=unusedFunction
+CPPCHECK_OPTIONS="-I . -I novas -I vsop -I top2013 --error-exitcode=9 --enable=all --suppress=variableScope --suppress=unusedStructMember --suppress=missingIncludeSystem --suppress=unusedFunction"
 if [[ "${OS_NAME}" == "macOS" ]]; then
     CPPCHECK_OPTIONS += --check-level=exhaustive
 fi
