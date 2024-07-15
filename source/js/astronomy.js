@@ -279,21 +279,21 @@ var Body;
     Body["Star6"] = "Star6";
     Body["Star7"] = "Star7";
     Body["Star8"] = "Star8";
-})(Body = exports.Body || (exports.Body = {}));
+})(Body || (exports.Body = Body = {}));
 const StarList = [
     Body.Star1, Body.Star2, Body.Star3, Body.Star4,
     Body.Star5, Body.Star6, Body.Star7, Body.Star8
 ];
 ;
 const StarTable = [
-    { ra: 0, dec: 0, dist: 0 },
-    { ra: 0, dec: 0, dist: 0 },
-    { ra: 0, dec: 0, dist: 0 },
-    { ra: 0, dec: 0, dist: 0 },
-    { ra: 0, dec: 0, dist: 0 },
-    { ra: 0, dec: 0, dist: 0 },
-    { ra: 0, dec: 0, dist: 0 },
-    { ra: 0, dec: 0, dist: 0 },
+    { ra: 0, dec: 0, dist: 0 }, // Body.Star1
+    { ra: 0, dec: 0, dist: 0 }, // Body.Star2
+    { ra: 0, dec: 0, dist: 0 }, // Body.Star3
+    { ra: 0, dec: 0, dist: 0 }, // Body.Star4
+    { ra: 0, dec: 0, dist: 0 }, // Body.Star5
+    { ra: 0, dec: 0, dist: 0 }, // Body.Star6
+    { ra: 0, dec: 0, dist: 0 }, // Body.Star7
+    { ra: 0, dec: 0, dist: 0 }, // Body.Star8
 ];
 function GetStar(body) {
     const index = StarList.indexOf(body);
@@ -5809,7 +5809,7 @@ var ApsisKind;
 (function (ApsisKind) {
     ApsisKind[ApsisKind["Pericenter"] = 0] = "Pericenter";
     ApsisKind[ApsisKind["Apocenter"] = 1] = "Apocenter";
-})(ApsisKind = exports.ApsisKind || (exports.ApsisKind = {}));
+})(ApsisKind || (exports.ApsisKind = ApsisKind = {}));
 /**
  * @brief A closest or farthest point in a body's orbit around its primary.
  *
@@ -7992,7 +7992,7 @@ var EclipseKind;
     EclipseKind["Partial"] = "partial";
     EclipseKind["Annular"] = "annular";
     EclipseKind["Total"] = "total";
-})(EclipseKind = exports.EclipseKind || (exports.EclipseKind = {}));
+})(EclipseKind || (exports.EclipseKind = EclipseKind = {}));
 /**
  * @brief Returns information about a lunar eclipse.
  *
@@ -8965,7 +8965,7 @@ var NodeEventKind;
     NodeEventKind[NodeEventKind["Invalid"] = 0] = "Invalid";
     NodeEventKind[NodeEventKind["Ascending"] = 1] = "Ascending";
     NodeEventKind[NodeEventKind["Descending"] = -1] = "Descending";
-})(NodeEventKind = exports.NodeEventKind || (exports.NodeEventKind = {}));
+})(NodeEventKind || (exports.NodeEventKind = NodeEventKind = {}));
 /**
  * @brief Information about an ascending or descending node of a body.
  *

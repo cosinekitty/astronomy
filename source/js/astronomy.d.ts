@@ -26,7 +26,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 */
-export declare type FlexibleDateTime = Date | number | AstroTime;
+export type FlexibleDateTime = Date | number | AstroTime;
 /**
  * @brief The speed of light in AU/day.
  */
@@ -150,8 +150,8 @@ export declare enum Body {
     Uranus = "Uranus",
     Neptune = "Neptune",
     Pluto = "Pluto",
-    SSB = "SSB",
-    EMB = "EMB",
+    SSB = "SSB",// Solar System Barycenter
+    EMB = "EMB",// Earth/Moon Barycenter
     Star1 = "Star1",
     Star2 = "Star2",
     Star3 = "Star3",
@@ -204,7 +204,7 @@ export declare function DefineStar(body: Body, ra: number, dec: number, distance
  */
 export declare function PlanetOrbitalPeriod(body: Body): number;
 export declare function DeltaT_EspenakMeeus(ut: number): number;
-export declare type DeltaTimeFunction = (ut: number) => number;
+export type DeltaTimeFunction = (ut: number) => number;
 export declare function DeltaT_JplHorizons(ut: number): number;
 export declare function SetDeltaTFunction(func: DeltaTimeFunction): void;
 /**
