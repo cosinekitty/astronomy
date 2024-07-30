@@ -11230,7 +11230,7 @@ static const constel_boundary_t ConstelBounds[] = {
 astro_constellation_t Astronomy_Constellation(double ra, double dec)
 {
     static astro_time_t epoch2000;
-    static astro_rotation_t rot = { ASTRO_NOT_INITIALIZED };
+    static astro_rotation_t rot = { ASTRO_NOT_INITIALIZED, {{0}} };
     astro_constellation_t constel;
     astro_spherical_t s2000;
     astro_equatorial_t b1875;
