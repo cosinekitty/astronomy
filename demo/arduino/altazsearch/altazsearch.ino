@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include "astronomy.h"
 
+char printBuffer[80];
 
 struct Event
 {
@@ -30,7 +31,8 @@ struct Event
     {
         char text[TIME_TEXT_BYTES];
         Astronomy_FormatTime(time, TIME_FORMAT_SECOND, text, sizeof(text));
-        Serial.printf("%s az=%0.2lf alt=%0.2lf", text, azimuth, altitude);
+        snprintf(printBuffer, sizeof printBuffer,"%s az=%0.2lf alt=%0.2lf", text, azimuth, altitude);
+        Serial.println(printBuffer);
     }
 };
 
@@ -45,15 +47,15 @@ struct Solution
     {
         if (valid)
         {
-            Serial.printf("Start: ");
+            Serial.print("Start: ");
             start.Print();
-            Serial.printf("; Finish: ");
+            Serial.print("; Finish: ");
             finish.Print();
-            Serial.printf(".\n");
+            Serial.println();
         }
         else
         {
-            Serial.printf("No solution.\n");
+            Serial.println("No solution.");
         }
     }
 };
@@ -61,8 +63,10 @@ struct Solution
 
 void Verify(astro_status_t status, const char *message)
 {
-    if (status != ASTRO_SUCCESS)
-        Serial.printf(message , ": error " , static_cast<int>(status));
+    if (status != ASTRO_SUCCESS){
+        snprintf(printBuffer, sizeof printBuffer,message , ": error " , static_cast<int>(status));
+        Serial.println(printBuffer);
+    }
 }
 
 
@@ -263,6 +267,7 @@ void loop()
     astro_time_t startTime = Astronomy_MakeTime(2023, 6, 17, 0, 0, 0.0);
     Solution solution = problem.FindNext(startTime, 2.0);
     solution.Print();
+    delay(2000);
 
 }
 

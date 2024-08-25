@@ -19,19 +19,23 @@
 
 #include <stdio.h>
 #include "astro_demo_common.h"
+char printBuffer[80];
 
 int PrintEvent(const char *name, astro_hour_angle_t evt)
 {
-    Serial.printf("%-8s : ", name);
+    snprintf(printBuffer, sizeof printBuffer,"%-8s : ", name);
+    Serial.println(printBuffer);
     if (evt.status == ASTRO_SUCCESS)
     {
         PrintTime(evt.time);
-        Serial.printf("  altitude=%6.2lf  azimuth=%6.2lf\n", evt.hor.altitude, evt.hor.azimuth);
+        snprintf(printBuffer, sizeof printBuffer,"  altitude=%6.2lf  azimuth=%6.2lf\n", evt.hor.altitude, evt.hor.azimuth);
+        Serial.println(printBuffer);
         return 0;
     }
     else
     {
-        Serial.printf("ERROR %d\n", evt.status);
+        snprintf(printBuffer, sizeof printBuffer,"ERROR %d\n", evt.status);
+        Serial.println(printBuffer);
         return 1;
     }
 }
@@ -66,9 +70,11 @@ void loop()
     if (error)
         Serial.println("error.......");
 
-    Serial.printf("search   : ");
+    snprintf(printBuffer, sizeof printBuffer,"search   : ");
+    Serial.println(printBuffer);
     PrintTime(time);
-    Serial.printf("\n");
+    snprintf(printBuffer, sizeof printBuffer,"\n");
+    Serial.println(printBuffer);
 
     for (i=0; i < nbodies; ++i)
     {

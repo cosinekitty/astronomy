@@ -5,11 +5,13 @@
     Helper code for Astronomy Engine demo programs.
 */
 
-#include <stdio.h>
+// #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "astro_demo_common.h"
+#include "Arduino.h"
+char printBufferCommon[80];
 
 static const char ObserverVarName[] = "ASTRONOMY_ENGINE_OBSERVER";
 
@@ -52,7 +54,8 @@ int ParseTime(const char *text, astro_time_t *time)
 
     if (nscanned != 6)
     {
-        fprintf(stderr, "ERROR: Invalid date/time format in '%s'\n", text);
+        snprintf(printBufferCommon, sizeof printBufferCommon, "ERROR: Invalid date/time format in '%s'\n", text);
+        Serial.println(printBufferCommon);
         return 1;
     }
 
@@ -68,8 +71,11 @@ void PrintTime(astro_time_t time)
     status = Astronomy_FormatTime(time, TIME_FORMAT_SECOND, text, sizeof(text));
     if (status != ASTRO_SUCCESS)
     {
-        fprintf(stderr, "\nFATAL(PrintTime): status %d\n", status);
-        exit(1);
+        snprintf(printBufferCommon, sizeof printBufferCommon, "\nFATAL(PrintTime): status %d\n", status);
+        Serial.println(printBufferCommon);
+        // exit(1);
     }
-    printf("%s", text);
+        snprintf(printBufferCommon, sizeof printBufferCommon, "%s", text);
+        Serial.print(printBufferCommon);
+
 }

@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "astro_demo_common.h"
-
+char printBuffer[80];
 
 int GalaticToHorizontal(
   astro_time_t time,
@@ -47,7 +47,9 @@ int GalaticToHorizontal(
   gsphere.dist = 1.0;
   gvec = Astronomy_VectorFromSphere(gsphere, time);
   if (gvec.status != ASTRO_SUCCESS) {
-    Serial.printf("Astronomy_VectorFromSphere returned error %d\n", gvec.status);
+    snprintf(printBuffer, sizeof printBuffer, "Astronomy_VectorFromSphere returned error %d\n", gvec.status);
+
+    Serial.println(printBuffer);
     return 1;
   }
 
@@ -56,7 +58,8 @@ int GalaticToHorizontal(
     */
   hvec = Astronomy_RotateVector(rot, gvec);
   if (hvec.status != ASTRO_SUCCESS) {
-    Serial.printf("Astronomy_RotateVector returned error %d\n", hvec.status);
+    snprintf(printBuffer, sizeof printBuffer, "Astronomy_RotateVector returned error %d\n", hvec.status);
+    Serial.println(printBuffer);
     return 1;
   }
 
@@ -66,7 +69,8 @@ int GalaticToHorizontal(
     */
   hsphere = Astronomy_HorizonFromVector(hvec, REFRACTION_NONE);
   if (hsphere.status != ASTRO_SUCCESS) {
-    Serial.printf("Astronomy_HorizonFromVector returned error %d\n", hsphere.status);
+    snprintf(printBuffer, sizeof printBuffer, "Astronomy_HorizonFromVector returned error %d\n", hsphere.status);
+    Serial.println(printBuffer);
     return 1;
   }
 
@@ -95,23 +99,29 @@ void loop() {
 
 
   if (glat < -90.0 || glat > +90.0) {
-    Serial.printf("ERROR: Invalid galatic latitude '%s' on command line\n", glat);
+    snprintf(printBuffer, sizeof printBuffer, "ERROR: Invalid galatic latitude '%s' on command line\n", glat);
+
+    Serial.println(printBuffer);
     error = 1;
   }
 
 
   if (glon <= -360.0 || glon >= +360.0) {
-    Serial.printf("ERROR: Invalid galatic longitude '%s' on command line\n", glon);
+    snprintf(printBuffer, sizeof printBuffer, "ERROR: Invalid galatic longitude '%s' on command line\n", glon);
+
+    Serial.println(printBuffer);
     error = 1;
   }
 
   if (GalaticToHorizontal(time, observer, glat, glon, &altitude, &azimuth)) {
-    Serial.println("error.......");
+    Serial.println("error......GalaticToHorizontal.");
   }
   if (error) {
     Serial.println("error.......");
   }
-  Serial.printf("altitude = %10.3lf, azimuth = %10.3lf\n", altitude, azimuth);
+  snprintf(printBuffer, sizeof printBuffer, "altitude = %10.3lf, azimuth = %10.3lf\n", altitude, azimuth);
+// snprintf(printBuffer, sizeof printBuffer, "altitude = %10.3lf", altitude);
+  Serial.println(printBuffer);
 
   delay(1000);
 }

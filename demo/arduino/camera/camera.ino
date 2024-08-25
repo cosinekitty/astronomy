@@ -18,6 +18,8 @@
 #include <math.h>
 #include "astro_demo_common.h"
 
+char printBuffer[80];
+
 #define FAIL(...)   do{fprintf(stderr, __VA_ARGS__); error = 1; goto fail;}while(0)
 
 static int CameraImage(astro_observer_t observer, astro_time_t time);
@@ -40,11 +42,12 @@ void loop()
     // time = "1988-02-02T12:55:33Z";
     // const char *argvs[] = {"22.2","11.8","1988-02-02T12:55:33Z"};
     const char *argvs[] = {"22.2","33.8","2023-10-07T00:38:57+03:30"};
-    int argcs = 3;
+    int argcs = sizeof(argvs) / sizeof(argvs[1]);
     error = ParseArgs(argcs, argvs, &observer, &time);
     if (error)
         Serial.println("error.......");
     CameraImage(observer, time);
+    delay(2000);
 }
 
 
@@ -75,7 +78,8 @@ static int CameraImage(astro_observer_t observer, astro_time_t time)
 
     /* Get the Moon's horizontal coordinates, so we know how much to pivot azimuth and altitude. */
     moon_hor = Astronomy_Horizon(&time, observer, moon_equ.ra, moon_equ.dec, REFRACTION_NONE);
-    Serial.printf("Moon horizontal position: azimuth = %0.3lf, altitude = %0.3lf\n", moon_hor.azimuth, moon_hor.altitude);
+    snprintf(printBuffer, sizeof printBuffer,"Moon horizontal position: azimuth = %0.3lf, altitude = %0.3lf\n", moon_hor.azimuth, moon_hor.altitude);
+    Serial.println(printBuffer);
 
     /* Get the rotation matrix that converts equatorial to horizontal coordintes for this place and time. */
     rot = Astronomy_Rotation_EQD_HOR(&time, observer);
@@ -111,7 +115,8 @@ static int CameraImage(astro_observer_t observer, astro_time_t time)
     vec.x /= radius;
     vec.y /= radius;
     vec.z /= radius;
-    Serial.printf("Moon check: x = %0.6lf, y = %0.6lf, z = %0.6lf\n", vec.x, fabs(vec.y), fabs(vec.z));
+    snprintf(printBuffer, sizeof printBuffer,"Moon check: x = %0.6lf, y = %0.6lf, z = %0.6lf\n", vec.x, fabs(vec.y), fabs(vec.z));
+    Serial.println(printBuffer);
     if (!isfinite(vec.x) || fabs(vec.x - 1.0) > tolerance)
         FAIL("Excessive error in moon check (x)\n");
 
@@ -129,24 +134,28 @@ static int CameraImage(astro_observer_t observer, astro_time_t time)
         FAIL("Error %d in Astronomy_RotateVector(sun)\n", vec.status);
 
     /* Don't bother normalizing the Sun vector, because in AU it will be close to unit anyway. */
-    Serial.printf("Sun vector: x = %0.6lf, y = %0.6lf, z = %0.6lf\n", vec.x, vec.y, vec.z);
+    snprintf(printBuffer, sizeof printBuffer,"Sun vector: x = %0.6lf, y = %0.6lf, z = %0.6lf\n", vec.x, vec.y, vec.z);
+    Serial.println(printBuffer);
 
     /* Calculate the tilt angle of the sunlit side, as seen by the camera. */
     /* The x-axis is now pointing directly at the object, z is up in the camera image, y is to the left. */
     tilt = RAD2DEG * atan2(vec.y, vec.z);
-    Serial.printf("Tilt angle of sunlit side of the Moon = %0.3lf degrees counterclockwise from up.\n", tilt);
+    snprintf(printBuffer, sizeof printBuffer,"Tilt angle of sunlit side of the Moon = %0.3lf degrees counterclockwise from up.\n", tilt);
+    Serial.println(printBuffer);
 
     illum = Astronomy_Illumination(BODY_MOON, time);
     if (illum.status != ASTRO_SUCCESS)
         FAIL("Error %d trying to calculate Moon illumination.\n", illum.status);
 
-    Serial.printf("Moon magnitude = %0.2lf, phase angle = %0.2lf degrees.\n", illum.mag, illum.phase_angle);
+    snprintf(printBuffer, sizeof printBuffer,"Moon magnitude = %0.2lf, phase angle = %0.2lf degrees.\n", illum.mag, illum.phase_angle);
+    Serial.println(printBuffer);
 
     angle = Astronomy_AngleFromSun(BODY_MOON, time);
     if (angle.status != ASTRO_SUCCESS)
         FAIL("Error %d trying to calculate angle between Moon and Sun\n", angle.status);
 
-    Serial.printf("Angle between Moon and Sun as seen from Earth = %0.2lf degrees.\n", angle.angle);
+    snprintf(printBuffer, sizeof printBuffer,"Angle between Moon and Sun as seen from Earth = %0.2lf degrees.\n", angle.angle);
+    Serial.println(printBuffer);
 
     error = 0;
 fail:
