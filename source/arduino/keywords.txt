@@ -1,0 +1,28 @@
+#######################################
+# Syntax Coloring Map For ExampleLibrary
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ASTRONOMY	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+argvs		KEYWORD2
+ParseArgs	KEYWORD2
+
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+Astronomy_ObserverGravity	LITERAL1
+Astronomy_ObserverGravity1	LITERAL1

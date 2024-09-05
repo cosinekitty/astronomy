@@ -1,0 +1,52 @@
+name: Arduino Build
+
+on:
+  push:
+    branches: [arduino]
+
+
+jobs:
+  test-matrix:
+    strategy:
+      matrix:
+        arduino-platform: ["rp2040:rp2040"]
+        include:
+          - arduino-platform: "rp2040:rp2040"
+            fqbn: "rp2040:rp2040:rpipico"
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+
+      - name: Run PWD
+        run: pwd
+
+      - name: Install Arduino-cli
+        run: curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+
+      - name: Install platform
+        run: |
+          export PATH="${{ github.workspace }}/bin:$PATH"
+          arduino-cli config add board_manager.additional_urls https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
+          arduino-cli core update-index
+          arduino-cli core install ${{ matrix.arduino-platform }}
+
+      - name: TestArduinoFile
+        working-directory: ./source/arduino
+        run: |
+          export PATH="${{ github.workspace }}/bin:$PATH" 
+          files=$(ls ../../demo/arduino/)
+          echo "Files in the folder:"
+          echo "$files"
+
+          for file in $files; do
+            echo "Processing and Testing Arduino Sketch: $file"
+            cp ../../demo/arduino/$file/$file.ino ./arduino.ino
+            arduino-cli compile --fqbn rp2040:rp2040:rpipico  ./arduino.ino
+            rm ./arduino.ino
+          done 
+
+
+        
