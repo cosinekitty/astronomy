@@ -4,7 +4,7 @@
 
     MIT License
 
-    Copyright (c) 2019-2023 Don Cross <cosinekitty@gmail.com>
+    Copyright (c) 2019-2024 Don Cross <cosinekitty@gmail.com>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -1000,7 +1000,6 @@ astro_time_t Astronomy_TerrestrialTime(double tt)
  * define the preprocessor symbol `ASTRONOMY_ENGINE_NO_CURRENT_TIME` to
  * exclude this function from your code.
  */
-
 #define ASTRONOMY_ENGINE_WHOLE_SECOND 1
 astro_time_t Astronomy_CurrentTime(void)
 {
@@ -1022,7 +1021,7 @@ astro_time_t Astronomy_CurrentTime(void)
 #elif defined(ASTRONOMY_ENGINE_WHOLE_SECOND)
     sec = time(NULL);
 #else
-    // #error Microsecond time resolution is not supported on this platform. Define ASTRONOMY_ENGINE_WHOLE_SECOND to use second resolution instead.
+    #error Microsecond time resolution is not supported on this platform. Define ASTRONOMY_ENGINE_WHOLE_SECOND to use second resolution instead.
 #endif
 
     /* Convert seconds to days, then subtract to get days since noon on January 1, 2000. */

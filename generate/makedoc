@@ -20,6 +20,10 @@ for file in ../source/c/astronomy.c ../source/js/astronomy.ts ../source/python/a
     node trimspace.js ${file} || Fail "Cannot trim whitespace from target file: ${file}"
 done
 
+echo "Patching C++ code for Arduino."
+cp -v ../source/c/astronomy.c ../source/arduino/astronomy.cpp || exit 1
+sed -i '/astro_time_t Astronomy_CurrentTime(void)/i #define ASTRONOMY_ENGINE_WHOLE_SECOND 1' ../source/arduino/astronomy.cpp || exit 1
+
 # C# is a special case: we have to compile the code to get its documentation.
 echo "Building C# code to get documentation XML."
 cd dotnet/csharp_test || "Cannot change to directory dotnet/csharp_test"
