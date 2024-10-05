@@ -60,6 +60,7 @@ The following tools are required for developers:
     - libxml2-2.9.3-win32-x86_64.7z
     - libxslt-1.1.28-win32-x86_64.7z
     - mingwrt-5.2.0-win32-x86_64.7z
+    - zlib-1.2.8-win32-x86_64.7z
 
     Use [7-Zip](https://www.7-zip.org/) to expand these archives into a newly-created
     empty directory. Just unzip them all to the same place. Verify that the `bin`

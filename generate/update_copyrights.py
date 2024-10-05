@@ -4,7 +4,7 @@ import sys
 import re
 import datetime
 
-CurrentYear = str(datetime.datetime.utcnow().year)
+CurrentYear = str(datetime.datetime.now(datetime.UTC).year)
 
 def UpdateCopyrights(fn):
     count = 0
