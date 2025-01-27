@@ -30,6 +30,13 @@
 
 #include <stddef.h>     /* for size_t */
 
+#ifdef _WIN32
+#pragma pack(1)
+#define _PREFIX __declspec(dllexport)
+#else
+#define _PREFIX
+#endif // _WIN32
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -642,10 +649,10 @@ typedef astro_func_result_t (* astro_search_func_t) (void *context, astro_time_t
  */
 typedef double (* astro_deltat_func) (double ut);
 
-double Astronomy_DeltaT_EspenakMeeus(double ut);
-double Astronomy_DeltaT_JplHorizons(double ut);
+_PREFIX double Astronomy_DeltaT_EspenakMeeus(double ut);
+_PREFIX double Astronomy_DeltaT_JplHorizons(double ut);
 
-void Astronomy_SetDeltaTFunction(astro_deltat_func func);
+_PREFIX void Astronomy_SetDeltaTFunction(astro_deltat_func func);
 
 /**
  * @brief Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.
@@ -1158,45 +1165,45 @@ typedef struct astro_grav_sim_s astro_grav_sim_t;
 
 /*---------- functions ----------*/
 
-void Astronomy_Reset(void);
-double Astronomy_VectorLength(astro_vector_t vector);
-astro_angle_result_t Astronomy_AngleBetween(astro_vector_t a, astro_vector_t b);
-const char *Astronomy_BodyName(astro_body_t body);
-astro_body_t Astronomy_BodyCode(const char *name);
-astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
+_PREFIX void Astronomy_Reset(void);
+_PREFIX double Astronomy_VectorLength(astro_vector_t vector);
+_PREFIX astro_angle_result_t Astronomy_AngleBetween(astro_vector_t a, astro_vector_t b);
+_PREFIX const char *Astronomy_BodyName(astro_body_t body);
+_PREFIX astro_body_t Astronomy_BodyCode(const char *name);
+_PREFIX astro_observer_t Astronomy_MakeObserver(double latitude, double longitude, double height);
 #if !defined(ASTRONOMY_ENGINE_NO_CURRENT_TIME)
-astro_time_t Astronomy_CurrentTime(void);
+_PREFIX astro_time_t Astronomy_CurrentTime(void);
 #endif
-astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
-astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
-astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);
-astro_status_t Astronomy_FormatTime(astro_time_t time, astro_time_format_t format, char *text, size_t size);
-astro_time_t Astronomy_TimeFromDays(double ut);
-astro_time_t Astronomy_TerrestrialTime(double tt);
-astro_time_t Astronomy_AddDays(astro_time_t time, double days);
-double Astronomy_SiderealTime(astro_time_t *time);
-astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time);
-astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
-astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);
-astro_vector_t Astronomy_GeoMoon(astro_time_t time);
-astro_spherical_t Astronomy_EclipticGeoMoon(astro_time_t time);
-astro_state_vector_t Astronomy_GeoMoonState(astro_time_t time);
-astro_state_vector_t Astronomy_GeoEmbState(astro_time_t time);
-astro_libration_t Astronomy_Libration(astro_time_t time);
-astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time);
-astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time);
+_PREFIX astro_time_t Astronomy_MakeTime(int year, int month, int day, int hour, int minute, double second);
+_PREFIX astro_time_t Astronomy_TimeFromUtc(astro_utc_t utc);
+_PREFIX astro_utc_t  Astronomy_UtcFromTime(astro_time_t time);
+_PREFIX astro_status_t Astronomy_FormatTime(astro_time_t time, astro_time_format_t format, char *text, size_t size);
+_PREFIX astro_time_t Astronomy_TimeFromDays(double ut);
+_PREFIX astro_time_t Astronomy_TerrestrialTime(double tt);
+_PREFIX astro_time_t Astronomy_AddDays(astro_time_t time, double days);
+_PREFIX double Astronomy_SiderealTime(astro_time_t *time);
+_PREFIX astro_func_result_t Astronomy_HelioDistance(astro_body_t body, astro_time_t time);
+_PREFIX astro_vector_t Astronomy_HelioVector(astro_body_t body, astro_time_t time);
+_PREFIX astro_vector_t Astronomy_GeoVector(astro_body_t body, astro_time_t time, astro_aberration_t aberration);
+_PREFIX astro_vector_t Astronomy_GeoMoon(astro_time_t time);
+_PREFIX astro_spherical_t Astronomy_EclipticGeoMoon(astro_time_t time);
+_PREFIX astro_state_vector_t Astronomy_GeoMoonState(astro_time_t time);
+_PREFIX astro_state_vector_t Astronomy_GeoEmbState(astro_time_t time);
+_PREFIX astro_libration_t Astronomy_Libration(astro_time_t time);
+_PREFIX astro_state_vector_t Astronomy_BaryState(astro_body_t body, astro_time_t time);
+_PREFIX astro_state_vector_t Astronomy_HelioState(astro_body_t body, astro_time_t time);
 
-double Astronomy_MassProduct(astro_body_t body);
-double Astronomy_PlanetOrbitalPeriod(astro_body_t body);
+_PREFIX double Astronomy_MassProduct(astro_body_t body);
+_PREFIX double Astronomy_PlanetOrbitalPeriod(astro_body_t body);
 
-astro_state_vector_t Astronomy_LagrangePoint(
+_PREFIX astro_state_vector_t Astronomy_LagrangePoint(
     int point,
     astro_time_t time,
     astro_body_t major_body,
     astro_body_t minor_body
 );
 
-astro_state_vector_t Astronomy_LagrangePointFast(
+_PREFIX astro_state_vector_t Astronomy_LagrangePointFast(
     int point,
     astro_state_vector_t major_state,
     double major_mass,
@@ -1204,9 +1211,9 @@ astro_state_vector_t Astronomy_LagrangePointFast(
     double minor_mass
 );
 
-astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time);
+_PREFIX astro_jupiter_moons_t Astronomy_JupiterMoons(astro_time_t time);
 
-astro_equatorial_t Astronomy_Equator(
+_PREFIX astro_equatorial_t Astronomy_Equator(
     astro_body_t body,
     astro_time_t *time,
     astro_observer_t observer,
@@ -1214,79 +1221,79 @@ astro_equatorial_t Astronomy_Equator(
     astro_aberration_t aberration
 );
 
-astro_vector_t Astronomy_ObserverVector(
+_PREFIX astro_vector_t Astronomy_ObserverVector(
     astro_time_t *time,
     astro_observer_t observer,
     astro_equator_date_t equdate
 );
 
-astro_state_vector_t Astronomy_ObserverState(
+_PREFIX astro_state_vector_t Astronomy_ObserverState(
     astro_time_t *time,
     astro_observer_t observer,
     astro_equator_date_t equdate
 );
 
-astro_observer_t Astronomy_VectorObserver(astro_vector_t *vector, astro_equator_date_t equdate);
+_PREFIX astro_observer_t Astronomy_VectorObserver(astro_vector_t *vector, astro_equator_date_t equdate);
 
-double Astronomy_ObserverGravity(double latitude, double height);
+_PREFIX double Astronomy_ObserverGravity(double latitude, double height);
 
-astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
-astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t eqj);
-astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);
+_PREFIX astro_ecliptic_t Astronomy_SunPosition(astro_time_t time);
+_PREFIX astro_ecliptic_t Astronomy_Ecliptic(astro_vector_t eqj);
+_PREFIX astro_angle_result_t Astronomy_EclipticLongitude(astro_body_t body, astro_time_t time);
 
-astro_horizon_t Astronomy_Horizon(
+_PREFIX astro_horizon_t Astronomy_Horizon(
     astro_time_t *time,
     astro_observer_t observer,
     double ra,
     double dec,
     astro_refraction_t refraction);
 
-astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
-astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);
-astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startTime);
-astro_angle_result_t Astronomy_PairLongitude(astro_body_t body1, astro_body_t body2, astro_time_t time);
+_PREFIX astro_angle_result_t Astronomy_AngleFromSun(astro_body_t body, astro_time_t time);
+_PREFIX astro_elongation_t Astronomy_Elongation(astro_body_t body, astro_time_t time);
+_PREFIX astro_elongation_t Astronomy_SearchMaxElongation(astro_body_t body, astro_time_t startTime);
+_PREFIX astro_angle_result_t Astronomy_PairLongitude(astro_body_t body1, astro_body_t body2, astro_time_t time);
 
 /** @cond DOXYGEN_SKIP */
 /* Provided for backward compatibility. Newer code can use Astronomy_PairLongitude. */
 #define Astronomy_LongitudeFromSun(body,time)   (Astronomy_PairLongitude((body), BODY_SUN, (time)))
 /** @endcond */
 
-astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startTime);
-astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
-astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t startTime, double limitDays);
-astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t startTime);
-astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq);
-astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime);
-astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t prevEclipseTime);
-astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t startTime);
-astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevEclipseTime);
-astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(astro_time_t startTime, astro_observer_t observer);
-astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(astro_time_t prevEclipseTime, astro_observer_t observer);
-astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTime);
-astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransitTime);
-astro_node_event_t Astronomy_SearchMoonNode(astro_time_t startTime);
-astro_node_event_t Astronomy_NextMoonNode(astro_node_event_t prevNode);
+_PREFIX astro_search_result_t Astronomy_SearchRelativeLongitude(astro_body_t body, double targetRelLon, astro_time_t startTime);
+_PREFIX astro_angle_result_t Astronomy_MoonPhase(astro_time_t time);
+_PREFIX astro_search_result_t Astronomy_SearchMoonPhase(double targetLon, astro_time_t startTime, double limitDays);
+_PREFIX astro_moon_quarter_t Astronomy_SearchMoonQuarter(astro_time_t startTime);
+_PREFIX astro_moon_quarter_t Astronomy_NextMoonQuarter(astro_moon_quarter_t mq);
+_PREFIX astro_lunar_eclipse_t Astronomy_SearchLunarEclipse(astro_time_t startTime);
+_PREFIX astro_lunar_eclipse_t Astronomy_NextLunarEclipse(astro_time_t prevEclipseTime);
+_PREFIX astro_global_solar_eclipse_t Astronomy_SearchGlobalSolarEclipse(astro_time_t startTime);
+_PREFIX astro_global_solar_eclipse_t Astronomy_NextGlobalSolarEclipse(astro_time_t prevEclipseTime);
+_PREFIX astro_local_solar_eclipse_t Astronomy_SearchLocalSolarEclipse(astro_time_t startTime, astro_observer_t observer);
+_PREFIX astro_local_solar_eclipse_t Astronomy_NextLocalSolarEclipse(astro_time_t prevEclipseTime, astro_observer_t observer);
+_PREFIX astro_transit_t Astronomy_SearchTransit(astro_body_t body, astro_time_t startTime);
+_PREFIX astro_transit_t Astronomy_NextTransit(astro_body_t body, astro_time_t prevTransitTime);
+_PREFIX astro_node_event_t Astronomy_SearchMoonNode(astro_time_t startTime);
+_PREFIX astro_node_event_t Astronomy_NextMoonNode(astro_node_event_t prevNode);
 
-astro_search_result_t Astronomy_Search(
+_PREFIX astro_search_result_t Astronomy_Search(
     astro_search_func_t func,
     void *context,
     astro_time_t t1,
     astro_time_t t2,
     double dt_tolerance_seconds);
 
-astro_search_result_t Astronomy_SearchSunLongitude(
+_PREFIX astro_search_result_t Astronomy_SearchSunLongitude(
     double targetLon,
     astro_time_t startTime,
     double limitDays);
 
-astro_hour_angle_t Astronomy_SearchHourAngleEx(
+_PREFIX astro_hour_angle_t Astronomy_SearchHourAngleEx(
     astro_body_t body,
     astro_observer_t observer,
     double hourAngle,
     astro_time_t startTime,
     int direction);
 
-astro_func_result_t Astronomy_HourAngle(
+_PREFIX astro_func_result_t Astronomy_HourAngle(
     astro_body_t body,
     astro_time_t *time,
     astro_observer_t observer);
@@ -1302,7 +1309,7 @@ astro_func_result_t Astronomy_HourAngle(
 
 /** @endcond */
 
-astro_search_result_t Astronomy_SearchRiseSetEx(
+_PREFIX astro_search_result_t Astronomy_SearchRiseSetEx(
     astro_body_t body,
     astro_observer_t observer,
     astro_direction_t direction,
@@ -1310,7 +1317,7 @@ astro_search_result_t Astronomy_SearchRiseSetEx(
     double limitDays,
     double metersAboveGround);
 
-astro_search_result_t Astronomy_SearchAltitude(
+_PREFIX astro_search_result_t Astronomy_SearchAltitude(
     astro_body_t body,
     astro_observer_t observer,
     astro_direction_t direction,
@@ -1318,55 +1325,55 @@ astro_search_result_t Astronomy_SearchAltitude(
     double limitDays,
     double altitude);
 
-astro_atmosphere_t Astronomy_Atmosphere(double elevationMeters);
+_PREFIX astro_atmosphere_t Astronomy_Atmosphere(double elevationMeters);
 
-astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t *time);
+_PREFIX astro_axis_t Astronomy_RotationAxis(astro_body_t body, astro_time_t *time);
 
-astro_seasons_t Astronomy_Seasons(int year);
-astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
-astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startTime);
-astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);
-astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
-astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startTime);
-astro_apsis_t Astronomy_NextPlanetApsis(astro_body_t body, astro_apsis_t apsis);
+_PREFIX astro_seasons_t Astronomy_Seasons(int year);
+_PREFIX astro_illum_t Astronomy_Illumination(astro_body_t body, astro_time_t time);
+_PREFIX astro_illum_t Astronomy_SearchPeakMagnitude(astro_body_t body, astro_time_t startTime);
+_PREFIX astro_apsis_t Astronomy_SearchLunarApsis(astro_time_t startTime);
+_PREFIX astro_apsis_t Astronomy_NextLunarApsis(astro_apsis_t apsis);
+_PREFIX astro_apsis_t Astronomy_SearchPlanetApsis(astro_body_t body, astro_time_t startTime);
+_PREFIX astro_apsis_t Astronomy_NextPlanetApsis(astro_body_t body, astro_apsis_t apsis);
 
-astro_rotation_t Astronomy_IdentityMatrix(void);
-astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
-astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
-astro_rotation_t Astronomy_Pivot(astro_rotation_t rotation, int axis, double angle);
-astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t time);
-astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector);
-astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector);
-astro_vector_t Astronomy_VectorFromHorizon(astro_spherical_t sphere, astro_time_t time, astro_refraction_t refraction);
-astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction);
-astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t vector);
-astro_state_vector_t Astronomy_RotateState(astro_rotation_t rotation, astro_state_vector_t state);
+_PREFIX astro_rotation_t Astronomy_IdentityMatrix(void);
+_PREFIX astro_rotation_t Astronomy_InverseRotation(astro_rotation_t rotation);
+_PREFIX astro_rotation_t Astronomy_CombineRotation(astro_rotation_t a, astro_rotation_t b);
+_PREFIX astro_rotation_t Astronomy_Pivot(astro_rotation_t rotation, int axis, double angle);
+_PREFIX astro_vector_t Astronomy_VectorFromSphere(astro_spherical_t sphere, astro_time_t time);
+_PREFIX astro_spherical_t Astronomy_SphereFromVector(astro_vector_t vector);
+_PREFIX astro_equatorial_t Astronomy_EquatorFromVector(astro_vector_t vector);
+_PREFIX astro_vector_t Astronomy_VectorFromHorizon(astro_spherical_t sphere, astro_time_t time, astro_refraction_t refraction);
+_PREFIX astro_spherical_t Astronomy_HorizonFromVector(astro_vector_t vector, astro_refraction_t refraction);
+_PREFIX astro_vector_t Astronomy_RotateVector(astro_rotation_t rotation, astro_vector_t vector);
+_PREFIX astro_state_vector_t Astronomy_RotateState(astro_rotation_t rotation, astro_state_vector_t state);
 
-astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t *time);
-astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t *time);
-astro_rotation_t Astronomy_Rotation_EQD_ECT(astro_time_t *time);
-astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t *time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t *time);
-astro_rotation_t Astronomy_Rotation_EQJ_ECT(astro_time_t *time);
-astro_rotation_t Astronomy_Rotation_EQJ_ECL(void);
-astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t *time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t *time);
-astro_rotation_t Astronomy_Rotation_ECL_EQJ(void);
-astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t *time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_ECT_EQJ(astro_time_t *time);
-astro_rotation_t Astronomy_Rotation_ECT_EQD(astro_time_t *time);
-astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t *time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t *time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t *time, astro_observer_t observer);
-astro_rotation_t Astronomy_Rotation_EQJ_GAL(void);
-astro_rotation_t Astronomy_Rotation_GAL_EQJ(void);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQD_EQJ(astro_time_t *time);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQD_ECL(astro_time_t *time);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQD_ECT(astro_time_t *time);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQD_HOR(astro_time_t *time, astro_observer_t observer);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQJ_EQD(astro_time_t *time);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQJ_ECT(astro_time_t *time);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQJ_ECL(void);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQJ_HOR(astro_time_t *time, astro_observer_t observer);
+_PREFIX astro_rotation_t Astronomy_Rotation_ECL_EQD(astro_time_t *time);
+_PREFIX astro_rotation_t Astronomy_Rotation_ECL_EQJ(void);
+_PREFIX astro_rotation_t Astronomy_Rotation_ECL_HOR(astro_time_t *time, astro_observer_t observer);
+_PREFIX astro_rotation_t Astronomy_Rotation_ECT_EQJ(astro_time_t *time);
+_PREFIX astro_rotation_t Astronomy_Rotation_ECT_EQD(astro_time_t *time);
+_PREFIX astro_rotation_t Astronomy_Rotation_HOR_EQD(astro_time_t *time, astro_observer_t observer);
+_PREFIX astro_rotation_t Astronomy_Rotation_HOR_EQJ(astro_time_t *time, astro_observer_t observer);
+_PREFIX astro_rotation_t Astronomy_Rotation_HOR_ECL(astro_time_t *time, astro_observer_t observer);
+_PREFIX astro_rotation_t Astronomy_Rotation_EQJ_GAL(void);
+_PREFIX astro_rotation_t Astronomy_Rotation_GAL_EQJ(void);
 
-double Astronomy_Refraction(astro_refraction_t refraction, double altitude);
-double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude);
+_PREFIX double Astronomy_Refraction(astro_refraction_t refraction, double altitude);
+_PREFIX double Astronomy_InverseRefraction(astro_refraction_t refraction, double bent_altitude);
 
-astro_constellation_t Astronomy_Constellation(double ra, double dec);
+_PREFIX astro_constellation_t Astronomy_Constellation(double ra, double dec);
 
-astro_status_t Astronomy_GravSimInit(
+_PREFIX astro_status_t Astronomy_GravSimInit(
     astro_grav_sim_t **simOut,
     astro_body_t originBody,
     astro_time_t time,
@@ -1374,23 +1381,23 @@ astro_status_t Astronomy_GravSimInit(
     const astro_state_vector_t *bodyStateArray
 );
 
-astro_status_t Astronomy_GravSimUpdate(
+_PREFIX astro_status_t Astronomy_GravSimUpdate(
     astro_grav_sim_t *sim,
     astro_time_t time,
     int numBodies,
     astro_state_vector_t *bodyStateArray
 );
 
-astro_state_vector_t Astronomy_GravSimBodyState(
+_PREFIX astro_state_vector_t Astronomy_GravSimBodyState(
     astro_grav_sim_t *sim,
     astro_body_t body
 );
 
-astro_time_t Astronomy_GravSimTime(const astro_grav_sim_t *sim);
-int Astronomy_GravSimNumBodies(const astro_grav_sim_t *sim);
-astro_body_t Astronomy_GravSimOrigin(const astro_grav_sim_t *sim);
-void Astronomy_GravSimSwap(astro_grav_sim_t *sim);
-void Astronomy_GravSimFree(astro_grav_sim_t *sim);
+_PREFIX astro_time_t Astronomy_GravSimTime(const astro_grav_sim_t *sim);
+_PREFIX int Astronomy_GravSimNumBodies(const astro_grav_sim_t *sim);
+_PREFIX astro_body_t Astronomy_GravSimOrigin(const astro_grav_sim_t *sim);
+_PREFIX void Astronomy_GravSimSwap(astro_grav_sim_t *sim);
+_PREFIX void Astronomy_GravSimFree(astro_grav_sim_t *sim);
 
 /**
  * @brief A function for which to solve a light-travel time problem.
@@ -1404,20 +1411,20 @@ void Astronomy_GravSimFree(astro_grav_sim_t *sim);
  */
 typedef astro_vector_t (* astro_position_func_t) (void *context, astro_time_t time);
 
-astro_vector_t Astronomy_CorrectLightTravel(
+_PREFIX astro_vector_t Astronomy_CorrectLightTravel(
     void *context,
     astro_position_func_t func,
     astro_time_t time
 );
 
-astro_vector_t Astronomy_BackdatePosition(
+_PREFIX astro_vector_t Astronomy_BackdatePosition(
     astro_time_t time,
     astro_body_t observerBody,
     astro_body_t targetBody,
     astro_aberration_t aberration
 );
 
-astro_status_t Astronomy_DefineStar(
+_PREFIX astro_status_t Astronomy_DefineStar(
     astro_body_t body,
     double ra,
     double dec,
