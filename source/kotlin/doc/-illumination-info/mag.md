@@ -2,6 +2,6 @@
 
 # mag
 
-val [mag](mag.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [mag](mag.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)
 
 The visual magnitude of the body. Smaller values are brighter.

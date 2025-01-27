@@ -2,6 +2,6 @@
 
 # latitude
 
-val [latitude](latitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [latitude](latitude.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)
 
 The geographic latitude at the center of the peak eclipse shadow.

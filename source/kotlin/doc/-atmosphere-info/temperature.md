@@ -2,6 +2,6 @@
 
 # temperature
 
-val [temperature](temperature.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [temperature](temperature.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)
 
 Atmospheric temperature in kelvins.

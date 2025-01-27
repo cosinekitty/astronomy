@@ -2,7 +2,7 @@
 
 # Body
 
-enum [Body](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[Body](index.md)&gt; 
+enum [Body](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-enum/index.html)&lt;[Body](index.md)&gt; 
 
 The enumeration of celestial bodies supported by Astronomy Engine.
 

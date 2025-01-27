@@ -2,7 +2,7 @@
 
 # Aberration
 
-enum [Aberration](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[Aberration](index.md)&gt; 
+enum [Aberration](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-enum/index.html)&lt;[Aberration](index.md)&gt; 
 
 Aberration calculation options.
 

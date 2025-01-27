@@ -2,7 +2,7 @@
 
 # compareTo
 
-open operator override fun [compareTo](compare-to.md)(other: [Time](index.md)): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)
+open operator override fun [compareTo](compare-to.md)(other: [Time](index.md)): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html)
 
 Compares the chronological order of two Time values.
 

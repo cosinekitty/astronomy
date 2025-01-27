@@ -2,6 +2,6 @@
 
 # rot
 
-val [rot](rot.md): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)&lt;[DoubleArray](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double-array/index.html)&gt;
+val [rot](rot.md): [Array](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-array/index.html)&lt;[DoubleArray](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double-array/index.html)&gt;
 
 A 3x3 array of numbers to initialize the rotation matrix.

@@ -2,7 +2,7 @@
 
 # lagrangePointFast
 
-fun [lagrangePointFast](lagrange-point-fast.md)(point: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html), majorState: [StateVector](-state-vector/index.md), majorMass: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), minorState: [StateVector](-state-vector/index.md), minorMass: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [StateVector](-state-vector/index.md)
+fun [lagrangePointFast](lagrange-point-fast.md)(point: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html), majorState: [StateVector](-state-vector/index.md), majorMass: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html), minorState: [StateVector](-state-vector/index.md), minorMass: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)): [StateVector](-state-vector/index.md)
 
 Calculates one of the 5 Lagrange points from body masses and state vectors.
 

@@ -2,6 +2,6 @@
 
 # separation
 
-val [separation](separation.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [separation](separation.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)
 
 Angular separation in arcminutes between the centers of the Sun and the planet at time peak.

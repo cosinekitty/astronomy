@@ -2,7 +2,7 @@
 
 # globalSolarEclipsesAfter
 
-fun [globalSolarEclipsesAfter](global-solar-eclipses-after.md)(startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)&lt;[GlobalSolarEclipseInfo](-global-solar-eclipse-info/index.md)&gt;
+fun [globalSolarEclipsesAfter](global-solar-eclipses-after.md)(startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.sequences/-sequence/index.html)&lt;[GlobalSolarEclipseInfo](-global-solar-eclipse-info/index.md)&gt;
 
 Enumerates a series of consecutive global solar eclipses that occur after a given time.
 

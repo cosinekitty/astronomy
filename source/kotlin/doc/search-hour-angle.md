@@ -2,7 +2,7 @@
 
 # searchHourAngle
 
-fun [searchHourAngle](search-hour-angle.md)(body: [Body](-body/index.md), observer: [Observer](-observer/index.md), hourAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), startTime: [Time](-time/index.md), direction: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) = +1): [HourAngleInfo](-hour-angle-info/index.md)
+fun [searchHourAngle](search-hour-angle.md)(body: [Body](-body/index.md), observer: [Observer](-observer/index.md), hourAngle: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html), startTime: [Time](-time/index.md), direction: [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html) = +1): [HourAngleInfo](-hour-angle-info/index.md)
 
 Searches for the time when the center of a body reaches a specified hour angle as seen by an observer on the Earth.
 

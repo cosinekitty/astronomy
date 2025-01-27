@@ -2,6 +2,6 @@
 
 # z
 
-val [z](z.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+val [z](z.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)
 
 A Cartesian z-coordinate expressed in AU.

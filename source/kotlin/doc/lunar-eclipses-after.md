@@ -2,7 +2,7 @@
 
 # lunarEclipsesAfter
 
-fun [lunarEclipsesAfter](lunar-eclipses-after.md)(startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)&lt;[LunarEclipseInfo](-lunar-eclipse-info/index.md)&gt;
+fun [lunarEclipsesAfter](lunar-eclipses-after.md)(startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.sequences/-sequence/index.html)&lt;[LunarEclipseInfo](-lunar-eclipse-info/index.md)&gt;
 
 Enumerates a series of consecutive lunar eclipses that occur after a given time.
 

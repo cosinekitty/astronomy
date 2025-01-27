@@ -2,7 +2,7 @@
 
 # toString
 
-open override fun [toString](to-string.md)(): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)
+open override fun [toString](to-string.md)(): [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-string/index.html)
 
 Converts this Time to ISO 8601 format, expressed in UTC with millisecond resolution.
 

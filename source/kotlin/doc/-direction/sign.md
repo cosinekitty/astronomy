@@ -2,6 +2,6 @@
 
 # sign
 
-val [sign](sign.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)
+val [sign](sign.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html)
 
 A numeric value that is helpful in formulas involving rise/set. The sign is +1 for a rising event, or -1 for a setting event.

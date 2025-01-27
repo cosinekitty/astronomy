@@ -2,7 +2,7 @@
 
 # EclipseKind
 
-enum [EclipseKind](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[EclipseKind](index.md)&gt; 
+enum [EclipseKind](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-enum/index.html)&lt;[EclipseKind](index.md)&gt; 
 
 The different kinds of lunar/solar eclipses.
 

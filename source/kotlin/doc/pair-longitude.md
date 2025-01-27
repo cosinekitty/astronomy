@@ -2,7 +2,7 @@
 
 # pairLongitude
 
-fun [pairLongitude](pair-longitude.md)(body1: [Body](-body/index.md), body2: [Body](-body/index.md), time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [pairLongitude](pair-longitude.md)(body1: [Body](-body/index.md), body2: [Body](-body/index.md), time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)
 
 Returns one body's ecliptic longitude with respect to another, as seen from the Earth.
 

@@ -2,7 +2,7 @@
 
 # Visibility
 
-enum [Visibility](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)&lt;[Visibility](index.md)&gt; 
+enum [Visibility](index.md) : [Enum](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-enum/index.html)&lt;[Visibility](index.md)&gt; 
 
 Indicates whether a body (especially Mercury or Venus) is best seen in the morning or evening.
 

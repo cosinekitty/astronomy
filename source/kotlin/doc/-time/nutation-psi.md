@@ -2,4 +2,4 @@
 
 # nutationPsi
 
-fun [nutationPsi](nutation-psi.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [nutationPsi](nutation-psi.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)

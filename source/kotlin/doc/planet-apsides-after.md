@@ -2,7 +2,7 @@
 
 # planetApsidesAfter
 
-fun [planetApsidesAfter](planet-apsides-after.md)(body: [Body](-body/index.md), startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/-sequence/index.html)&lt;[ApsisInfo](-apsis-info/index.md)&gt;
+fun [planetApsidesAfter](planet-apsides-after.md)(body: [Body](-body/index.md), startTime: [Time](-time/index.md)): [Sequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.sequences/-sequence/index.html)&lt;[ApsisInfo](-apsis-info/index.md)&gt;
 
 Enumerates a series of consecutive planetary perihelia/aphelia events.
 

@@ -2,6 +2,6 @@
 
 # month
 
-val [month](month.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)
+val [month](month.md): [Int](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-int/index.html)
 
 The month value 1=January, ..., 12=December.

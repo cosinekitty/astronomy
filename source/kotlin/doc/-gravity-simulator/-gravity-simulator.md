@@ -2,7 +2,7 @@
 
 # GravitySimulator
 
-fun [GravitySimulator](-gravity-simulator.md)(originBody: [Body](../-body/index.md), time: [Time](../-time/index.md), bodyStates: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;)
+fun [GravitySimulator](-gravity-simulator.md)(originBody: [Body](../-body/index.md), time: [Time](../-time/index.md), bodyStates: [List](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.collections/-list/index.html)&lt;[StateVector](../-state-vector/index.md)&gt;)
 
 Creates a gravity simulation object.
 

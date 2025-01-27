@@ -2,4 +2,4 @@
 
 # nutationEps
 
-fun [nutationEps](nutation-eps.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [nutationEps](nutation-eps.md)(): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)

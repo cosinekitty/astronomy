@@ -2,7 +2,7 @@
 
 # hourAngle
 
-fun [hourAngle](hour-angle.md)(body: [Body](-body/index.md), time: [Time](-time/index.md), observer: [Observer](-observer/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [hourAngle](hour-angle.md)(body: [Body](-body/index.md), time: [Time](-time/index.md), observer: [Observer](-observer/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)
 
 Finds the hour angle of a body for a given observer and time.
 

@@ -2,7 +2,7 @@
 
 # atmosphere
 
-fun [atmosphere](atmosphere.md)(elevationMeters: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [AtmosphereInfo](-atmosphere-info/index.md)
+fun [atmosphere](atmosphere.md)(elevationMeters: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)): [AtmosphereInfo](-atmosphere-info/index.md)
 
 Calculates U.S. Standard Atmosphere (1976) variables as a function of elevation.
 

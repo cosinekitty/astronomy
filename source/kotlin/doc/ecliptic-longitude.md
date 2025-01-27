@@ -2,7 +2,7 @@
 
 # eclipticLongitude
 
-fun [eclipticLongitude](ecliptic-longitude.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)
+fun [eclipticLongitude](ecliptic-longitude.md)(body: [Body](-body/index.md), time: [Time](-time/index.md)): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)
 
 Calculates heliocentric ecliptic longitude of a body.
 

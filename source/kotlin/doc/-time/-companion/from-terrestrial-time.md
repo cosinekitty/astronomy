@@ -3,9 +3,9 @@
 # fromTerrestrialTime
 
 
-@[JvmStatic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-static/index.html)
+@[JvmStatic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html)
 
-fun [fromTerrestrialTime](from-terrestrial-time.md)(tt: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)): [Time](../index.md)
+fun [fromTerrestrialTime](from-terrestrial-time.md)(tt: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)): [Time](../index.md)
 
 Creates a Time object from a Terrestrial Time day value.
 

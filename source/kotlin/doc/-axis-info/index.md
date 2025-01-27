@@ -2,7 +2,7 @@
 
 # AxisInfo
 
-class [AxisInfo](index.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), spin: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), north: [Vector](../-vector/index.md))
+class [AxisInfo](index.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html), spin: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html), north: [Vector](../-vector/index.md))
 
 Information about a body's rotation axis at a given time.
 
@@ -20,13 +20,13 @@ The field north is a unit vector pointing in the direction of the body's north p
 
 | | |
 |---|---|
-| [AxisInfo](-axis-info.md)<br>fun [AxisInfo](-axis-info.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), spin: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html), north: [Vector](../-vector/index.md)) |
+| [AxisInfo](-axis-info.md)<br>fun [AxisInfo](-axis-info.md)(ra: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html), dec: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html), spin: [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html), north: [Vector](../-vector/index.md)) |
 
 ## Properties
 
 | Name | Summary |
 |---|---|
-| [dec](dec.md)<br>val [dec](dec.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The J2000 declination of the body's north pole direction, in degrees. |
+| [dec](dec.md)<br>val [dec](dec.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)<br>The J2000 declination of the body's north pole direction, in degrees. |
 | [north](north.md)<br>val [north](north.md): [Vector](../-vector/index.md)<br>A J2000 dimensionless unit vector pointing in the direction of the body's north pole. |
-| [ra](ra.md)<br>val [ra](ra.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The J2000 right ascension of the body's north pole direction, in sidereal hours. |
-| [spin](spin.md)<br>val [spin](spin.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>Rotation angle of the body's prime meridian, in degrees. |
+| [ra](ra.md)<br>val [ra](ra.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)<br>The J2000 right ascension of the body's north pole direction, in sidereal hours. |
+| [spin](spin.md)<br>val [spin](spin.md): [Double](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin-stdlib/kotlin/-double/index.html)<br>Rotation angle of the body's prime meridian, in degrees. |
