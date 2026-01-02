@@ -26,6 +26,7 @@
 */
 
 #include <math.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -4556,9 +4557,8 @@ static const body_state_t PlutoStateTable[] =
 ,   {   730000.0, {  4.243252837090, -30.118201690825, -10.707441231349}, { 3.1725847067411e-03,  1.6098461202270e-04, -9.0672150593868e-04} }
 };
 
-/* FIXFIXFIX - Using a global is not thread-safe. Either add thread-locks or change API to accept a cache pointer. */
 static body_segment_t *pluto_cache[PLUTO_NUM_STATES-1];
-
+static pthread_mutex_t pluto_cache_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int ClampIndex(double frac, int nsteps)
 {
@@ -4590,12 +4590,18 @@ static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double
     /* If so, return it. Otherwise, calculate it and return it. */
 
     *seg_index = ClampIndex((tt - PlutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1);
+
+    pthread_mutex_lock(&pluto_cache_mutex);
+
     if (cache[*seg_index] == NULL)
     {
         /* Allocate memory for the segment (about 11K each). */
         seg = cache[*seg_index] = (body_segment_t *) calloc(1, sizeof(body_segment_t));
         if (seg == NULL)
+        {
+            pthread_mutex_unlock(&pluto_cache_mutex);
             return ASTRO_OUT_OF_MEMORY;
+        }
 
         /* Calculate the segment. */
         /* Pick the pair of bracketing body states to fill the segment. */
@@ -4625,6 +4631,7 @@ static astro_status_t GetSegment(int *seg_index, body_segment_t *cache[], double
         }
     }
 
+    pthread_mutex_unlock(&pluto_cache_mutex);
     return ASTRO_SUCCESS;
 }
 
