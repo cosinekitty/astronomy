@@ -3655,7 +3655,7 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
             seg.add(sim.grav)
 
             // Simulate backwards from the upper time bound.
-            val reverse = buildList {
+            val reverse = buildList<BodyGravCalc> {
                 add(sim.grav)
 
                 steptt = sim.grav.tt
@@ -3666,7 +3666,7 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
                 }
 
                 add(seg[0])
-            }.reversed()
+            }.asReversed()
 
             // Fade-mix the two series so that there are no discontinuities.
             for (i in (PLUTO_NSTEPS-2) downTo 1) {
