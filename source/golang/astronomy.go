@@ -868,6 +868,262 @@ func RotateVector(rotation RotationMatrix, vector AstroVector) AstroVector {
 	}
 }
 
+// RotateState applies a rotation to a state vector, rotating both its position
+// and velocity components into another orientation system.
+func RotateState(rotation RotationMatrix, state StateVector) StateVector {
+	return StateVector{
+		X:  rotation.Rot[0][0]*state.X + rotation.Rot[1][0]*state.Y + rotation.Rot[2][0]*state.Z,
+		Y:  rotation.Rot[0][1]*state.X + rotation.Rot[1][1]*state.Y + rotation.Rot[2][1]*state.Z,
+		Z:  rotation.Rot[0][2]*state.X + rotation.Rot[1][2]*state.Y + rotation.Rot[2][2]*state.Z,
+		Vx: rotation.Rot[0][0]*state.Vx + rotation.Rot[1][0]*state.Vy + rotation.Rot[2][0]*state.Vz,
+		Vy: rotation.Rot[0][1]*state.Vx + rotation.Rot[1][1]*state.Vy + rotation.Rot[2][1]*state.Vz,
+		Vz: rotation.Rot[0][2]*state.Vx + rotation.Rot[1][2]*state.Vy + rotation.Rot[2][2]*state.Vz,
+		T:  state.T,
+	}
+}
+
+// IdentityMatrix returns a rotation matrix that has no effect on orientation.
+// It can be the starting point for building custom rotations with Pivot.
+func IdentityMatrix() RotationMatrix {
+	var r RotationMatrix
+	r.Rot[0][0] = 1.0
+	r.Rot[1][1] = 1.0
+	r.Rot[2][2] = 1.0
+	return r
+}
+
+// InverseRotation returns a rotation matrix that undoes another rotation.
+// Multiplying a vector by the inverse matrix is equivalent to rotating it
+// back through the opposite orientation.
+func InverseRotation(rotation RotationMatrix) RotationMatrix {
+	var inverse RotationMatrix
+	inverse.Rot[0][0] = rotation.Rot[0][0]
+	inverse.Rot[0][1] = rotation.Rot[1][0]
+	inverse.Rot[0][2] = rotation.Rot[2][0]
+	inverse.Rot[1][0] = rotation.Rot[0][1]
+	inverse.Rot[1][1] = rotation.Rot[1][1]
+	inverse.Rot[1][2] = rotation.Rot[2][1]
+	inverse.Rot[2][0] = rotation.Rot[0][2]
+	inverse.Rot[2][1] = rotation.Rot[1][2]
+	inverse.Rot[2][2] = rotation.Rot[2][2]
+	return inverse
+}
+
+// CombineRotation creates a rotation matrix that is equivalent to applying
+// rotation a first, followed by rotation b.
+func CombineRotation(a RotationMatrix, b RotationMatrix) RotationMatrix {
+	var c RotationMatrix
+	c.Rot[0][0] = b.Rot[0][0]*a.Rot[0][0] + b.Rot[1][0]*a.Rot[0][1] + b.Rot[2][0]*a.Rot[0][2]
+	c.Rot[1][0] = b.Rot[0][0]*a.Rot[1][0] + b.Rot[1][0]*a.Rot[1][1] + b.Rot[2][0]*a.Rot[1][2]
+	c.Rot[2][0] = b.Rot[0][0]*a.Rot[2][0] + b.Rot[1][0]*a.Rot[2][1] + b.Rot[2][0]*a.Rot[2][2]
+	c.Rot[0][1] = b.Rot[0][1]*a.Rot[0][0] + b.Rot[1][1]*a.Rot[0][1] + b.Rot[2][1]*a.Rot[0][2]
+	c.Rot[1][1] = b.Rot[0][1]*a.Rot[1][0] + b.Rot[1][1]*a.Rot[1][1] + b.Rot[2][1]*a.Rot[1][2]
+	c.Rot[2][1] = b.Rot[0][1]*a.Rot[2][0] + b.Rot[1][1]*a.Rot[2][1] + b.Rot[2][1]*a.Rot[2][2]
+	c.Rot[0][2] = b.Rot[0][2]*a.Rot[0][0] + b.Rot[1][2]*a.Rot[0][1] + b.Rot[2][2]*a.Rot[0][2]
+	c.Rot[1][2] = b.Rot[0][2]*a.Rot[1][0] + b.Rot[1][2]*a.Rot[1][1] + b.Rot[2][2]*a.Rot[1][2]
+	c.Rot[2][2] = b.Rot[0][2]*a.Rot[2][0] + b.Rot[1][2]*a.Rot[2][1] + b.Rot[2][2]*a.Rot[2][2]
+	return c
+}
+
+// Pivot re-orients a rotation matrix by rotating it by the given angle in
+// degrees around one of its coordinate axes (0=x, 1=y, 2=z).
+// Positive angles are counterclockwise as seen from the positive axis direction.
+func Pivot(rotation RotationMatrix, axis int, angle float64) (RotationMatrix, error) {
+	if axis < 0 || axis > 2 {
+		return RotationMatrix{}, errors.New("Invalid coordinate axis")
+	}
+	if !isfinite(angle) {
+		return RotationMatrix{}, errors.New("Invalid angle")
+	}
+	radians := RadiansFromDegrees(angle)
+	c := math.Cos(radians)
+	s := math.Sin(radians)
+
+	// Maintain the right-hand rule: pick the (i,j,k) axis order such that i x j = k.
+	i := (axis + 1) % 3
+	j := (axis + 2) % 3
+	k := axis
+
+	var p RotationMatrix
+	p.Rot[i][i] = c*rotation.Rot[i][i] - s*rotation.Rot[i][j]
+	p.Rot[i][j] = s*rotation.Rot[i][i] + c*rotation.Rot[i][j]
+	p.Rot[i][k] = rotation.Rot[i][k]
+
+	p.Rot[j][i] = c*rotation.Rot[j][i] - s*rotation.Rot[j][j]
+	p.Rot[j][j] = s*rotation.Rot[j][i] + c*rotation.Rot[j][j]
+	p.Rot[j][k] = rotation.Rot[j][k]
+
+	p.Rot[k][i] = c*rotation.Rot[k][i] - s*rotation.Rot[k][j]
+	p.Rot[k][j] = s*rotation.Rot[k][i] + c*rotation.Rot[k][j]
+	p.Rot[k][k] = rotation.Rot[k][k]
+
+	return p, nil
+}
+
+// VectorFromSphere converts spherical coordinates (latitude, longitude,
+// distance in AU) into a Cartesian vector at the given time.
+func VectorFromSphere(sphere Spherical, time AstroTime) AstroVector {
+	radlat := RadiansFromDegrees(sphere.Lat)
+	radlon := RadiansFromDegrees(sphere.Lon)
+	rcoslat := sphere.Dist * math.Cos(radlat)
+	return AstroVector{
+		X: rcoslat * math.Cos(radlon),
+		Y: rcoslat * math.Sin(radlon),
+		Z: sphere.Dist * math.Sin(radlat),
+		T: time,
+	}
+}
+
+// SphereFromVector converts a Cartesian vector into spherical coordinates.
+// Returns an error if the vector has zero length, which would make the
+// latitude and longitude indeterminate.
+func SphereFromVector(vector AstroVector) (Spherical, error) {
+	xyproj := vector.X*vector.X + vector.Y*vector.Y
+	dist := math.Sqrt(xyproj + vector.Z*vector.Z)
+	if xyproj == 0.0 {
+		if vector.Z == 0.0 {
+			return Spherical{}, errors.New("Zero-length vector has no spherical coordinates")
+		}
+		lat := -90.0
+		if vector.Z > 0.0 {
+			lat = +90.0
+		}
+		return Spherical{Lat: lat, Lon: 0.0, Dist: dist}, nil
+	}
+	lon := DegreesFromRadians(math.Atan2(vector.Y, vector.X))
+	if lon < 0.0 {
+		lon += 360.0
+	}
+	lat := DegreesFromRadians(math.Atan2(vector.Z, math.Sqrt(xyproj)))
+	return Spherical{Lat: lat, Lon: lon, Dist: dist}, nil
+}
+
+// EquatorFromVector converts an equatorial Cartesian vector into right
+// ascension (in sidereal hours), declination, and distance.
+func EquatorFromVector(vector AstroVector) (Equatorial, error) {
+	sphere, err := SphereFromVector(vector)
+	if err != nil {
+		return Equatorial{}, err
+	}
+	return Equatorial{
+		Ra:   sphere.Lon / 15.0, // convert degrees to sidereal hours
+		Dec:  sphere.Lat,
+		Dist: sphere.Dist,
+		Vec:  vector,
+	}, nil
+}
+
+// cubeRoot returns the real cube root of x.
+func cubeRoot(x float64) float64 {
+	return math.Cbrt(x)
+}
+
+// quadInterp fits a parabola through three equally spaced samples and finds
+// the root (t) nearest the middle sample, along with the derivative df/dt.
+// Returns ok=false when a unique in-bounds root cannot be found.
+func quadInterp(tm, dt, fa, fm, fb float64) (t float64, dfDt float64, ok bool) {
+	Q := (fb+fa)/2.0 - fm
+	R := (fb - fa) / 2.0
+	S := fm
+
+	var x float64
+	if Q == 0.0 {
+		// This is a line, not a parabola.
+		if R == 0.0 {
+			return 0.0, 0.0, false // a horizontal line; can't make progress
+		}
+		x = -S / R
+		if x < -1.0 || x > +1.0 {
+			return 0.0, 0.0, false // out of bounds
+		}
+	} else {
+		// This really is a parabola. Find roots x1, x2.
+		u := R*R - 4*Q*S
+		if u <= 0.0 {
+			return 0.0, 0.0, false // no real roots, or vertex tangent to axis
+		}
+		ru := math.Sqrt(u)
+		x1 := (-R + ru) / (2.0 * Q)
+		x2 := (-R - ru) / (2.0 * Q)
+		if -1.0 <= x1 && x1 <= +1.0 {
+			if -1.0 <= x2 && x2 <= +1.0 {
+				return 0.0, 0.0, false // two roots in bounds; not a unique crossing
+			}
+			x = x1
+		} else if -1.0 <= x2 && x2 <= +1.0 {
+			x = x2
+		} else {
+			return 0.0, 0.0, false // neither root is within bounds
+		}
+	}
+
+	return tm + x*dt, (2*Q*x + R) / dt, true
+}
+
+// longitudeOffset returns the value diff reduced into the half-open range
+// (-180, +180] degrees.
+func longitudeOffset(diff float64) float64 {
+	for diff <= -180.0 {
+		diff += 360.0
+	}
+	for diff > 180.0 {
+		diff -= 360.0
+	}
+	return diff
+}
+
+// normalizeLongitude returns the value lon reduced into the half-open range
+// [0, 360) degrees.
+func normalizeLongitude(lon float64) float64 {
+	for lon < 0.0 {
+		lon += 360.0
+	}
+	for lon >= 360.0 {
+		lon -= 360.0
+	}
+	return lon
+}
+
+// toggleAzimuthDirection converts an azimuth measured counterclockwise from
+// north into one measured clockwise from north, and vice versa.
+func toggleAzimuthDirection(az float64) float64 {
+	az = 360.0 - az
+	if az >= 360.0 {
+		az -= 360.0
+	} else if az < 0.0 {
+		az += 360.0
+	}
+	return az
+}
+
+// rotateEquatorialToEcliptic rotates a Cartesian position from the equatorial
+// frame to the ecliptic frame, using the given obliquity angle in radians.
+func rotateEquatorialToEcliptic(pos [3]float64, obliqRadians float64, time AstroTime) Ecliptic {
+	cosOb := math.Cos(obliqRadians)
+	sinOb := math.Sin(obliqRadians)
+
+	vec := AstroVector{
+		X: pos[0],
+		Y: pos[1]*cosOb + pos[2]*sinOb,
+		Z: -pos[1]*sinOb + pos[2]*cosOb,
+		T: time,
+	}
+
+	xyproj := math.Hypot(vec.X, vec.Y)
+	elon := 0.0
+	if xyproj > 0.0 {
+		elon = DegreesFromRadians(math.Atan2(vec.Y, vec.X))
+		if elon < 0.0 {
+			elon += 360.0
+		}
+	}
+	return Ecliptic{
+		Vec:  vec,
+		Elat: DegreesFromRadians(math.Atan2(vec.Z, xyproj)),
+		Elon: elon,
+	}
+}
+
 type addSolTerm struct {
 	coeffl float64
 	coeffs float64
