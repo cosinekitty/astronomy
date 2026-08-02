@@ -50,6 +50,28 @@ const (
 	asecToRad = 1.0 / arc                // radians per arcsecond
 )
 
+const (
+	cosObliq2000       = 0.9174821430670688 // cosine of the mean obliquity of the J2000 ecliptic
+	sinObliq2000       = 0.3977769691083922 // sine of the mean obliquity of the J2000 ecliptic
+	earthMoonMassRatio = 81.30056           // ratio of Earth mass to Moon mass
+	sunGM              = 0.2959122082855911e-03
+	mercuryGM          = 0.4912547451450812e-10
+	venusGM            = 0.7243452486162703e-09
+	earthGM            = 0.8887692390113509e-09
+	marsGM             = 0.9549535105779258e-10
+	jupiterGM          = 0.2825345909524226e-06
+	saturnGM           = 0.8459715185680659e-07
+	uranusGM           = 0.1292024916781969e-07
+	neptuneGM          = 0.1524358900784276e-07
+	plutoGM            = 0.2188699765425970e-11
+	moonGM             = earthGM / earthMoonMassRatio
+)
+
+const (
+	earthOrbitalPeriod   = 365.256 // days for Earth to orbit the Sun
+	neptuneOrbitalPeriod = 60189.0 // days for Neptune to orbit the Sun
+)
+
 func isfinite(x float64) bool {
 	return !math.IsInf(x, 0) && !math.IsNaN(x)
 }
@@ -441,29 +463,326 @@ type Spherical struct {
 type Body int
 
 const (
-	InvalidBody Body  = -1
-	Mercury           = 0 // The planet Mercury
-	Venus                 // The planet Venus
-	Earth                 // The planet Earth
-	Mars                  // The planet Mars
-	Jupiter               // The planet Jupiter
-	Saturn                // The planet Saturn
-	Uranus                // The planet Uranus
-	Neptune               // The planet Neptune
-	Pluto                 // The dwarf planet Pluto
-	Sun                   // The Sun
-	Moon                  // The Earth's Moon
-	Emb                   // The Earth/Moon Barycenter
-	Ssb                   // The Solar System Barycenter
-	Star1       = 101     // User-defined star #1
-	Star2                 // User-defined star #2
-	Star3                 // User-defined star #3
-	Star4                 // User-defined star #4
-	Star5                 // User-defined star #5
-	Star6                 // User-defined star #6
-	Star7                 // User-defined star #7
-	Star8                 // User-defined star #8
+	InvalidBody Body = -1
+	Mercury     Body = 0   // The planet Mercury
+	Venus            = 1   // The planet Venus
+	Earth            = 2   // The planet Earth
+	Mars             = 3   // The planet Mars
+	Jupiter          = 4   // The planet Jupiter
+	Saturn           = 5   // The planet Saturn
+	Uranus           = 6   // The planet Uranus
+	Neptune          = 7   // The planet Neptune
+	Pluto            = 8   // The dwarf planet Pluto
+	Sun              = 9   // The Sun
+	Moon             = 10  // The Earth's Moon
+	Emb              = 11  // The Earth/Moon Barycenter
+	Ssb              = 12  // The Solar System Barycenter
+	Star1            = 101 // User-defined star #1
+	Star2            = 102 // User-defined star #2
+	Star3            = 103 // User-defined star #3
+	Star4            = 104 // User-defined star #4
+	Star5            = 105 // User-defined star #5
+	Star6            = 106 // User-defined star #6
+	Star7            = 107 // User-defined star #7
+	Star8            = 108 // User-defined star #8
 )
+
+// stardef stores the equatorial coordinates and distance of a user-defined star.
+type stardef struct {
+	ra   float64 // right ascension in sidereal hours (J2000 equatorial coordinates)
+	dec  float64 // declination in degrees (J2000 equatorial coordinates)
+	dist float64 // distance from the Sun in astronomical units
+}
+
+// starTable holds the definitions of the eight user-defined stars (Star1..Star8).
+var starTable [8]stardef
+
+// getStarPointer returns the definition slot for a user-defined star, or nil
+// if the body is not one of the eight user-defined stars.
+func getStarPointer(body Body) *stardef {
+	if body >= Star1 && body <= Star8 {
+		return &starTable[body-Star1]
+	}
+	return nil
+}
+
+// userDefinedStar returns the definition of a user-defined star, or nil if
+// the body is not a star or has not been defined yet.
+func userDefinedStar(body Body) *stardef {
+	star := getStarPointer(body)
+	if star != nil && star.dist > 0.0 {
+		return star
+	}
+	return nil
+}
+
+// DefineStar assigns equatorial coordinates to a user-defined star.
+// Some Astronomy Engine functions allow their body parameter to be a
+// user-defined fixed point in the sky, loosely called a "star".
+// This function assigns a right ascension, declination, and distance to one of
+// the eight user-defined stars Star1 .. Star8. Stars are not valid until defined.
+func DefineStar(body Body, ra float64, dec float64, distanceLightYears float64) error {
+	star := getStarPointer(body)
+	if star == nil {
+		return errors.New("Invalid star body")
+	}
+	if !isfinite(ra) || ra < 0.0 || ra >= 24.0 {
+		return errors.New("Invalid right ascension for star")
+	}
+	if !isfinite(dec) || dec < -90.0 || dec > +90.0 {
+		return errors.New("Invalid declination for star")
+	}
+	if !isfinite(distanceLightYears) || distanceLightYears < 1.0 {
+		return errors.New("Invalid distance for star")
+	}
+	star.ra = ra
+	star.dec = dec
+	star.dist = distanceLightYears * AuPerLightYear
+	return nil
+}
+
+// BodyName returns the English name of the given body, or "" if invalid.
+func BodyName(body Body) string {
+	switch body {
+	case Mercury:
+		return "Mercury"
+	case Venus:
+		return "Venus"
+	case Earth:
+		return "Earth"
+	case Mars:
+		return "Mars"
+	case Jupiter:
+		return "Jupiter"
+	case Saturn:
+		return "Saturn"
+	case Uranus:
+		return "Uranus"
+	case Neptune:
+		return "Neptune"
+	case Pluto:
+		return "Pluto"
+	case Sun:
+		return "Sun"
+	case Moon:
+		return "Moon"
+	case Emb:
+		return "EMB"
+	case Ssb:
+		return "SSB"
+	default:
+		return ""
+	}
+}
+
+// BodyCode returns the Body value corresponding to the given English name
+// (case-sensitive), or InvalidBody if the name is not recognized.
+func BodyCode(name string) Body {
+	switch name {
+	case "Mercury":
+		return Mercury
+	case "Venus":
+		return Venus
+	case "Earth":
+		return Earth
+	case "Mars":
+		return Mars
+	case "Jupiter":
+		return Jupiter
+	case "Saturn":
+		return Saturn
+	case "Uranus":
+		return Uranus
+	case "Neptune":
+		return Neptune
+	case "Pluto":
+		return Pluto
+	case "Sun":
+		return Sun
+	case "Moon":
+		return Moon
+	case "EMB":
+		return Emb
+	case "SSB":
+		return Ssb
+	default:
+		return InvalidBody
+	}
+}
+
+// isSuperiorPlanet returns true for planets that are farther from the Sun
+// than the Earth is.
+func isSuperiorPlanet(body Body) bool {
+	switch body {
+	case Mars, Jupiter, Saturn, Uranus, Neptune, Pluto:
+		return true
+	default:
+		return false
+	}
+}
+
+// PlanetOrbitalPeriod returns the average number of days it takes for a planet
+// to orbit the Sun. Returns 0.0 if body is not one of the nine planets.
+func PlanetOrbitalPeriod(body Body) float64 {
+	switch body {
+	case Mercury:
+		return 87.969
+	case Venus:
+		return 224.701
+	case Earth:
+		return earthOrbitalPeriod
+	case Mars:
+		return 686.980
+	case Jupiter:
+		return 4332.589
+	case Saturn:
+		return 10759.22
+	case Uranus:
+		return 30685.4
+	case Neptune:
+		return neptuneOrbitalPeriod
+	case Pluto:
+		return 90560.0
+	default:
+		return 0.0 // invalid body
+	}
+}
+
+// MassProduct returns the product of the body's mass and the gravitational
+// constant G, expressed in astronomical units, days, and solar masses.
+// Returns 0.0 for invalid bodies and for the Earth/Moon barycenter's
+// component bodies.
+func MassProduct(body Body) float64 {
+	switch body {
+	case Sun:
+		return sunGM
+	case Mercury:
+		return mercuryGM
+	case Venus:
+		return venusGM
+	case Earth:
+		return earthGM
+	case Moon:
+		return moonGM
+	case Emb:
+		return earthGM + moonGM
+	case Mars:
+		return marsGM
+	case Jupiter:
+		return jupiterGM
+	case Saturn:
+		return saturnGM
+	case Uranus:
+		return uranusGM
+	case Neptune:
+		return neptuneGM
+	case Pluto:
+		return plutoGM
+	default:
+		return 0.0 // invalid body
+	}
+}
+
+// bodyState holds the position and velocity of a body at a moment of time.
+type bodyState struct {
+	tt float64     // Terrestrial Time in J2000 days
+	r  terseVector // position [au]
+	v  terseVector // velocity [au/day]
+}
+
+// exportState converts a terse bodyState into a full StateVector at the given time.
+func exportState(terse bodyState, time AstroTime) StateVector {
+	return StateVector{
+		X:  terse.r.X,
+		Y:  terse.r.Y,
+		Z:  terse.r.Z,
+		Vx: terse.v.X,
+		Vy: terse.v.Y,
+		Vz: terse.v.Z,
+		T:  time,
+	}
+}
+
+// updatePosition advances a position by dt days using the current velocity and
+// acceleration, integrating acceleration by the midpoint method.
+func updatePosition(dt float64, r terseVector, v terseVector, a terseVector) terseVector {
+	r.X += (v.X + a.X*dt/2) * dt
+	r.Y += (v.Y + a.Y*dt/2) * dt
+	r.Z += (v.Z + a.Z*dt/2) * dt
+	return r
+}
+
+// updateVelocity advances a velocity by dt days using the given acceleration.
+func updateVelocity(dt float64, v terseVector, a terseVector) terseVector {
+	v.X += dt * a.X
+	v.Y += dt * a.Y
+	v.Z += dt * a.Z
+	return v
+}
+
+// Rotation_EQJ_ECL returns a rotation matrix that converts EQJ (J2000 mean
+// equator) coordinates to ECL (J2000 mean ecliptic) coordinates.
+func Rotation_EQJ_ECL() RotationMatrix {
+	var r RotationMatrix
+	r.Rot[0][0] = 1.0
+	r.Rot[0][1] = 0.0
+	r.Rot[0][2] = 0.0
+	r.Rot[1][0] = 0.0
+	r.Rot[1][1] = +cosObliq2000
+	r.Rot[1][2] = -sinObliq2000
+	r.Rot[2][0] = 0.0
+	r.Rot[2][1] = +sinObliq2000
+	r.Rot[2][2] = +cosObliq2000
+	return r
+}
+
+// Rotation_ECL_EQJ returns a rotation matrix that converts ECL (J2000 mean
+// ecliptic) coordinates to EQJ (J2000 mean equator) coordinates.
+func Rotation_ECL_EQJ() RotationMatrix {
+	var r RotationMatrix
+	r.Rot[0][0] = 1.0
+	r.Rot[0][1] = 0.0
+	r.Rot[0][2] = 0.0
+	r.Rot[1][0] = 0.0
+	r.Rot[1][1] = +cosObliq2000
+	r.Rot[1][2] = +sinObliq2000
+	r.Rot[2][0] = 0.0
+	r.Rot[2][1] = -sinObliq2000
+	r.Rot[2][2] = +cosObliq2000
+	return r
+}
+
+// Rotation_EQJ_GAL returns a rotation matrix that converts EQJ (J2000 mean
+// equator) coordinates to GAL (galactic, IAU 1958) coordinates.
+func Rotation_EQJ_GAL() RotationMatrix {
+	var rot RotationMatrix
+	rot.Rot[0][0] = -0.0548624779711344
+	rot.Rot[0][1] = +0.4941095946388765
+	rot.Rot[0][2] = -0.8676668813529025
+	rot.Rot[1][0] = -0.8734572784246782
+	rot.Rot[1][1] = -0.4447938112296831
+	rot.Rot[1][2] = -0.1980677870294097
+	rot.Rot[2][0] = -0.4838000529948520
+	rot.Rot[2][1] = +0.7470034631630423
+	rot.Rot[2][2] = +0.4559861124470794
+	return rot
+}
+
+// Rotation_GAL_EQJ returns a rotation matrix that converts GAL (galactic,
+// IAU 1958) coordinates to EQJ (J2000 mean equator) coordinates.
+func Rotation_GAL_EQJ() RotationMatrix {
+	var rot RotationMatrix
+	rot.Rot[0][0] = -0.0548624779711344
+	rot.Rot[0][1] = -0.8734572784246782
+	rot.Rot[0][2] = -0.4838000529948520
+	rot.Rot[1][0] = +0.4941095946388765
+	rot.Rot[1][1] = -0.4447938112296831
+	rot.Rot[1][2] = +0.7470034631630423
+	rot.Rot[2][0] = -0.8676668813529025
+	rot.Rot[2][1] = -0.1980677870294097
+	rot.Rot[2][2] = +0.4559861124470794
+	return rot
+}
 
 // The location of a point on or near the surface of the Earth
 type Observer struct {
