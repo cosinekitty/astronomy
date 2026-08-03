@@ -1443,6 +1443,119 @@ func rotateEquatorialToEcliptic(pos [3]float64, obliqRadians float64, time Astro
 	}
 }
 
+// vsopTerm is a single trigonometric term in a VSOP87 series.
+type vsopTerm struct {
+	amp float64 // amplitude
+	pha float64 // phase
+	fre float64 // frequency
+}
+
+// vsopSeries is one power-of-t series of vsopTerm values.
+type vsopSeries struct {
+	nterms int
+	term   []vsopTerm
+}
+
+// vsopFormula holds all the power-of-t series for one spherical coordinate.
+type vsopFormula struct {
+	nseries int
+	series  []vsopSeries
+}
+
+// vsopModel holds the longitude, latitude, and radius formulas for one body.
+type vsopModel struct {
+	formula [3]vsopFormula
+}
+
+const (
+	vsopLonIndex = 0 // index of the longitude formula inside vsopModel
+	vsopLatIndex = 1 // index of the latitude formula inside vsopModel
+	vsopRadIndex = 2 // index of the radius formula inside vsopModel
+)
+
+const daysPerMillennium = 365250.0
+
+// vsopFormulaCalc evaluates the VSOP87B trigonometric series for one body and
+// returns ecliptic spherical coordinates: [longitude, latitude, radius] in
+// radians and astronomical units. The time t is expressed in thousands of
+// Julian years (millennia) since J2000.
+func vsopFormulaCalc(model *vsopModel, t float64) [3]float64 {
+	var sphere [3]float64
+	for k := 0; k < 3; k++ {
+		tpower := 1.0
+		formula := &model.formula[k]
+		sphere[k] = 0.0
+		for s := 0; s < formula.nseries; s++ {
+			sum := 0.0
+			series := &formula.series[s]
+			for i := 0; i < series.nterms; i++ {
+				term := &series.term[i]
+				sum += term.amp * math.Cos(term.pha+(t*term.fre))
+			}
+			incr := tpower * sum
+			if k == vsopLonIndex {
+				incr = math.Mod(incr, 2.0*math.Pi) // improve precision for longitudes, which can be hundreds of radians
+			}
+			sphere[k] += incr
+			tpower *= t
+		}
+	}
+	return sphere
+}
+
+// vsopDerivCalc evaluates the time derivatives of the VSOP87B series and
+// returns d(lon)/dt, d(lat)/dt, dr/dt in units per millennium.
+func vsopDerivCalc(model *vsopModel, t float64) [3]float64 {
+	var deriv [3]float64
+	for k := 0; k < 3; k++ {
+		tpower := 1.0
+		dpower := 0.0
+		formula := &model.formula[k]
+		deriv[k] = 0.0
+		for s := 0; s < formula.nseries; s++ {
+			sinSum := 0.0
+			cosSum := 0.0
+			series := &formula.series[s]
+			for i := 0; i < series.nterms; i++ {
+				term := &series.term[i]
+				angle := term.pha + (t * term.fre)
+				sinSum += term.amp * term.fre * math.Sin(angle)
+				if s > 0 {
+					cosSum += term.amp * math.Cos(angle)
+				}
+			}
+			deriv[k] += (float64(s) * dpower * cosSum) - (tpower * sinSum)
+			dpower = tpower
+			tpower *= t
+		}
+	}
+	return deriv
+}
+
+// vsopRotate converts a VSOP87A ecliptic Cartesian vector into an equatorial
+// Cartesian vector, applying the FK5 correction to the J2000 mean equator.
+func vsopRotate(ecl [3]float64) terseVector {
+	//     X        +1.000000000000  +0.000000440360  -0.000000190919   X
+	//     Y     =  -0.000000479966  +0.917482137087  -0.397776982902   Y
+	//     Z FK5     0.000000000000  +0.397776982902  +0.917482137087   Z VSOP87A
+	return terseVector{
+		X: ecl[0] + 0.000000440360*ecl[1] - 0.000000190919*ecl[2],
+		Y: -0.000000479966*ecl[0] + 0.917482137087*ecl[1] - 0.397776982902*ecl[2],
+		Z: 0.397776982902*ecl[1] + 0.917482137087*ecl[2],
+	}
+}
+
+// vsopSphereToRect converts ecliptic spherical coordinates (longitude and
+// latitude in radians, radius in AU) into ecliptic Cartesian coordinates.
+func vsopSphereToRect(lon float64, lat float64, radius float64) [3]float64 {
+	rCosLat := radius * math.Cos(lat)
+	return [3]float64{
+		rCosLat * math.Cos(lon),
+		rCosLat * math.Sin(lon),
+		radius * math.Sin(lat),
+	}
+}
+
 type addSolTerm struct {
 	coeffl float64
 	coeffs float64
@@ -1675,6 +1788,26 @@ func GeoMoon(time AstroTime) AstroVector {
 }
 
 //--- Generated code begins here ------------------------------------------------------------------
+
+//$ASTRO_GO_VSOP(Mercury)
+//$ASTRO_GO_VSOP(Venus)
+//$ASTRO_GO_VSOP(Earth)
+//$ASTRO_GO_VSOP(Mars)
+//$ASTRO_GO_VSOP(Jupiter)
+//$ASTRO_GO_VSOP(Saturn)
+//$ASTRO_GO_VSOP(Uranus)
+//$ASTRO_GO_VSOP(Neptune)
+
+var vsop = []vsopModel{
+	{[3]vsopFormula{{len(vsopLonMercury), vsopLonMercury}, {len(vsopLatMercury), vsopLatMercury}, {len(vsopRadMercury), vsopRadMercury}}},
+	{[3]vsopFormula{{len(vsopLonVenus), vsopLonVenus}, {len(vsopLatVenus), vsopLatVenus}, {len(vsopRadVenus), vsopRadVenus}}},
+	{[3]vsopFormula{{len(vsopLonEarth), vsopLonEarth}, {len(vsopLatEarth), vsopLatEarth}, {len(vsopRadEarth), vsopRadEarth}}},
+	{[3]vsopFormula{{len(vsopLonMars), vsopLonMars}, {len(vsopLatMars), vsopLatMars}, {len(vsopRadMars), vsopRadMars}}},
+	{[3]vsopFormula{{len(vsopLonJupiter), vsopLonJupiter}, {len(vsopLatJupiter), vsopLatJupiter}, {len(vsopRadJupiter), vsopRadJupiter}}},
+	{[3]vsopFormula{{len(vsopLonSaturn), vsopLonSaturn}, {len(vsopLatSaturn), vsopLatSaturn}, {len(vsopRadSaturn), vsopRadSaturn}}},
+	{[3]vsopFormula{{len(vsopLonUranus), vsopLonUranus}, {len(vsopLatUranus), vsopLatUranus}, {len(vsopRadUranus), vsopRadUranus}}},
+	{[3]vsopFormula{{len(vsopLonNeptune), vsopLonNeptune}, {len(vsopLatNeptune), vsopLatNeptune}, {len(vsopRadNeptune), vsopRadNeptune}}},
+}
 
 //$ASTRO_CONSTEL()
 
