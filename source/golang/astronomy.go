@@ -68,8 +68,9 @@ const (
 )
 
 const (
-	earthOrbitalPeriod   = 365.256 // days for Earth to orbit the Sun
-	neptuneOrbitalPeriod = 60189.0 // days for Neptune to orbit the Sun
+	earthOrbitalPeriod      = 365.256 // days for Earth to orbit the Sun
+	neptuneOrbitalPeriod    = 60189.0 // days for Neptune to orbit the Sun
+	solarDaysPerSiderealDay = 0.9972695717592592
 )
 
 func isfinite(x float64) bool {
@@ -1554,6 +1555,353 @@ func vsopSphereToRect(lon float64, lat float64, radius float64) [3]float64 {
 		rCosLat * math.Sin(lon),
 		radius * math.Sin(lat),
 	}
+}
+
+// RefractionAngle returns the angular adjustment in degrees to add to the given
+// altitude angle to correct for atmospheric refraction. The refraction model
+// is selected by the refraction parameter: NoRefraction (or an invalid value)
+// returns 0, while NormalRefraction and JplHorizonsRefraction apply the
+// Saemundsson model. Altitudes outside [-90, +90] are not corrected.
+func RefractionAngle(refraction Refraction, altitude float64) float64 {
+	var refr, hd float64
+	if altitude < -90.0 || altitude > +90.0 {
+		return 0.0 // no attempt to correct an invalid altitude
+	}
+	if refraction == NormalRefraction || refraction == JplHorizonsRefraction {
+		hd = altitude
+		if hd < -1.0 {
+			hd = -1.0
+		}
+		refr = (1.02 / math.Tan((hd+10.3/(hd+5.11))*RadiansFromDegrees(1.0))) / 60.0
+		if refraction == NormalRefraction && altitude < -1.0 {
+			// In "normal" mode we gradually reduce refraction toward the nadir
+			// so that we never get an altitude angle less than -90 degrees.
+			refr *= (altitude + 90.0) / 89.0
+		}
+	} else {
+		refr = 0.0
+	}
+	return refr
+}
+
+// eclipseKind classifies an eclipse as total, annular, partial, or penumbral.
+type EclipseKind int
+
+const (
+	EclipseKindTotal     EclipseKind = iota // the Moon completely blocks the Sun (total solar eclipse)
+	EclipseKindAnnular                      // the Moon is entirely inside the Sun's disc (annular solar eclipse)
+	EclipseKindPartial                      // the Moon only partially covers the Sun
+	EclipseKindPenumbral                    // the Moon passes only through the Earth's penumbra
+)
+
+// eclipseKindFromUmbra classifies a solar eclipse by the size of the umbra
+// radius: positive means the umbra reaches the ground (total), otherwise
+// the eclipse is annular.
+func eclipseKindFromUmbra(k float64) EclipseKind {
+	if k > 0.014 {
+		return EclipseKindTotal
+	}
+	return EclipseKindAnnular
+}
+
+// obscuration returns the fractional area of the first disc that is covered
+// by the second disc. a and b are the radii of the two discs, and c is the
+// distance between their centers, all expressed in the same units.
+func obscuration(a, b, c float64) float64 {
+	if a <= 0.0 || b <= 0.0 {
+		return 0.0 // invalid radius
+	}
+	if c < 0.0 {
+		return 0.0 // invalid distance between centers
+	}
+	if c >= a+b {
+		return 0.0 // the discs are too far apart to overlap
+	}
+	if c == 0.0 {
+		// The discs have a common center: one disc is inside the other.
+		if a <= b {
+			return 1.0
+		}
+		return (b * b) / (a * a)
+	}
+	x := (a*a - b*b + c*c) / (2 * c)
+	radicand := a*a - x*x
+	if radicand <= 0.0 {
+		// The circumferences do not intersect or are tangent; one disc is inside the other.
+		if a <= b {
+			return 1.0
+		}
+		return (b * b) / (a * a)
+	}
+	y := math.Sqrt(radicand)
+	// The discs overlap in a pair of lens-shaped areas.
+	lens1 := a*a*math.Acos(x/a) - x*y
+	lens2 := b*b*math.Acos((c-x)/b) - (c-x)*y
+	return (lens1 + lens2) / (math.Pi * a * a)
+}
+
+// horizonDipAngle calculates the angle in degrees that the visible horizon
+// dips below the observer's horizontal plane, due to the curvature of the
+// Earth and the observer's height above the ground.
+func horizonDipAngle(observer Observer, metersAboveGround float64) float64 {
+	phi := RadiansFromDegrees(observer.Latitude)
+	sinphi := math.Sin(phi)
+	cosphi := math.Cos(phi)
+	c := 1.0 / math.Hypot(cosphi, sinphi*EarthFlattening)
+	s := c * (EarthFlattening * EarthFlattening)
+	htKm := (observer.Height - metersAboveGround) / 1000.0
+	ach := EarthEquatorialRadiusKm*c + htKm
+	ash := EarthEquatorialRadiusKm*s + htKm
+	radiusM := 1000.0 * math.Hypot(ach*cosphi, ash*sinphi)
+
+	// Correct for refraction of a ray of light tangent to the Earth's surface.
+	k := 0.175 * math.Pow(1.0-(6.5e-3/283.15)*(observer.Height-(2.0/3.0)*metersAboveGround), 3.256)
+	return DegreesFromRadians(-(math.Sqrt(2*(1-k)*metersAboveGround/radiusM) / (1 - k)))
+}
+
+// ObserverGravity returns the acceleration of gravity in m/s^2 at the given
+// latitude in degrees and height above sea level in meters.
+func ObserverGravity(latitude float64, height float64) float64 {
+	s := math.Sin(RadiansFromDegrees(latitude))
+	s2 := s * s
+	g0 := 9.7803253359 * (1.0 + 0.00193185265241*s2) / math.Sqrt(1.0-0.00669437999013*s2)
+	return g0 * (1.0 - (3.15704e-07-2.10269e-09*s2)*height + 7.37452e-14*height*height)
+}
+
+// maxAltitudeSlope returns the maximum possible rate of change in degrees per
+// day of the body's altitude as seen by an observer at the given latitude.
+func maxAltitudeSlope(body Body, latitude float64) (float64, error) {
+	if !isfinite(latitude) || latitude < -90.0 || latitude > +90.0 {
+		return math.NaN(), errors.New("Invalid latitude")
+	}
+	var derivRa, derivDec float64
+	switch body {
+	case Moon:
+		derivRa = +4.5
+		derivDec = +8.2
+	case Sun:
+		derivRa = +0.8
+		derivDec = +0.5
+	case Mercury:
+		derivRa = -1.6
+		derivDec = +1.0
+	case Venus:
+		derivRa = -0.8
+		derivDec = +0.6
+	case Mars:
+		derivRa = -0.5
+		derivDec = +0.4
+	case Jupiter, Saturn, Uranus, Neptune, Pluto:
+		derivRa = -0.2
+		derivDec = +0.2
+	case Earth:
+		return math.NaN(), errors.New("Earth not allowed for altitude search")
+	default:
+		if userDefinedStar(body) != nil {
+			// Parallax and aberration are tiny for a star; use a generous buffer.
+			derivRa = -0.008
+			derivDec = +0.008
+			break
+		}
+		return math.NaN(), errors.New("Invalid body for altitude search")
+	}
+	latrad := RadiansFromDegrees(latitude)
+	value := math.Abs(((360.0/solarDaysPerSiderealDay)-derivRa)*math.Cos(latrad)) + math.Abs(derivDec*math.Sin(latrad))
+	return value, nil
+}
+
+// altitudeContext holds the state needed to evaluate the altitude of a body
+// relative to a target altitude, used by the rise/set search algorithms.
+type altitudeContext struct {
+	body           Body
+	direction      int
+	observer       Observer
+	bodyRadiusAu   float64
+	targetAltitude float64
+}
+
+// ascent holds a time interval [tx, ty] within which the altitude-difference
+// function rises from non-positive to positive.
+type ascent struct {
+	tx AstroTime
+	ty AstroTime
+	ax float64
+	ay float64
+}
+
+// findAscent searches the interval [t1, t2] for a sub-interval where the
+// altitude-difference function (evaluated by altDiff) rises from non-positive
+// to positive. Returns ok=false when no such ascent exists, and a non-nil
+// error for actual failures.
+func findAscent(depth int, maxDerivAlt float64, t1, t2 AstroTime, a1, a2 float64, altDiff func(time AstroTime) (float64, error)) (ascent, bool, error) {
+	if a1 < 0.0 && a2 >= 0.0 {
+		// Trivial success: the endpoints already rise through zero.
+		return ascent{tx: t1, ty: t2, ax: a1, ay: a2}, true, nil
+	}
+	if a1 >= 0.0 && a2 < 0.0 {
+		// Trivial failure: assume the Nyquist condition prevents an ascent.
+		return ascent{}, false, nil
+	}
+	if depth > 17 {
+		// Safety valve: do not allow unlimited recursion.
+		return ascent{}, false, errors.New("Maximum recursion depth exceeded in rise/set search")
+	}
+	dt := (t2.Ut - t1.Ut) / 2
+	if dt*86400.0 < 1.0 {
+		return ascent{}, false, nil
+	}
+	absA1 := math.Abs(a1)
+	absA2 := math.Abs(a2)
+	da := absA1
+	if absA2 < absA1 {
+		da = absA2
+	}
+	if da > maxDerivAlt*(dt/2) {
+		// Prune: the altitude cannot change fast enough to reach zero.
+		return ascent{}, false, nil
+	}
+	tm := TimeFromUniversalDays((t1.Ut + t2.Ut) / 2)
+	altValue, err := altDiff(tm)
+	if err != nil {
+		return ascent{}, false, err
+	}
+	// Recurse into the left interval, then the right.
+	left, ok, err := findAscent(depth+1, maxDerivAlt, t1, tm, a1, altValue, altDiff)
+	if err != nil {
+		return ascent{}, false, err
+	}
+	if !ok {
+		return findAscent(depth+1, maxDerivAlt, tm, t2, altValue, a2, altDiff)
+	}
+	return left, true, nil
+}
+
+// moonMagnitude estimates the visual magnitude of the Moon from its phase
+// angle and its heliocentric and geocentric distances.
+func moonMagnitude(phase float64, helioDist float64, geoDist float64) float64 {
+	rad := RadiansFromDegrees(phase)
+	rad2 := rad * rad
+	rad4 := rad2 * rad2
+	mag := -12.717 + 1.49*math.Abs(rad) + 0.0431*rad4
+	moonMeanDistanceAu := 385000.6 / KmPerAu
+	geoAu := geoDist / moonMeanDistanceAu
+	mag += 5 * math.Log10(helioDist*geoAu)
+	return mag
+}
+
+// visualMagnitude estimates the visual magnitude of a planet from its phase
+// angle and its heliocentric and geocentric distances.
+func visualMagnitude(body Body, phase float64, helioDist float64, geoDist float64) (float64, error) {
+	// For Mercury and Venus, see:  https://iopscience.iop.org/article/10.1086/430212
+	var c0, c1, c2, c3 float64
+	switch body {
+	case Mercury:
+		c0, c1, c2, c3 = -0.60, +4.98, -4.88, +3.02
+	case Venus:
+		if phase < 163.6 {
+			c0, c1, c2, c3 = -4.47, +1.03, +0.57, +0.13
+		} else {
+			c0, c1 = 0.98, -1.02
+		}
+	case Mars:
+		c0, c1 = -1.52, +1.60
+	case Jupiter:
+		c0, c1 = -9.40, +0.50
+	case Uranus:
+		c0, c1 = -7.19, +0.25
+	case Neptune:
+		c0 = -6.87
+	case Pluto:
+		c0, c1 = -1.00, +4.00
+	default:
+		return 0.0, errors.New("Invalid body for visual magnitude")
+	}
+	x := phase / 100
+	mag := c0 + x*(c1+x*(c2+x*c3))
+	mag += 5.0 * math.Log10(helioDist*geoDist)
+	return mag, nil
+}
+
+// jupiterMoonElem2pv converts a set of orbital elements of a Galilean moon
+// into a Cartesian state vector, translated from the FORTRAN routine ELEM2PV
+// of the L1.2 ephemeris model.
+func jupiterMoonElem2pv(time AstroTime, mu float64, elem [6]float64) StateVector {
+	a := elem[0]
+	al := elem[1]
+	k := elem[2]
+	h := elem[3]
+	q := elem[4]
+	p := elem[5]
+
+	an := math.Sqrt(mu / (a * a * a))
+
+	ee := al + k*math.Sin(al) - h*math.Cos(al)
+	for {
+		ce := math.Cos(ee)
+		se := math.Sin(ee)
+		de := (al - ee + k*se - h*ce) / (1.0 - k*ce - h*se)
+		ee += de
+		if math.Abs(de) < 1.0e-12 {
+			break
+		}
+	}
+
+	ce := math.Cos(ee)
+	se := math.Sin(ee)
+	dle := h*ce - k*se
+	rsam1 := -k*ce - h*se
+	asr := 1.0 / (1.0 + rsam1)
+	phi := math.Sqrt(1.0 - k*k - h*h)
+	psi := 1.0 / (1.0 + phi)
+	x1 := a * (ce - k - psi*h*dle)
+	y1 := a * (se - h + psi*k*dle)
+	vx1 := an * asr * a * (-se - psi*h*rsam1)
+	vy1 := an * asr * a * (+ce + psi*k*rsam1)
+	f2 := 2.0 * math.Sqrt(1.0-q*q-p*p)
+	p2 := 1.0 - 2.0*p*p
+	q2 := 1.0 - 2.0*q*q
+	pq := 2.0 * p * q
+
+	return StateVector{
+		X:  x1*p2 + y1*pq,
+		Y:  x1*pq + y1*q2,
+		Z:  (q*y1 - x1*p) * f2,
+		Vx: vx1*p2 + vy1*pq,
+		Vy: vx1*pq + vy1*q2,
+		Vz: (q*vy1 - vx1*p) * f2,
+		T:  time,
+	}
+}
+
+// shadow describes the alignment of a shadow-casting body with a target body,
+// used for finding eclipses.
+type shadow struct {
+	time   AstroTime
+	u      float64 // dot product of the shadow direction and target position
+	r      float64 // km distance between the target and the shadow axis
+	k      float64 // umbra radius in km at the shadow plane
+	p      float64 // penumbra radius in km at the shadow plane
+	target AstroVector
+	dir    AstroVector
+}
+
+// calcShadow calculates the geometry of the shadow cast by one body onto
+// another, given the casting body's radius and the target and direction
+// vectors expressed relative to the casting body.
+func calcShadow(bodyRadiusKm float64, time AstroTime, target AstroVector, dir AstroVector) shadow {
+	s := shadow{
+		time:   time,
+		target: target,
+		dir:    dir,
+	}
+	s.u = (dir.X*target.X + dir.Y*target.Y + dir.Z*target.Z) / (dir.X*dir.X + dir.Y*dir.Y + dir.Z*dir.Z)
+	dx := (s.u * dir.X) - target.X
+	dy := (s.u * dir.Y) - target.Y
+	dz := (s.u * dir.Z) - target.Z
+	s.r = KmPerAu * math.Sqrt(dx*dx+dy*dy+dz*dz)
+	s.k = +SunRadiusKm - (1.0+s.u)*(SunRadiusKm-bodyRadiusKm)
+	s.p = -SunRadiusKm + (1.0+s.u)*(SunRadiusKm+bodyRadiusKm)
+	return s
 }
 
 type addSolTerm struct {
