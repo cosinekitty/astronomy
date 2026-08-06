@@ -1904,6 +1904,665 @@ func calcShadow(bodyRadiusKm float64, time AstroTime, target AstroVector, dir As
 	return s
 }
 
+// calcVsop evaluates the VSOP87 model for a body at the given time, returning
+// the heliocentric equatorial position vector.
+func calcVsop(model *vsopModel, time AstroTime) AstroVector {
+	t := time.Tt / daysPerMillennium
+	sphere := vsopFormulaCalc(model, t)
+	eclip := vsopSphereToRect(sphere[vsopLonIndex], sphere[vsopLatIndex], sphere[vsopRadIndex])
+	pos := vsopRotate(eclip)
+	return AstroVector{X: pos.X, Y: pos.Y, Z: pos.Z, T: time}
+}
+
+// calcVsopPosVel evaluates the VSOP87 model for a body at the given Terrestrial
+// Time in days since J2000, returning both position and velocity.
+func calcVsopPosVel(model *vsopModel, tt float64) bodyState {
+	t := tt / daysPerMillennium
+	sphere := vsopFormulaCalc(model, t)
+	deriv := vsopDerivCalc(model, t)
+	eclip := vsopSphereToRect(sphere[vsopLonIndex], sphere[vsopLatIndex], sphere[vsopRadIndex])
+
+	state := bodyState{tt: tt}
+	state.r = vsopRotate(eclip)
+
+	// Use spherical coordinates and spherical derivatives to calculate the
+	// velocity vector in rectangular coordinates.
+	coslon := math.Cos(sphere[vsopLonIndex])
+	sinlon := math.Sin(sphere[vsopLonIndex])
+	coslat := math.Cos(sphere[vsopLatIndex])
+	sinlat := math.Sin(sphere[vsopLatIndex])
+	r := sphere[vsopRadIndex]
+	dlonDt := deriv[vsopLonIndex]
+	dlatDt := deriv[vsopLatIndex]
+	drDt := deriv[vsopRadIndex]
+
+	eclip[0] = (drDt*coslat*coslon) - (r*sinlat*coslon*dlatDt) - (r*coslat*sinlon*dlonDt)
+	eclip[1] = (drDt*coslat*sinlon) - (r*sinlat*sinlon*dlatDt) + (r*coslat*coslon*dlonDt)
+	eclip[2] = (drDt * sinlat) + (r * coslat * dlatDt)
+
+	state.v = vsopRotate(eclip)
+	// Convert speed units from [AU/millennium] to [AU/day].
+	state.v.X /= daysPerMillennium
+	state.v.Y /= daysPerMillennium
+	state.v.Z /= daysPerMillennium
+	return state
+}
+
+// DeltaT returns the difference in seconds between Terrestrial Time (TT) and
+// Universal Time (UT), using the default Delta T model by Espenak and Meeus.
+func DeltaT(ut float64) float64 {
+	return deltaTime(ut)
+}
+
+// synodicPeriod returns the average number of days it takes for a planet to
+// return to the same relative longitude with respect to the Earth, as seen
+// from the Sun.
+func synodicPeriod(body Body) (float64, error) {
+	if body == Earth {
+		return 0.0, errors.New("The Earth does not have a synodic period as seen from itself")
+	}
+	if body == Moon {
+		return 29.530588, nil
+	}
+	tp := PlanetOrbitalPeriod(body)
+	if tp <= 0.0 {
+		return 0.0, errors.New("Invalid body for synodic period")
+	}
+	return math.Abs(earthOrbitalPeriod / (earthOrbitalPeriod/tp - 1.0)), nil
+}
+
+// clampIndex returns the nearest valid index to index, in the range [0, n).
+func clampIndex(index, n int) int {
+	if index < 0 {
+		return 0
+	}
+	if index >= n {
+		return n - 1
+	}
+	return index
+}
+
+// correctLightTravel solves for the position of a body at the earlier time
+// when the light we see now left the body. The calc function must return the
+// body's position at a given time. The returned vector is the light-travel
+// time corrected position.
+func correctLightTravel(calc func(time AstroTime) (AstroVector, error), time AstroTime) (AstroVector, error) {
+	ltime := time
+	var pos AstroVector
+	var err error
+	for iter := 0; iter < 10; iter++ {
+		pos, err = calc(ltime)
+		if err != nil {
+			return AstroVector{}, err
+		}
+		distance := pos.Length()
+		if distance > SpeedOfLightAuPerDay {
+			return AstroVector{}, errors.New("Cannot correct light travel time for distance greater than one light-day")
+		}
+		ltime2 := time.AddDays(-distance / SpeedOfLightAuPerDay)
+		dt := math.Abs(ltime2.Tt - ltime.Tt)
+		if dt < 1.0e-9 {
+			return pos, nil // 86.4 microseconds
+		}
+		ltime = ltime2
+	}
+	return AstroVector{}, errors.New("Light travel time solver did not converge")
+}
+
+// spin rotates a vector by the given angle in degrees about the z-axis.
+func spin(angle float64, pos [3]float64) [3]float64 {
+	angr := RadiansFromDegrees(angle)
+	cosang := math.Cos(angr)
+	sinang := math.Sin(angr)
+	return [3]float64{
+		+cosang*pos[0] + sinang*pos[1],
+		-sinang*pos[0] + cosang*pos[1],
+		pos[2],
+	}
+}
+
+// terra converts an observer's geographic position and sidereal time into
+// geocentric equatorial position and velocity vectors (both in AU and AU/day).
+func terra(observer Observer, st float64) (terseVector, terseVector) {
+	const angVel = 7.2921150e-5
+	phi := RadiansFromDegrees(observer.Latitude)
+	sinphi := math.Sin(phi)
+	cosphi := math.Cos(phi)
+	c := 1.0 / math.Hypot(cosphi, sinphi*EarthFlattening)
+	s := c * (EarthFlattening * EarthFlattening)
+	htKm := observer.Height / 1000.0
+	ach := EarthEquatorialRadiusKm*c + htKm
+	ash := EarthEquatorialRadiusKm*s + htKm
+	stlocl := RadiansFromDegrees(15.0*st + observer.Longitude)
+	sinst := math.Sin(stlocl)
+	cosst := math.Cos(stlocl)
+
+	pos := terseVector{
+		X: ach * cosphi * cosst / KmPerAu,
+		Y: ach * cosphi * sinst / KmPerAu,
+		Z: ash * sinphi / KmPerAu,
+	}
+	vel := terseVector{
+		X: -(angVel * 86400.0 / KmPerAu) * ach * cosphi * sinst,
+		Y: +(angVel * 86400.0 / KmPerAu) * ach * cosphi * cosst,
+		Z: 0.0,
+	}
+	return pos, vel
+}
+
+// inverseTerra converts a geocentric equatorial position vector (in AU) at the
+// given sidereal time into an observer's geographic position.
+func inverseTerra(ovec terseVector, st float64) Observer {
+	x := ovec.X * KmPerAu
+	y := ovec.Y * KmPerAu
+	z := ovec.Z * KmPerAu
+	p := math.Hypot(x, y)
+
+	var lonDeg, latDeg, heightKm float64
+	if p < 1.0e-6 {
+		// Special case: within 1 millimeter of a pole.
+		lonDeg = 0.0
+		if z > 0.0 {
+			latDeg = +90.0
+		} else {
+			latDeg = -90.0
+		}
+		heightKm = math.Abs(z) - EarthPolarRadiusKm
+	} else {
+		stlocl := math.Atan2(y, x)
+		lonDeg = DegreesFromRadians(stlocl) - (15.0 * st)
+		for lonDeg <= -180.0 {
+			lonDeg += 360.0
+		}
+		for lonDeg > +180.0 {
+			lonDeg -= 360.0
+		}
+		// Numerically solve for exact latitude using Newton's Method.
+		f := EarthFlattening * EarthFlattening
+		lat := math.Atan2(z, p)
+		for count := 0; ; count++ {
+			if count > 10 {
+				panic("inverseTerra did not converge")
+			}
+			// Calculate the error function W(lat) and its derivative D.
+			c := math.Cos(lat)
+			s := math.Sin(lat)
+			factor := (f - 1) * EarthEquatorialRadiusKm
+			c2 := c * c
+			s2 := s * s
+			radicand := c2 + f*s2
+			denom := math.Sqrt(radicand)
+			w := (factor*s*c)/denom - z*c + p*s
+			if math.Abs(w) < 1.0e-8 {
+				break
+			}
+			d := factor*((c2-s2)/denom-s2*c2*(f-1)/(factor*radicand)) + z*s + p*c
+			lat -= w / d
+		}
+		latDeg = DegreesFromRadians(lat)
+		// Solve for exact height in meters using the less risky denominator.
+		adjust := EarthEquatorialRadiusKm / math.Sqrt(math.Cos(lat)*math.Cos(lat)+f*math.Sin(lat)*math.Sin(lat))
+		if math.Abs(math.Sin(lat)) > math.Abs(math.Cos(lat)) {
+			heightKm = z/math.Sin(lat) - f*adjust
+		} else {
+			heightKm = p/math.Cos(lat) - adjust
+		}
+	}
+	return Observer{Latitude: latDeg, Longitude: lonDeg, Height: 1000.0 * heightKm}
+}
+
+// nutationRot creates a rotation matrix that adds or removes nutation from an
+// equatorial vector of date.
+func nutationRot(time *AstroTime, dir precessDirection) RotationMatrix {
+	tilt := etilt(time)
+	oblm := RadiansFromDegrees(tilt.Mobl)
+	oblt := RadiansFromDegrees(tilt.Tobl)
+	psi := tilt.Dpsi * asecToRad
+	cobm := math.Cos(oblm)
+	sobm := math.Sin(oblm)
+	cobt := math.Cos(oblt)
+	sobt := math.Sin(oblt)
+	cpsi := math.Cos(psi)
+	spsi := math.Sin(psi)
+
+	xx := cpsi
+	yx := -spsi * cobm
+	zx := -spsi * sobm
+	xy := spsi * cobt
+	yy := cpsi*cobm*cobt + sobm*sobt
+	zy := cpsi*sobm*cobt - cobm*sobt
+	xz := spsi * sobt
+	yz := cpsi*cobm*sobt - sobm*cobt
+	zz := cpsi*sobm*sobt + cobm*cobt
+
+	var rotation RotationMatrix
+	if dir == from2000 {
+		// convert J2000 to of-date
+		rotation.Rot[0][0] = xx
+		rotation.Rot[0][1] = xy
+		rotation.Rot[0][2] = xz
+		rotation.Rot[1][0] = yx
+		rotation.Rot[1][1] = yy
+		rotation.Rot[1][2] = yz
+		rotation.Rot[2][0] = zx
+		rotation.Rot[2][1] = zy
+		rotation.Rot[2][2] = zz
+	} else {
+		// convert of-date to J2000
+		rotation.Rot[0][0] = xx
+		rotation.Rot[0][1] = yx
+		rotation.Rot[0][2] = zx
+		rotation.Rot[1][0] = xy
+		rotation.Rot[1][1] = yy
+		rotation.Rot[1][2] = zy
+		rotation.Rot[2][0] = xz
+		rotation.Rot[2][1] = yz
+		rotation.Rot[2][2] = zz
+	}
+	return rotation
+}
+
+// nutationPosVel applies the nutation rotation to both the position and
+// velocity components of a state vector.
+func nutationPosVel(state StateVector, dir precessDirection) StateVector {
+	return RotateState(nutationRot(&state.T, dir), state)
+}
+
+// precessionPosVel applies the precession rotation to both the position and
+// velocity components of a state vector.
+func precessionPosVel(state StateVector, dir precessDirection) StateVector {
+	return RotateState(precessionRot(state.T, dir), state)
+}
+
+// Rotation_EQD_HOR returns a rotation matrix that converts equatorial
+// of-date (EQD) coordinates to horizontal (HOR) coordinates for the given
+// observer.
+func Rotation_EQD_HOR(time AstroTime, observer Observer) RotationMatrix {
+	uze := [3]float64{
+		math.Cos(RadiansFromDegrees(observer.Latitude)) * math.Cos(RadiansFromDegrees(observer.Longitude)),
+		math.Cos(RadiansFromDegrees(observer.Latitude)) * math.Sin(RadiansFromDegrees(observer.Longitude)),
+		math.Sin(RadiansFromDegrees(observer.Latitude)),
+	}
+	une := [3]float64{
+		-math.Sin(RadiansFromDegrees(observer.Latitude)) * math.Cos(RadiansFromDegrees(observer.Longitude)),
+		-math.Sin(RadiansFromDegrees(observer.Latitude)) * math.Sin(RadiansFromDegrees(observer.Longitude)),
+		math.Cos(RadiansFromDegrees(observer.Latitude)),
+	}
+	uwe := [3]float64{
+		math.Sin(RadiansFromDegrees(observer.Longitude)),
+		-math.Cos(RadiansFromDegrees(observer.Longitude)),
+		0.0,
+	}
+	spinAngle := -15.0 * SiderealTime(&time)
+	uz := spin(spinAngle, uze)
+	un := spin(spinAngle, une)
+	uw := spin(spinAngle, uwe)
+
+	var rot RotationMatrix
+	rot.Rot[0][0] = un[0]
+	rot.Rot[1][0] = un[1]
+	rot.Rot[2][0] = un[2]
+	rot.Rot[0][1] = uw[0]
+	rot.Rot[1][1] = uw[1]
+	rot.Rot[2][1] = uw[2]
+	rot.Rot[0][2] = uz[0]
+	rot.Rot[1][2] = uz[1]
+	rot.Rot[2][2] = uz[2]
+	return rot
+}
+
+// Horizon calculates the azimuth and altitude of a celestial body as seen by
+// an observer at the given time. The input right ascension and declination
+// must be equator-of-date coordinates. The returned structure optionally
+// corrects for atmospheric refraction.
+func Horizon(time AstroTime, observer Observer, ra float64, dec float64, refraction Refraction) Topocentric {
+	latrad := RadiansFromDegrees(observer.Latitude)
+	lonrad := RadiansFromDegrees(observer.Longitude)
+	decrad := RadiansFromDegrees(dec)
+	rarad := ra * 15.0 * (math.Pi / 180.0)
+
+	sinlat := math.Sin(latrad)
+	coslat := math.Cos(latrad)
+	sinlon := math.Sin(lonrad)
+	coslon := math.Cos(lonrad)
+	sindc := math.Sin(decrad)
+	cosdc := math.Cos(decrad)
+	sinra := math.Sin(rarad)
+	cosra := math.Cos(rarad)
+
+	// Uncorrected unit vectors for zenith, north, and west.
+	uze := [3]float64{coslat * coslon, coslat * sinlon, sinlat}
+	une := [3]float64{-sinlat * coslon, -sinlat * sinlon, coslat}
+	uwe := [3]float64{sinlon, -coslon, 0.0}
+
+	spinAngle := -15.0 * SiderealTime(&time)
+	uz := spin(spinAngle, uze)
+	un := spin(spinAngle, une)
+	uw := spin(spinAngle, uwe)
+
+	p := [3]float64{cosdc * cosra, cosdc * sinra, sindc}
+	pn := p[0]*un[0] + p[1]*un[1] + p[2]*un[2]
+	pw := p[0]*uw[0] + p[1]*uw[1] + p[2]*uw[2]
+	pz := p[0]*uz[0] + p[1]*uz[1] + p[2]*uz[2]
+
+	proj := math.Hypot(pn, pw)
+	var az float64
+	if proj > 0.0 {
+		az = -DegreesFromRadians(math.Atan2(pw, pn))
+		if az < 0.0 {
+			az += 360.0
+		}
+	} else {
+		az = 0.0
+	}
+	zd := DegreesFromRadians(math.Atan2(proj, pz))
+	raOut := ra
+	decOut := dec
+
+	if refraction == NormalRefraction || refraction == JplHorizonsRefraction {
+		zd0 := zd
+		refr := RefractionAngle(refraction, 90.0-zd)
+		zd -= refr
+		if refr > 0.0 && zd > 3.0e-4 {
+			sinzd := math.Sin(RadiansFromDegrees(zd))
+			coszd := math.Cos(RadiansFromDegrees(zd))
+			sinzd0 := math.Sin(RadiansFromDegrees(zd0))
+			coszd0 := math.Cos(RadiansFromDegrees(zd0))
+			var pr [3]float64
+			for j := 0; j < 3; j++ {
+				pr[j] = ((p[j] - coszd0*uz[j]) / sinzd0 * sinzd) + uz[j]*coszd
+			}
+			proj = math.Hypot(pr[0], pr[1])
+			if proj > 0 {
+				raOut = (DegreesFromRadians(math.Atan2(pr[1], pr[0]))) / 15.0
+				if raOut < 0.0 {
+					raOut += 24.0
+				}
+			} else {
+				raOut = 0.0
+			}
+			decOut = DegreesFromRadians(math.Atan2(pr[2], proj))
+		}
+	}
+
+	return Topocentric{
+		Azimuth:  az,
+		Altitude: 90.0 - zd,
+		Ra:       raOut,
+		Dec:      decOut,
+	}
+}
+
+// HorizonFromVector converts a horizontal Cartesian vector into azimuth and
+// altitude angles, optionally correcting for atmospheric refraction.
+func HorizonFromVector(vector AstroVector, refraction Refraction) (Spherical, error) {
+	sphere, err := SphereFromVector(vector)
+	if err != nil {
+		return Spherical{}, err
+	}
+	// Convert azimuth from counterclockwise-from-north to clockwise-from-north.
+	sphere.Lon = toggleAzimuthDirection(sphere.Lon)
+	sphere.Lat += RefractionAngle(refraction, sphere.Lat)
+	return sphere, nil
+}
+
+// VectorFromHorizon converts apparent horizontal angular coordinates into a
+// horizontal Cartesian vector, optionally removing atmospheric refraction.
+func VectorFromHorizon(sphere Spherical, time AstroTime, refraction Refraction) AstroVector {
+	// Convert azimuth from clockwise-from-north to counterclockwise-from-north.
+	sphere.Lon = toggleAzimuthDirection(sphere.Lon)
+	// Reverse any applied refraction.
+	sphere.Lat += InverseRefractionAngle(refraction, sphere.Lat)
+	return VectorFromSphere(sphere, time)
+}
+
+// InverseRefractionAngle returns the negative angular correction in degrees
+// to subtract from an observed (refracted) altitude to obtain the true,
+// unrefracted altitude.
+func InverseRefractionAngle(refraction Refraction, bentAltitude float64) float64 {
+	if bentAltitude < -90.0 || bentAltitude > +90.0 {
+		return 0.0 // no attempt to correct an invalid altitude
+	}
+	altitude := bentAltitude - RefractionAngle(refraction, bentAltitude)
+	for {
+		// See how close we got.
+		diff := (altitude + RefractionAngle(refraction, altitude)) - bentAltitude
+		if math.Abs(diff) < 1.0e-14 {
+			return altitude - bentAltitude
+		}
+		altitude -= diff
+	}
+}
+
+// Search finds the time when a continuous function f crosses zero from
+// negative to positive within the time range [t1, t2]. The dtToleranceSeconds
+// value sets the maximum error in the returned time.
+func Search(f func(t AstroTime) (float64, error), t1 AstroTime, t2 AstroTime, dtToleranceSeconds float64) (AstroTime, error) {
+	dtDays := math.Abs(dtToleranceSeconds / 86400.0)
+	f1, err := f(t1)
+	if err != nil {
+		return AstroTime{}, err
+	}
+	f2, err := f(t2)
+	if err != nil {
+		return AstroTime{}, err
+	}
+	const iterLimit = 20
+	iter := 0
+	calcFmid := true
+	var fmid float64
+
+	for {
+		iter++
+		if iter > iterLimit {
+			return AstroTime{}, errors.New("Search did not converge")
+		}
+		dt := (t2.Tt - t1.Tt) / 2.0
+		tmid := t1.AddDays(dt)
+		if math.Abs(dt) < dtDays {
+			return tmid, nil // close enough to the event
+		}
+		if calcFmid {
+			fmid, err = f(tmid)
+			if err != nil {
+				return AstroTime{}, err
+			}
+		} else {
+			calcFmid = true // we already have the correct value from the previous loop
+		}
+
+		// Quadratic interpolation: fit a parabola through (t1,f1), (tmid,fmid), (t2,f2).
+		if qUt, qDfDt, ok := quadInterp(tmid.Ut, t2.Ut-tmid.Ut, f1, fmid, f2); ok {
+			tq := TimeFromUniversalDays(qUt)
+			fq, err := f(tq)
+			if err != nil {
+				return AstroTime{}, err
+			}
+			if qDfDt != 0.0 {
+				dtGuess := math.Abs(fq / qDfDt)
+				if dtGuess < dtDays {
+					return tq, nil // the estimated time error is small enough
+				}
+				// Try guessing a tighter boundary with the interpolated root at the center.
+				dtGuess *= 1.2
+				if dtGuess < dt/10.0 {
+					tleft := tq.AddDays(-dtGuess)
+					tright := tq.AddDays(+dtGuess)
+					if (tleft.Ut-t1.Ut)*(tleft.Ut-t2.Ut) < 0 {
+						if (tright.Ut-t1.Ut)*(tright.Ut-t2.Ut) < 0 {
+							fleft, err := f(tleft)
+							if err != nil {
+								return AstroTime{}, err
+							}
+							fright, err := f(tright)
+							if err != nil {
+								return AstroTime{}, err
+							}
+							if fleft < 0.0 && fright >= 0.0 {
+								f1 = fleft
+								f2 = fright
+								t1 = tleft
+								t2 = tright
+								fmid = fq
+								calcFmid = false // no need to recalculate fmid next loop
+								continue
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// After quadratic interpolation, divide the region and pick the half that contains a root.
+		if f1 < 0.0 && fmid >= 0.0 {
+			t2 = tmid
+			f2 = fmid
+			continue
+		}
+		if fmid < 0.0 && f2 >= 0.0 {
+			t1 = tmid
+			f1 = fmid
+			continue
+		}
+		return AstroTime{}, errors.New("Search failure: no ascending zero-crossing in the search window")
+	}
+}
+
+// MoonEclipticLatitudeDegrees returns the Moon's ecliptic latitude in degrees
+// at the given time.
+func MoonEclipticLatitudeDegrees(time AstroTime) float64 {
+	mc := makeMoonContext(time.Tt / 36525.0)
+	moon := mc.calcMoon()
+	return DegreesFromRadians(moon.geoEclipLat)
+}
+
+// Libration calculates the Moon's libration angles: the optical and physical
+// librations of the Moon as seen from the Earth.
+func Libration(time AstroTime) LibrationInfo {
+	sinI := math.Sin(RadiansFromDegrees(1.543)) // sin of the Moon's axis inclination
+	cosI := math.Cos(RadiansFromDegrees(1.543)) // cos of the Moon's axis inclination
+	const moonMeanRadiusKm = 1737.4
+
+	t := time.Tt / 36525.0
+	t2 := t * t
+	t3 := t2 * t
+	t4 := t2 * t2
+
+	mc := makeMoonContext(time.Tt / 36525.0)
+	moon := mc.calcMoon()
+	mlon := moon.geoEclipLon
+	mlat := moon.geoEclipLat
+	distKm := moon.distanceAu * KmPerAu
+
+	var lib LibrationInfo
+	lib.Mlon = DegreesFromRadians(mlon)
+	lib.Mlat = DegreesFromRadians(mlat)
+	lib.DistKm = distKm
+	lib.DiamDeg = 2.0 * DegreesFromRadians(math.Atan(moonMeanRadiusKm/math.Sqrt(distKm*distKm-moonMeanRadiusKm*moonMeanRadiusKm)))
+
+	// Moon's argument of latitude in radians.
+	f := RadiansFromDegrees(normalizeLongitude(93.2720950 + 483202.0175233*t - 0.0036539*t2 - t3/3526000 + t4/863310000))
+	// Moon's ascending node's mean longitude in radians.
+	omega := RadiansFromDegrees(normalizeLongitude(125.0445479 - 1934.1362891*t + 0.0020754*t2 + t3/467441 - t4/60616000))
+	// Sun's mean anomaly.
+	m := RadiansFromDegrees(normalizeLongitude(357.5291092 + 35999.0502909*t - 0.0001536*t2 + t3/24490000))
+	// Moon's mean anomaly.
+	mdash := RadiansFromDegrees(normalizeLongitude(134.9633964 + 477198.8675055*t + 0.0087414*t2 + t3/69699 - t4/14712000))
+	// Moon's mean elongation.
+	d := RadiansFromDegrees(normalizeLongitude(297.8501921 + 445267.1114034*t - 0.0018819*t2 + t3/545868 - t4/113065000))
+	// Eccentricity of the Earth's orbit.
+	e := 1.0 - 0.002516*t - 0.0000074*t2
+
+	// Optical librations.
+	w := mlon - omega
+	a := math.Atan2(math.Sin(w)*math.Cos(mlat)*cosI-math.Sin(mlat)*sinI, math.Cos(w)*math.Cos(mlat))
+	ldash := longitudeOffset(DegreesFromRadians(a - f))
+	bdash := math.Asin(-math.Sin(w)*math.Cos(mlat)*sinI - math.Sin(mlat)*cosI)
+
+	// Physical librations.
+	k1 := RadiansFromDegrees(119.75 + 131.849*t)
+	k2 := RadiansFromDegrees(72.56 + 20.186*t)
+
+	rho := (-0.02752*math.Cos(mdash) +
+		-0.02245*math.Sin(f) +
+		+0.00684*math.Cos(mdash-2*f) +
+		-0.00293*math.Cos(2*f) +
+		-0.00085*math.Cos(2*f-2*d) +
+		-0.00054*math.Cos(mdash-2*d) +
+		-0.00020*math.Sin(mdash+f) +
+		-0.00020*math.Cos(mdash+2*f) +
+		-0.00020*math.Cos(mdash-f) +
+		+0.00014*math.Cos(mdash+2*f-2*d))
+
+	sigma := (-0.02816*math.Sin(mdash) +
+		+0.02244*math.Cos(f) +
+		-0.00682*math.Sin(mdash-2*f) +
+		-0.00279*math.Sin(2*f) +
+		-0.00083*math.Sin(2*f-2*d) +
+		+0.00069*math.Sin(mdash-2*d) +
+		+0.00040*math.Cos(mdash+f) +
+		-0.00025*math.Sin(2*mdash) +
+		-0.00023*math.Sin(mdash+2*f) +
+		+0.00020*math.Cos(mdash-f) +
+		+0.00019*math.Sin(mdash-f) +
+		+0.00013*math.Sin(mdash+2*f-2*d) +
+		-0.00010*math.Cos(mdash-3*f))
+
+	tau := (+0.02520*e*math.Sin(m) +
+		+0.00473*math.Sin(2*mdash-2*f) +
+		-0.00467*math.Sin(mdash) +
+		+0.00396*math.Sin(k1) +
+		+0.00276*math.Sin(2*mdash-2*d) +
+		+0.00196*math.Sin(omega) +
+		-0.00183*math.Cos(mdash-f) +
+		+0.00115*math.Sin(mdash-2*d) +
+		-0.00096*math.Sin(mdash-d) +
+		+0.00046*math.Sin(2*f-2*d) +
+		-0.00039*math.Sin(mdash-f) +
+		-0.00032*math.Sin(mdash-m-d) +
+		+0.00027*math.Sin(2*mdash-m-2*d) +
+		+0.00023*math.Sin(k2) +
+		-0.00014*math.Sin(2*d) +
+		+0.00014*math.Cos(2*mdash-2*f) +
+		-0.00012*math.Sin(mdash-2*f) +
+		-0.00012*math.Sin(2*mdash) +
+		+0.00011*math.Sin(2*mdash-2*m-2*d))
+
+	ldash2 := -tau + (rho*math.Cos(a)+sigma*math.Sin(a))*math.Tan(bdash)
+	bdashDeg := DegreesFromRadians(bdash)
+	bdash2 := sigma*math.Cos(a) - rho*math.Sin(a)
+
+	lib.Elon = ldash + ldash2
+	lib.Elat = bdashDeg + bdash2
+	return lib
+}
+
+// SolarEclipseObscuration calculates the fraction of the Sun's disc covered
+// by the Moon, as seen from the given lunacentric observer position. hm is the
+// heliocentric Moon vector and lo is the lunacentric observer vector.
+func SolarEclipseObscuration(hm AstroVector, lo AstroVector) (float64, error) {
+	// Find the heliocentric observer position.
+	ho := AstroVector{
+		X: hm.X + lo.X,
+		Y: hm.Y + lo.Y,
+		Z: hm.Z + lo.Z,
+		T: lo.T,
+	}
+	sunAu := ho.Length()
+	// Calculate the apparent angular radius of the Sun for the observer.
+	sunRadius := math.Asin((SunRadiusKm / KmPerAu) / sunAu)
+	// Calculate the apparent angular radius of the Moon for the observer.
+	moonRadius := math.Asin((MoonPolarRadiusKm / KmPerAu) / lo.Length())
+	// Calculate the apparent angular separation between the Sun and Moon centers.
+	sepAngle := AngleBetween(lo, ho)
+	obscuration := obscuration(sunRadius, moonRadius, RadiansFromDegrees(sepAngle))
+	// HACK: in marginal cases, clamp obscuration to less than 1.0.
+	if obscuration > 0.9999 {
+		obscuration = 0.9999
+	}
+	return obscuration, nil
+}
+
 type addSolTerm struct {
 	coeffl float64
 	coeffs float64
