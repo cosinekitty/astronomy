@@ -2563,6 +2563,169 @@ func SolarEclipseObscuration(hm AstroVector, lo AstroVector) (float64, error) {
 	return obscuration, nil
 }
 
+// jupiterMoonElem holds the orbital element series for one Galilean moon.
+type jupiterMoonElem struct {
+	mu   float64
+	al   [2]float64
+	a    vsopSeries
+	l    vsopSeries
+	z    vsopSeries
+	zeta vsopSeries
+}
+
+// CalcEarth calculates the heliocentric equatorial position of the Earth at
+// the given time using the VSOP87 model.
+func calcEarth(time AstroTime) AstroVector {
+	return calcVsop(&vsop[Earth], time)
+}
+
+// majorBodies holds the barycentric positions and velocities of the Sun and
+// the four giant planets, used by the gravity simulator and Pluto calculations.
+type majorBodies struct {
+	Sun     bodyState
+	Jupiter bodyState
+	Saturn  bodyState
+	Uranus  bodyState
+	Neptune bodyState
+}
+
+// calcSolarSystemBarycenter calculates the heliocentric position of the Solar
+// System Barycenter, considering the gravitational pulls of the four giant
+// planets.
+func calcSolarSystemBarycenter(time AstroTime) AstroVector {
+	var ssb AstroVector
+	ssb.T = time
+
+	// Adjust the SSB for each giant planet's pull on the Sun.
+	var bary majorBodies
+	majorBodyBary(&bary, time.Tt)
+
+	ssb.X = -bary.Sun.r.X
+	ssb.Y = -bary.Sun.r.Y
+	ssb.Z = -bary.Sun.r.Z
+	return ssb
+}
+
+// adjustBarycenterPosVel adjusts the given SSB state by the effect of one
+// major body, and returns that body's heliocentric position and velocity.
+func adjustBarycenterPosVel(ssb *bodyState, tt float64, body Body, planetGM float64) bodyState {
+	shift := planetGM / (planetGM + sunGM)
+	planet := calcVsopPosVel(&vsop[body], tt)
+	ssb.r.X += shift * planet.r.X
+	ssb.r.Y += shift * planet.r.Y
+	ssb.r.Z += shift * planet.r.Z
+	ssb.v.X += shift * planet.v.X
+	ssb.v.Y += shift * planet.v.Y
+	ssb.v.Z += shift * planet.v.Z
+	return planet
+}
+
+// majorBodyBary computes the barycentric state of the Sun and the four giant
+// planets at the given Terrestrial Time.
+func majorBodyBary(bary *majorBodies, tt float64) {
+	bary.Sun.tt = tt
+	bary.Sun.r = terseVector{}
+	bary.Sun.v = terseVector{}
+
+	bary.Jupiter = adjustBarycenterPosVel(&bary.Sun, tt, Jupiter, jupiterGM)
+	bary.Saturn = adjustBarycenterPosVel(&bary.Sun, tt, Saturn, saturnGM)
+	bary.Uranus = adjustBarycenterPosVel(&bary.Sun, tt, Uranus, uranusGM)
+	bary.Neptune = adjustBarycenterPosVel(&bary.Sun, tt, Neptune, neptuneGM)
+
+	// Convert planet states from heliocentric to barycentric.
+	bary.Jupiter.r.X -= bary.Sun.r.X
+	bary.Jupiter.r.Y -= bary.Sun.r.Y
+	bary.Jupiter.r.Z -= bary.Sun.r.Z
+	bary.Jupiter.v.X -= bary.Sun.v.X
+	bary.Jupiter.v.Y -= bary.Sun.v.Y
+	bary.Jupiter.v.Z -= bary.Sun.v.Z
+
+	bary.Saturn.r.X -= bary.Sun.r.X
+	bary.Saturn.r.Y -= bary.Sun.r.Y
+	bary.Saturn.r.Z -= bary.Sun.r.Z
+	bary.Saturn.v.X -= bary.Sun.v.X
+	bary.Saturn.v.Y -= bary.Sun.v.Y
+	bary.Saturn.v.Z -= bary.Sun.v.Z
+
+	bary.Uranus.r.X -= bary.Sun.r.X
+	bary.Uranus.r.Y -= bary.Sun.r.Y
+	bary.Uranus.r.Z -= bary.Sun.r.Z
+	bary.Uranus.v.X -= bary.Sun.v.X
+	bary.Uranus.v.Y -= bary.Sun.v.Y
+	bary.Uranus.v.Z -= bary.Sun.v.Z
+
+	bary.Neptune.r.X -= bary.Sun.r.X
+	bary.Neptune.r.Y -= bary.Sun.r.Y
+	bary.Neptune.r.Z -= bary.Sun.r.Z
+	bary.Neptune.v.X -= bary.Sun.v.X
+	bary.Neptune.v.Y -= bary.Sun.v.Y
+	bary.Neptune.v.Z -= bary.Sun.v.Z
+
+	// Convert the heliocentric SSB to a barycentric Sun.
+	bary.Sun.r.X = -bary.Sun.r.X
+	bary.Sun.r.Y = -bary.Sun.r.Y
+	bary.Sun.r.Z = -bary.Sun.r.Z
+	bary.Sun.v.X = -bary.Sun.v.X
+	bary.Sun.v.Y = -bary.Sun.v.Y
+	bary.Sun.v.Z = -bary.Sun.v.Z
+}
+
+// calcJupiterMoon calculates the jovicentric position and velocity of one of
+// Jupiter's four Galilean moons (Io, Europa, Ganymede, Callisto) at the given
+// time, expressed in the J2000 equatorial (EQJ) frame.
+func calcJupiterMoon(time AstroTime, mindex int) StateVector {
+	m := &jupiterMoonModel[mindex]
+	t := time.Tt + 18262.5 // time since 1950-01-01T00:00:00Z
+
+	// Calculate 6 orbital elements at the given time t.
+	var elem [6]float64
+
+	elem[0] = 0.0
+	for k := 0; k < m.a.nterms; k++ {
+		arg := m.a.term[k].pha + (t * m.a.term[k].fre)
+		elem[0] += m.a.term[k].amp * math.Cos(arg)
+	}
+
+	elem[1] = m.al[0] + (t * m.al[1])
+	for k := 0; k < m.l.nterms; k++ {
+		arg := m.l.term[k].pha + (t * m.l.term[k].fre)
+		elem[1] += m.l.term[k].amp * math.Sin(arg)
+	}
+	elem[1] = math.Mod(elem[1], 2.0*math.Pi)
+	if elem[1] < 0.0 {
+		elem[1] += 2.0 * math.Pi
+	}
+
+	for k := 0; k < m.z.nterms; k++ {
+		arg := m.z.term[k].pha + (t * m.z.term[k].fre)
+		elem[2] += m.z.term[k].amp * math.Cos(arg)
+		elem[3] += m.z.term[k].amp * math.Sin(arg)
+	}
+
+	for k := 0; k < m.zeta.nterms; k++ {
+		arg := m.zeta.term[k].pha + (t * m.zeta.term[k].fre)
+		elem[4] += m.zeta.term[k].amp * math.Cos(arg)
+		elem[5] += m.zeta.term[k].amp * math.Sin(arg)
+	}
+
+	// Convert the orbital elements into a position vector in the Jupiter
+	// equatorial system (JUP), then re-orient to the J2000 equatorial frame.
+	state := jupiterMoonElem2pv(time, m.mu, elem)
+	return RotateState(rotationJupEqj, state)
+}
+
+// JupiterMoons calculates the jovicentric positions and velocities of
+// Jupiter's four largest moons (Io, Europa, Ganymede, and Callisto) at the
+// given time, expressed in the J2000 equatorial (EQJ) frame.
+func JupiterMoons(time AstroTime) JupiterMoonsInfo {
+	return JupiterMoonsInfo{
+		Io:       calcJupiterMoon(time, 0),
+		Europa:   calcJupiterMoon(time, 1),
+		Ganymede: calcJupiterMoon(time, 2),
+		Callisto: calcJupiterMoon(time, 3),
+	}
+}
+
 type addSolTerm struct {
 	coeffl float64
 	coeffs float64
@@ -2815,6 +2978,8 @@ var vsop = []vsopModel{
 	{[3]vsopFormula{{len(vsopLonUranus), vsopLonUranus}, {len(vsopLatUranus), vsopLatUranus}, {len(vsopRadUranus), vsopRadUranus}}},
 	{[3]vsopFormula{{len(vsopLonNeptune), vsopLonNeptune}, {len(vsopLatNeptune), vsopLatNeptune}, {len(vsopRadNeptune), vsopRadNeptune}}},
 }
+
+//$ASTRO_GO_JUPITER_MOONS()
 
 //$ASTRO_CONSTEL()
 

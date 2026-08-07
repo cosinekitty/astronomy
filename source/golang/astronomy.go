@@ -2563,6 +2563,169 @@ func SolarEclipseObscuration(hm AstroVector, lo AstroVector) (float64, error) {
 	return obscuration, nil
 }
 
+// jupiterMoonElem holds the orbital element series for one Galilean moon.
+type jupiterMoonElem struct {
+	mu   float64
+	al   [2]float64
+	a    vsopSeries
+	l    vsopSeries
+	z    vsopSeries
+	zeta vsopSeries
+}
+
+// CalcEarth calculates the heliocentric equatorial position of the Earth at
+// the given time using the VSOP87 model.
+func calcEarth(time AstroTime) AstroVector {
+	return calcVsop(&vsop[Earth], time)
+}
+
+// majorBodies holds the barycentric positions and velocities of the Sun and
+// the four giant planets, used by the gravity simulator and Pluto calculations.
+type majorBodies struct {
+	Sun     bodyState
+	Jupiter bodyState
+	Saturn  bodyState
+	Uranus  bodyState
+	Neptune bodyState
+}
+
+// calcSolarSystemBarycenter calculates the heliocentric position of the Solar
+// System Barycenter, considering the gravitational pulls of the four giant
+// planets.
+func calcSolarSystemBarycenter(time AstroTime) AstroVector {
+	var ssb AstroVector
+	ssb.T = time
+
+	// Adjust the SSB for each giant planet's pull on the Sun.
+	var bary majorBodies
+	majorBodyBary(&bary, time.Tt)
+
+	ssb.X = -bary.Sun.r.X
+	ssb.Y = -bary.Sun.r.Y
+	ssb.Z = -bary.Sun.r.Z
+	return ssb
+}
+
+// adjustBarycenterPosVel adjusts the given SSB state by the effect of one
+// major body, and returns that body's heliocentric position and velocity.
+func adjustBarycenterPosVel(ssb *bodyState, tt float64, body Body, planetGM float64) bodyState {
+	shift := planetGM / (planetGM + sunGM)
+	planet := calcVsopPosVel(&vsop[body], tt)
+	ssb.r.X += shift * planet.r.X
+	ssb.r.Y += shift * planet.r.Y
+	ssb.r.Z += shift * planet.r.Z
+	ssb.v.X += shift * planet.v.X
+	ssb.v.Y += shift * planet.v.Y
+	ssb.v.Z += shift * planet.v.Z
+	return planet
+}
+
+// majorBodyBary computes the barycentric state of the Sun and the four giant
+// planets at the given Terrestrial Time.
+func majorBodyBary(bary *majorBodies, tt float64) {
+	bary.Sun.tt = tt
+	bary.Sun.r = terseVector{}
+	bary.Sun.v = terseVector{}
+
+	bary.Jupiter = adjustBarycenterPosVel(&bary.Sun, tt, Jupiter, jupiterGM)
+	bary.Saturn = adjustBarycenterPosVel(&bary.Sun, tt, Saturn, saturnGM)
+	bary.Uranus = adjustBarycenterPosVel(&bary.Sun, tt, Uranus, uranusGM)
+	bary.Neptune = adjustBarycenterPosVel(&bary.Sun, tt, Neptune, neptuneGM)
+
+	// Convert planet states from heliocentric to barycentric.
+	bary.Jupiter.r.X -= bary.Sun.r.X
+	bary.Jupiter.r.Y -= bary.Sun.r.Y
+	bary.Jupiter.r.Z -= bary.Sun.r.Z
+	bary.Jupiter.v.X -= bary.Sun.v.X
+	bary.Jupiter.v.Y -= bary.Sun.v.Y
+	bary.Jupiter.v.Z -= bary.Sun.v.Z
+
+	bary.Saturn.r.X -= bary.Sun.r.X
+	bary.Saturn.r.Y -= bary.Sun.r.Y
+	bary.Saturn.r.Z -= bary.Sun.r.Z
+	bary.Saturn.v.X -= bary.Sun.v.X
+	bary.Saturn.v.Y -= bary.Sun.v.Y
+	bary.Saturn.v.Z -= bary.Sun.v.Z
+
+	bary.Uranus.r.X -= bary.Sun.r.X
+	bary.Uranus.r.Y -= bary.Sun.r.Y
+	bary.Uranus.r.Z -= bary.Sun.r.Z
+	bary.Uranus.v.X -= bary.Sun.v.X
+	bary.Uranus.v.Y -= bary.Sun.v.Y
+	bary.Uranus.v.Z -= bary.Sun.v.Z
+
+	bary.Neptune.r.X -= bary.Sun.r.X
+	bary.Neptune.r.Y -= bary.Sun.r.Y
+	bary.Neptune.r.Z -= bary.Sun.r.Z
+	bary.Neptune.v.X -= bary.Sun.v.X
+	bary.Neptune.v.Y -= bary.Sun.v.Y
+	bary.Neptune.v.Z -= bary.Sun.v.Z
+
+	// Convert the heliocentric SSB to a barycentric Sun.
+	bary.Sun.r.X = -bary.Sun.r.X
+	bary.Sun.r.Y = -bary.Sun.r.Y
+	bary.Sun.r.Z = -bary.Sun.r.Z
+	bary.Sun.v.X = -bary.Sun.v.X
+	bary.Sun.v.Y = -bary.Sun.v.Y
+	bary.Sun.v.Z = -bary.Sun.v.Z
+}
+
+// calcJupiterMoon calculates the jovicentric position and velocity of one of
+// Jupiter's four Galilean moons (Io, Europa, Ganymede, Callisto) at the given
+// time, expressed in the J2000 equatorial (EQJ) frame.
+func calcJupiterMoon(time AstroTime, mindex int) StateVector {
+	m := &jupiterMoonModel[mindex]
+	t := time.Tt + 18262.5 // time since 1950-01-01T00:00:00Z
+
+	// Calculate 6 orbital elements at the given time t.
+	var elem [6]float64
+
+	elem[0] = 0.0
+	for k := 0; k < m.a.nterms; k++ {
+		arg := m.a.term[k].pha + (t * m.a.term[k].fre)
+		elem[0] += m.a.term[k].amp * math.Cos(arg)
+	}
+
+	elem[1] = m.al[0] + (t * m.al[1])
+	for k := 0; k < m.l.nterms; k++ {
+		arg := m.l.term[k].pha + (t * m.l.term[k].fre)
+		elem[1] += m.l.term[k].amp * math.Sin(arg)
+	}
+	elem[1] = math.Mod(elem[1], 2.0*math.Pi)
+	if elem[1] < 0.0 {
+		elem[1] += 2.0 * math.Pi
+	}
+
+	for k := 0; k < m.z.nterms; k++ {
+		arg := m.z.term[k].pha + (t * m.z.term[k].fre)
+		elem[2] += m.z.term[k].amp * math.Cos(arg)
+		elem[3] += m.z.term[k].amp * math.Sin(arg)
+	}
+
+	for k := 0; k < m.zeta.nterms; k++ {
+		arg := m.zeta.term[k].pha + (t * m.zeta.term[k].fre)
+		elem[4] += m.zeta.term[k].amp * math.Cos(arg)
+		elem[5] += m.zeta.term[k].amp * math.Sin(arg)
+	}
+
+	// Convert the orbital elements into a position vector in the Jupiter
+	// equatorial system (JUP), then re-orient to the J2000 equatorial frame.
+	state := jupiterMoonElem2pv(time, m.mu, elem)
+	return RotateState(rotationJupEqj, state)
+}
+
+// JupiterMoons calculates the jovicentric positions and velocities of
+// Jupiter's four largest moons (Io, Europa, Ganymede, and Callisto) at the
+// given time, expressed in the J2000 equatorial (EQJ) frame.
+func JupiterMoons(time AstroTime) JupiterMoonsInfo {
+	return JupiterMoonsInfo{
+		Io:       calcJupiterMoon(time, 0),
+		Europa:   calcJupiterMoon(time, 1),
+		Ganymede: calcJupiterMoon(time, 2),
+		Callisto: calcJupiterMoon(time, 3),
+	}
+}
+
 type addSolTerm struct {
 	coeffl float64
 	coeffs float64
@@ -3552,6 +3715,162 @@ var vsop = []vsopModel{
 	{[3]vsopFormula{{len(vsopLonSaturn), vsopLonSaturn}, {len(vsopLatSaturn), vsopLatSaturn}, {len(vsopRadSaturn), vsopRadSaturn}}},
 	{[3]vsopFormula{{len(vsopLonUranus), vsopLonUranus}, {len(vsopLatUranus), vsopLatUranus}, {len(vsopRadUranus), vsopRadUranus}}},
 	{[3]vsopFormula{{len(vsopLonNeptune), vsopLonNeptune}, {len(vsopLatNeptune), vsopLatNeptune}, {len(vsopRadNeptune), vsopRadNeptune}}},
+}
+
+var rotationJupEqj = RotationMatrix{Rot: [3][3]float64{
+	{9.99432765338654e-01, -3.36771074697641e-02, 0.00000000000000e+00},
+	{3.03959428906285e-02, 9.02057912352809e-01, 4.30543388542295e-01},
+	{-1.44994559663353e-02, -4.30299169409101e-01, 9.02569881273754e-01},
+}}
+
+var jmIoa = []vsopTerm{
+	{2.8210960212903002e-03, 0.0000000000000000e+00, 0.0000000000000000e+00}, // 0
+}
+
+var jmIol = []vsopTerm{
+	{-1.9252583486660001e-04, 4.9369589722644998e+00, 1.3584836583050000e-02}, // 0
+	{-9.7080359607600004e-05, 4.3188796477322002e+00, 1.3034138432430000e-02}, // 1
+	{-8.9881741650000001e-05, 1.9080016428616999e+00, 3.0506486715799999e-03}, // 2
+	{-5.5310105026200001e-05, 1.4936156681568999e+00, 1.2938928911549999e-02}, // 3
+}
+
+var jmIoz = []vsopTerm{
+	{4.1510849668155003e-03, 4.0899396355450000e+00, -1.2906864146660001e-02}, // 0
+	{6.2605214441129996e-04, 1.4461888986270000e+00, 3.5515522949801999e+00},  // 1
+	{3.5274734616900000e-05, 2.1256287034577999e+00, 1.2727416566999999e-04},  // 2
+}
+
+var jmIozeta = []vsopTerm{
+	{3.1421724660139999e-04, 2.7964219722923001e+00, -2.3150960980000000e-03}, // 0
+	{9.0416920794600001e-05, 1.0477061879627001e+00, -5.6920638196000003e-04}, // 1
+}
+
+var jmEuropaa = []vsopTerm{
+	{4.4871037804314002e-03, 0.0000000000000000e+00, 0.0000000000000000e+00}, // 0
+	{4.3243674980000000e-07, 1.8196456062910000e+00, 1.7822295777568000e+00}, // 1
+}
+
+var jmEuropal = []vsopTerm{
+	{8.5764331729359998e-04, 4.3188693178264002e+00, 1.3034138308049999e-02},  // 0
+	{4.5495828750859998e-04, 1.4936531751079001e+00, 1.2938928819619999e-02},  // 1
+	{3.2489398251739999e-04, 1.8196494533458001e+00, 1.7822295777568000e+00},  // 2
+	{-3.0742500793339998e-04, 4.9377037005910998e+00, 1.3584832867240000e-02}, // 3
+	{1.9823861447839999e-04, 1.9079869054759999e+00, 3.0510121286900001e-03},  // 4
+	{1.8340635518040001e-04, 2.1402853388529000e+00, 1.4500978933800000e-03},  // 5
+	{-1.4343831884519999e-04, 5.6222140366630002e+00, 8.9111478887838003e-01}, // 6
+	{-7.7193914094400004e-05, 4.3002724372349999e+00, 2.6733443704265998e+00}, // 7
+}
+
+var jmEuropaz = []vsopTerm{
+	{-9.3589104136341007e-03, 4.0899396509038999e+00, -1.2906864146660001e-02}, // 0
+	{2.9889945455550000e-04, 5.9097265185595003e+00, 1.7693227079461999e+00},   // 1
+	{2.1390363903500001e-04, 2.1256289300016000e+00, 1.2727418406999999e-04},   // 2
+	{1.9809635647810000e-04, 2.7435168292649998e+00, 6.7797343008999997e-04},   // 3
+	{1.2103881589649999e-04, 5.5839943711203004e+00, 3.2056614899999997e-05},   // 4
+	{8.3704204839300006e-05, 1.6094538368039000e+00, -9.0402165808846002e-01},  // 5
+	{8.2352516636899996e-05, 1.4461887708689001e+00, 3.5515522949801999e+00},   // 6
+}
+
+var jmEuropazeta = []vsopTerm{
+	{4.0404917832303003e-03, 1.0477063169425000e+00, -5.6920640539999997e-04}, // 0
+	{2.2004210345639999e-04, 3.3368857864364001e+00, -1.2491307306999999e-04}, // 1
+	{1.6625447447190001e-04, 2.4134862374710999e+00, 0.0000000000000000e+00},  // 2
+	{5.9028247098299997e-05, 5.9719930968366004e+00, -3.0561602250000000e-05}, // 3
+}
+
+var jmGanymedea = []vsopTerm{
+	{7.1566594572575002e-03, 0.0000000000000000e+00, 0.0000000000000000e+00}, // 0
+	{1.3930299110000000e-06, 1.1586745884981000e+00, 2.6733443704265998e+00}, // 1
+}
+
+var jmGanymedel = []vsopTerm{
+	{2.3107978862260000e-04, 2.1402987195941998e+00, 1.4500978438400001e-03},  // 0
+	{-1.8286359641180001e-04, 4.3188672736968003e+00, 1.3034138282630000e-02}, // 1
+	{1.5123787782040000e-04, 4.9373102372298003e+00, 1.3584834812520000e-02},  // 2
+	{-1.1637209697779999e-04, 4.3002659861490002e+00, 2.6733443704265998e+00}, // 3
+	{-9.5547806984600005e-05, 1.4936612842567001e+00, 1.2938928798570001e-02}, // 4
+	{8.1524685446399998e-05, 5.6222137132535002e+00, 8.9111478887838003e-01},  // 5
+	{-8.0121967960200004e-05, 1.2995922951532000e+00, 1.0034433456728999e+00}, // 6
+	{-6.0701726018200000e-05, 6.4978769669238001e-01, 5.0172167043264004e-01}, // 7
+}
+
+var jmGanymedez = []vsopTerm{
+	{1.4289811307319001e-03, 2.1256295942738999e+00, 1.2727413029000001e-04},   // 0
+	{7.7109312267600004e-04, 5.5836330003496002e+00, 3.2064341100000001e-05},   // 1
+	{5.9259117807659997e-04, 4.0899396636447998e+00, -1.2906864146660001e-02},  // 2
+	{2.0455974961460001e-04, 5.2713683670371996e+00, -1.2523544076106000e-01},  // 3
+	{1.7851186482579999e-04, 2.8743156721063001e-01, 8.7820792442520001e-01},   // 4
+	{1.1319997848930000e-04, 1.4462127277818000e+00, 3.5515522949801999e+00},   // 5
+	{-6.5877816920999996e-05, 2.2702423990985001e+00, -1.7951364394536999e+00}, // 6
+	{4.9705888832799997e-05, 5.9096792204858000e+00, 1.7693227129285001e+00},   // 7
+}
+
+var jmGanymedezeta = []vsopTerm{
+	{1.5932721570848000e-03, 3.3368862796665000e+00, -1.2491307058000000e-04},  // 0
+	{8.5330931289049998e-04, 2.4133881688166001e+00, 0.0000000000000000e+00},   // 1
+	{3.5133479110369999e-04, 5.9720789850126996e+00, -3.0561017709999999e-05},  // 2
+	{-1.4419292554829999e-04, 1.0477061764435001e+00, -5.6920632124000004e-04}, // 3
+}
+
+var jmCallistoa = []vsopTerm{
+	{1.2587970171531401e-02, 0.0000000000000000e+00, 0.0000000000000000e+00}, // 0
+	{3.5952049470000002e-06, 6.4965776007116005e-01, 5.0172168165034003e-01}, // 1
+	{2.7580210651999999e-06, 1.8084235781510001e+00, 3.1750660413359002e+00}, // 2
+}
+
+var jmCallistol = []vsopTerm{
+	{5.5860401238239999e-04, 2.1404207189814999e+00, 1.4500979323100001e-03},  // 0
+	{-3.8058138681759999e-04, 2.7358844897852999e+00, 2.9729650620000000e-05}, // 1
+	{2.2051528632620001e-04, 6.4979652596399995e-01, 5.0172167243580001e-01},  // 2
+	{1.8778951511580000e-04, 1.8084787604004999e+00, 3.1750660413359002e+00},  // 3
+	{7.6691697524199995e-05, 6.2720114319754998e+00, 1.3928364636651001e+00},  // 4
+	{7.4705685510599996e-05, 1.2995916202344000e+00, 1.0034433456728999e+00},  // 5
+}
+
+var jmCallistoz = []vsopTerm{
+	{7.3755808467977002e-03, 5.5836071576083999e+00, 3.2065099140000001e-05},   // 0
+	{2.0659241699420001e-04, 5.9209831565786004e+00, 3.7648624194703001e-01},   // 1
+	{1.5898697640210000e-04, 2.8744006242622999e-01, 8.7820792442520001e-01},   // 2
+	{-1.5611316053480001e-04, 2.1257397865089001e+00, 1.2727441285000001e-04},  // 3
+	{1.4860433809710000e-04, 1.4462134301023000e+00, 3.5515522949801999e+00},   // 4
+	{6.3507310873099995e-05, 5.9096803285953996e+00, 1.7693227129285001e+00},   // 5
+	{5.9935169852500000e-05, 4.1125517584797997e+00, -2.7985797954588998e+00},  // 6
+	{5.4066084273100000e-05, 5.5390350845569003e+00, 2.8683408228299999e-03},   // 7
+	{-4.8959690086600002e-05, 4.6218149483337996e+00, -6.2695712529518999e-01}, // 8
+}
+
+var jmCallistozeta = []vsopTerm{
+	{3.8422977898495002e-03, 2.4133922085556998e+00, 0.0000000000000000e+00},   // 0
+	{2.2453891791893998e-03, 5.9721736773277003e+00, -3.0561255249999997e-05},  // 1
+	{-2.6044794505589999e-04, 3.3368746306408998e+00, -1.2491309972000001e-04}, // 2
+	{3.3211214322999998e-05, 5.5604137742336999e+00, 2.9003768850700000e-03},   // 3
+}
+
+var jupiterMoonModel = []jupiterMoonElem{
+	// [0] Io
+	{mu: 2.8248942843381399e-07, al: [2]float64{1.4462132960212239e+00, 3.5515522861824000e+00},
+		a:    vsopSeries{nterms: 1, term: jmIoa},
+		l:    vsopSeries{nterms: 4, term: jmIol},
+		z:    vsopSeries{nterms: 3, term: jmIoz},
+		zeta: vsopSeries{nterms: 2, term: jmIozeta}},
+	// [1] Europa
+	{mu: 2.8248327439289299e-07, al: [2]float64{-3.7352634374713622e-01, 1.7693227111234699e+00},
+		a:    vsopSeries{nterms: 2, term: jmEuropaa},
+		l:    vsopSeries{nterms: 8, term: jmEuropal},
+		z:    vsopSeries{nterms: 7, term: jmEuropaz},
+		zeta: vsopSeries{nterms: 4, term: jmEuropazeta}},
+	// [2] Ganymede
+	{mu: 2.8249818418472298e-07, al: [2]float64{2.8740893911433479e-01, 8.7820792358932798e-01},
+		a:    vsopSeries{nterms: 2, term: jmGanymedea},
+		l:    vsopSeries{nterms: 8, term: jmGanymedel},
+		z:    vsopSeries{nterms: 8, term: jmGanymedez},
+		zeta: vsopSeries{nterms: 4, term: jmGanymedezeta}},
+	// [3] Callisto
+	{mu: 2.8249214488990899e-07, al: [2]float64{-3.6203412913757038e-01, 3.7648623343382798e-01},
+		a:    vsopSeries{nterms: 3, term: jmCallistoa},
+		l:    vsopSeries{nterms: 6, term: jmCallistol},
+		z:    vsopSeries{nterms: 9, term: jmCallistoz},
+		zeta: vsopSeries{nterms: 4, term: jmCallistozeta}},
 }
 
 var constelNames = [...]constelInfo{

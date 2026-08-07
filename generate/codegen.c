@@ -2049,6 +2049,65 @@ static int JupiterMoons_C(cg_context_t *context, const jupiter_moon_model_t *mod
     return 0;
 }
 
+static int JupiterMoons_Go(cg_context_t *context, const jupiter_moon_model_t *model)
+{
+    int mindex, var, i;
+    const char *moon_name[] = { "Io", "Europa", "Ganymede", "Callisto" };
+    const char *var_name[] = { "a", "l", "z", "zeta" };
+    vsop_series_t series[4];
+
+    fprintf(context->outfile, "var rotationJupEqj = RotationMatrix{Rot: [3][3]float64{\n");
+    for (var = 0; var < 3; ++var)
+        fprintf(context->outfile, "\t\t{%21.14le, %21.14le, %21.14le},\n",
+            model->rot[var][0],
+            model->rot[var][1],
+            model->rot[var][2]);
+    fprintf(context->outfile, "\t}}\n\n");
+
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        for (var = 0; var < NUM_JM_VARS; ++var)
+        {
+            int nterms = series[var].nterms_total;
+            fprintf(context->outfile, "var jm%s%s = []vsopTerm{\n", moon_name[mindex], var_name[var]);
+            for (i = 0; i < nterms; ++i)
+            {
+                const vsop_term_t *term = &series[var].term[i];
+                fprintf(context->outfile, "{%0.16e, %0.16e, %0.16e}, // %d\n",
+                    term->amplitude,
+                    term->phase,
+                    term->frequency,
+                    i);
+            }
+            fprintf(context->outfile, "}\n\n");
+        }
+    }
+
+    fprintf(context->outfile, "var jupiterMoonModel = []jupiterMoonElem{\n");
+    for (mindex = 0; mindex < NUM_JUPITER_MOONS; ++mindex)
+    {
+        series[0] = model->moon[mindex].a;
+        series[1] = model->moon[mindex].l;
+        series[2] = model->moon[mindex].z;
+        series[3] = model->moon[mindex].zeta;
+        fprintf(context->outfile, "\t// [%d] %s\n", mindex, moon_name[mindex]);
+        fprintf(context->outfile, "\t{mu: %23.16le, al: [2]float64{%23.16le, %23.16le},\n",
+            model->moon[mindex].mu,
+            model->moon[mindex].al[0],
+            model->moon[mindex].al[1]);
+        fprintf(context->outfile, "\t\ta: vsopSeries{nterms: %3d, term: jm%s%s},\n", series[0].nterms_total, moon_name[mindex], var_name[0]);
+        fprintf(context->outfile, "\t\tl: vsopSeries{nterms: %3d, term: jm%s%s},\n", series[1].nterms_total, moon_name[mindex], var_name[1]);
+        fprintf(context->outfile, "\t\tz: vsopSeries{nterms: %3d, term: jm%s%s},\n", series[2].nterms_total, moon_name[mindex], var_name[2]);
+        fprintf(context->outfile, "\t\tzeta: vsopSeries{nterms: %3d, term: jm%s%s}},\n", series[3].nterms_total, moon_name[mindex], var_name[3]);
+    }
+    fprintf(context->outfile, "}\n");
+    return 0;
+}
+
 static int JupiterMoons_CSharp(cg_context_t *context, const jupiter_moon_model_t *model)
 {
     int mindex, var, i;
@@ -2254,6 +2313,10 @@ static int JupiterMoons(cg_context_t *context)
         CHECK(JupiterMoons_C(context, model));
         break;
 
+    case CODEGEN_LANGUAGE_GO:
+        CHECK(JupiterMoons_Go(context, model));
+        break;
+
     case CODEGEN_LANGUAGE_CSHARP:
         CHECK(JupiterMoons_CSharp(context, model));
         break;
@@ -2309,6 +2372,7 @@ static const cg_directive_entry DirectiveTable[] =
     { "C_PLUTO_CONST",      PlutoConstants_C    },
     { "PLUTO_TABLE",        PlutoStateTable     },
     { "JUPITER_MOONS",      JupiterMoons        },
+    { "GO_JUPITER_MOONS",   JupiterMoons        },
     { NULL, NULL }  /* Marks end of list */
 };
 
