@@ -1098,7 +1098,7 @@ type precessDirection int
 
 const (
 	from2000 precessDirection = 0
-	into2000
+	into2000 precessDirection = 1
 )
 
 func precessionRot(time AstroTime, dir precessDirection) RotationMatrix {
@@ -2724,6 +2724,161 @@ func JupiterMoons(time AstroTime) JupiterMoonsInfo {
 		Ganymede: calcJupiterMoon(time, 2),
 		Callisto: calcJupiterMoon(time, 3),
 	}
+}
+
+// nutation applies the nutation rotation matrix to a vector.
+func nutation(pos AstroVector, dir precessDirection) AstroVector {
+	return RotateVector(nutationRot(&pos.T, dir), pos)
+}
+
+// Rotation_EQJ_EQD returns a rotation matrix that converts J2000 mean equator
+// (EQJ) coordinates to equatorial of-date (EQD) coordinates.
+func Rotation_EQJ_EQD(time AstroTime) RotationMatrix {
+	prec := precessionRot(time, from2000)
+	nut := nutationRot(&time, from2000)
+	return CombineRotation(prec, nut)
+}
+
+// Rotation_EQD_EQJ returns a rotation matrix that converts equatorial of-date
+// (EQD) coordinates to J2000 mean equator (EQJ) coordinates.
+func Rotation_EQD_EQJ(time AstroTime) RotationMatrix {
+	nut := nutationRot(&time, into2000)
+	prec := precessionRot(time, into2000)
+	return CombineRotation(nut, prec)
+}
+
+// Rotation_HOR_EQD returns a rotation matrix that converts horizontal (HOR)
+// coordinates to equatorial of-date (EQD) coordinates.
+func Rotation_HOR_EQD(time AstroTime, observer Observer) RotationMatrix {
+	return InverseRotation(Rotation_EQD_HOR(time, observer))
+}
+
+// Rotation_ECT_EQD returns a rotation matrix that converts true ecliptic of
+// date (ECT) coordinates to equatorial of-date (EQD) coordinates.
+func Rotation_ECT_EQD(time AstroTime) RotationMatrix {
+	tilt := etilt(&time)
+	tobl := RadiansFromDegrees(tilt.Tobl)
+	cosTobl := math.Cos(tobl)
+	sinTobl := math.Sin(tobl)
+
+	var m RotationMatrix
+	// EQD.x = ECT.x
+	m.Rot[0][0] = 1.0
+	m.Rot[1][0] = 0.0
+	m.Rot[2][0] = 0.0
+	// EQD.y = +cos*ECT.y - sin*ECT.z
+	m.Rot[0][1] = 0.0
+	m.Rot[1][1] = +cosTobl
+	m.Rot[2][1] = -sinTobl
+	// EQD.z = +sin*ECT.y + cos*ECT.z
+	m.Rot[0][2] = 0.0
+	m.Rot[1][2] = +sinTobl
+	m.Rot[2][2] = +cosTobl
+	return m
+}
+
+// Rotation_EQD_ECT returns a rotation matrix that converts equatorial of-date
+// (EQD) coordinates to true ecliptic of date (ECT) coordinates.
+func Rotation_EQD_ECT(time AstroTime) RotationMatrix {
+	return InverseRotation(Rotation_ECT_EQD(time))
+}
+
+// ApsisKind indicates whether an apsis event is a closest approach
+// (pericenter) or a farthest distance (apocenter).
+type ApsisKind int
+
+const (
+	ApsisKindPericenter ApsisKind = iota // the body is at its closest approach
+	ApsisKindApocenter                   // the body is at its farthest distance
+	ApsisKindInvalid                     // undefined or invalid apsis
+)
+
+// ApsisInfo describes a closest-approach or farthest-distance event of an
+// orbiting body, such as the Moon's perigee and apogee.
+type ApsisInfo struct {
+	Time   AstroTime // the date and time of the apsis
+	Kind   ApsisKind // whether this is a pericenter or apocenter event
+	DistAu float64   // the distance between the centers of the bodies in AU
+	DistKm float64   // the distance between the centers of the bodies in kilometers
+}
+
+// moonDistance returns the geocentric distance to the Moon in AU.
+func moonDistance(t AstroTime) float64 {
+	mc := makeMoonContext(t.Tt / 36525.0)
+	moon := mc.calcMoon()
+	return moon.distanceAu
+}
+
+// moonDistanceSlope evaluates the rate of change of the Moon's distance.
+func moonDistanceSlope(time AstroTime, direction float64) float64 {
+	dt := 0.001
+	t1 := time.AddDays(-dt / 2.0)
+	t2 := time.AddDays(+dt / 2.0)
+	return direction * (moonDistance(t2) - moonDistance(t1)) / dt
+}
+
+// SearchLunarApsis finds the next perigee (closest approach) or apogee
+// (farthest distance) of the Moon after the given start time.
+func SearchLunarApsis(startTime AstroTime) (ApsisInfo, error) {
+	const increment = 5.0 // number of days to skip in each iteration
+	t1 := startTime
+	m1 := moonDistanceSlope(t1, +1.0)
+
+	for iter := 0.0; iter < 2.0*29.530588; iter += increment {
+		t2 := t1.AddDays(increment)
+		m2 := moonDistanceSlope(t2, +1.0)
+
+		if m1*m2 <= 0.0 {
+			// There is a change of slope polarity within [t1, t2], so this
+			// range contains an apsis. Figure out whether it is perigee or apogee.
+			var kind ApsisKind
+			var root AstroTime
+			var err error
+			if m1 < 0.0 || m2 > 0.0 {
+				// Minimum-distance event: perigee.
+				kind = ApsisKindPericenter
+				root, err = Search(func(t AstroTime) (float64, error) {
+					return moonDistanceSlope(t, +1.0), nil
+				}, t1, t2, 1.0)
+			} else if m1 > 0.0 || m2 < 0.0 {
+				// Maximum-distance event: apogee.
+				kind = ApsisKindApocenter
+				root, err = Search(func(t AstroTime) (float64, error) {
+					return moonDistanceSlope(t, -1.0), nil
+				}, t1, t2, 1.0)
+			} else {
+				return ApsisInfo{}, errors.New("Both Moon distance slopes are zero")
+			}
+			if err != nil {
+				return ApsisInfo{}, err
+			}
+			distAu := moonDistance(root)
+			return ApsisInfo{Time: root, Kind: kind, DistAu: distAu, DistKm: distAu * KmPerAu}, nil
+		}
+
+		// Not yet found a slope polarity change; keep searching.
+		t1 = t2
+		m1 = m2
+	}
+	return ApsisInfo{}, errors.New("Could not find a lunar apsis within two synodic months")
+}
+
+// NextLunarApsis finds the next lunar perigee or apogee event after the given
+// apsis event. Given an apogee event, it finds the next perigee, and vice versa.
+func NextLunarApsis(apsis ApsisInfo) (ApsisInfo, error) {
+	if apsis.Kind != ApsisKindApocenter && apsis.Kind != ApsisKindPericenter {
+		return ApsisInfo{}, errors.New("Invalid apsis kind")
+	}
+	const skip = 11.0 // days to skip to start looking for the next apsis event
+	next, err := SearchLunarApsis(apsis.Time.AddDays(skip))
+	if err != nil {
+		return ApsisInfo{}, err
+	}
+	// Verify that we found the opposite apsis from the previous one.
+	if next.Kind+apsis.Kind != 1 {
+		return ApsisInfo{}, errors.New("Found same apsis kind instead of opposite")
+	}
+	return next, nil
 }
 
 type addSolTerm struct {
