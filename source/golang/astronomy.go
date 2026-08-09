@@ -2881,6 +2881,438 @@ func NextLunarApsis(apsis ApsisInfo) (ApsisInfo, error) {
 	return next, nil
 }
 
+// gyration combines nutation and precession into a single operation.
+func gyration(pos AstroVector, dir precessDirection) AstroVector {
+	if dir == into2000 {
+		return precession(nutation(pos, dir), dir)
+	}
+	return nutation(precession(pos, dir), dir)
+}
+
+// gyrationPosVel combines nutation and precession for a state vector.
+func gyrationPosVel(state StateVector, dir precessDirection) StateVector {
+	if dir == into2000 {
+		return precessionPosVel(nutationPosVel(state, dir), dir)
+	}
+	return nutationPosVel(precessionPosVel(state, dir), dir)
+}
+
+// EclipticGeoMoon calculates the geocentric ecliptic coordinates of the Moon
+// at the given time, using the true equinox of date.
+func EclipticGeoMoon(time AstroTime) Spherical {
+	mc := makeMoonContext(time.Tt / 36525.0)
+	moon := mc.calcMoon()
+
+	// CalcMoon produces ecliptic coordinates in mean equinox of date (ECM).
+	distCosLat := moon.distanceAu * math.Cos(moon.geoEclipLat)
+	ecm := [3]float64{
+		distCosLat * math.Cos(moon.geoEclipLon),
+		distCosLat * math.Sin(moon.geoEclipLon),
+		moon.distanceAu * math.Sin(moon.geoEclipLat),
+	}
+
+	// Obtain true and mean obliquity angles for the given time.
+	// This also pre-calculates and caches the nutation in `time`.
+	tilt := etilt(&time)
+
+	// Convert ecliptic coordinates (ECM) to equatorial coordinates (EQM),
+	// both in mean equinox of date.
+	eqm := eclOblToEquVec(AstroVector{X: ecm[0], Y: ecm[1], Z: ecm[2], T: time}, RadiansFromDegrees(tilt.Mobl))
+
+	// Add nutation to convert to true equatorial coordinates of date (EQD).
+	eqd := nutation(eqm, from2000)
+
+	// Convert back to ecliptic using the true equinox of date (ECT).
+	eclip := rotateEquatorialToEcliptic([3]float64{eqd.X, eqd.Y, eqd.Z}, RadiansFromDegrees(tilt.Tobl), time)
+	return Spherical{Lat: eclip.Elat, Lon: eclip.Elon, Dist: moon.distanceAu}
+}
+
+// EquatorialToEcliptic converts a J2000 mean equator (EQJ) vector into true
+// ecliptic of date (ECT) coordinates, returning both Cartesian and spherical
+// results.
+func EquatorialToEcliptic(eqj AstroVector) Ecliptic {
+	// Calculate nutation and obliquity for this time.
+	tilt := etilt(&eqj.T)
+
+	// Convert mean J2000 equator (EQJ) to true equator of date (EQD).
+	mean := precession(eqj, from2000)
+	eqd := nutation(mean, from2000)
+
+	// Rotate from EQD to true ecliptic of date (ECT).
+	return rotateEquatorialToEcliptic([3]float64{eqd.X, eqd.Y, eqd.Z}, RadiansFromDegrees(tilt.Tobl), eqj.T)
+}
+
+// GeoMoonState calculates the geocentric position and velocity of the Moon at
+// the given time, using numerical differentiation of GeoMoon.
+func GeoMoonState(time AstroTime) StateVector {
+	const dt = 1.0e-5 // 0.864 seconds
+	t1 := time.AddDays(-dt)
+	t2 := time.AddDays(+dt)
+	r1 := GeoMoon(t1)
+	r2 := GeoMoon(t2)
+	return StateVector{
+		X:  (r1.X + r2.X) / 2,
+		Y:  (r1.Y + r2.Y) / 2,
+		Z:  (r1.Z + r2.Z) / 2,
+		Vx: (r2.X - r1.X) / (2 * dt),
+		Vy: (r2.Y - r1.Y) / (2 * dt),
+		Vz: (r2.Z - r1.Z) / (2 * dt),
+		T:  time,
+	}
+}
+
+// GeoEmbState calculates the geocentric position and velocity of the
+// Earth/Moon barycenter at the given time.
+func GeoEmbState(time AstroTime) StateVector {
+	s := GeoMoonState(time)
+	const d = 1.0 + earthMoonMassRatio
+	return StateVector{
+		X:  s.X / d,
+		Y:  s.Y / d,
+		Z:  s.Z / d,
+		Vx: s.Vx / d,
+		Vy: s.Vy / d,
+		Vz: s.Vz / d,
+		T:  time,
+	}
+}
+
+// EarthRotationAxis calculates the orientation of the Earth's rotation axis at
+// the given time, returning the north pole vector and the rotation angle of
+// the prime meridian.
+func EarthRotationAxis(time *AstroTime) AxisInfo {
+	// Start with a north pole vector in equator-of-date coordinates: (0,0,1),
+	// then convert to J2000 coordinates.
+	north := gyration(AstroVector{X: 0, Y: 0, Z: 1, T: *time}, into2000)
+
+	equ, err := EquatorFromVector(north)
+	if err != nil {
+		panic(err)
+	}
+	// Use a modified version of the era() function that does not trim to
+	// 0..360 degrees, corrected to give the correct angle at J2000.
+	spin := 190.41375788700253 + (360.9856122880876 * time.Ut)
+	return AxisInfo{
+		Ra:    equ.Ra,
+		Dec:   equ.Dec,
+		Spin:  spin,
+		North: north,
+	}
+}
+
+// RotationAxis calculates the orientation of a body's rotation axis and the
+// rotation angle of its prime meridian at the given time, using the IAU
+// Working Group on Cartographics and Rotational Elements 2015 report formulas.
+func RotationAxis(body Body, time *AstroTime) (AxisInfo, error) {
+	var ra, dec, w float64
+	const d = 36525.0
+	tt := time.Tt
+	T := tt / d
+
+	switch body {
+	case Sun:
+		ra = 286.13
+		dec = 63.87
+		w = 84.176 + (14.1844 * tt)
+	case Mercury:
+		ra = 281.0103 - (0.0328 * T)
+		dec = 61.4155 - (0.0049 * T)
+		w = 329.5988 +
+			(6.1385108 * tt) +
+			(0.01067257 * math.Sin(RadiansFromDegrees(174.7910857+4.092335*tt))) -
+			(0.00112309 * math.Sin(RadiansFromDegrees(349.5821714+8.184670*tt))) -
+			(0.00011040 * math.Sin(RadiansFromDegrees(164.3732571+12.277005*tt))) -
+			(0.00002539 * math.Sin(RadiansFromDegrees(339.1643429+16.369340*tt))) -
+			(0.00000571 * math.Sin(RadiansFromDegrees(153.9554286+20.461675*tt)))
+	case Venus:
+		ra = 272.76
+		dec = 67.16
+		w = 160.20 - (1.4813688 * tt)
+	case Earth:
+		return EarthRotationAxis(time), nil
+	case Moon:
+		e1 := RadiansFromDegrees(125.045 - 0.0529921*tt)
+		e2 := RadiansFromDegrees(250.089 - 0.1059842*tt)
+		e3 := RadiansFromDegrees(260.008 + 13.0120009*tt)
+		e4 := RadiansFromDegrees(176.625 + 13.3407154*tt)
+		e5 := RadiansFromDegrees(357.529 + 0.9856003*tt)
+		e6 := RadiansFromDegrees(311.589 + 26.4057084*tt)
+		e7 := RadiansFromDegrees(134.963 + 13.0649930*tt)
+		e8 := RadiansFromDegrees(276.617 + 0.3287146*tt)
+		e9 := RadiansFromDegrees(34.226 + 1.7484877*tt)
+		e10 := RadiansFromDegrees(15.134 - 0.1589763*tt)
+		e11 := RadiansFromDegrees(119.743 + 0.0036096*tt)
+		e12 := RadiansFromDegrees(239.961 + 0.1643573*tt)
+		e13 := RadiansFromDegrees(25.053 + 12.9590088*tt)
+
+		ra = 269.9949 + 0.0031*T -
+			3.8787*math.Sin(e1) -
+			0.1204*math.Sin(e2) +
+			0.0700*math.Sin(e3) -
+			0.0172*math.Sin(e4) +
+			0.0072*math.Sin(e6) -
+			0.0052*math.Sin(e10) +
+			0.0043*math.Sin(e13)
+
+		dec = 66.5392 + 0.0130*T +
+			1.5419*math.Cos(e1) +
+			0.0239*math.Cos(e2) -
+			0.0278*math.Cos(e3) +
+			0.0068*math.Cos(e4) -
+			0.0029*math.Cos(e6) +
+			0.0009*math.Cos(e7) +
+			0.0008*math.Cos(e10) -
+			0.0009*math.Cos(e13)
+
+		w = 38.3213 + (13.17635815-1.4e-12*tt)*tt +
+			3.5610*math.Sin(e1) +
+			0.1208*math.Sin(e2) -
+			0.0642*math.Sin(e3) +
+			0.0158*math.Sin(e4) +
+			0.0252*math.Sin(e5) -
+			0.0066*math.Sin(e6) -
+			0.0047*math.Sin(e7) -
+			0.0046*math.Sin(e8) +
+			0.0028*math.Sin(e9) +
+			0.0052*math.Sin(e10) +
+			0.0040*math.Sin(e11) +
+			0.0019*math.Sin(e12) -
+			0.0044*math.Sin(e13)
+	case Mars:
+		ra = 317.269202 - 0.10927547*T +
+			0.000068*math.Sin(RadiansFromDegrees(198.991226+19139.4819985*T)) +
+			0.000238*math.Sin(RadiansFromDegrees(226.292679+38280.8511281*T)) +
+			0.000052*math.Sin(RadiansFromDegrees(249.663391+57420.7251593*T)) +
+			0.000009*math.Sin(RadiansFromDegrees(266.183510+76560.6367950*T)) +
+			0.419057*math.Sin(RadiansFromDegrees(79.398797+0.5042615*T))
+		dec = 54.432516 - 0.05827105*T +
+			0.000051*math.Cos(RadiansFromDegrees(122.433576+19139.9407476*T)) +
+			0.000141*math.Cos(RadiansFromDegrees(43.058401+38280.8753272*T)) +
+			0.000031*math.Cos(RadiansFromDegrees(57.663379+57420.7517205*T)) +
+			0.000005*math.Cos(RadiansFromDegrees(79.476401+76560.6495004*T)) +
+			1.591274*math.Cos(RadiansFromDegrees(166.325722+0.5042615*T))
+		w = 176.049863 + 350.891982443297*tt +
+			0.000145*math.Sin(RadiansFromDegrees(129.071773+19140.0328244*T)) +
+			0.000157*math.Sin(RadiansFromDegrees(36.352167+38281.0473591*T)) +
+			0.000040*math.Sin(RadiansFromDegrees(56.668646+57420.9295360*T)) +
+			0.000001*math.Sin(RadiansFromDegrees(67.364003+76560.2552215*T)) +
+			0.000001*math.Sin(RadiansFromDegrees(104.792680+95700.4387578*T)) +
+			0.584542*math.Sin(RadiansFromDegrees(95.391654+0.5042615*T))
+	case Jupiter:
+		ja := RadiansFromDegrees(99.360714 + 4850.4046*T)
+		jb := RadiansFromDegrees(175.895369 + 1191.9605*T)
+		jc := RadiansFromDegrees(300.323162 + 262.5475*T)
+		jd := RadiansFromDegrees(114.012305 + 6070.2476*T)
+		je := RadiansFromDegrees(49.511251 + 64.3000*T)
+		ra = 268.056595 - 0.006499*T +
+			0.000117*math.Sin(ja) +
+			0.000938*math.Sin(jb) +
+			0.001432*math.Sin(jc) +
+			0.000030*math.Sin(jd) +
+			0.002150*math.Sin(je)
+		dec = 64.495303 + 0.002413*T +
+			0.000050*math.Cos(ja) +
+			0.000404*math.Cos(jb) +
+			0.000617*math.Cos(jc) -
+			0.000013*math.Cos(jd) +
+			0.000926*math.Cos(je)
+		w = 284.95 + 870.536*tt
+	case Saturn:
+		ra = 40.589 - 0.036*T
+		dec = 83.537 - 0.004*T
+		w = 38.90 + 810.7939024*tt
+	case Uranus:
+		ra = 257.311
+		dec = -15.175
+		w = 203.81 - 501.1600928*tt
+	case Neptune:
+		n := RadiansFromDegrees(357.85 + 52.316*T)
+		ra = 299.36 + 0.70*math.Sin(n)
+		dec = 43.46 - 0.51*math.Cos(n)
+		w = 249.978 + 541.1397757*tt - 0.48*math.Sin(n)
+	case Pluto:
+		ra = 132.993
+		dec = -6.163
+		w = 302.695 + 56.3625225*tt
+	default:
+		return AxisInfo{}, errors.New("Invalid body for rotation axis")
+	}
+
+	radlat := RadiansFromDegrees(dec)
+	radlon := RadiansFromDegrees(ra)
+	rcoslat := math.Cos(radlat)
+	axis := AxisInfo{
+		Ra:   ra / 15.0, // convert degrees to sidereal hours
+		Dec:  dec,
+		Spin: w,
+		North: AstroVector{
+			X: rcoslat * math.Cos(radlon),
+			Y: rcoslat * math.Sin(radlon),
+			Z: math.Sin(radlat),
+			T: *time,
+		},
+	}
+	return axis, nil
+}
+
+// ConstellationInfo identifies the constellation that contains a point in the
+// sky, based on the International Astronomical Union's 1922 constellation
+// boundaries in the B1875 epoch.
+type ConstellationInfo struct {
+	Symbol  string  // the 3-letter abbreviation of the constellation
+	Name    string  // the full name of the constellation
+	Ra1875  float64 // right ascension in B1875 coordinates (sidereal hours)
+	Dec1875 float64 // declination in B1875 coordinates (degrees)
+}
+
+// constellationEpochTime is the time of the B1875 epoch, used for converting
+// coordinates into the constellation boundary frame.
+var constellationEpochTime = TimeFromUniversalDays(-45655.74141261017)
+
+// Constellation finds the constellation that contains the given J2000
+// equatorial coordinates (right ascension in sidereal hours, declination in
+// degrees).
+func Constellation(ra float64, dec float64) (ConstellationInfo, error) {
+	if dec < -90.0 || dec > +90.0 {
+		return ConstellationInfo{}, errors.New("Invalid declination for constellation")
+	}
+	// Allow right ascension to wrap around; clamp to [0, 24) sidereal hours.
+	ra = math.Mod(ra, 24.0)
+	if ra < 0.0 {
+		ra += 24.0
+	}
+
+	// Convert coordinates from J2000 to the B1875 epoch.
+	vec2000 := VectorFromSphere(Spherical{Lat: dec, Lon: ra * 15.0, Dist: 1.0}, constellationEpochTime)
+	rot := Rotation_EQJ_EQD(constellationEpochTime)
+	vec1875 := RotateVector(rot, vec2000)
+	b1875, err := EquatorFromVector(vec1875)
+	if err != nil {
+		return ConstellationInfo{}, err
+	}
+
+	// Convert DEC from degrees and RA from hours to the compact angle units
+	// used in the constellation boundary table.
+	xRa := (24.0 * 15.0) * b1875.Ra
+	xDec := 24.0 * b1875.Dec
+
+	// Search for the constellation using the B1875 coordinates.
+	index := -1
+	for i := range constelBounds {
+		b := &constelBounds[i]
+		if b.decLo <= xDec && b.raHi > xRa && b.raLo <= xRa {
+			index = b.index
+			break
+		}
+	}
+	if index < 0 || index >= len(constelNames) {
+		return ConstellationInfo{}, errors.New("Constellation not found")
+	}
+	return ConstellationInfo{
+		Symbol:  constelNames[index].symbol,
+		Name:    constelNames[index].name,
+		Ra1875:  b1875.Ra,
+		Dec1875: b1875.Dec,
+	}, nil
+}
+
+// findSeasonChange searches for the moment when the Sun reaches the given
+// ecliptic longitude, starting from a date in the given year.
+func findSeasonChange(targetLon float64, year, month, day int) (AstroTime, error) {
+	startTime := TimeFromCalendar(year, month, day, 0, 0, 0.0)
+	return SearchSunLongitude(targetLon, startTime, 20.0)
+}
+
+// SunPosition calculates the geocentric ecliptic coordinates of the Sun at the
+// given time, using the true equinox of date.
+func SunPosition(time AstroTime) Ecliptic {
+	// Correct for light travel time from the Sun, otherwise season
+	// calculations (equinox, solstice) will all be early by about 8 minutes.
+	adjustedTime := time.AddDays(-1.0 / SpeedOfLightAuPerDay)
+
+	// Find the heliocentric equatorial coordinates of Earth at the J2000 epoch,
+	// then negate to get the geocentric position of the Sun.
+	earth2000 := calcEarth(adjustedTime)
+	sun2000 := AstroVector{X: -earth2000.X, Y: -earth2000.Y, Z: -earth2000.Z, T: adjustedTime}
+
+	// Convert from J2000 mean equator (EQJ) to mean equator of date (EQM).
+	tilt := etilt(&adjustedTime)
+	meanEquinox := precession(sun2000, from2000)
+
+	// Add nutation to convert to true equator of date (EQD).
+	eqd := nutation(meanEquinox, from2000)
+
+	// Convert EQD to true ecliptic of date (ECT).
+	return rotateEquatorialToEcliptic([3]float64{eqd.X, eqd.Y, eqd.Z}, RadiansFromDegrees(tilt.Tobl), time)
+}
+
+// sunOffset returns the difference between the Sun's ecliptic longitude and a
+// target longitude, reduced into the range (-180, +180].
+func sunOffset(targetLon float64, time AstroTime) (float64, error) {
+	ecl := SunPosition(time)
+	return longitudeOffset(ecl.Elon - targetLon), nil
+}
+
+// SearchSunLongitude finds the next time the Sun reaches the given apparent
+// ecliptic longitude in degrees, after startTime.
+func SearchSunLongitude(targetLon float64, startTime AstroTime, limitDays float64) (AstroTime, error) {
+	t2 := startTime.AddDays(limitDays)
+	return Search(func(t AstroTime) (float64, error) {
+		return sunOffset(targetLon, t)
+	}, startTime, t2, 0.01)
+}
+
+// Seasons calculates the March and September equinoxes and the June and
+// December solstices for the given calendar year.
+func Seasons(year int) (SeasonsInfo, error) {
+	marEquinox, err := findSeasonChange(0, year, 3, 10)
+	if err != nil {
+		return SeasonsInfo{}, err
+	}
+	junSolstice, err := findSeasonChange(90, year, 6, 10)
+	if err != nil {
+		return SeasonsInfo{}, err
+	}
+	sepEquinox, err := findSeasonChange(180, year, 9, 10)
+	if err != nil {
+		return SeasonsInfo{}, err
+	}
+	decSolstice, err := findSeasonChange(270, year, 12, 10)
+	if err != nil {
+		return SeasonsInfo{}, err
+	}
+	return SeasonsInfo{
+		MarEquinox:  marEquinox,
+		JunSolstice: junSolstice,
+		SepEquinox:  sepEquinox,
+		DecSolstice: decSolstice,
+	}, nil
+}
+
+// Rotation_EQJ_ECT returns a rotation matrix that converts J2000 mean equator
+// (EQJ) coordinates to true ecliptic of date (ECT) coordinates.
+func Rotation_EQJ_ECT(time AstroTime) RotationMatrix {
+	return CombineRotation(Rotation_EQJ_EQD(time), Rotation_EQD_ECT(time))
+}
+
+// Rotation_ECT_EQJ returns a rotation matrix that converts true ecliptic of
+// date (ECT) coordinates to J2000 mean equator (EQJ) coordinates.
+func Rotation_ECT_EQJ(time AstroTime) RotationMatrix {
+	return InverseRotation(Rotation_EQJ_ECT(time))
+}
+
+// Rotation_HOR_EQJ returns a rotation matrix that converts horizontal (HOR)
+// coordinates to J2000 mean equator (EQJ) coordinates.
+func Rotation_HOR_EQJ(time AstroTime, observer Observer) RotationMatrix {
+	return CombineRotation(Rotation_HOR_EQD(time, observer), Rotation_EQD_EQJ(time))
+}
+
+// Rotation_EQD_ECL returns a rotation matrix that converts equatorial of-date
+// (EQD) coordinates to J2000 mean ecliptic (ECL) coordinates.
+func Rotation_EQD_ECL(time AstroTime) RotationMatrix {
+	return CombineRotation(Rotation_EQD_EQJ(time), Rotation_EQJ_ECL())
+}
+
 type addSolTerm struct {
 	coeffl float64
 	coeffs float64
