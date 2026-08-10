@@ -2670,6 +2670,380 @@ func majorBodyBary(bary *majorBodies, tt float64) {
 	bary.Sun.v.Z = -bary.Sun.v.Z
 }
 
+// smallBodyAcceleration calculates the acceleration experienced by a small
+// body at the given barycentric position, due to the Sun and the four giant
+// planets.
+func smallBodyAcceleration(smallPos terseVector, bary *majorBodies) terseVector {
+	var acc terseVector
+	addAcceleration(&acc, smallPos, sunGM, bary.Sun.r)
+	addAcceleration(&acc, smallPos, jupiterGM, bary.Jupiter.r)
+	addAcceleration(&acc, smallPos, saturnGM, bary.Saturn.r)
+	addAcceleration(&acc, smallPos, uranusGM, bary.Uranus.r)
+	addAcceleration(&acc, smallPos, neptuneGM, bary.Neptune.r)
+	return acc
+}
+
+// addAcceleration accumulates the gravitational pull of a major body on a
+// small body at the given position.
+func addAcceleration(acc *terseVector, smallPos terseVector, gm float64, majorPos terseVector) {
+	dx := majorPos.X - smallPos.X
+	dy := majorPos.Y - smallPos.Y
+	dz := majorPos.Z - smallPos.Z
+	r2 := dx*dx + dy*dy + dz*dz
+	pull := gm / (r2 * math.Sqrt(r2))
+	acc.X += dx * pull
+	acc.Y += dy * pull
+	acc.Z += dz * pull
+}
+
+// gravFromState converts a heliocentric position/velocity state into a
+// barycentric gravity calculation including the acceleration at that state.
+func gravFromState(bary *majorBodies, state *bodyState) bodyGravCalc {
+	majorBodyBary(bary, state.tt)
+	calc := bodyGravCalc{
+		Tt: state.tt,
+		R:  terseVector{X: state.r.X + bary.Sun.r.X, Y: state.r.Y + bary.Sun.r.Y, Z: state.r.Z + bary.Sun.r.Z},
+		V:  terseVector{X: state.v.X + bary.Sun.v.X, Y: state.v.Y + bary.Sun.v.Y, Z: state.v.Z + bary.Sun.v.Z},
+	}
+	calc.A = smallBodyAcceleration(calc.R, bary)
+	return calc
+}
+
+// gravSim advances a gravity calculation from time tt1 to tt2 using a
+// predictor-corrector integration of the small body's motion.
+func gravSim(bary2 *majorBodies, tt2 float64, calc1 *bodyGravCalc) bodyGravCalc {
+	dt := tt2 - calc1.Tt
+
+	// Calculate where the major bodies (Sun, Jupiter...Neptune) will be at the
+	// next time step.
+	majorBodyBary(bary2, tt2)
+
+	// Estimate the position of the small body as if the current acceleration
+	// applies across the whole time interval.
+	approxPos := updatePosition(dt, calc1.R, calc1.V, calc1.A)
+
+	// Calculate the acceleration at the approximate next location.
+	acc := smallBodyAcceleration(approxPos, bary2)
+
+	// Average the endpoint accelerations as the mean effective acceleration.
+	acc = terseVector{
+		X: (acc.X + calc1.A.X) / 2,
+		Y: (acc.Y + calc1.A.Y) / 2,
+		Z: (acc.Z + calc1.A.Z) / 2,
+	}
+
+	// Refine the estimates using the mean acceleration.
+	var calc2 bodyGravCalc
+	calc2.R = updatePosition(dt, calc1.R, calc1.V, acc)
+	calc2.V = updateVelocity(dt, calc1.V, acc)
+	calc2.A = smallBodyAcceleration(calc2.R, bary2)
+	calc2.Tt = tt2
+	return calc2
+}
+
+// plutoCache caches pre-calculated Pluto gravity segments so that repeated
+// Pluto calculations at nearby times are fast.
+var plutoCache []*bodySegment
+
+// bodySegment is a series of gravity states interpolating Pluto's motion
+// between two entries of the plutoStateTable.
+type bodySegment struct {
+	step [plutoNsteps]bodyGravCalc
+}
+
+// getSegment finds or calculates a cached gravity segment that contains the
+// given Terrestrial Time. Returns -1 for the segment index when the time is
+// outside the covered range.
+func getSegment(cache []*bodySegment, tt float64) (int, *bodySegment, error) {
+	if tt < plutoStateTable[0].tt || tt > plutoStateTable[plutoNumStates-1].tt {
+		return -1, nil, nil
+	}
+
+	segIndex := clampIndex(int(math.Floor((tt-plutoStateTable[0].tt)/plutoTimeStep)), plutoNumStates-1)
+	seg := cache[segIndex]
+	if seg == nil {
+		// Calculate the segment: pick the pair of bracketing body states.
+		seg = &bodySegment{}
+		cache[segIndex] = seg
+		var bary majorBodies
+		seg.step[0] = gravFromState(&bary, &plutoStateTable[segIndex])
+		seg.step[plutoNsteps-1] = gravFromState(&bary, &plutoStateTable[segIndex+1])
+
+		// Simulate forwards from the lower time bound.
+		stepTT := seg.step[0].Tt
+		for i := 1; i < plutoNsteps-1; i++ {
+			stepTT += plutoDt
+			seg.step[i] = gravSim(&bary, stepTT, &seg.step[i-1])
+		}
+
+		// Simulate backwards from the upper time bound.
+		var reverse bodySegment
+		reverse.step[plutoNsteps-1] = seg.step[plutoNsteps-1]
+		stepTT = reverse.step[plutoNsteps-1].Tt
+		for i := plutoNsteps - 2; i > 0; i-- {
+			stepTT -= plutoDt
+			reverse.step[i] = gravSim(&bary, stepTT, &reverse.step[i+1])
+		}
+
+		// Fade-mix the two series so that there are no discontinuities.
+		for i := plutoNsteps - 2; i > 0; i-- {
+			ramp := float64(i) / float64(plutoNsteps-1)
+			seg.step[i].R = vecRamp(seg.step[i].R, reverse.step[i].R, ramp)
+			seg.step[i].V = vecRamp(seg.step[i].V, reverse.step[i].V, ramp)
+			seg.step[i].A = vecRamp(seg.step[i].A, reverse.step[i].A, ramp)
+		}
+	}
+	return segIndex, seg, nil
+}
+
+// vecRamp linearly interpolates between two terse vectors.
+func vecRamp(a, b terseVector, ramp float64) terseVector {
+	return terseVector{
+		X: (1-ramp)*a.X + ramp*b.X,
+		Y: (1-ramp)*a.Y + ramp*b.Y,
+		Z: (1-ramp)*a.Z + ramp*b.Z,
+	}
+}
+
+// calcPlutoOneWay computes Pluto's barycentric state at targetTt by stepping
+// forward (or backward) from a known initial state.
+func calcPlutoOneWay(bary *majorBodies, initState *bodyState, targetTt float64, dt float64) bodyGravCalc {
+	calc := gravFromState(bary, initState)
+	n := int(math.Ceil((targetTt - calc.Tt) / dt))
+	for i := 0; i < n; i++ {
+		next := targetTt
+		if i+1 != n {
+			next = calc.Tt + dt
+		}
+		calc = gravSim(bary, next, &calc)
+	}
+	return calc
+}
+
+// calcPluto calculates the position and velocity of Pluto at the given time.
+// When helio is true, the result is converted from barycentric to heliocentric.
+func calcPluto(time AstroTime, helio bool) bodyState {
+	if plutoCache == nil {
+		plutoCache = make([]*bodySegment, plutoNumStates-1)
+	}
+
+	var bstate bodyState
+	bstate.tt = time.Tt
+
+	segIndex, seg, err := getSegment(plutoCache, time.Tt)
+	if err != nil {
+		return bstate
+	}
+
+	var bary majorBodies
+	if segIndex < 0 {
+		// The target time is outside the covered range; crawl from the nearest
+		// endpoint.
+		if time.Tt < plutoStateTable[0].tt {
+			calc := calcPlutoOneWay(&bary, &plutoStateTable[0], time.Tt, -plutoDt)
+			bstate.r = calc.R
+			bstate.v = calc.V
+		} else {
+			calc := calcPlutoOneWay(&bary, &plutoStateTable[plutoNumStates-1], time.Tt, +plutoDt)
+			bstate.r = calc.R
+			bstate.v = calc.V
+		}
+	} else {
+		left := clampIndex(int(math.Floor((time.Tt-seg.step[0].Tt)/plutoDt)), plutoNsteps-1)
+		s1 := &seg.step[left]
+		s2 := &seg.step[left+1]
+
+		// Find the mean acceleration vector over the interval.
+		acc := terseVector{
+			X: (s1.A.X + s2.A.X) / 2,
+			Y: (s1.A.Y + s2.A.Y) / 2,
+			Z: (s1.A.Z + s2.A.Z) / 2,
+		}
+
+		// Extrapolate away from t1 in the positive time direction.
+		ra := updatePosition(time.Tt-s1.Tt, s1.R, s1.V, acc)
+		va := updateVelocity(time.Tt-s1.Tt, s1.V, acc)
+
+		// Extrapolate away from t2 in the negative time direction.
+		rb := updatePosition(time.Tt-s2.Tt, s2.R, s2.V, acc)
+		vb := updateVelocity(time.Tt-s2.Tt, s2.V, acc)
+
+		// Blend the two position estimates with a fade.
+		ramp := (time.Tt - s1.Tt) / plutoDt
+		bstate.r = vecRamp(ra, rb, ramp)
+		bstate.v = vecRamp(va, vb, ramp)
+
+		if helio {
+			majorBodyBary(&bary, time.Tt)
+		}
+	}
+
+	if helio {
+		// Convert barycentric coordinates back to heliocentric coordinates.
+		bstate.r.X -= bary.Sun.r.X
+		bstate.r.Y -= bary.Sun.r.Y
+		bstate.r.Z -= bary.Sun.r.Z
+		bstate.v.X -= bary.Sun.v.X
+		bstate.v.Y -= bary.Sun.v.Y
+		bstate.v.Z -= bary.Sun.v.Z
+	}
+	return bstate
+}
+
+// EquatorDate selects the epoch of the Earth's equator for equatorial
+// coordinates.
+type EquatorDate int
+
+const (
+	EquatorOfDate EquatorDate = 0 // the Earth's equator at the given date/time
+	EquatorJ2000  EquatorDate = 1 // the Earth's equator at the J2000 epoch
+)
+
+// geoPos converts an observer's geographic position to a geocentric equatorial
+// position vector in J2000 coordinates.
+func geoPos(time *AstroTime, observer Observer) [3]float64 {
+	gast := SiderealTime(time)
+	pos, _ := terra(observer, gast)
+	vec := gyration(AstroVector{X: pos.X, Y: pos.Y, Z: pos.Z, T: *time}, into2000)
+	return [3]float64{vec.X, vec.Y, vec.Z}
+}
+
+// ObserverVector calculates the geocentric equatorial position vector of an
+// observer on the surface of the Earth at the given time.
+func ObserverVector(time *AstroTime, observer Observer, equdate EquatorDate) (AstroVector, error) {
+	gast := SiderealTime(time)
+	pos, _ := terra(observer, gast)
+	var vec AstroVector
+	switch equdate {
+	case EquatorOfDate:
+		vec = AstroVector{X: pos.X, Y: pos.Y, Z: pos.Z, T: *time}
+	case EquatorJ2000:
+		vec = gyration(AstroVector{X: pos.X, Y: pos.Y, Z: pos.Z, T: *time}, into2000)
+	default:
+		return AstroVector{}, errors.New("Invalid equinox of date")
+	}
+	return vec, nil
+}
+
+// ObserverState calculates the geocentric equatorial position and velocity of
+// an observer on the surface of the Earth at the given time.
+func ObserverState(time *AstroTime, observer Observer, equdate EquatorDate) (StateVector, error) {
+	gast := SiderealTime(time)
+	pos, vel := terra(observer, gast)
+	var state StateVector
+	switch equdate {
+	case EquatorOfDate:
+		state = StateVector{X: pos.X, Y: pos.Y, Z: pos.Z, Vx: vel.X, Vy: vel.Y, Vz: vel.Z, T: *time}
+	case EquatorJ2000:
+		state = gyrationPosVel(StateVector{X: pos.X, Y: pos.Y, Z: pos.Z, Vx: vel.X, Vy: vel.Y, Vz: vel.Z, T: *time}, into2000)
+	default:
+		return StateVector{}, errors.New("Invalid equinox of date")
+	}
+	return state, nil
+}
+
+// VectorObserver is the inverse of ObserverVector: it converts a geocentric
+// equatorial position vector into the corresponding geographic location.
+func VectorObserver(vector *AstroVector, equdate EquatorDate) Observer {
+	pos1 := [3]float64{vector.X, vector.Y, vector.Z}
+	if equdate == EquatorJ2000 {
+		mean := precession(AstroVector{X: pos1[0], Y: pos1[1], Z: pos1[2], T: vector.T}, from2000)
+		eqd := nutation(mean, from2000)
+		pos1 = [3]float64{eqd.X, eqd.Y, eqd.Z}
+	}
+	gast := SiderealTime(&vector.T)
+	return inverseTerra(terseVector{X: pos1[0], Y: pos1[1], Z: pos1[2]}, gast)
+}
+
+// saturnMagnitude estimates the visual magnitude of Saturn, accounting for the
+// tilt of its rings.
+func saturnMagnitude(phase float64, helioDist float64, geoDist float64, gc AstroVector, time AstroTime) (float64, float64, error) {
+	// Based on formulas by Paul Schlyter.
+	// We must handle Saturn's rings as a major component of its visual magnitude.
+	eclip := EquatorialToEcliptic(gc)
+	ir := RadiansFromDegrees(28.06)                       // tilt of Saturn's rings to the ecliptic
+	nr := RadiansFromDegrees(169.51 + 3.82e-5*time.Tt)   // ascending node of Saturn's rings
+
+	lat := RadiansFromDegrees(eclip.Elat)
+	lon := RadiansFromDegrees(eclip.Elon)
+	tilt := math.Asin(math.Sin(lat)*math.Cos(ir) - math.Cos(lat)*math.Sin(ir)*math.Sin(lon-nr))
+	sinTilt := math.Sin(math.Abs(tilt))
+
+	mag := -9.0 + 0.044*phase
+	mag += sinTilt * (-2.6 + 1.2*sinTilt)
+	mag += 5.0 * math.Log10(helioDist*geoDist)
+	return mag, DegreesFromRadians(tilt), nil
+}
+
+// moonNodeSearchFunc evaluates the Moon's ecliptic latitude, signed by the
+// node kind, used for finding where the Moon's orbit crosses the ecliptic.
+func moonNodeSearchFunc(kind NodeEventKind, time AstroTime) (float64, error) {
+	eclip := EclipticGeoMoon(time)
+	return eclip.Lat * float64(kind), nil
+}
+
+// SearchMoonNode searches for the first ascending or descending node of the
+// Moon after the given start time. An ascending node is where the Moon's orbit
+// crosses the ecliptic from south to north; a descending node is the reverse.
+func SearchMoonNode(startTime AstroTime) (NodeEventInfo, error) {
+	const stepDays = 10.0
+	time1 := startTime
+	eclip1 := EclipticGeoMoon(time1)
+	for {
+		time2 := time1.AddDays(stepDays)
+		eclip2 := EclipticGeoMoon(time2)
+		if eclip1.Lat*eclip2.Lat <= 0.0 {
+			// There is a node somewhere inside this closed time interval.
+			kind := DescendingNode
+			if eclip2.Lat > eclip1.Lat {
+				kind = AscendingNode
+			}
+			root, err := Search(func(t AstroTime) (float64, error) {
+				return moonNodeSearchFunc(kind, t)
+			}, time1, time2, 1.0)
+			if err != nil {
+				return NodeEventInfo{}, err
+			}
+			return NodeEventInfo{Time: root, Kind: kind}, nil
+		}
+		time1 = time2
+		eclip1 = eclip2
+	}
+}
+
+// NextMoonNode finds the next lunar node event after the given previous node.
+func NextMoonNode(prevNode NodeEventInfo) (NodeEventInfo, error) {
+	time := prevNode.Time.AddDays(10.0)
+	// Search for the next node of the opposite kind.
+	opposite := DescendingNode
+	if prevNode.Kind == DescendingNode {
+		opposite = AscendingNode
+	}
+	node, err := SearchMoonNode(time)
+	if err != nil {
+		return NodeEventInfo{}, err
+	}
+	return node, nil
+}
+
+// Rotation_EQJ_HOR returns a rotation matrix that converts J2000 mean equator
+// (EQJ) coordinates to horizontal (HOR) coordinates.
+func Rotation_EQJ_HOR(time AstroTime, observer Observer) RotationMatrix {
+	return InverseRotation(Rotation_HOR_EQJ(time, observer))
+}
+
+// Rotation_ECL_EQD returns a rotation matrix that converts J2000 mean ecliptic
+// (ECL) coordinates to equatorial of-date (EQD) coordinates.
+func Rotation_ECL_EQD(time AstroTime) RotationMatrix {
+	return InverseRotation(Rotation_EQD_ECL(time))
+}
+
+// Rotation_ECL_HOR returns a rotation matrix that converts J2000 mean ecliptic
+// (ECL) coordinates to horizontal (HOR) coordinates.
+func Rotation_ECL_HOR(time AstroTime, observer Observer) RotationMatrix {
+	return CombineRotation(Rotation_ECL_EQD(time), Rotation_EQD_HOR(time, observer))
+}
+
 // calcJupiterMoon calculates the jovicentric position and velocity of one of
 // Jupiter's four Galilean moons (Io, Europa, Ganymede, Callisto) at the given
 // time, expressed in the J2000 equatorial (EQJ) frame.
@@ -3545,6 +3919,10 @@ func GeoMoon(time AstroTime) AstroVector {
 }
 
 //--- Generated code begins here ------------------------------------------------------------------
+
+//$ASTRO_GO_PLUTO_CONST()
+
+//$ASTRO_GO_PLUTO_TABLE()
 
 //$ASTRO_GO_VSOP(Mercury)
 //$ASTRO_GO_VSOP(Venus)

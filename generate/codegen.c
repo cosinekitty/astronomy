@@ -1566,6 +1566,17 @@ static int PlutoConstants_C(cg_context_t *context)
     return 0;
 }
 
+static int PlutoConstants_Go(cg_context_t *context)
+{
+    fprintf(context->outfile, "const (\n");
+    fprintf(context->outfile, "\tplutoNumStates = %d\n", PLUTO_NUM_STATES);
+    fprintf(context->outfile, "\tplutoTimeStep  = %d\n", PLUTO_TIME_STEP);
+    fprintf(context->outfile, "\tplutoDt        = %d\n", PLUTO_DT);
+    fprintf(context->outfile, "\tplutoNsteps    = %d\n", PLUTO_NSTEPS);
+    fprintf(context->outfile, ")\n\n");
+    return 0;
+}
+
 
 static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
 {
@@ -1589,6 +1600,32 @@ static int PlutoStateTable_C(cg_context_t *context, const top_model_t *model)
     }
 
     fprintf(context->outfile, "}");
+
+    error = 0;
+fail:
+    return error;
+}
+
+static int PlutoStateTable_Go(cg_context_t *context, const top_model_t *model)
+{
+    int error = 1;
+    double tt;
+    top_rectangular_t equ;
+    int i;
+
+    fprintf(context->outfile, "var plutoStateTable = []bodyState{\n");
+
+    for (i=0; i < PLUTO_NUM_STATES; ++i)
+    {
+        tt = i*PLUTO_TIME_STEP + PLUTO_TT1;
+        CHECK(TopPosition(model, tt, &equ));
+
+        fprintf(context->outfile,
+            "\t{tt: %10.1lf, r: terseVector{X: %16.12lf, Y: %16.12lf, Z: %16.12lf}, v: terseVector{X: %20.13le, Y: %20.13le, Z: %20.13le}},\n",
+            tt, equ.x, equ.y, equ.z, equ.vx, equ.vy, equ.vz);
+    }
+
+    fprintf(context->outfile, "}\n");
 
     error = 0;
 fail:
@@ -1741,6 +1778,10 @@ static int PlutoStateTable(cg_context_t *context)
     {
     case CODEGEN_LANGUAGE_C:
         CHECK(PlutoStateTable_C(context, &model));
+        break;
+
+    case CODEGEN_LANGUAGE_GO:
+        CHECK(PlutoStateTable_Go(context, &model));
         break;
 
     case CODEGEN_LANGUAGE_CSHARP:
@@ -2370,7 +2411,9 @@ static const cg_directive_entry DirectiveTable[] =
     { "ADDSOL",             OptAddSol           },
     { "CONSTEL",            ConstellationData   },
     { "C_PLUTO_CONST",      PlutoConstants_C    },
+    { "GO_PLUTO_CONST",     PlutoConstants_Go   },
     { "PLUTO_TABLE",        PlutoStateTable     },
+    { "GO_PLUTO_TABLE",     PlutoStateTable     },
     { "JUPITER_MOONS",      JupiterMoons        },
     { "GO_JUPITER_MOONS",   JupiterMoons        },
     { NULL, NULL }  /* Marks end of list */

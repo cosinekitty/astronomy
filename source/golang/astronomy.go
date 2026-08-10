@@ -2670,6 +2670,383 @@ func majorBodyBary(bary *majorBodies, tt float64) {
 	bary.Sun.v.Z = -bary.Sun.v.Z
 }
 
+// smallBodyAcceleration calculates the acceleration experienced by a small
+// body at the given barycentric position, due to the Sun and the four giant
+// planets.
+func smallBodyAcceleration(smallPos terseVector, bary *majorBodies) terseVector {
+	var acc terseVector
+	addAcceleration(&acc, smallPos, sunGM, bary.Sun.r)
+	addAcceleration(&acc, smallPos, jupiterGM, bary.Jupiter.r)
+	addAcceleration(&acc, smallPos, saturnGM, bary.Saturn.r)
+	addAcceleration(&acc, smallPos, uranusGM, bary.Uranus.r)
+	addAcceleration(&acc, smallPos, neptuneGM, bary.Neptune.r)
+	return acc
+}
+
+// addAcceleration accumulates the gravitational pull of a major body on a
+// small body at the given position.
+func addAcceleration(acc *terseVector, smallPos terseVector, gm float64, majorPos terseVector) {
+	dx := majorPos.X - smallPos.X
+	dy := majorPos.Y - smallPos.Y
+	dz := majorPos.Z - smallPos.Z
+	r2 := dx*dx + dy*dy + dz*dz
+	pull := gm / (r2 * math.Sqrt(r2))
+	acc.X += dx * pull
+	acc.Y += dy * pull
+	acc.Z += dz * pull
+}
+
+// gravFromState converts a heliocentric position/velocity state into a
+// barycentric gravity calculation including the acceleration at that state.
+func gravFromState(bary *majorBodies, state *bodyState) bodyGravCalc {
+	majorBodyBary(bary, state.tt)
+	calc := bodyGravCalc{
+		Tt: state.tt,
+		R:  terseVector{X: state.r.X + bary.Sun.r.X, Y: state.r.Y + bary.Sun.r.Y, Z: state.r.Z + bary.Sun.r.Z},
+		V:  terseVector{X: state.v.X + bary.Sun.v.X, Y: state.v.Y + bary.Sun.v.Y, Z: state.v.Z + bary.Sun.v.Z},
+	}
+	calc.A = smallBodyAcceleration(calc.R, bary)
+	return calc
+}
+
+// gravSim advances a gravity calculation from time tt1 to tt2 using a
+// predictor-corrector integration of the small body's motion.
+func gravSim(bary2 *majorBodies, tt2 float64, calc1 *bodyGravCalc) bodyGravCalc {
+	dt := tt2 - calc1.Tt
+
+	// Calculate where the major bodies (Sun, Jupiter...Neptune) will be at the
+	// next time step.
+	majorBodyBary(bary2, tt2)
+
+	// Estimate the position of the small body as if the current acceleration
+	// applies across the whole time interval.
+	approxPos := updatePosition(dt, calc1.R, calc1.V, calc1.A)
+
+	// Calculate the acceleration at the approximate next location.
+	acc := smallBodyAcceleration(approxPos, bary2)
+
+	// Average the endpoint accelerations as the mean effective acceleration.
+	acc = terseVector{
+		X: (acc.X + calc1.A.X) / 2,
+		Y: (acc.Y + calc1.A.Y) / 2,
+		Z: (acc.Z + calc1.A.Z) / 2,
+	}
+
+	// Refine the estimates using the mean acceleration.
+	var calc2 bodyGravCalc
+	calc2.R = updatePosition(dt, calc1.R, calc1.V, acc)
+	calc2.V = updateVelocity(dt, calc1.V, acc)
+	calc2.A = smallBodyAcceleration(calc2.R, bary2)
+	calc2.Tt = tt2
+	return calc2
+}
+
+// plutoCache caches pre-calculated Pluto gravity segments so that repeated
+// Pluto calculations at nearby times are fast.
+var plutoCache []*bodySegment
+
+// bodySegment is a series of gravity states interpolating Pluto's motion
+// between two entries of the plutoStateTable.
+type bodySegment struct {
+	step [plutoNsteps]bodyGravCalc
+}
+
+// getSegment finds or calculates a cached gravity segment that contains the
+// given Terrestrial Time. Returns -1 for the segment index when the time is
+// outside the covered range.
+func getSegment(cache []*bodySegment, tt float64) (int, *bodySegment, error) {
+	if tt < plutoStateTable[0].tt || tt > plutoStateTable[plutoNumStates-1].tt {
+		return -1, nil, nil
+	}
+
+	segIndex := clampIndex(int(math.Floor((tt-plutoStateTable[0].tt)/plutoTimeStep)), plutoNumStates-1)
+	seg := cache[segIndex]
+	if seg == nil {
+		// Calculate the segment: pick the pair of bracketing body states.
+		seg = &bodySegment{}
+		cache[segIndex] = seg
+		var bary majorBodies
+		seg.step[0] = gravFromState(&bary, &plutoStateTable[segIndex])
+		seg.step[plutoNsteps-1] = gravFromState(&bary, &plutoStateTable[segIndex+1])
+
+		// Simulate forwards from the lower time bound.
+		stepTT := seg.step[0].Tt
+		for i := 1; i < plutoNsteps-1; i++ {
+			stepTT += plutoDt
+			seg.step[i] = gravSim(&bary, stepTT, &seg.step[i-1])
+		}
+
+		// Simulate backwards from the upper time bound.
+		var reverse bodySegment
+		reverse.step[plutoNsteps-1] = seg.step[plutoNsteps-1]
+		stepTT = reverse.step[plutoNsteps-1].Tt
+		for i := plutoNsteps - 2; i > 0; i-- {
+			stepTT -= plutoDt
+			reverse.step[i] = gravSim(&bary, stepTT, &reverse.step[i+1])
+		}
+
+		// Fade-mix the two series so that there are no discontinuities.
+		for i := plutoNsteps - 2; i > 0; i-- {
+			ramp := float64(i) / float64(plutoNsteps-1)
+			seg.step[i].R = vecRamp(seg.step[i].R, reverse.step[i].R, ramp)
+			seg.step[i].V = vecRamp(seg.step[i].V, reverse.step[i].V, ramp)
+			seg.step[i].A = vecRamp(seg.step[i].A, reverse.step[i].A, ramp)
+		}
+	}
+	return segIndex, seg, nil
+}
+
+// vecRamp linearly interpolates between two terse vectors.
+func vecRamp(a, b terseVector, ramp float64) terseVector {
+	return terseVector{
+		X: (1-ramp)*a.X + ramp*b.X,
+		Y: (1-ramp)*a.Y + ramp*b.Y,
+		Z: (1-ramp)*a.Z + ramp*b.Z,
+	}
+}
+
+// calcPlutoOneWay computes Pluto's barycentric state at targetTt by stepping
+// forward (or backward) from a known initial state.
+func calcPlutoOneWay(bary *majorBodies, initState *bodyState, targetTt float64, dt float64) bodyGravCalc {
+	calc := gravFromState(bary, initState)
+	n := int(math.Ceil((targetTt - calc.Tt) / dt))
+	for i := 0; i < n; i++ {
+		next := targetTt
+		if i+1 != n {
+			next = calc.Tt + dt
+		}
+		calc = gravSim(bary, next, &calc)
+	}
+	return calc
+}
+
+// calcPluto calculates the position and velocity of Pluto at the given time.
+// When helio is true, the result is converted from barycentric to heliocentric.
+func calcPluto(time AstroTime, helio bool) bodyState {
+	if plutoCache == nil {
+		plutoCache = make([]*bodySegment, plutoNumStates-1)
+	}
+
+	var bstate bodyState
+	bstate.tt = time.Tt
+
+	segIndex, seg, err := getSegment(plutoCache, time.Tt)
+	if err != nil {
+		return bstate
+	}
+
+	var bary majorBodies
+	if segIndex < 0 {
+		// The target time is outside the covered range; crawl from the nearest
+		// endpoint.
+		if time.Tt < plutoStateTable[0].tt {
+			calc := calcPlutoOneWay(&bary, &plutoStateTable[0], time.Tt, -plutoDt)
+			bstate.r = calc.R
+			bstate.v = calc.V
+		} else {
+			calc := calcPlutoOneWay(&bary, &plutoStateTable[plutoNumStates-1], time.Tt, +plutoDt)
+			bstate.r = calc.R
+			bstate.v = calc.V
+		}
+	} else {
+		left := clampIndex(int(math.Floor((time.Tt-seg.step[0].Tt)/plutoDt)), plutoNsteps-1)
+		s1 := &seg.step[left]
+		s2 := &seg.step[left+1]
+
+		// Find the mean acceleration vector over the interval.
+		acc := terseVector{
+			X: (s1.A.X + s2.A.X) / 2,
+			Y: (s1.A.Y + s2.A.Y) / 2,
+			Z: (s1.A.Z + s2.A.Z) / 2,
+		}
+
+		// Extrapolate away from t1 in the positive time direction.
+		ra := updatePosition(time.Tt-s1.Tt, s1.R, s1.V, acc)
+		va := updateVelocity(time.Tt-s1.Tt, s1.V, acc)
+
+		// Extrapolate away from t2 in the negative time direction.
+		rb := updatePosition(time.Tt-s2.Tt, s2.R, s2.V, acc)
+		vb := updateVelocity(time.Tt-s2.Tt, s2.V, acc)
+
+		// Blend the two position estimates with a fade.
+		ramp := (time.Tt - s1.Tt) / plutoDt
+		bstate.r = vecRamp(ra, rb, ramp)
+		bstate.v = vecRamp(va, vb, ramp)
+
+		if helio {
+			majorBodyBary(&bary, time.Tt)
+		}
+	}
+
+	if helio {
+		// Convert barycentric coordinates back to heliocentric coordinates.
+		bstate.r.X -= bary.Sun.r.X
+		bstate.r.Y -= bary.Sun.r.Y
+		bstate.r.Z -= bary.Sun.r.Z
+		bstate.v.X -= bary.Sun.v.X
+		bstate.v.Y -= bary.Sun.v.Y
+		bstate.v.Z -= bary.Sun.v.Z
+	}
+	return bstate
+}
+
+// EquatorDate selects the epoch of the Earth's equator for equatorial
+// coordinates.
+type EquatorDate int
+
+const (
+	EquatorOfDate EquatorDate = 0 // the Earth's equator at the given date/time
+	EquatorJ2000  EquatorDate = 1 // the Earth's equator at the J2000 epoch
+)
+
+// geoPos converts an observer's geographic position to a geocentric equatorial
+// position vector in J2000 coordinates.
+func geoPos(time *AstroTime, observer Observer) [3]float64 {
+	gast := SiderealTime(time)
+	pos, _ := terra(observer, gast)
+	vec := gyration(AstroVector{X: pos.X, Y: pos.Y, Z: pos.Z, T: *time}, into2000)
+	return [3]float64{vec.X, vec.Y, vec.Z}
+}
+
+// ObserverVector calculates the geocentric equatorial position vector of an
+// observer on the surface of the Earth at the given time.
+func ObserverVector(time *AstroTime, observer Observer, equdate EquatorDate) (AstroVector, error) {
+	gast := SiderealTime(time)
+	pos, _ := terra(observer, gast)
+	var vec AstroVector
+	switch equdate {
+	case EquatorOfDate:
+		vec = AstroVector{X: pos.X, Y: pos.Y, Z: pos.Z, T: *time}
+	case EquatorJ2000:
+		vec = gyration(AstroVector{X: pos.X, Y: pos.Y, Z: pos.Z, T: *time}, into2000)
+	default:
+		return AstroVector{}, errors.New("Invalid equinox of date")
+	}
+	return vec, nil
+}
+
+// ObserverState calculates the geocentric equatorial position and velocity of
+// an observer on the surface of the Earth at the given time.
+func ObserverState(time *AstroTime, observer Observer, equdate EquatorDate) (StateVector, error) {
+	gast := SiderealTime(time)
+	pos, vel := terra(observer, gast)
+	var state StateVector
+	switch equdate {
+	case EquatorOfDate:
+		state = StateVector{X: pos.X, Y: pos.Y, Z: pos.Z, Vx: vel.X, Vy: vel.Y, Vz: vel.Z, T: *time}
+	case EquatorJ2000:
+		state = gyrationPosVel(StateVector{X: pos.X, Y: pos.Y, Z: pos.Z, Vx: vel.X, Vy: vel.Y, Vz: vel.Z, T: *time}, into2000)
+	default:
+		return StateVector{}, errors.New("Invalid equinox of date")
+	}
+	return state, nil
+}
+
+// VectorObserver is the inverse of ObserverVector: it converts a geocentric
+// equatorial position vector into the corresponding geographic location.
+func VectorObserver(vector *AstroVector, equdate EquatorDate) Observer {
+	pos1 := [3]float64{vector.X, vector.Y, vector.Z}
+	if equdate == EquatorJ2000 {
+		mean := precession(AstroVector{X: pos1[0], Y: pos1[1], Z: pos1[2], T: vector.T}, from2000)
+		eqd := nutation(mean, from2000)
+		pos1 = [3]float64{eqd.X, eqd.Y, eqd.Z}
+	}
+	gast := SiderealTime(&vector.T)
+	return inverseTerra(terseVector{X: pos1[0], Y: pos1[1], Z: pos1[2]}, gast)
+}
+
+// saturnMagnitude estimates the visual magnitude of Saturn, accounting for the
+// tilt of its rings.
+func saturnMagnitude(phase float64, helioDist float64, geoDist float64, gc AstroVector, time AstroTime) (float64, float64, error) {
+	// Based on formulas by Paul Schlyter.
+	// We must handle Saturn's rings as a major component of its visual magnitude.
+	eclip := EquatorialToEcliptic(gc)
+	ir := RadiansFromDegrees(28.06)                    // tilt of Saturn's rings to the ecliptic
+	nr := RadiansFromDegrees(169.51 + 3.82e-5*time.Tt) // ascending node of Saturn's rings
+
+	lat := RadiansFromDegrees(eclip.Elat)
+	lon := RadiansFromDegrees(eclip.Elon)
+	tilt := math.Asin(math.Sin(lat)*math.Cos(ir) - math.Cos(lat)*math.Sin(ir)*math.Sin(lon-nr))
+	sinTilt := math.Sin(math.Abs(tilt))
+
+	mag := -9.0 + 0.044*phase
+	mag += sinTilt * (-2.6 + 1.2*sinTilt)
+	mag += 5.0 * math.Log10(helioDist*geoDist)
+	return mag, DegreesFromRadians(tilt), nil
+}
+
+// moonNodeSearchFunc evaluates the Moon's ecliptic latitude, signed by the
+// node kind, used for finding where the Moon's orbit crosses the ecliptic.
+func moonNodeSearchFunc(kind NodeEventKind, time AstroTime) (float64, error) {
+	eclip := EclipticGeoMoon(time)
+	return eclip.Lat * float64(kind), nil
+}
+
+// SearchMoonNode searches for the first ascending or descending node of the
+// Moon after the given start time. An ascending node is where the Moon's orbit
+// crosses the ecliptic from south to north; a descending node is the reverse.
+func SearchMoonNode(startTime AstroTime) (NodeEventInfo, error) {
+	const stepDays = 10.0
+	time1 := startTime
+	eclip1 := EclipticGeoMoon(time1)
+	for {
+		time2 := time1.AddDays(stepDays)
+		eclip2 := EclipticGeoMoon(time2)
+		if eclip1.Lat*eclip2.Lat <= 0.0 {
+			// There is a node somewhere inside this closed time interval.
+			var kind NodeEventKind = DescendingNode
+			if eclip2.Lat > eclip1.Lat {
+				kind = AscendingNode
+			}
+			root, err := Search(func(t AstroTime) (float64, error) {
+				return moonNodeSearchFunc(kind, t)
+			}, time1, time2, 1.0)
+			if err != nil {
+				return NodeEventInfo{}, err
+			}
+			return NodeEventInfo{Time: root, Kind: kind}, nil
+		}
+		time1 = time2
+		eclip1 = eclip2
+	}
+}
+
+// NextMoonNode finds the next lunar node event after the given previous node.
+func NextMoonNode(prevNode NodeEventInfo) (NodeEventInfo, error) {
+	if prevNode.Kind != AscendingNode && prevNode.Kind != DescendingNode {
+		return NodeEventInfo{}, errors.New("Invalid lunar node kind")
+	}
+	time := prevNode.Time.AddDays(10.0)
+	node, err := SearchMoonNode(time)
+	if err != nil {
+		return NodeEventInfo{}, err
+	}
+	// Verify the nodes alternate as expected.
+	if (prevNode.Kind == AscendingNode && node.Kind != DescendingNode) ||
+		(prevNode.Kind == DescendingNode && node.Kind != AscendingNode) {
+		return NodeEventInfo{}, errors.New("Lunar nodes do not alternate correctly")
+	}
+	return node, nil
+}
+
+// Rotation_EQJ_HOR returns a rotation matrix that converts J2000 mean equator
+// (EQJ) coordinates to horizontal (HOR) coordinates.
+func Rotation_EQJ_HOR(time AstroTime, observer Observer) RotationMatrix {
+	return InverseRotation(Rotation_HOR_EQJ(time, observer))
+}
+
+// Rotation_ECL_EQD returns a rotation matrix that converts J2000 mean ecliptic
+// (ECL) coordinates to equatorial of-date (EQD) coordinates.
+func Rotation_ECL_EQD(time AstroTime) RotationMatrix {
+	return InverseRotation(Rotation_EQD_ECL(time))
+}
+
+// Rotation_ECL_HOR returns a rotation matrix that converts J2000 mean ecliptic
+// (ECL) coordinates to horizontal (HOR) coordinates.
+func Rotation_ECL_HOR(time AstroTime, observer Observer) RotationMatrix {
+	return CombineRotation(Rotation_ECL_EQD(time), Rotation_EQD_HOR(time, observer))
+}
+
 // calcJupiterMoon calculates the jovicentric position and velocity of one of
 // Jupiter's four Galilean moons (Io, Europa, Ganymede, Callisto) at the given
 // time, expressed in the J2000 equatorial (EQJ) frame.
@@ -3545,6 +3922,67 @@ func GeoMoon(time AstroTime) AstroVector {
 }
 
 //--- Generated code begins here ------------------------------------------------------------------
+
+const (
+	plutoNumStates = 51
+	plutoTimeStep  = 29200
+	plutoDt        = 146
+	plutoNsteps    = 201
+)
+
+var plutoStateTable = []bodyState{
+	{tt: -730000.0, r: terseVector{X: -26.118207232108, Y: -14.376168177825, Z: 3.384402515299}, v: terseVector{X: 1.6339372163656e-03, Y: -2.7861699588508e-03, Z: -1.3585880229445e-03}},
+	{tt: -700800.0, r: terseVector{X: 41.974905202127, Y: -0.448502952929, Z: -12.770351505989}, v: terseVector{X: 7.3458569351457e-04, Y: 2.2785014891658e-03, Z: 4.8619778602049e-04}},
+	{tt: -671600.0, r: terseVector{X: 14.706930780744, Y: 44.269110540027, Z: 9.353698474772}, v: terseVector{X: -2.1000147999800e-03, Y: 2.2295915939915e-04, Z: 7.0143443551414e-04}},
+	{tt: -642400.0, r: terseVector{X: -29.441003929957, Y: -6.430161530570, Z: 6.858481011305}, v: terseVector{X: 8.4495803960544e-04, Y: -3.0783914758711e-03, Z: -1.2106305981192e-03}},
+	{tt: -613200.0, r: terseVector{X: 39.444396946234, Y: -6.557989760571, Z: -13.913760296463}, v: terseVector{X: 1.1480029005873e-03, Y: 2.2400006880665e-03, Z: 3.5168075922288e-04}},
+	{tt: -584000.0, r: terseVector{X: 20.230380950700, Y: 43.266966657189, Z: 7.382966091923}, v: terseVector{X: -1.9754081700585e-03, Y: 5.3457141292226e-04, Z: 7.5929169129793e-04}},
+	{tt: -554800.0, r: terseVector{X: -30.658325364620, Y: 2.093818874552, Z: 9.880531138071}, v: terseVector{X: 6.1010603013347e-05, Y: -3.1326500935382e-03, Z: -9.9346125151067e-04}},
+	{tt: -525600.0, r: terseVector{X: 35.737703251673, Y: -12.587706024764, Z: -14.677847247563}, v: terseVector{X: 1.5802939375649e-03, Y: 2.1347678412429e-03, Z: 1.9074436384343e-04}},
+	{tt: -496400.0, r: terseVector{X: 25.466295188546, Y: 41.367478338417, Z: 5.216476873382}, v: terseVector{X: -1.8054401046468e-03, Y: 8.3283083599510e-04, Z: 8.0260156912107e-04}},
+	{tt: -467200.0, r: terseVector{X: -29.847174904071, Y: 10.636426313081, Z: 12.297904180106}, v: terseVector{X: -6.3257063052907e-04, Y: -2.9969577578221e-03, Z: -7.4476074151596e-04}},
+	{tt: -438000.0, r: terseVector{X: 30.774692107687, Y: -18.236637015304, Z: -14.945535879896}, v: terseVector{X: 2.0113162005465e-03, Y: 1.9353827024189e-03, Z: -2.0937793168297e-06}},
+	{tt: -408800.0, r: terseVector{X: 30.243153324028, Y: 38.656267888503, Z: 2.938501750218}, v: terseVector{X: -1.6052508674468e-03, Y: 1.1183495337525e-03, Z: 8.3333973416824e-04}},
+	{tt: -379600.0, r: terseVector{X: -27.288984772533, Y: 18.643162147874, Z: 14.023633623329}, v: terseVector{X: -1.1856388898191e-03, Y: -2.7170609282181e-03, Z: -4.9015526126399e-04}},
+	{tt: -350400.0, r: terseVector{X: 24.519605196774, Y: -23.245756064727, Z: -14.626862367368}, v: terseVector{X: 2.4322321483154e-03, Y: 1.6062008146048e-03, Z: -2.3369181613312e-04}},
+	{tt: -321200.0, r: terseVector{X: 34.505274805875, Y: 35.125338586954, Z: 0.557361475637}, v: terseVector{X: -1.3824391637782e-03, Y: 1.3833397561817e-03, Z: 8.4823598806262e-04}},
+	{tt: -292000.0, r: terseVector{X: -23.275363915119, Y: 25.818514298769, Z: 15.055381588598}, v: terseVector{X: -1.6062295460975e-03, Y: -2.3395961498533e-03, Z: -2.4377362639479e-04}},
+	{tt: -262800.0, r: terseVector{X: 17.050384798092, Y: -27.180376290126, Z: -13.608963321694}, v: terseVector{X: 2.8175521080578e-03, Y: 1.1358749093955e-03, Z: -4.9548725258825e-04}},
+	{tt: -233600.0, r: terseVector{X: 38.093671910285, Y: 30.880588383337, Z: -1.843688067413}, v: terseVector{X: -1.1317697153459e-03, Y: 1.6128814698472e-03, Z: 8.4177586176055e-04}},
+	{tt: -204400.0, r: terseVector{X: -18.197852930878, Y: 31.932869934309, Z: 15.438294826279}, v: terseVector{X: -1.9117272501813e-03, Y: -1.9146495909842e-03, Z: -1.9657304369835e-05}},
+	{tt: -175200.0, r: terseVector{X: 8.528924039997, Y: -29.618422200048, Z: -11.805400994258}, v: terseVector{X: 3.1034370787005e-03, Y: 5.1393633292430e-04, Z: -7.7293066202546e-04}},
+	{tt: -146000.0, r: terseVector{X: 40.946857258640, Y: 25.904973592021, Z: -4.256336240499}, v: terseVector{X: -8.3652705194051e-04, Y: 1.8129497136404e-03, Z: 8.1564228273060e-04}},
+	{tt: -116800.0, r: terseVector{X: -12.326958895325, Y: 36.881883446292, Z: 15.217158258711}, v: terseVector{X: -2.1166103705038e-03, Y: -1.4814420035990e-03, Z: 1.7401209844705e-04}},
+	{tt: -87600.0, r: terseVector{X: -0.633258375909, Y: -30.018759794709, Z: -9.171932874950}, v: terseVector{X: 3.2016994581737e-03, Y: -2.5279858672148e-04, Z: -1.0411088271861e-03}},
+	{tt: -58400.0, r: terseVector{X: 42.936048423883, Y: 20.344685584452, Z: -6.588027007912}, v: terseVector{X: -5.0525450073192e-04, Y: 1.9910074335507e-03, Z: 7.7440196540269e-04}},
+	{tt: -29200.0, r: terseVector{X: -5.975910552974, Y: 40.611809958460, Z: 14.470131723673}, v: terseVector{X: -2.2184202156107e-03, Y: -1.0562361130164e-03, Z: 3.3652250216211e-04}},
+	{tt: 0.0, r: terseVector{X: -9.875369580774, Y: -27.978926224737, Z: -5.753711824704}, v: terseVector{X: 3.0287533248818e-03, Y: -1.1276087003636e-03, Z: -1.2651326732361e-03}},
+	{tt: 29200.0, r: terseVector{X: 43.958831986165, Y: 14.214147973292, Z: -8.808306227163}, v: terseVector{X: -1.4717608981871e-04, Y: 2.1404187242141e-03, Z: 7.1486567806614e-04}},
+	{tt: 58400.0, r: terseVector{X: 0.678136763520, Y: 43.094461639362, Z: 13.243238780721}, v: terseVector{X: -2.2358226110718e-03, Y: -6.3233636090933e-04, Z: 4.7664798895648e-04}},
+	{tt: 87600.0, r: terseVector{X: -18.282602096834, Y: -23.305039586660, Z: -1.766620508028}, v: terseVector{X: 2.5567245263557e-03, Y: -1.9902940754171e-03, Z: -1.3943491701082e-03}},
+	{tt: 116800.0, r: terseVector{X: 43.873338744526, Y: 7.700705617215, Z: -10.814273666425}, v: terseVector{X: 2.3174803055677e-04, Y: 2.2402163127924e-03, Z: 6.2988756452032e-04}},
+	{tt: 146000.0, r: terseVector{X: 7.392949027906, Y: 44.382678951534, Z: 11.629500214854}, v: terseVector{X: -2.1932815453830e-03, Y: -2.1751799585364e-04, Z: 5.9556516201114e-04}},
+	{tt: 175200.0, r: terseVector{X: -24.981690229261, Y: -16.204012851426, Z: 2.466457544298}, v: terseVector{X: 1.8193989149580e-03, Y: -2.6765419531201e-03, Z: -1.3848283502247e-03}},
+	{tt: 204400.0, r: terseVector{X: 42.530187039511, Y: 0.845935508021, Z: -12.554907527683}, v: terseVector{X: 6.5059779150669e-04, Y: 2.2725657282262e-03, Z: 5.1133743202822e-04}},
+	{tt: 233600.0, r: terseVector{X: 13.999526486822, Y: 44.462363044894, Z: 9.669418486465}, v: terseVector{X: -2.1079296569252e-03, Y: 1.7533423831993e-04, Z: 6.9128485798076e-04}},
+	{tt: 262800.0, r: terseVector{X: -29.184024803031, Y: -7.371243995762, Z: 6.493275957928}, v: terseVector{X: 9.3581363109681e-04, Y: -3.0610357109184e-03, Z: -1.2364201089345e-03}},
+	{tt: 292000.0, r: terseVector{X: 39.831980671753, Y: -6.078405766765, Z: -13.909815358656}, v: terseVector{X: 1.1117769689167e-03, Y: 2.2362097830152e-03, Z: 3.6230548231153e-04}},
+	{tt: 321200.0, r: terseVector{X: 20.294955108476, Y: 43.417190420251, Z: 7.450091985932}, v: terseVector{X: -1.9742157451535e-03, Y: 5.3102050468554e-04, Z: 7.5938408813008e-04}},
+	{tt: 350400.0, r: terseVector{X: -30.669992302160, Y: 2.318743558955, Z: 9.973480913858}, v: terseVector{X: 4.5605107450676e-05, Y: -3.1308219926928e-03, Z: -9.9066533301924e-04}},
+	{tt: 379600.0, r: terseVector{X: 35.626122155983, Y: -12.897647509224, Z: -14.777586508444}, v: terseVector{X: 1.6015684949743e-03, Y: 2.1171931182284e-03, Z: 1.8002516202204e-04}},
+	{tt: 408800.0, r: terseVector{X: 26.133186148561, Y: 41.232139187599, Z: 5.006401326220}, v: terseVector{X: -1.7857704419579e-03, Y: 8.6046232702817e-04, Z: 8.0614690298954e-04}},
+	{tt: 438000.0, r: terseVector{X: -29.576740229230, Y: 11.863535943587, Z: 12.631323039872}, v: terseVector{X: -7.2292830060955e-04, Y: -2.9587820140709e-03, Z: -7.0824296450300e-04}},
+	{tt: 467200.0, r: terseVector{X: 29.910805787391, Y: -19.159019294000, Z: -15.013363865194}, v: terseVector{X: 2.0871080437997e-03, Y: 1.8848372554514e-03, Z: -3.8528655083926e-05}},
+	{tt: 496400.0, r: terseVector{X: 31.375957451819, Y: 38.050372720763, Z: 2.433138343754}, v: terseVector{X: -1.5546055556611e-03, Y: 1.1699815465629e-03, Z: 8.3565439266001e-04}},
+	{tt: 525600.0, r: terseVector{X: -26.360071336928, Y: 20.662505904952, Z: 14.414696258958}, v: terseVector{X: -1.3142373118349e-03, Y: -2.6236647854842e-03, Z: -4.2542017598193e-04}},
+	{tt: 554800.0, r: terseVector{X: 22.599441488648, Y: -24.508879898306, Z: -14.484045731468}, v: terseVector{X: 2.5454108304806e-03, Y: 1.4917058755191e-03, Z: -3.0243665086079e-04}},
+	{tt: 584000.0, r: terseVector{X: 35.877864013014, Y: 33.894226366071, Z: -0.224524636277}, v: terseVector{X: -1.2941245730845e-03, Y: 1.4560427668319e-03, Z: 8.4762160640137e-04}},
+	{tt: 613200.0, r: terseVector{X: -21.538149762417, Y: 28.204068269761, Z: 15.321973799534}, v: terseVector{X: -1.7312117409010e-03, Y: -2.1939631314577e-03, Z: -1.6316913275180e-04}},
+	{tt: 642400.0, r: terseVector{X: 13.971521374415, Y: -28.339941764789, Z: -13.083792871886}, v: terseVector{X: 2.9334630526035e-03, Y: 9.1860931752944e-04, Z: -5.9939422488627e-04}},
+	{tt: 671600.0, r: terseVector{X: 39.526942044143, Y: 28.939897360110, Z: -2.872799527539}, v: terseVector{X: -1.0068481658095e-03, Y: 1.7021132888090e-03, Z: 8.3578230511981e-04}},
+	{tt: 700800.0, r: terseVector{X: -15.576200701394, Y: 34.399412961275, Z: 15.466033737854}, v: terseVector{X: -2.0098814612884e-03, Y: -1.7191109825989e-03, Z: 7.0414782780416e-05}},
+	{tt: 730000.0, r: terseVector{X: 4.243252837090, Y: -30.118201690825, Z: -10.707441231349}, v: terseVector{X: 3.1725847067411e-03, Y: 1.6098461202270e-04, Z: -9.0672150593868e-04}},
+}
 
 var vsopLonMercury_0 = []vsopTerm{
 	{4.40250710144, 0.00000000000, 0.00000000000},      // 0
