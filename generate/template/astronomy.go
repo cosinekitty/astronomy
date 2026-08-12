@@ -2994,7 +2994,7 @@ func SearchMoonNode(startTime AstroTime) (NodeEventInfo, error) {
 		eclip2 := EclipticGeoMoon(time2)
 		if eclip1.Lat*eclip2.Lat <= 0.0 {
 			// There is a node somewhere inside this closed time interval.
-			kind := DescendingNode
+			var kind NodeEventKind = DescendingNode
 			if eclip2.Lat > eclip1.Lat {
 				kind = AscendingNode
 			}
@@ -3013,15 +3013,18 @@ func SearchMoonNode(startTime AstroTime) (NodeEventInfo, error) {
 
 // NextMoonNode finds the next lunar node event after the given previous node.
 func NextMoonNode(prevNode NodeEventInfo) (NodeEventInfo, error) {
-	time := prevNode.Time.AddDays(10.0)
-	// Search for the next node of the opposite kind.
-	opposite := DescendingNode
-	if prevNode.Kind == DescendingNode {
-		opposite = AscendingNode
+	if prevNode.Kind != AscendingNode && prevNode.Kind != DescendingNode {
+		return NodeEventInfo{}, errors.New("Invalid lunar node kind")
 	}
+	time := prevNode.Time.AddDays(10.0)
 	node, err := SearchMoonNode(time)
 	if err != nil {
 		return NodeEventInfo{}, err
+	}
+	// Verify the nodes alternate as expected.
+	if (prevNode.Kind == AscendingNode && node.Kind != DescendingNode) ||
+		(prevNode.Kind == DescendingNode && node.Kind != AscendingNode) {
+		return NodeEventInfo{}, errors.New("Lunar nodes do not alternate correctly")
 	}
 	return node, nil
 }
@@ -3042,6 +3045,268 @@ func Rotation_ECL_EQD(time AstroTime) RotationMatrix {
 // (ECL) coordinates to horizontal (HOR) coordinates.
 func Rotation_ECL_HOR(time AstroTime, observer Observer) RotationMatrix {
 	return CombineRotation(Rotation_ECL_EQD(time), Rotation_EQD_HOR(time, observer))
+}
+
+// Rotation_HOR_ECL returns a rotation matrix that converts horizontal (HOR)
+// coordinates to J2000 mean ecliptic (ECL) coordinates.
+func Rotation_HOR_ECL(time AstroTime, observer Observer) RotationMatrix {
+	return InverseRotation(Rotation_ECL_HOR(time, observer))
+}
+
+// vsopHelioDistance calculates the heliocentric distance to a VSOP planet at
+// the given time, using only the radial part of the VSOP model.
+func vsopHelioDistance(model *vsopModel, time AstroTime) float64 {
+	t := time.Tt / daysPerMillennium
+	distance := 0.0
+	tpower := 1.0
+	formula := &model.formula[vsopRadIndex]
+	for s := 0; s < formula.nseries; s++ {
+		sum := 0.0
+		series := &formula.series[s]
+		for i := 0; i < series.nterms; i++ {
+			term := &series.term[i]
+			sum += term.amp * math.Cos(term.pha+(t*term.fre))
+		}
+		distance += tpower * sum
+		tpower *= t
+	}
+	return distance
+}
+
+// HelioVector calculates the heliocentric position of a body in the J2000
+// equatorial system at the given time.
+func HelioVector(body Body, time AstroTime) (AstroVector, error) {
+	if star := userDefinedStar(body); star != nil {
+		return VectorFromSphere(Spherical{Lat: star.dec, Lon: 15.0 * star.ra, Dist: star.dist}, time), nil
+	}
+	switch body {
+	case Sun:
+		return AstroVector{X: 0.0, Y: 0.0, Z: 0.0, T: time}, nil
+	case Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune:
+		return calcVsop(&vsop[body], time), nil
+	case Pluto:
+		b := calcPluto(time, true)
+		return AstroVector{X: b.r.X, Y: b.r.Y, Z: b.r.Z, T: time}, nil
+	case Moon:
+		moon := GeoMoon(time)
+		earth := calcEarth(time)
+		return AstroVector{X: moon.X + earth.X, Y: moon.Y + earth.Y, Z: moon.Z + earth.Z, T: time}, nil
+	case Emb:
+		moon := GeoMoon(time)
+		earth := calcEarth(time)
+		d := 1.0 + earthMoonMassRatio
+		return AstroVector{
+			X: earth.X + moon.X/d,
+			Y: earth.Y + moon.Y/d,
+			Z: earth.Z + moon.Z/d,
+			T: time,
+		}, nil
+	case Ssb:
+		return calcSolarSystemBarycenter(time), nil
+	default:
+		return AstroVector{}, errors.New("Invalid body for heliocentric vector")
+	}
+}
+
+// HelioDistance returns the distance in AU between the center of the Sun and
+// the center of the given body at the given time.
+func HelioDistance(body Body, time AstroTime) (float64, error) {
+	if star := userDefinedStar(body); star != nil {
+		return star.dist, nil
+	}
+	switch body {
+	case Sun:
+		return 0.0, nil
+	case Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune:
+		return vsopHelioDistance(&vsop[body], time), nil
+	default:
+		vector, err := HelioVector(body, time)
+		if err != nil {
+			return 0.0, err
+		}
+		return vector.Length(), nil
+	}
+}
+
+// HelioState returns the heliocentric position and velocity of a body in the
+// J2000 equatorial system at the given time.
+func HelioState(body Body, time AstroTime) (StateVector, error) {
+	if userDefinedStar(body) != nil {
+		vector, err := HelioVector(body, time)
+		if err != nil {
+			return StateVector{}, err
+		}
+		return StateVector{X: vector.X, Y: vector.Y, Z: vector.Z, T: time}, nil
+	}
+	switch body {
+	case Sun:
+		return StateVector{T: time}, nil
+	case Ssb:
+		var bary majorBodies
+		majorBodyBary(&bary, time.Tt)
+		return StateVector{
+			X:  -bary.Sun.r.X, Y: -bary.Sun.r.Y, Z: -bary.Sun.r.Z,
+			Vx: -bary.Sun.v.X, Vy: -bary.Sun.v.Y, Vz: -bary.Sun.v.Z,
+			T: time,
+		}, nil
+	case Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune:
+		planet := calcVsopPosVel(&vsop[body], time.Tt)
+		return exportState(planet, time), nil
+	case Pluto:
+		planet := calcPluto(time, true)
+		return exportState(planet, time), nil
+	case Moon, Emb:
+		earth := calcVsopPosVel(&vsop[Earth], time.Tt)
+		var state StateVector
+		if body == Moon {
+			state = GeoMoonState(time)
+		} else {
+			state = GeoEmbState(time)
+		}
+		return StateVector{
+			X:  state.X + earth.r.X, Y: state.Y + earth.r.Y, Z: state.Z + earth.r.Z,
+			Vx: state.Vx + earth.v.X, Vy: state.Vy + earth.v.Y, Vz: state.Vz + earth.v.Z,
+			T: time,
+		}, nil
+	default:
+		return StateVector{}, errors.New("Invalid body for heliocentric state")
+	}
+}
+
+// BaryState returns the barycentric position and velocity of a body in the
+// J2000 equatorial system at the given time.
+func BaryState(body Body, time AstroTime) (StateVector, error) {
+	switch body {
+	case Ssb:
+		return StateVector{T: time}, nil
+	case Pluto:
+		planet := calcPluto(time, false)
+		return exportState(planet, time), nil
+	}
+
+	var bary majorBodies
+	majorBodyBary(&bary, time.Tt)
+
+	switch body {
+	case Sun:
+		return exportState(bary.Sun, time), nil
+	case Jupiter:
+		return exportState(bary.Jupiter, time), nil
+	case Saturn:
+		return exportState(bary.Saturn, time), nil
+	case Uranus:
+		return exportState(bary.Uranus, time), nil
+	case Neptune:
+		return exportState(bary.Neptune, time), nil
+	case Mercury, Venus, Earth, Mars:
+		planet := calcVsopPosVel(&vsop[body], time.Tt)
+		return StateVector{
+			X:  bary.Sun.r.X + planet.r.X, Y: bary.Sun.r.Y + planet.r.Y, Z: bary.Sun.r.Z + planet.r.Z,
+			Vx: bary.Sun.v.X + planet.v.X, Vy: bary.Sun.v.Y + planet.v.Y, Vz: bary.Sun.v.Z + planet.v.Z,
+			T: time,
+		}, nil
+	case Moon, Emb:
+		earth := calcVsopPosVel(&vsop[Earth], time.Tt)
+		var state StateVector
+		if body == Moon {
+			state = GeoMoonState(time)
+		} else {
+			state = GeoEmbState(time)
+		}
+		return StateVector{
+			X:  state.X + bary.Sun.r.X + earth.r.X, Y: state.Y + bary.Sun.r.Y + earth.r.Y, Z: state.Z + bary.Sun.r.Z + earth.r.Z,
+			Vx: state.Vx + bary.Sun.v.X + earth.v.X, Vy: state.Vy + bary.Sun.v.Y + earth.v.Y, Vz: state.Vz + bary.Sun.v.Z + earth.v.Z,
+			T: time,
+		}, nil
+	default:
+		return StateVector{}, errors.New("Invalid body for barycentric state")
+	}
+}
+
+// EclipticLongitude calculates the heliocentric ecliptic longitude of a body
+// in degrees, measured from the true equinox of date.
+func EclipticLongitude(body Body, time AstroTime) (float64, error) {
+	if body == Sun {
+		return 0.0, errors.New("Cannot calculate the heliocentric longitude of the Sun")
+	}
+	hv, err := HelioVector(body, time)
+	if err != nil {
+		return 0.0, err
+	}
+	eclip := EquatorialToEcliptic(hv)
+	return eclip.Elon, nil
+}
+
+// IlluminationInfo describes the visual magnitude, phase angle, and related
+// information about how a celestial body appears from the Earth.
+type IlluminationInfo struct {
+	Mag           float64 // visual magnitude; smaller values are brighter
+	PhaseAngle    float64 // angle in degrees between the Sun and Earth as seen from the body
+	PhaseFraction float64 // fraction of the body's apparent disc illuminated, in [0, 1]
+	HelioDist     float64 // distance between the Sun and the body in AU
+	RingTilt      float64 // Saturn's ring tilt in degrees (0 for other bodies)
+	GeoDist       float64 // distance between the Earth and the body in AU
+}
+
+// Illumination calculates information about how bright a celestial body
+// appears from the Earth, including visual magnitude and phase angle.
+func Illumination(body Body, time AstroTime) (IlluminationInfo, error) {
+	if body == Earth {
+		return IlluminationInfo{}, errors.New("Earth not allowed for illumination")
+	}
+	earth := calcEarth(time)
+
+	var gc, hc AstroVector
+	phaseAngle := 0.0
+	if body == Sun {
+		gc = AstroVector{X: -earth.X, Y: -earth.Y, Z: -earth.Z, T: time}
+		hc = AstroVector{T: time}
+	} else {
+		var err error
+		if body == Moon {
+			gc = GeoMoon(time)
+			hc = AstroVector{X: earth.X + gc.X, Y: earth.Y + gc.Y, Z: earth.Z + gc.Z, T: time}
+		} else {
+			hc, err = HelioVector(body, time)
+			if err != nil {
+				return IlluminationInfo{}, err
+			}
+			gc = AstroVector{X: hc.X - earth.X, Y: hc.Y - earth.Y, Z: hc.Z - earth.Z, T: time}
+		}
+		phaseAngle = AngleBetween(gc, hc)
+	}
+
+	geoDist := gc.Length()
+	helioDist := hc.Length()
+	ringTilt := 0.0
+	var mag float64
+	var err error
+
+	switch body {
+	case Sun:
+		mag = -0.17 + 5.0*math.Log10(geoDist/(180.0*3600.0/math.Pi))
+	case Moon:
+		mag = moonMagnitude(phaseAngle, helioDist, geoDist)
+	case Saturn:
+		mag, ringTilt, err = saturnMagnitude(phaseAngle, helioDist, geoDist, gc, time)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+	default:
+		mag, err = visualMagnitude(body, phaseAngle, helioDist, geoDist)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+	}
+
+	return IlluminationInfo{
+		Mag:           mag,
+		PhaseAngle:    phaseAngle,
+		PhaseFraction: (1.0 + math.Cos(RadiansFromDegrees(phaseAngle))) / 2.0,
+		HelioDist:     helioDist,
+		RingTilt:      ringTilt,
+		GeoDist:       geoDist,
+	}, nil
 }
 
 // calcJupiterMoon calculates the jovicentric position and velocity of one of
