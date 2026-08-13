@@ -3309,6 +3309,361 @@ func Illumination(body Body, time AstroTime) (IlluminationInfo, error) {
 	}, nil
 }
 
+// Aberration selects whether to correct for the aberration of light when
+// calculating the observed position of a body.
+type Aberration int
+
+const (
+	NoAberration   Aberration = 0 // no aberration correction
+	WithAberration            = 1 // correct for the aberration of light
+)
+
+// backdateContext carries the state needed to compute a backdated position.
+type backdateContext struct {
+	observerBody Body
+	targetBody   Body
+	aberration   Aberration
+	observerPos  AstroVector // used only when aberration == NoAberration
+}
+
+// bodyPosition returns the vector from the observer body to the target body at
+// the given time, used by the light-travel time solver.
+func bodyPosition(context *backdateContext, time AstroTime) (AstroVector, error) {
+	var observerPos AstroVector
+	var err error
+	if context.aberration == NoAberration {
+		observerPos = context.observerPos
+	} else {
+		// Include aberration by making a good first-order approximation,
+		// backdating the observer body's position also.
+		observerPos, err = HelioVector(context.observerBody, time)
+		if err != nil {
+			return AstroVector{}, err
+		}
+	}
+	pos, err := HelioVector(context.targetBody, time)
+	if err != nil {
+		return AstroVector{}, err
+	}
+	return AstroVector{X: pos.X - observerPos.X, Y: pos.Y - observerPos.Y, Z: pos.Z - observerPos.Z, T: time}, nil
+}
+
+// BackdatePosition calculates the geometric position of a target body as seen
+// from an observer body, optionally correcting for light travel time and
+// stellar aberration.
+func BackdatePosition(time AstroTime, observerBody Body, targetBody Body, aberration Aberration) (AstroVector, error) {
+	if userDefinedStar(targetBody) != nil {
+		// A user-defined star's heliocentric position is assumed fixed and
+		// already corrected for light travel time, so no backdating is applied.
+		tvec, err := HelioVector(targetBody, time)
+		if err != nil {
+			return AstroVector{}, err
+		}
+		switch aberration {
+		case NoAberration:
+			ovec, err := HelioVector(observerBody, time)
+			if err != nil {
+				return AstroVector{}, err
+			}
+			return AstroVector{X: tvec.X - ovec.X, Y: tvec.Y - ovec.Y, Z: tvec.Z - ovec.Z, T: time}, nil
+		case WithAberration:
+			ostate, err := HelioState(observerBody, time)
+			if err != nil {
+				return AstroVector{}, err
+			}
+			rx := tvec.X - ostate.X
+			ry := tvec.Y - ostate.Y
+			rz := tvec.Z - ostate.Z
+			s := SpeedOfLightAuPerDay / math.Sqrt(rx*rx+ry*ry+rz*rz)
+			return AstroVector{X: rx + ostate.Vx/s, Y: ry + ostate.Vy/s, Z: rz + ostate.Vz/s, T: time}, nil
+		default:
+			return AstroVector{}, errors.New("Invalid aberration option")
+		}
+	}
+
+	context := backdateContext{
+		observerBody: observerBody,
+		targetBody:   targetBody,
+		aberration:   aberration,
+	}
+	switch aberration {
+	case NoAberration:
+		pos, err := HelioVector(observerBody, time)
+		if err != nil {
+			return AstroVector{}, err
+		}
+		context.observerPos = pos
+	case WithAberration:
+		// The observer's position is backdated inside bodyPosition.
+	default:
+		return AstroVector{}, errors.New("Invalid aberration option")
+	}
+	return correctLightTravel(func(t AstroTime) (AstroVector, error) {
+		return bodyPosition(&context, t)
+	}, time)
+}
+
+// GeoVector calculates the geocentric position of a body at the given time,
+// optionally corrected for light travel time and aberration.
+func GeoVector(body Body, time AstroTime, aberration Aberration) (AstroVector, error) {
+	switch body {
+	case Earth:
+		return AstroVector{T: time}, nil
+	case Moon:
+		return GeoMoon(time), nil
+	default:
+		return BackdatePosition(time, Earth, body, aberration)
+	}
+}
+
+// LagrangePointFast calculates the position and velocity of one of the five
+// Lagrange points of a two-body system, given the states and masses of the two
+// bodies.
+func LagrangePointFast(point int, majorState StateVector, majorMass float64, minorState StateVector, minorMass float64) (StateVector, error) {
+	const cos60 = 0.5
+	const sin60 = 0.8660254037844386 // sqrt(3) / 2
+
+	if point < 1 || point > 5 {
+		return StateVector{}, errors.New("Invalid Lagrange point number")
+	}
+	if majorMass <= 0.0 || minorMass <= 0.0 {
+		return StateVector{}, errors.New("Invalid mass for Lagrange point")
+	}
+
+	// Find the relative position vector (dx, dy, dz).
+	dx := minorState.X - majorState.X
+	dy := minorState.Y - majorState.Y
+	dz := minorState.Z - majorState.Z
+	R2 := dx*dx + dy*dy + dz*dz
+	R := math.Sqrt(R2)
+
+	// Find the relative velocity vector (vx, vy, vz).
+	vx := minorState.Vx - majorState.Vx
+	vy := minorState.Vy - majorState.Vy
+	vz := minorState.Vz - majorState.Vz
+
+	var p StateVector
+	p.T = majorState.T
+
+	if point == 4 || point == 5 {
+		// For L4 and L5, find points 60 degrees away from the line connecting
+		// the two bodies in the instantaneous orbital plane.
+		// Take the cross product of position and velocity to find a normal.
+		nx := dy*vz - dz*vy
+		ny := dz*vx - dx*vz
+		nz := dx*vy - dy*vx
+
+		// Take the cross product normal*position to get a tangential vector.
+		ux := ny*dz - nz*dy
+		uy := nz*dx - nx*dz
+		uz := nx*dy - ny*dx
+
+		// Convert the tangential direction vector to a unit vector.
+		U := math.Sqrt(ux*ux + uy*uy + uz*uz)
+		ux /= U
+		uy /= U
+		uz /= U
+		dx /= R
+		dy /= R
+		dz /= R
+
+		vert := -sin60
+		if point == 4 {
+			vert = +sin60
+		}
+		Dx := cos60*dx + vert*ux
+		Dy := cos60*dy + vert*uy
+		Dz := cos60*dz + vert*uz
+		Ux := cos60*ux - vert*dx
+		Uy := cos60*uy - vert*dy
+		Uz := cos60*uz - vert*dz
+
+		p.X = R * Dx
+		p.Y = R * Dy
+		p.Z = R * Dz
+
+		vrad := vx*dx + vy*dy + vz*dz
+		vtan := vx*ux + vy*uy + vz*uz
+		p.Vx = vrad*Dx + vtan*Ux
+		p.Vy = vrad*Dy + vtan*Uy
+		p.Vz = vrad*Dz + vtan*Uz
+	} else {
+		// Calculate the distances of each body from their mutual barycenter.
+		r1 := -R * (minorMass / (majorMass + minorMass))
+		r2 := +R * (majorMass / (majorMass + minorMass))
+		omega2 := (majorMass + minorMass) / (R2 * R)
+
+		// Use Newton's Method to solve for the location where outward
+		// centrifugal acceleration equals net inward gravitational acceleration.
+		var scale, numer1, numer2 float64
+		if point == 1 || point == 2 {
+			scale = (majorMass / (majorMass + minorMass)) * math.Cbrt(minorMass/(3.0*majorMass))
+			numer1 = -majorMass // major mass is to the left of L1 and L2
+			if point == 1 {
+				scale = 1.0 - scale
+				numer2 = +minorMass // minor mass is to the right of L1
+			} else {
+				scale = 1.0 + scale
+				numer2 = -minorMass // minor mass is to the left of L2
+			}
+		} else { // point == 3
+			scale = ((7.0/12.0)*minorMass - majorMass) / (minorMass + majorMass)
+			numer1 = +majorMass // major mass is to the right of L3
+			numer2 = +minorMass // minor mass is to the right of L3
+		}
+		x := R*scale - r1
+		for {
+			dr1 := x - r1
+			dr2 := x - r2
+			accel := omega2*x + numer1/(dr1*dr1) + numer2/(dr2*dr2)
+			deriv := omega2 - 2*numer1/(dr1*dr1*dr1) - 2*numer2/(dr2*dr2*dr2)
+			deltax := accel / deriv
+			x -= deltax
+			if math.Abs(deltax/R) <= 1.0e-14 {
+				break
+			}
+		}
+		scale = (x - r1) / R
+		p.X = scale * dx
+		p.Y = scale * dy
+		p.Z = scale * dz
+		p.Vx = scale * vx
+		p.Vy = scale * vy
+		p.Vz = scale * vz
+	}
+	return p, nil
+}
+
+// LagrangePoint calculates the position and velocity of a Lagrange point in a
+// system defined by a major body and a minor body orbiting it.
+func LagrangePoint(point int, time AstroTime, majorBody Body, minorBody Body) (StateVector, error) {
+	majorMass := MassProduct(majorBody)
+	if majorMass <= 0.0 {
+		return StateVector{}, errors.New("Invalid major body for Lagrange point")
+	}
+	minorMass := MassProduct(minorBody)
+	if minorMass <= 0.0 {
+		return StateVector{}, errors.New("Invalid minor body for Lagrange point")
+	}
+
+	var majorState, minorState StateVector
+	var err error
+	if majorBody == Earth && minorBody == Moon {
+		majorState = StateVector{T: time}
+		minorState = GeoMoonState(time)
+	} else {
+		majorState, err = HelioState(majorBody, time)
+		if err != nil {
+			return StateVector{}, err
+		}
+		minorState, err = HelioState(minorBody, time)
+		if err != nil {
+			return StateVector{}, err
+		}
+	}
+	return LagrangePointFast(point, majorState, majorMass, minorState, minorMass)
+}
+
+// relativeLongitudeOffset computes the signed difference between the relative
+// longitude of a body and a target relative longitude.
+func relativeLongitudeOffset(body Body, time AstroTime, direction int, targetRelLon float64) (float64, error) {
+	plon, err := EclipticLongitude(body, time)
+	if err != nil {
+		return 0.0, err
+	}
+	elon, err := EclipticLongitude(Earth, time)
+	if err != nil {
+		return 0.0, err
+	}
+	diff := float64(direction) * (elon - plon)
+	return longitudeOffset(diff - targetRelLon), nil
+}
+
+// SearchRelativeLongitude finds the next time a body reaches a target relative
+// longitude with respect to the Earth, as seen from the Sun.
+func SearchRelativeLongitude(body Body, targetRelLon float64, startTime AstroTime) (AstroTime, error) {
+	if body == Earth {
+		return AstroTime{}, errors.New("Earth not allowed for relative longitude")
+	}
+	if body == Moon || body == Sun {
+		return AstroTime{}, errors.New("Invalid body for relative longitude")
+	}
+	syn, err := synodicPeriod(body)
+	if err != nil {
+		return AstroTime{}, err
+	}
+	direction := -1
+	if isSuperiorPlanet(body) {
+		direction = +1
+	}
+	errorAngle, err := relativeLongitudeOffset(body, startTime, direction, targetRelLon)
+	if err != nil {
+		return AstroTime{}, err
+	}
+	if errorAngle > 0 {
+		errorAngle -= 360 // force searching forward in time
+	}
+	time := startTime
+	for iter := 0; iter < 100; iter++ {
+		dayAdjust := (-errorAngle / 360.0) * syn
+		time = time.AddDays(dayAdjust)
+		if math.Abs(dayAdjust)*86400.0 < 1.0 {
+			return time, nil
+		}
+		prevAngle := errorAngle
+		errorAngle, err = relativeLongitudeOffset(body, time, direction, targetRelLon)
+		if err != nil {
+			return AstroTime{}, err
+		}
+		if math.Abs(prevAngle) < 30.0 && prevAngle != errorAngle {
+			ratio := prevAngle / (prevAngle - errorAngle)
+			if ratio > 0.5 && ratio < 2.0 {
+				syn *= ratio
+			}
+		}
+	}
+	return AstroTime{}, errors.New("Relative longitude search did not converge")
+}
+
+// planetExtreme finds a local minimum or maximum of a planet's heliocentric
+// distance, refining the search window by successive narrowing.
+func planetExtreme(body Body, kind ApsisKind, startTime AstroTime, dayspan float64) (ApsisInfo, error) {
+	direction := -1.0
+	if kind == ApsisKindApocenter {
+		direction = +1.0
+	}
+	const npoints = 10
+
+	for {
+		interval := dayspan / (npoints - 1)
+		if interval < 1.0/1440.0 {
+			// Iterate until the uncertainty is less than one minute.
+			time := startTime.AddDays(interval / 2.0)
+			dist, err := HelioDistance(body, time)
+			if err != nil {
+				return ApsisInfo{}, err
+			}
+			return ApsisInfo{Time: time, Kind: kind, DistAu: dist, DistKm: dist * KmPerAu}, nil
+		}
+		bestI := -1
+		bestDist := 0.0
+		for i := 0; i < npoints; i++ {
+			time := startTime.AddDays(float64(i) * interval)
+			dist, err := HelioDistance(body, time)
+			if err != nil {
+				return ApsisInfo{}, err
+			}
+			d := direction * dist
+			if i == 0 || d > bestDist {
+				bestI = i
+				bestDist = d
+			}
+		}
+		startTime = startTime.AddDays(float64(bestI-1) * interval)
+		dayspan = 2.0 * interval
+	}
+}
+
 // calcJupiterMoon calculates the jovicentric position and velocity of one of
 // Jupiter's four Galilean moons (Io, Europa, Ganymede, Callisto) at the given
 // time, expressed in the J2000 equatorial (EQJ) frame.
