@@ -3664,6 +3664,615 @@ func planetExtreme(body Body, kind ApsisKind, startTime AstroTime, dayspan float
 	}
 }
 
+// bruteSearchPlanetApsis finds the next perihelion or aphelion of a planet by
+// brute-force sampling of the heliocentric distance, which is needed for
+// Neptune and Pluto where the orbit is nearly circular or the motion is noisy.
+func bruteSearchPlanetApsis(body Body, startTime AstroTime) (ApsisInfo, error) {
+	const npoints = 100
+	period := PlanetOrbitalPeriod(body)
+	t1 := startTime.AddDays(period * (-30.0 / 360.0))
+	t2 := startTime.AddDays(period * (+270.0 / 360.0))
+	tMin := t1
+	tMax := t1
+	minDist := -1.0
+	maxDist := -1.0
+	interval := (t2.Ut - t1.Ut) / (npoints - 1.0)
+
+	for i := 0; i < npoints; i++ {
+		ut := t1.Ut + (float64(i) * interval)
+		time := TimeFromUniversalDays(ut)
+		dist, err := HelioDistance(body, time)
+		if err != nil {
+			return ApsisInfo{}, err
+		}
+		if i == 0 {
+			minDist = dist
+			maxDist = dist
+		} else {
+			if dist > maxDist {
+				maxDist = dist
+				tMax = time
+			}
+			if dist < minDist {
+				minDist = dist
+				tMin = time
+			}
+		}
+	}
+
+	perihelion, err := planetExtreme(body, ApsisKindPericenter, tMin.AddDays(-2*interval), 4*interval)
+	if err != nil {
+		return ApsisInfo{}, err
+	}
+	aphelion, err := planetExtreme(body, ApsisKindApocenter, tMax.AddDays(-2*interval), 4*interval)
+	if err != nil {
+		return ApsisInfo{}, err
+	}
+
+	if perihelion.Time.Tt >= startTime.Tt {
+		if aphelion.Time.Tt >= startTime.Tt && aphelion.Time.Tt < perihelion.Time.Tt {
+			return aphelion, nil
+		}
+		return perihelion, nil
+	}
+	if aphelion.Time.Tt >= startTime.Tt {
+		return aphelion, nil
+	}
+	return ApsisInfo{}, errors.New("Could not find a planet apsis")
+}
+
+// vector2radec converts a Cartesian vector into right ascension, declination,
+// and distance in the same equatorial orientation.
+func vector2radec(pos [3]float64, time AstroTime) (Equatorial, error) {
+	return EquatorFromVector(AstroVector{X: pos[0], Y: pos[1], Z: pos[2], T: time})
+}
+
+// Equator calculates topocentric equatorial coordinates of a body as seen by
+// an observer on the Earth's surface, optionally correcting for aberration.
+func Equator(body Body, time *AstroTime, observer Observer, equdate EquatorDate, aberration Aberration) (Equatorial, error) {
+	gcObserver := geoPos(time, observer)
+	gc, err := GeoVector(body, *time, aberration)
+	if err != nil {
+		return Equatorial{}, err
+	}
+	j2000 := [3]float64{gc.X - gcObserver[0], gc.Y - gcObserver[1], gc.Z - gcObserver[2]}
+	switch equdate {
+	case EquatorOfDate:
+		mean := precession(AstroVector{X: j2000[0], Y: j2000[1], Z: j2000[2], T: *time}, from2000)
+		eqd := nutation(mean, from2000)
+		return EquatorFromVector(eqd)
+	case EquatorJ2000:
+		return EquatorFromVector(AstroVector{X: j2000[0], Y: j2000[1], Z: j2000[2], T: *time})
+	default:
+		return Equatorial{}, errors.New("Invalid equinox of date")
+	}
+}
+
+// AngleFromSun returns the angle in degrees between a body and the Sun, as
+// seen from the Earth.
+func AngleFromSun(body Body, time AstroTime) (float64, error) {
+	if body == Earth {
+		return 0.0, errors.New("Earth not allowed for angle from Sun")
+	}
+	sv, err := GeoVector(Sun, time, WithAberration)
+	if err != nil {
+		return 0.0, err
+	}
+	bv, err := GeoVector(body, time, WithAberration)
+	if err != nil {
+		return 0.0, err
+	}
+	return AngleBetween(sv, bv), nil
+}
+
+// Visibility classifies whether a planet is visible in the morning or evening.
+type Visibility int
+
+const (
+	VisibilityMorning Visibility = iota // the body is visible in the morning
+	VisibilityEvening                   // the body is visible in the evening
+)
+
+// ElongationInfo describes the angle between the Sun and a body as seen from
+// the Earth, along with its visibility.
+type ElongationInfo struct {
+	Time             AstroTime  // the time of the observation
+	Visibility       Visibility // whether the body is visible in the morning or evening
+	Elongation       float64    // the angle in degrees between the Sun and the body
+	EclipticSeparation float64  // the absolute value of the difference in ecliptic longitudes
+}
+
+// Elongation calculates the angle between the Sun and a body as seen from the
+// Earth.
+func Elongation(body Body, time AstroTime) (ElongationInfo, error) {
+	angres, err := PairLongitude(body, Sun, time)
+	if err != nil {
+		return ElongationInfo{}, err
+	}
+	visibility := VisibilityEvening
+	eclipticSeparation := angres
+	if angres > 180.0 {
+		visibility = VisibilityMorning
+		eclipticSeparation = 360.0 - angres
+	}
+	elong, err := AngleFromSun(body, time)
+	if err != nil {
+		return ElongationInfo{}, err
+	}
+	return ElongationInfo{
+		Time:               time,
+		Visibility:         visibility,
+		Elongation:         elong,
+		EclipticSeparation: eclipticSeparation,
+	}, nil
+}
+
+// PairLongitude calculates the difference in geocentric ecliptic longitudes
+// between two bodies, in the range [0, 360).
+func PairLongitude(body1 Body, body2 Body, time AstroTime) (float64, error) {
+	if body1 == Earth || body2 == Earth {
+		return 0.0, errors.New("Earth not allowed for pair longitude")
+	}
+	vector1, err := GeoVector(body1, time, NoAberration)
+	if err != nil {
+		return 0.0, err
+	}
+	eclip1 := EquatorialToEcliptic(vector1)
+	vector2, err := GeoVector(body2, time, NoAberration)
+	if err != nil {
+		return 0.0, err
+	}
+	eclip2 := EquatorialToEcliptic(vector2)
+	return normalizeLongitude(eclip1.Elon - eclip2.Elon), nil
+}
+
+// MoonPhase returns the Moon's ecliptic phase angle in degrees, in the range
+// [0, 360), where 0 is a new moon and 180 is a full moon.
+func MoonPhase(time AstroTime) (float64, error) {
+	return PairLongitude(Moon, Sun, time)
+}
+
+// moonOffset returns the difference between the Moon's phase angle and a
+// target phase angle, reduced into the range (-180, +180].
+func moonOffset(targetLon float64, time AstroTime) (float64, error) {
+	phase, err := MoonPhase(time)
+	if err != nil {
+		return 0.0, err
+	}
+	return longitudeOffset(phase - targetLon), nil
+}
+
+// SearchMoonPhase finds the next time the Moon's phase angle reaches the given
+// target ecliptic longitude (0=new, 90=first quarter, 180=full, 270=last
+// quarter), after the given start time.
+func SearchMoonPhase(targetLon float64, startTime AstroTime, limitDays float64) (AstroTime, error) {
+	const uncertainty = 1.5
+	ya, err := moonOffset(targetLon, startTime)
+	if err != nil {
+		return AstroTime{}, err
+	}
+
+	var estDt, dt1, dt2 float64
+	if limitDays < 0.0 {
+		// Search backward in time.
+		if ya < 0.0 {
+			ya += 360.0
+		}
+		estDt = -(29.530588 * ya) / 360.0
+		dt1 = estDt - uncertainty
+		dt2 = estDt + uncertainty
+		if dt2 < limitDays {
+			return AstroTime{}, errors.New("No moon phase within the specified window")
+		}
+		if dt1 < limitDays {
+			dt1 = limitDays
+		}
+	} else {
+		// Search forward in time.
+		if ya > 0.0 {
+			ya -= 360.0
+		}
+		estDt = -(29.530588 * ya) / 360.0
+		dt1 = estDt - uncertainty
+		dt2 = estDt + uncertainty
+		if dt1 > limitDays {
+			return AstroTime{}, errors.New("No moon phase within the specified window")
+		}
+		if dt2 > limitDays {
+			dt2 = limitDays
+		}
+	}
+	t1 := startTime.AddDays(dt1)
+	t2 := startTime.AddDays(dt2)
+	return Search(func(t AstroTime) (float64, error) {
+		return moonOffset(targetLon, t)
+	}, t1, t2, 0.1)
+}
+
+// SearchMoonQuarter finds the first quarter phase of the Moon after the given
+// start time.
+func SearchMoonQuarter(startTime AstroTime) (AstroMoonQuarter, error) {
+	phase, err := MoonPhase(startTime)
+	if err != nil {
+		return AstroMoonQuarter{}, err
+	}
+	quarter := (1 + int(math.Floor(phase/90.0))) % 4
+	root, err := SearchMoonPhase(90.0*float64(quarter), startTime, 10.0)
+	if err != nil {
+		return AstroMoonQuarter{}, err
+	}
+	return AstroMoonQuarter{Quarter: quarter, Time: root}, nil
+}
+
+// NextMoonQuarter finds the next quarter phase of the Moon after the given
+// quarter phase event.
+func NextMoonQuarter(mq AstroMoonQuarter) (AstroMoonQuarter, error) {
+	time := mq.Time.AddDays(6.0)
+	next, err := SearchMoonQuarter(time)
+	if err != nil {
+		return AstroMoonQuarter{}, err
+	}
+	if next.Quarter != (1+mq.Quarter)%4 {
+		return AstroMoonQuarter{}, errors.New("Found the wrong moon quarter")
+	}
+	return next, nil
+}
+
+// HourAngle calculates the hour angle of a body for an observer at the given
+// time, in the range [0, 24).
+func HourAngle(body Body, time *AstroTime, observer Observer) (float64, error) {
+	gast := SiderealTime(time)
+	ofdate, err := Equator(body, time, observer, EquatorOfDate, WithAberration)
+	if err != nil {
+		return 0.0, err
+	}
+	value := math.Mod(observer.Longitude/15+gast-ofdate.Ra, 24.0)
+	if value < 0.0 {
+		value += 24.0
+	}
+	return value, nil
+}
+
+// SearchHourAngle finds the time when the given body reaches the given hour
+// angle as seen by the observer, searching forward (direction=+1) or backward
+// (direction=-1) from the start time.
+func SearchHourAngle(body Body, observer Observer, hourAngle float64, startTime AstroTime, direction int) (Topocentric, AstroTime, error) {
+	if body == Earth {
+		return Topocentric{}, AstroTime{}, errors.New("Earth not allowed for hour angle")
+	}
+	if hourAngle < 0.0 || hourAngle >= 24.0 {
+		return Topocentric{}, AstroTime{}, errors.New("Invalid hour angle")
+	}
+	if direction == 0 {
+		return Topocentric{}, AstroTime{}, errors.New("Invalid direction for hour angle search")
+	}
+	time := startTime
+	for iter := 0; ; iter++ {
+		gast := SiderealTime(&time)
+		ofdate, err := Equator(body, &time, observer, EquatorOfDate, WithAberration)
+		if err != nil {
+			return Topocentric{}, AstroTime{}, err
+		}
+		deltaSiderealHours := math.Mod((hourAngle+ofdate.Ra-observer.Longitude/15)-gast, 24.0)
+		if iter == 0 {
+			if direction > 0 {
+				if deltaSiderealHours < 0.0 {
+					deltaSiderealHours += 24.0
+				}
+			} else {
+				if deltaSiderealHours > 0.0 {
+					deltaSiderealHours -= 24.0
+				}
+			}
+		} else {
+			if deltaSiderealHours < -12.0 {
+				deltaSiderealHours += 24.0
+			} else if deltaSiderealHours > +12.0 {
+				deltaSiderealHours -= 24.0
+			}
+		}
+		if math.Abs(deltaSiderealHours)*3600.0 < 0.1 {
+			hor := Horizon(time, observer, ofdate.Ra, ofdate.Dec, NormalRefraction)
+			return hor, time, nil
+		}
+		deltaDays := (deltaSiderealHours / 24.0) * solarDaysPerSiderealDay
+		time = time.AddDays(deltaDays)
+	}
+}
+
+// EarthShadow calculates the alignment of the Earth with the Moon's shadow, for
+// finding lunar eclipses.
+func EarthShadow(time AstroTime) shadow {
+	// Find the geocentric Sun with aberration correction, then negate to point
+	// in the direction of sunlight heading toward the Earth's center.
+	e, err := GeoVector(Sun, time, WithAberration)
+	if err != nil {
+		return shadow{}
+	}
+	e = AstroVector{X: -e.X, Y: -e.Y, Z: -e.Z, T: time}
+	m := GeoMoon(time)
+	return calcShadow(6371.0+80.0, time, m, e)
+}
+
+// MoonShadow calculates the alignment of the Moon with the Earth, for finding
+// solar eclipses.
+func MoonShadow(time AstroTime) shadow {
+	s, err := GeoVector(Sun, time, WithAberration)
+	if err != nil {
+		return shadow{}
+	}
+	m := GeoMoon(time) // geocentric Moon
+	e := AstroVector{X: -m.X, Y: -m.Y, Z: -m.Z, T: m.T}
+	m = AstroVector{X: m.X - s.X, Y: m.Y - s.Y, Z: m.Z - s.Z, T: m.T}
+	return calcShadow(1737.4, time, e, m)
+}
+
+// LocalMoonShadow calculates the alignment of the Moon's shadow with an
+// observer on the Earth's surface, for finding local solar eclipses.
+func LocalMoonShadow(time AstroTime, observer Observer) shadow {
+	pos := geoPos(&time, observer)
+	s, err := GeoVector(Sun, time, WithAberration)
+	if err != nil {
+		return shadow{}
+	}
+	m := GeoMoon(time) // geocentric Moon
+	o := AstroVector{X: pos[0] - m.X, Y: pos[1] - m.Y, Z: pos[2] - m.Z, T: m.T}
+	m = AstroVector{X: m.X - s.X, Y: m.Y - s.Y, Z: m.Z - s.Z, T: m.T}
+	return calcShadow(1737.4, time, o, m)
+}
+
+// PlanetShadow calculates the alignment of a planet's shadow with the Earth,
+// for finding planet transits.
+func PlanetShadow(body Body, planetRadiusKm float64, time AstroTime) shadow {
+	g, err := GeoVector(body, time, WithAberration)
+	if err != nil {
+		return shadow{}
+	}
+	e, err := GeoVector(Sun, time, WithAberration)
+	if err != nil {
+		return shadow{}
+	}
+	// Deduce the light-travel corrected vector from the Sun to the planet.
+	p := AstroVector{X: g.X - e.X, Y: g.Y - e.Y, Z: g.Z - e.Z, T: time}
+	// Calculate the Earth's position from the planet's point of view.
+	e = AstroVector{X: -g.X, Y: -g.Y, Z: -g.Z, T: time}
+	return calcShadow(planetRadiusKm, time, e, p)
+}
+
+// altitudeDiff computes the signed difference between a body's altitude and a
+// target altitude, used by the rise/set search algorithms.
+func altitudeDiff(context *altitudeContext, time AstroTime) (float64, error) {
+	ofdate, err := Equator(context.body, &time, context.observer, EquatorOfDate, WithAberration)
+	if err != nil {
+		return 0.0, err
+	}
+	hor := Horizon(time, context.observer, ofdate.Ra, ofdate.Dec, NoRefraction)
+	altitude := hor.Altitude + DegreesFromRadians(math.Asin(context.bodyRadiusAu/ofdate.Dist))
+	return float64(context.direction) * (altitude - context.targetAltitude), nil
+}
+
+// internalSearchAltitude searches for the next time a body reaches the given
+// altitude, as seen by an observer, using a combination of FindAscent and
+// Search. direction must be +1 (rising) or -1 (setting).
+func internalSearchAltitude(body Body, observer Observer, direction int, startTime AstroTime, limitDays float64, bodyRadiusAu float64, targetAltitude float64) (AstroTime, error) {
+	if !isfinite(targetAltitude) || targetAltitude < -90.0 || targetAltitude > +90.0 {
+		return AstroTime{}, errors.New("Invalid target altitude")
+	}
+	maxDerivAlt, err := maxAltitudeSlope(body, observer.Latitude)
+	if err != nil {
+		return AstroTime{}, err
+	}
+
+	context := altitudeContext{
+		body:           body,
+		direction:      direction,
+		observer:       observer,
+		bodyRadiusAu:   bodyRadiusAu,
+		targetAltitude: targetAltitude,
+	}
+
+	t1 := startTime
+	t2 := startTime
+	a1, err := altitudeDiff(&context, t2)
+	if err != nil {
+		return AstroTime{}, err
+	}
+	a2 := a1
+
+	const riseSetDt = 0.42 // 10.08 hours: Nyquist-safe for a 22-hour period
+	for {
+		if limitDays < 0.0 {
+			t1 = t2.AddDays(-riseSetDt)
+			a1, err = altitudeDiff(&context, t1)
+			if err != nil {
+				return AstroTime{}, err
+			}
+		} else {
+			t2 = t1.AddDays(+riseSetDt)
+			a2, err = altitudeDiff(&context, t2)
+			if err != nil {
+				return AstroTime{}, err
+			}
+		}
+
+		ascent, ok, err := findAscent(0, maxDerivAlt, t1, t2, a1, a2, func(t AstroTime) (float64, error) {
+			return altitudeDiff(&context, t)
+		})
+		if err != nil {
+			return AstroTime{}, err
+		}
+		if ok {
+			// We found an interval [tx, ty] containing an alt-diff rising
+			// from negative to non-negative; search for the exact root.
+			root, err := Search(func(t AstroTime) (float64, error) {
+				return altitudeDiff(&context, t)
+			}, ascent.tx, ascent.ty, 0.1)
+			if err != nil {
+				return AstroTime{}, err
+			}
+			if limitDays < 0.0 {
+				if root.Ut < startTime.Ut+limitDays {
+					return AstroTime{}, errors.New("Search altitude failed to find an event within the time window")
+				}
+			} else {
+				if root.Ut > startTime.Ut+limitDays {
+					return AstroTime{}, errors.New("Search altitude failed to find an event within the time window")
+				}
+			}
+			return root, nil
+		}
+
+		if limitDays < 0.0 {
+			if t1.Ut < startTime.Ut+limitDays {
+				return AstroTime{}, errors.New("Search altitude failed to find an event within the time window")
+			}
+			t2 = t1
+			a2 = a1
+		} else {
+			if t2.Ut > startTime.Ut+limitDays {
+				return AstroTime{}, errors.New("Search altitude failed to find an event within the time window")
+			}
+			t1 = t2
+			a1 = a2
+		}
+	}
+}
+
+// SearchAltitude finds the next time a body reaches the given altitude above
+// the horizon as seen by an observer. direction must be +1 (rising) or -1
+// (setting).
+func SearchAltitude(body Body, observer Observer, direction int, startTime AstroTime, limitDays float64, altitude float64) (AstroTime, error) {
+	return internalSearchAltitude(body, observer, direction, startTime, limitDays, 0.0, altitude)
+}
+
+// SearchRiseSet finds the next time a body rises or sets as seen by an
+// observer on the Earth. direction must be +1 for rise or -1 for set.
+func SearchRiseSet(body Body, observer Observer, direction int, startTime AstroTime, limitDays float64, metersAboveGround float64) (AstroTime, error) {
+	if !isfinite(metersAboveGround) || metersAboveGround < 0.0 {
+		return AstroTime{}, errors.New("Invalid meters above ground")
+	}
+	var bodyRadiusAu float64
+	switch body {
+	case Sun:
+		bodyRadiusAu = SunRadiusKm / KmPerAu
+	case Moon:
+		bodyRadiusAu = MoonEquatorialRadiusKm / KmPerAu
+	default:
+		bodyRadiusAu = 0.0
+	}
+	atmos, err := Atmosphere(observer.Height - metersAboveGround)
+	if err != nil {
+		return AstroTime{}, err
+	}
+	dip := horizonDipAngle(observer, metersAboveGround)
+	const refractionNearHorizon = 34.0 / 60.0
+	altitude := dip - (refractionNearHorizon * atmos.Density)
+	return internalSearchAltitude(body, observer, direction, startTime, limitDays, bodyRadiusAu, altitude)
+}
+
+// SunAltitude returns the Sun's altitude above the horizon as seen by the
+// observer at the given time.
+func SunAltitude(time AstroTime, observer Observer) (float64, error) {
+	ofdate, err := Equator(Sun, &time, observer, EquatorOfDate, WithAberration)
+	if err != nil {
+		return 0.0, err
+	}
+	hor := Horizon(time, observer, ofdate.Ra, ofdate.Dec, NoRefraction)
+	return hor.Altitude, nil
+}
+
+// planetDistanceSlope evaluates the rate of change of a planet's heliocentric
+// distance, used for finding perihelion and aphelion.
+func planetDistanceSlope(body Body, direction float64, time AstroTime) (float64, error) {
+	const dt = 0.001
+	t1 := time.AddDays(-dt / 2.0)
+	t2 := time.AddDays(+dt / 2.0)
+	d1, err := HelioDistance(body, t1)
+	if err != nil {
+		return 0.0, err
+	}
+	d2, err := HelioDistance(body, t2)
+	if err != nil {
+		return 0.0, err
+	}
+	return direction * (d2 - d1) / dt, nil
+}
+
+// SearchPlanetApsis finds the next perihelion or aphelion of a planet after
+// the given start time.
+func SearchPlanetApsis(body Body, startTime AstroTime) (ApsisInfo, error) {
+	if body == Neptune || body == Pluto {
+		return bruteSearchPlanetApsis(body, startTime)
+	}
+	orbitPeriod := PlanetOrbitalPeriod(body)
+	if orbitPeriod == 0.0 {
+		return ApsisInfo{}, errors.New("Invalid body for planet apsis")
+	}
+	increment := orbitPeriod / 6.0
+	t1 := startTime
+	m1, err := planetDistanceSlope(body, +1.0, t1)
+	if err != nil {
+		return ApsisInfo{}, err
+	}
+
+	for iter := 0.0; iter < 2.0*orbitPeriod; iter += increment {
+		t2 := t1.AddDays(increment)
+		m2, err := planetDistanceSlope(body, +1.0, t2)
+		if err != nil {
+			return ApsisInfo{}, err
+		}
+		if m1*m2 <= 0.0 {
+			var kind ApsisKind
+			var root AstroTime
+			var err error
+			if m1 < 0.0 || m2 > 0.0 {
+				// Minimum-distance event: perihelion.
+				kind = ApsisKindPericenter
+				root, err = Search(func(t AstroTime) (float64, error) {
+					return planetDistanceSlope(body, +1.0, t)
+				}, t1, t2, 1.0)
+			} else if m1 > 0.0 || m2 < 0.0 {
+				// Maximum-distance event: aphelion.
+				kind = ApsisKindApocenter
+				root, err = Search(func(t AstroTime) (float64, error) {
+					return planetDistanceSlope(body, -1.0, t)
+				}, t1, t2, 1.0)
+			} else {
+				return ApsisInfo{}, errors.New("Both planet distance slopes are zero")
+			}
+			if err != nil {
+				return ApsisInfo{}, err
+			}
+			dist, err := HelioDistance(body, root)
+			if err != nil {
+				return ApsisInfo{}, err
+			}
+			return ApsisInfo{Time: root, Kind: kind, DistAu: dist, DistKm: dist * KmPerAu}, nil
+		}
+		t1 = t2
+		m1 = m2
+	}
+	return ApsisInfo{}, errors.New("Could not find a planet apsis within two orbits")
+}
+
+// NextPlanetApsis finds the next perihelion or aphelion of a planet after the
+// given apsis event. Given an aphelion event, it finds the next perihelion,
+// and vice versa.
+func NextPlanetApsis(body Body, apsis ApsisInfo) (ApsisInfo, error) {
+	if apsis.Kind != ApsisKindApocenter && apsis.Kind != ApsisKindPericenter {
+		return ApsisInfo{}, errors.New("Invalid apsis kind")
+	}
+	skip := 0.25 * PlanetOrbitalPeriod(body) // skip 1/4 of an orbit before starting the search again
+	next, err := SearchPlanetApsis(body, apsis.Time.AddDays(skip))
+	if err != nil {
+		return ApsisInfo{}, err
+	}
+	if next.Kind+apsis.Kind != 1 {
+		return ApsisInfo{}, errors.New("Found the same apsis kind instead of the opposite")
+	}
+	return next, nil
+}
+
 // calcJupiterMoon calculates the jovicentric position and velocity of one of
 // Jupiter's four Galilean moons (Io, Europa, Ganymede, Callisto) at the given
 // time, expressed in the J2000 equatorial (EQJ) frame.
