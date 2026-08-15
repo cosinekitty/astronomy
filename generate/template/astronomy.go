@@ -1588,10 +1588,11 @@ func RefractionAngle(refraction Refraction, altitude float64) float64 {
 type EclipseKind int
 
 const (
-	EclipseKindTotal     EclipseKind = iota // the Moon completely blocks the Sun (total solar eclipse)
-	EclipseKindAnnular                      // the Moon is entirely inside the Sun's disc (annular solar eclipse)
-	EclipseKindPartial                      // the Moon only partially covers the Sun
-	EclipseKindPenumbral                    // the Moon passes only through the Earth's penumbra
+	EclipseKindNone     EclipseKind = iota // no eclipse found
+	EclipseKindPenumbral                   // the Moon passes only through the Earth's penumbra (lunar eclipses only)
+	EclipseKindPartial                     // the Moon only partially covers the Sun
+	EclipseKindAnnular                     // the Moon is entirely inside the Sun's disc (annular solar eclipse)
+	EclipseKindTotal                       // the Moon completely blocks the Sun (total solar eclipse)
 )
 
 // eclipseKindFromUmbra classifies a solar eclipse by the size of the umbra
@@ -3991,7 +3992,7 @@ func EarthShadow(time AstroTime) shadow {
 	}
 	e = AstroVector{X: -e.X, Y: -e.Y, Z: -e.Z, T: time}
 	m := GeoMoon(time)
-	return calcShadow(6371.0+80.0, time, m, e)
+	return calcShadow(6371.0+88.0, time, m, e)
 }
 
 // MoonShadow calculates the alignment of the Moon with the Earth, for finding
@@ -4271,6 +4272,520 @@ func NextPlanetApsis(body Body, apsis ApsisInfo) (ApsisInfo, error) {
 		return ApsisInfo{}, errors.New("Found the same apsis kind instead of the opposite")
 	}
 	return next, nil
+}
+
+// EclipseEventInfo describes the time and Sun altitude of a phase of a local
+// solar eclipse.
+type EclipseEventInfo struct {
+	Time     AstroTime // the date and time of the event
+	Altitude float64   // the angular altitude of the Sun at the event, in degrees
+}
+
+// LunarEclipseInfo describes a lunar eclipse event.
+type LunarEclipseInfo struct {
+	Kind        EclipseKind // the type of lunar eclipse
+	Obscuration float64     // the peak fraction of the Moon's disc covered by the umbra
+	Peak        AstroTime   // the time of the eclipse at its peak
+	SdPenum     float64     // semi-duration of the penumbral phase in minutes
+	SdPartial   float64     // semi-duration of the partial phase in minutes
+	SdTotal     float64     // semi-duration of the total phase in minutes
+}
+
+// GlobalSolarEclipseInfo describes a solar eclipse as seen from the center of
+// the Earth.
+type GlobalSolarEclipseInfo struct {
+	Kind        EclipseKind // the type of solar eclipse
+	Obscuration float64     // the peak fraction of the Sun's disc obscured
+	Peak        AstroTime   // when the solar eclipse is darkest
+	Distance    float64     // the distance between the shadow axis and Earth's center in km
+	Latitude    float64     // geographic latitude of the center of the peak shadow
+	Longitude   float64     // geographic longitude of the center of the peak shadow
+}
+
+// LocalSolarEclipseInfo describes a solar eclipse as seen by a specific
+// observer on the Earth's surface.
+type LocalSolarEclipseInfo struct {
+	Kind         EclipseKind      // the type of solar eclipse
+	Obscuration  float64          // the fraction of the Sun's disc obscured at the peak
+	PartialBegin EclipseEventInfo // the beginning of the partial eclipse
+	TotalBegin   EclipseEventInfo // the beginning of the total/annular phase (if any)
+	Peak         EclipseEventInfo // the time of the eclipse peak
+	TotalEnd     EclipseEventInfo // the end of the total/annular phase (if any)
+	PartialEnd   EclipseEventInfo // the end of the partial eclipse
+}
+
+// TransitInfo describes a transit of Mercury or Venus across the Sun.
+type TransitInfo struct {
+	Start      AstroTime // the beginning of the transit
+	Peak       AstroTime // the peak of the transit
+	Finish     AstroTime // the end of the transit
+	Separation float64   // angular separation in arcminutes between Sun and planet at peak
+}
+
+// shadowDistance is the signed distance from the shadow axis to the target,
+// relative to a limit, used for finding eclipse peaks.
+func shadowDistance(direction float64, radiusLimit float64, time AstroTime, shadowFunc func(t AstroTime) shadow) (float64, error) {
+	s := shadowFunc(time)
+	return direction * (s.r - radiusLimit), nil
+}
+
+// shadowDistanceSlope measures how quickly the shadow axis distance changes.
+func shadowDistanceSlope(shadowFunc func(t AstroTime) shadow, direction float64, time AstroTime) (float64, error) {
+	const dt = 1.0 / 86400.0
+	t1 := time.AddDays(-dt)
+	t2 := time.AddDays(+dt)
+	s1 := shadowFunc(t1)
+	s2 := shadowFunc(t2)
+	return (s2.r - s1.r) / dt, nil
+}
+
+// peakEarthShadow finds the time when the Earth's shadow axis passes closest
+// to the Moon's center.
+func peakEarthShadow(searchCenterTime AstroTime) (shadow, error) {
+	const window = 0.03 // days before/after full moon
+	t1 := searchCenterTime.AddDays(-window)
+	t2 := searchCenterTime.AddDays(+window)
+	root, err := Search(func(t AstroTime) (float64, error) {
+		return shadowDistanceSlope(EarthShadow, +1.0, t)
+	}, t1, t2, 1.0)
+	if err != nil {
+		return shadow{}, err
+	}
+	return EarthShadow(root), nil
+}
+
+// peakMoonShadow finds the time when the Moon's shadow axis passes closest to
+// the center of the Earth.
+func peakMoonShadow(searchCenterTime AstroTime) (shadow, error) {
+	const window = 0.03 // days before/after new moon
+	t1 := searchCenterTime.AddDays(-window)
+	t2 := searchCenterTime.AddDays(+window)
+	root, err := Search(func(t AstroTime) (float64, error) {
+		return shadowDistanceSlope(MoonShadow, +1.0, t)
+	}, t1, t2, 1.0)
+	if err != nil {
+		return shadow{}, err
+	}
+	return MoonShadow(root), nil
+}
+
+// peakLocalMoonShadow finds when the Moon's shadow comes closest to the given
+// observer.
+func peakLocalMoonShadow(searchCenterTime AstroTime, observer Observer) (shadow, error) {
+	const window = 0.2
+	t1 := searchCenterTime.AddDays(-window)
+	t2 := searchCenterTime.AddDays(+window)
+	root, err := Search(func(t AstroTime) (float64, error) {
+		return shadowDistanceSlope(func(ti AstroTime) shadow {
+			return LocalMoonShadow(ti, observer)
+		}, +1.0, t)
+	}, t1, t2, 1.0)
+	if err != nil {
+		return shadow{}, err
+	}
+	return LocalMoonShadow(root, observer), nil
+}
+
+// peakPlanetShadow finds when a planet's shadow passes closest to the Earth.
+func peakPlanetShadow(body Body, planetRadiusKm float64, searchCenterTime AstroTime) (shadow, error) {
+	const window = 1.0
+	t1 := searchCenterTime.AddDays(-window)
+	t2 := searchCenterTime.AddDays(+window)
+	root, err := Search(func(t AstroTime) (float64, error) {
+		return shadowDistanceSlope(func(ti AstroTime) shadow {
+			return PlanetShadow(body, planetRadiusKm, ti)
+		}, +1.0, t)
+	}, t1, t2, 1.0)
+	if err != nil {
+		return shadow{}, err
+	}
+	return PlanetShadow(body, planetRadiusKm, root), nil
+}
+
+// shadowSemiDurationMinutes measures the half-duration of a phase of a lunar
+// eclipse in minutes.
+func shadowSemiDurationMinutes(centerTime AstroTime, radiusLimit float64, windowMinutes float64) (float64, error) {
+	window := windowMinutes / (24.0 * 60.0)
+	before := centerTime.AddDays(-window)
+	after := centerTime.AddDays(+window)
+
+	s1, err := Search(func(t AstroTime) (float64, error) {
+		return shadowDistance(-1.0, radiusLimit, t, EarthShadow)
+	}, before, centerTime, 1.0)
+	if err != nil {
+		return -1.0, err
+	}
+	s2, err := Search(func(t AstroTime) (float64, error) {
+		return shadowDistance(+1.0, radiusLimit, t, EarthShadow)
+	}, centerTime, after, 1.0)
+	if err != nil {
+		return -1.0, err
+	}
+	return (s2.Ut - s1.Ut) * ((24.0 * 60.0) / 2.0), nil
+}
+
+// SearchLunarEclipse searches for the first lunar eclipse after startTime.
+func SearchLunarEclipse(startTime AstroTime) (LunarEclipseInfo, error) {
+	const pruneLatitude = 1.8 // full Moon's ecliptic latitude above which an eclipse is impossible
+	const moonMeanRadiusKm = 1737.4
+	fmtime := startTime
+	for fmcount := 0; fmcount < 12; fmcount++ {
+		fullmoon, err := SearchMoonPhase(180.0, fmtime, 40.0)
+		if err != nil {
+			return LunarEclipseInfo{}, err
+		}
+		mc := makeMoonContext(fullmoon.Tt / 36525.0)
+		moon := mc.calcMoon()
+		if DegreesFromRadians(math.Abs(moon.geoEclipLat)) < pruneLatitude {
+			shadow, err := peakEarthShadow(fullmoon)
+			if err != nil {
+				return LunarEclipseInfo{}, err
+			}
+			if shadow.r < shadow.p+moonMeanRadiusKm {
+				eclipse := LunarEclipseInfo{
+					Kind:        EclipseKindPenumbral,
+					Obscuration: 0.0,
+					Peak:        shadow.time,
+					SdTotal:     0.0,
+					SdPartial:   0.0,
+				}
+				eclipse.SdPenum, err = shadowSemiDurationMinutes(shadow.time, shadow.p+moonMeanRadiusKm, 200.0)
+				if err != nil || eclipse.SdPenum <= 0.0 {
+					return LunarEclipseInfo{}, errors.New("Failed to find penumbral duration")
+				}
+				if shadow.r < shadow.k+moonMeanRadiusKm {
+					eclipse.Kind = EclipseKindPartial
+					eclipse.SdPartial, err = shadowSemiDurationMinutes(shadow.time, shadow.k+moonMeanRadiusKm, eclipse.SdPenum)
+					if err != nil || eclipse.SdPartial <= 0.0 {
+						return LunarEclipseInfo{}, errors.New("Failed to find partial duration")
+					}
+					if shadow.r+moonMeanRadiusKm < shadow.k {
+						eclipse.Kind = EclipseKindTotal
+						eclipse.Obscuration = 1.0
+						eclipse.SdTotal, err = shadowSemiDurationMinutes(shadow.time, shadow.k-moonMeanRadiusKm, eclipse.SdPartial)
+						if err != nil || eclipse.SdTotal <= 0.0 {
+							return LunarEclipseInfo{}, errors.New("Failed to find total duration")
+						}
+					} else {
+						eclipse.Obscuration = obscuration(moonMeanRadiusKm, shadow.k, shadow.r)
+					}
+				}
+				return eclipse, nil
+			}
+		}
+		fmtime = fullmoon.AddDays(10.0)
+	}
+	return LunarEclipseInfo{}, errors.New("Could not find a lunar eclipse within 12 full moons")
+}
+
+// NextLunarEclipse finds the next lunar eclipse after the given eclipse time.
+func NextLunarEclipse(prevEclipseTime AstroTime) (LunarEclipseInfo, error) {
+	return SearchLunarEclipse(prevEclipseTime.AddDays(10.0))
+}
+
+// geoidIntersect finds where the Moon's shadow axis intersects the Earth's
+// surface, determining whether a solar eclipse is total, annular, or partial.
+func geoidIntersect(shadow shadow) GlobalSolarEclipseInfo {
+	eclipse := GlobalSolarEclipseInfo{
+		Kind:     EclipseKindPartial,
+		Peak:     shadow.time,
+		Distance: shadow.r,
+	}
+
+	// Convert EQJ coordinates to equator-of-date coordinates aligned with the
+	// Earth's equator at this moment.
+	rot := Rotation_EQJ_EQD(shadow.time)
+	v := RotateVector(rot, shadow.dir)     // shadow-axis vector in EQD
+	e := RotateVector(rot, shadow.target)  // lunacentric Earth in EQD
+
+	// Convert distances from AU to km, dilating the z-coordinates so the Earth
+	// becomes a perfect sphere, then find the intersection with the sphere.
+	v.X *= KmPerAu
+	v.Y *= KmPerAu
+	v.Z *= KmPerAu / EarthFlattening
+	e.X *= KmPerAu
+	e.Y *= KmPerAu
+	e.Z *= KmPerAu / EarthFlattening
+
+	R := EarthEquatorialRadiusKm
+	A := v.X*v.X + v.Y*v.Y + v.Z*v.Z
+	B := -2.0 * (v.X*e.X + v.Y*e.Y + v.Z*e.Z)
+	C := (e.X*e.X + e.Y*e.Y + e.Z*e.Z) - R*R
+	radic := B*B - 4*A*C
+
+	if radic > 0.0 {
+		// Calculate the closer of the two intersection points (day side).
+		u := (-B - math.Sqrt(radic)) / (2 * A)
+		px := u*v.X - e.X
+		py := u*v.Y - e.Y
+		pz := (u*v.Z - e.Z) * EarthFlattening
+		proj := math.Hypot(px, py) * (EarthFlattening * EarthFlattening)
+		if proj == 0.0 {
+			if pz > 0.0 {
+				eclipse.Latitude = +90.0
+			} else {
+				eclipse.Latitude = -90.0
+			}
+		} else {
+			eclipse.Latitude = DegreesFromRadians(math.Atan(pz / proj))
+		}
+		gast := SiderealTime(&eclipse.Peak)
+		eclipse.Longitude = math.Mod((DegreesFromRadians(math.Atan2(py, px)))-(15*gast), 360.0)
+		if eclipse.Longitude <= -180.0 {
+			eclipse.Longitude += 360.0
+		} else if eclipse.Longitude > +180.0 {
+			eclipse.Longitude -= 360.0
+		}
+
+		// Convert back to the EQJ frame to find the shadow axis surface point.
+		inv := InverseRotation(rot)
+		o := RotateVector(inv, AstroVector{X: px / KmPerAu, Y: py / KmPerAu, Z: pz / KmPerAu, T: shadow.time})
+		o = AstroVector{
+			X: o.X + shadow.target.X,
+			Y: o.Y + shadow.target.Y,
+			Z: o.Z + shadow.target.Z,
+			T: shadow.time,
+		}
+		surface := calcShadow(MoonPolarRadiusKm, shadow.time, o, shadow.dir)
+		if surface.r < 0.0 || surface.r > 1.0e-9 {
+			return eclipse // internal error indicator: no valid surface intersection
+		}
+		eclipse.Kind = eclipseKindFromUmbra(surface.k)
+		if eclipse.Kind == EclipseKindTotal {
+			eclipse.Obscuration = 1.0
+		} else {
+			eclipse.Obscuration, _ = SolarEclipseObscuration(shadow.dir, o)
+		}
+	}
+	return eclipse
+}
+
+// SearchGlobalSolarEclipse searches for the first solar eclipse after
+// startTime, as seen from the center of the Earth.
+func SearchGlobalSolarEclipse(startTime AstroTime) (GlobalSolarEclipseInfo, error) {
+	const pruneLatitude = 1.8
+	nmtime := startTime
+	for nmcount := 0; nmcount < 12; nmcount++ {
+		newmoon, err := SearchMoonPhase(0.0, nmtime, 40.0)
+		if err != nil {
+			return GlobalSolarEclipseInfo{}, err
+		}
+		mc := makeMoonContext(newmoon.Tt / 36525.0)
+		moon := mc.calcMoon()
+		if DegreesFromRadians(math.Abs(moon.geoEclipLat)) < pruneLatitude {
+			shadow, err := peakMoonShadow(newmoon)
+			if err != nil {
+				return GlobalSolarEclipseInfo{}, err
+			}
+			if shadow.r < shadow.p+6371.0 {
+				return geoidIntersect(shadow), nil
+			}
+		}
+		nmtime = newmoon.AddDays(10.0)
+	}
+	return GlobalSolarEclipseInfo{}, errors.New("Could not find a global solar eclipse within 12 new moons")
+}
+
+// NextGlobalSolarEclipse finds the next global solar eclipse after the given
+// eclipse time.
+func NextGlobalSolarEclipse(prevEclipseTime AstroTime) (GlobalSolarEclipseInfo, error) {
+	return SearchGlobalSolarEclipse(prevEclipseTime.AddDays(10.0))
+}
+
+// calcEvent computes the Sun's altitude at the given time for a local eclipse.
+func calcEvent(observer Observer, time AstroTime) (EclipseEventInfo, error) {
+	alt, err := SunAltitude(time, observer)
+	if err != nil {
+		return EclipseEventInfo{}, err
+	}
+	return EclipseEventInfo{Time: time, Altitude: alt}, nil
+}
+
+// localEclipseTransition searches for the time a local eclipse phase begins or
+// ends.
+func localEclipseTransition(observer Observer, direction float64, distanceFunc func(s *shadow) float64, t1, t2 AstroTime) (EclipseEventInfo, error) {
+	root, err := Search(func(t AstroTime) (float64, error) {
+		s := LocalMoonShadow(t, observer)
+		return direction * distanceFunc(&s), nil
+	}, t1, t2, 1.0)
+	if err != nil {
+		return EclipseEventInfo{}, err
+	}
+	return calcEvent(observer, root)
+}
+
+// localPartialDistance returns the distance from the observer to the penumbra
+// edge.
+func localPartialDistance(s *shadow) float64 {
+	return s.p - s.r
+}
+
+// localTotalDistance returns the distance from the observer to the umbra edge.
+func localTotalDistance(s *shadow) float64 {
+	return math.Abs(s.k) - s.r
+}
+
+// localEclipse calculates the details of a local solar eclipse.
+func localEclipse(s shadow, observer Observer) LocalSolarEclipseInfo {
+	const partialWindow = 0.2
+	const totalWindow = 0.01
+
+	eclipse := LocalSolarEclipseInfo{}
+	peak, err := calcEvent(observer, s.time)
+	if err != nil {
+		return eclipse
+	}
+	eclipse.Peak = peak
+
+	t1 := s.time.AddDays(-partialWindow)
+	t2 := s.time.AddDays(+partialWindow)
+	partialBegin, err := localEclipseTransition(observer, +1.0, localPartialDistance, t1, s.time)
+	if err != nil {
+		return eclipse
+	}
+	eclipse.PartialBegin = partialBegin
+
+	partialEnd, err := localEclipseTransition(observer, -1.0, localPartialDistance, s.time, t2)
+	if err != nil {
+		return eclipse
+	}
+	eclipse.PartialEnd = partialEnd
+
+	if s.r < math.Abs(s.k) {
+		// Take the absolute value of k to handle annular eclipses too.
+		t1 := s.time.AddDays(-totalWindow)
+		t2 := s.time.AddDays(+totalWindow)
+		totalBegin, err := localEclipseTransition(observer, +1.0, localTotalDistance, t1, s.time)
+		if err != nil {
+			return eclipse
+		}
+		eclipse.TotalBegin = totalBegin
+		totalEnd, err := localEclipseTransition(observer, -1.0, localTotalDistance, s.time, t2)
+		if err != nil {
+			return eclipse
+		}
+		eclipse.TotalEnd = totalEnd
+		eclipse.Kind = eclipseKindFromUmbra(s.k)
+		if eclipse.Kind == EclipseKindTotal {
+			eclipse.Obscuration = 1.0
+		} else {
+			eclipse.Obscuration, _ = SolarEclipseObscuration(s.dir, s.target)
+		}
+	} else {
+		eclipse.Kind = EclipseKindPartial
+		eclipse.Obscuration, _ = SolarEclipseObscuration(s.dir, s.target)
+	}
+	return eclipse
+}
+
+// SearchLocalSolarEclipse searches for the first local solar eclipse after
+// startTime, as seen by the given observer.
+func SearchLocalSolarEclipse(startTime AstroTime, observer Observer) (LocalSolarEclipseInfo, error) {
+	const pruneLatitude = 1.8
+	nmtime := startTime
+	for {
+		newmoon, err := SearchMoonPhase(0.0, nmtime, 40.0)
+		if err != nil {
+			return LocalSolarEclipseInfo{}, err
+		}
+		mc := makeMoonContext(newmoon.Tt / 36525.0)
+		moon := mc.calcMoon()
+		if DegreesFromRadians(math.Abs(moon.geoEclipLat)) < pruneLatitude {
+			s, err := peakLocalMoonShadow(newmoon, observer)
+			if err != nil {
+				return LocalSolarEclipseInfo{}, err
+			}
+			if s.r < s.p {
+				eclipse := localEclipse(s, observer)
+				if eclipse.PartialBegin.Altitude > 0.0 || eclipse.PartialEnd.Altitude > 0.0 {
+					return eclipse, nil
+				}
+			}
+		}
+		nmtime = newmoon.AddDays(10.0)
+	}
+}
+
+// NextLocalSolarEclipse finds the next local solar eclipse after the given
+// eclipse time, as seen by the given observer.
+func NextLocalSolarEclipse(prevEclipseTime AstroTime, observer Observer) (LocalSolarEclipseInfo, error) {
+	return SearchLocalSolarEclipse(prevEclipseTime.AddDays(10.0), observer)
+}
+
+// planetTransitBound evaluates the signed distance between the planet's shadow
+// axis and the Earth's center, for finding transit boundaries.
+func planetTransitBound(body Body, planetRadiusKm float64, direction float64, time AstroTime) (float64, error) {
+	s := PlanetShadow(body, planetRadiusKm, time)
+	return direction * (s.r - s.p), nil
+}
+
+// planetTransitBoundary searches for the time the planet's penumbra begins or
+// ends making contact with the center of the Earth.
+func planetTransitBoundary(body Body, planetRadiusKm float64, t1, t2 AstroTime, direction float64) (AstroTime, error) {
+	return Search(func(t AstroTime) (float64, error) {
+		return planetTransitBound(body, planetRadiusKm, direction, t)
+	}, t1, t2, 1.0)
+}
+
+// SearchTransit searches for the first transit of Mercury or Venus after
+// startTime.
+func SearchTransit(body Body, startTime AstroTime) (TransitInfo, error) {
+	var planetRadiusKm float64
+	switch body {
+	case Mercury:
+		planetRadiusKm = 2439.7
+	case Venus:
+		planetRadiusKm = 6051.8
+	default:
+		return TransitInfo{}, errors.New("Invalid body for transit search")
+	}
+	searchTime := startTime
+	for {
+		// Search for the next inferior conjunction of the given planet.
+		conj, err := SearchRelativeLongitude(body, 0.0, searchTime)
+		if err != nil {
+			return TransitInfo{}, err
+		}
+		conjSeparation, err := AngleFromSun(body, conj)
+		if err != nil {
+			return TransitInfo{}, err
+		}
+		if conjSeparation < 0.4 {
+			// The planet's angular separation from the Sun is small enough to
+			// consider it a transit candidate.
+			s, err := peakPlanetShadow(body, planetRadiusKm, conj)
+			if err != nil {
+				return TransitInfo{}, err
+			}
+			if s.r < s.p { // does the planet's penumbra touch the Earth's center?
+				start, err := planetTransitBoundary(body, planetRadiusKm, s.time.AddDays(-1.0), s.time, -1.0)
+				if err != nil {
+					return TransitInfo{}, err
+				}
+				finish, err := planetTransitBoundary(body, planetRadiusKm, s.time, s.time.AddDays(+1.0), +1.0)
+				if err != nil {
+					return TransitInfo{}, err
+				}
+				minSeparation, err := AngleFromSun(body, s.time)
+				if err != nil {
+					return TransitInfo{}, err
+				}
+				return TransitInfo{
+					Start:      start,
+					Peak:       s.time,
+					Finish:     finish,
+					Separation: 60.0 * minSeparation,
+				}, nil
+			}
+		}
+		searchTime = conj.AddDays(10.0)
+	}
+}
+
+// NextTransit finds the next transit of Mercury or Venus after the given
+// transit time.
+func NextTransit(body Body, prevTransitTime AstroTime) (TransitInfo, error) {
+	return SearchTransit(body, prevTransitTime.AddDays(100.0))
 }
 
 // calcJupiterMoon calculates the jovicentric position and velocity of one of
