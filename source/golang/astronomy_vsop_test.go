@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-// timeFromIso parses a UTC timestamp in the form YYYY-MM-DDTHH:MM:SSZ and
-// returns the corresponding AstroTime.
+// timeFromIso parses a UTC timestamp in the form YYYY-MM-DDTHH:MM:SSZ (or with
+// a fractional second) and returns the corresponding AstroTime.
 func timeFromIso(text string, t *testing.T) AstroTime {
 	fields := strings.Split(text, "T")
 	date := strings.Split(fields[0], "-")
@@ -21,7 +21,15 @@ func timeFromIso(text string, t *testing.T) AstroTime {
 		}
 		return n
 	}
-	return TimeFromCalendar(atoi(date[0]), atoi(date[1]), atoi(date[2]), atoi(clock[0]), atoi(clock[1]), float64(atoi(clock[2])))
+	second := 0.0
+	if len(clock) >= 3 {
+		sec, err := strconv.ParseFloat(clock[2], 64)
+		if err != nil {
+			t.Fatal(err)
+		}
+		second = sec
+	}
+	return TimeFromCalendar(atoi(date[0]), atoi(date[1]), atoi(date[2]), atoi(clock[0]), atoi(clock[1]), second)
 }
 
 // vsopPosition computes the heliocentric equatorial position of a body using

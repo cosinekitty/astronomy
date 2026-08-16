@@ -10,6 +10,7 @@ package astronomy
 import (
 	"errors"
 	"math"
+	"time"
 )
 
 const (
@@ -272,6 +273,14 @@ func deltaTime(ut float64) float64 {
 // into an AstroTime value that can be used for astronomy calculations.
 func TimeFromUniversalDays(ut float64) AstroTime {
 	return makeTime(ut, terrestrialTime(ut))
+}
+
+// CurrentTime returns the current date and time as an AstroTime value.
+func CurrentTime() AstroTime {
+	now := time.Now()
+	ut := DaysFromCalendar(now.Year(), int(now.Month()), now.Day(), now.Hour(), now.Minute(),
+		float64(now.Second())+float64(now.Nanosecond())/1e9)
+	return TimeFromUniversalDays(ut)
 }
 
 // TimeFromTerrestrialDays converts a Terrestrial Time (TT) day value,
