@@ -104,6 +104,49 @@ These libraries are rigorously unit-tested against NOVAS,
 and other reliable sources of ephemeris data.
 Calculations are also verified to be identical among all the supported programming languages.
 
+### The Go Implementation
+
+The Go version of Astronomy Engine (`source/golang`) is a **native, pure-Go port**
+of the reference C implementation. It is built with only the Go standard library:
+
+* **Pure Go** &mdash; no CGO, no C wrappers, no subprocesses.
+* **No external dependencies** &mdash; `go list -m all` reports nothing but the module itself.
+* **Works with `CGO_ENABLED=0`** on machines that have no C compiler at all.
+* Requires **Go 1.27** or newer.
+
+The generated VSOP87 planetary tables, the Pluto state table (derived from TOP2013),
+the Jupiter moon ephemerides, and the constellation boundary data are all embedded
+directly in the Go source, so the library is fully self-contained at runtime.
+
+A concise example:
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/cosinekitty/astronomy/source/golang"
+)
+
+func main() {
+    // Find the geocentric position of the Moon on a given date.
+    time := astronomy.TimeFromCalendar(2019, 6, 24, 15, 45, 37.0)
+    moon := astronomy.GeoMoon(time)
+    fmt.Printf("Moon position: x=%.6f y=%.6f z=%.6f AU\n", moon.X, moon.Y, moon.Z)
+
+    // Predict the next full moon.
+    full, err := astronomy.SearchMoonPhase(180.0, time, 40.0)
+    if err == nil {
+        cal, _ := astronomy.CalendarFromDays(full.Ut)
+        fmt.Printf("Next full moon: %04d-%02d-%02dT%02d:%02dZ\n",
+            cal.Year, cal.Month, cal.Day, cal.Hour, cal.Minute)
+    }
+}
+```
+
+See [source/golang/](source/golang/) for the full documentation and
+[demo/golang/](demo/golang/) for runnable examples.
+
 ### Features
 
 - Provides calculations for the Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto.
