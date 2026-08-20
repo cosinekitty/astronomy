@@ -9,6 +9,7 @@ package astronomy
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"time"
 )
@@ -304,6 +305,65 @@ type CalendarDateTime struct {
 	Hour   int     // The hour in the range 0..23.
 	Minute int     // The minute in the range 0..59.
 	Second float64 // The real-valued second in the half-open range [0, 60).
+}
+
+// UtcTime represents a calendar date and time expressed in UTC.
+type UtcTime struct {
+	Year   int     // the year value, e.g. 2019
+	Month  int     // the month value: 1=January, ..., 12=December
+	Day    int     // the day of the month in the range 1..31
+	Hour   int     // the hour of the day in the range 0..23
+	Minute int     // the minute of the hour in the range 0..59
+	Second float64 // the number of seconds in the range [0, 60)
+}
+
+// TimeFromUtc converts a calendar date and time expressed in UTC into an
+// AstroTime value.
+func TimeFromUtc(utc UtcTime) AstroTime {
+	return TimeFromCalendar(utc.Year, utc.Month, utc.Day, utc.Hour, utc.Minute, utc.Second)
+}
+
+// UtcFromTime converts an AstroTime value into a calendar date and time
+// expressed in UTC.
+func UtcFromTime(time AstroTime) UtcTime {
+	cal, err := CalendarFromDays(time.Ut)
+	if err != nil {
+		return UtcTime{}
+	}
+	return UtcTime{
+		Year:   cal.Year,
+		Month:  cal.Month,
+		Day:    cal.Day,
+		Hour:   cal.Hour,
+		Minute: cal.Minute,
+		Second: cal.Second,
+	}
+}
+
+// FormatTime formats an AstroTime value as a UTC string at the requested
+// precision.
+func FormatTime(time AstroTime, format TimeFormat) string {
+	cal, err := CalendarFromDays(time.Ut)
+	if err != nil {
+		return ""
+	}
+	switch format {
+	case TimeFormatDay:
+		return fmt.Sprintf("%04d-%02d-%02d", cal.Year, cal.Month, cal.Day)
+	case TimeFormatMinute:
+		return fmt.Sprintf("%04d-%02d-%02dT%02d:%02d", cal.Year, cal.Month, cal.Day, cal.Hour, cal.Minute)
+	case TimeFormatSecond:
+		return fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:%02d", cal.Year, cal.Month, cal.Day, cal.Hour, cal.Minute, int(cal.Second))
+	default:
+		return fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:%06.3f", cal.Year, cal.Month, cal.Day, cal.Hour, cal.Minute, cal.Second)
+	}
+}
+
+// Reset frees any dynamically allocated caches (such as the Pluto gravity
+// segments) and clears the user-defined star definitions.
+func Reset() {
+	plutoCache = nil
+	starTable = [8]stardef{}
 }
 
 // CalendarFromDays converts a J2000 day value to a Gregorian calendar date and time.
