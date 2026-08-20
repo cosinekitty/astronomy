@@ -4,3 +4,5 @@
 __pycache__
 .mypy_cache
 bin/
+.DS_Store
+.kotlin/

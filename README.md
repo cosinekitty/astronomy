@@ -57,7 +57,7 @@
     </tr>
     <tr>
         <td style="text-align: center;">
-            <div>Kotlin / JVM</div>
+            <div>Kotlin Multiplatform</div>
             <div><img src="source/kotlin/kotlin_language.svg" width="100" height="100" alt="Kotlin" /></div>
         </td>
         <td>
@@ -187,7 +187,7 @@ non-intertial frames of reference! My humble needs did not require this herculea
 of complexity. So I decided to create Astronomy Engine with the following engineering goals:
 
 - Support JavaScript, C, C#, and Python with the same algorithms, and verify them to produce identical results.
-  (Kotlin support was added in 2022.)
+  (Kotlin support was added in 2022; Kotlin Multiplatform targeting JVM, iOS, macOS, Linux, and Windows was added in 2026.)
 - No external dependencies! The code must not require anything outside the standard library for each language.
 - Minified JavaScript code less than 120K. (The current size is <!--MINIFIED_SIZE-->116485 bytes.)
 - Accuracy always within 1 arcminute of results from NOVAS.

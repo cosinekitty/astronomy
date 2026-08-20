@@ -33,7 +33,7 @@ internal fun `Jupiter moons demo`(time: Time): Int {
     // The distance to Jupiter (AU) divided by the speed of light (AU/day) = time in days.
     val lightTravelDays = jv.length() / C_AUDAY
     println()
-    println("It took light %.2f minutes to reach the Earth from Jupiter.".format(lightTravelDays * MINUTES_PER_DAY))
+    println("It took light ${fmtDouble(lightTravelDays * MINUTES_PER_DAY, 2)} minutes to reach the Earth from Jupiter.")
     println()
 
     // The jupiterMoons function calculates positions of Jupiter's moons without
@@ -62,6 +62,6 @@ internal fun `Jupiter moons demo`(time: Time): Int {
 private fun printBody(name: String, geovec: Vector) {
     // Convert the geocentric vector into equatorial coordinates.
     val equ = geovec.toEquatorial()
-    println("%-8s   RA %10.6f   DEC %10.6f  %10.6f AU".format(name, equ.ra, equ.dec, equ.dist))
+    println("${fmtStr(name, -8)}   RA ${fmtDouble(equ.ra, 6, 10)}   DEC ${fmtDouble(equ.dec, 6, 10)}  ${fmtDouble(equ.dist, 6, 10)} AU")
 }
 

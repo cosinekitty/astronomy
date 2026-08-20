@@ -22,8 +22,7 @@ internal fun `Solar true time`(observer: Observer, time: Time): Int {
     minute %= 60
     hour %= 24
 
-    println("True solar time = %7.4f hours (%02d:%02d:%02d.%03d)".format(
-        solarTimeHours, hour, minute, second, milli))
+    println("True solar time = ${fmtDouble(solarTimeHours, 4, 7)} hours (${fmtInt(hour, 2, '0')}:${fmtInt(minute, 2, '0')}:${fmtInt(second, 2, '0')}.${fmtInt(milli, 3, '0')})")
 
     return 0
 }

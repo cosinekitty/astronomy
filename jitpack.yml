@@ -1,2 +1,12 @@
+# Gradle 9.6.1 and AGP 9.x both require JDK 17+; JitPack defaults to JDK 8.
+jdk:
+  - openjdk17
+
+# publishToMavenLocal does not depend on `check`, so no tests run.
+# The old command used `build ... --exclude-task test`, which fails outright:
+# a Kotlin Multiplatform build has no task named `test` (it has jvmTest,
+# wasmJsNodeTest, allTests, ...), and Gradle errors on an unknown -x target.
+# The test suite also cannot run here: it reads fixtures from ../../generate/
+# that are produced by the C `generate` tool, which JitPack does not build.
 install:
-  - cd source/kotlin && ./gradlew build publishToMavenLocal --exclude-task test
+  - cd source/kotlin && ./gradlew publishToMavenLocal

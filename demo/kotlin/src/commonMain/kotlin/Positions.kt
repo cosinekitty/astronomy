@@ -22,7 +22,7 @@ internal fun `Celestial body positions demo`(observer: Observer, time: Time): In
         val equ_2000: Equatorial = equator(body, time, observer, EquatorEpoch.J2000, Aberration.Corrected)
         val equ_ofdate: Equatorial = equator(body, time, observer, EquatorEpoch.OfDate, Aberration.Corrected)
         val hor: Topocentric = horizon(time, observer, equ_ofdate.ra, equ_ofdate.dec, Refraction.Normal)
-        println("%-8s %8.2f %8.2f %8.2f %8.2f".format(body, equ_2000.ra, equ_2000.dec, hor.azimuth, hor.altitude))
+        println("${fmtStr(body, -8)} ${fmtDouble(equ_2000.ra, 2, 8)} ${fmtDouble(equ_2000.dec, 2, 8)} ${fmtDouble(hor.azimuth, 2, 8)} ${fmtDouble(hor.altitude, 2, 8)}")
     }
     return 0
 }

@@ -28,6 +28,10 @@
 
 package io.github.cosinekitty.astronomy
 
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmStatic
+
 import kotlin.math.absoluteValue
 import kotlin.math.abs
 import kotlin.math.acos
@@ -132,6 +136,56 @@ const val GANYMEDE_RADIUS_KM = 2631.2
 const val CALLISTO_RADIUS_KM = 2410.3
 
 /**
+ * The mean radius of the Sun, expressed in kilometers.
+ */
+const val SUN_MEAN_RADIUS_KM = 695700.0
+
+/**
+ * The mean radius of Mercury, expressed in kilometers.
+ */
+const val MERCURY_MEAN_RADIUS_KM = 2439.7
+
+/**
+ * The mean radius of Venus, expressed in kilometers.
+ */
+const val VENUS_MEAN_RADIUS_KM = 6051.8
+
+/**
+ * The mean radius of the Earth, expressed in kilometers.
+ */
+const val EARTH_MEAN_RADIUS_KM = 6371.0
+
+/**
+ * The mean radius of Mars, expressed in kilometers.
+ */
+const val MARS_MEAN_RADIUS_KM = 3389.5
+
+/**
+ * The mean radius of Saturn, expressed in kilometers.
+ */
+const val SATURN_MEAN_RADIUS_KM = 58232.0
+
+/**
+ * The mean radius of Uranus, expressed in kilometers.
+ */
+const val URANUS_MEAN_RADIUS_KM = 25362.0
+
+/**
+ * The mean radius of Neptune, expressed in kilometers.
+ */
+const val NEPTUNE_MEAN_RADIUS_KM = 24622.0
+
+/**
+ * The mean radius of Pluto, expressed in kilometers.
+ */
+const val PLUTO_MEAN_RADIUS_KM = 1188.3
+
+/**
+ * The mean radius of Earth's Moon, expressed in kilometers.
+ */
+const val MOON_MEAN_RADIUS_KM = 1737.4
+
+/**
  * The speed of light in AU/day.
  */
 const val C_AUDAY = 173.1446326846693
@@ -173,19 +227,18 @@ private const val DAYS_PER_MILLENNIUM = 365250.0
 private const val ASEC360 = 1296000.0
 private const val ASEC2RAD = 4.848136811095359935899141e-6
 private const val PI2 = 2.0 * PI
-private const val SUN_RADIUS_KM  = 695700.0
+private const val SUN_RADIUS_KM  = SUN_MEAN_RADIUS_KM
 private const val SUN_RADIUS_AU  = SUN_RADIUS_KM / KM_PER_AU
 private const val EARTH_FLATTENING = 0.996647180302104
 private const val EARTH_FLATTENING_SQUARED = EARTH_FLATTENING * EARTH_FLATTENING
 private const val EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
 private const val EARTH_EQUATORIAL_RADIUS_AU = EARTH_EQUATORIAL_RADIUS_KM / KM_PER_AU
 private const val EARTH_POLAR_RADIUS_KM = EARTH_EQUATORIAL_RADIUS_KM * EARTH_FLATTENING
-private const val EARTH_MEAN_RADIUS_KM = 6371.0    // mean radius of the Earth's geoid, without atmosphere
 private const val EARTH_ATMOSPHERE_KM = 88.0       // effective atmosphere thickness for lunar eclipses
 private const val EARTH_ECLIPSE_RADIUS_KM = EARTH_MEAN_RADIUS_KM + EARTH_ATMOSPHERE_KM
 private const val MOON_EQUATORIAL_RADIUS_KM = 1738.1
 private const val MOON_EQUATORIAL_RADIUS_AU = (MOON_EQUATORIAL_RADIUS_KM / KM_PER_AU)
-private const val MOON_MEAN_RADIUS_KM       = 1737.4
+// MOON_MEAN_RADIUS_KM is now a public constant
 private const val MOON_POLAR_RADIUS_KM      = 1736.0
 private const val MOON_POLAR_RADIUS_AU      = (MOON_POLAR_RADIUS_KM / KM_PER_AU)
 private const val ANGVEL = 7.2921150e-5
@@ -545,13 +598,18 @@ class DateTime(
         val wholeMillis: Int = millis.toInt()
 
         val ytext = when {
-            year < 0 -> "-%06d".format(-year)
-            year <= 9999 -> "%04d".format(year)
-            else -> "+%06d".format(year)
+            year < 0 -> "-${(-year).toString().padStart(6, '0')}"
+            year <= 9999 -> year.toString().padStart(4, '0')
+            else -> "+${year.toString().padStart(6, '0')}"
         }
 
-        return "%s-%02d-%02dT%02d:%02d:%02d.%03dZ"
-            .format(ytext, month, day, hour, minute, wholeSeconds, wholeMillis)
+        val mm = month.toString().padStart(2, '0')
+        val dd = day.toString().padStart(2, '0')
+        val hh = hour.toString().padStart(2, '0')
+        val mi = minute.toString().padStart(2, '0')
+        val ss = wholeSeconds.toString().padStart(2, '0')
+        val ms = wholeMillis.toString().padStart(3, '0')
+        return "$ytext-$mm-${dd}T$hh:$mi:$ss.${ms}Z"
     }
 }
 
@@ -3629,13 +3687,13 @@ private fun gravFromState(state: BodyState): GravSim {
     return GravSim(bary, grav)
 }
 
+@Suppress("NON_JVM_SYNCHRONIZED")
 private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
     if (tt < plutoStateTable[0].tt || tt > plutoStateTable[PLUTO_NUM_STATES-1].tt)
         return null     // Don't bother calculating a segment. Let the caller crawl backward/forward to this time
 
     val segIndex = clampIndex((tt - plutoStateTable[0].tt) / PLUTO_TIME_STEP, PLUTO_NUM_STATES-1)
-    return synchronized(plutoCache) {
-        plutoCache.getOrPut(segIndex) {
+    return plutoCache.getOrPut(segIndex) {
             val seg = mutableListOf<BodyGravCalc>()
 
             // The first endpoint is exact.
@@ -3678,7 +3736,6 @@ private fun getPlutoSegment(tt: Double): List<BodyGravCalc>? {
 
             seg
         }
-    }
 }
 
 private fun calcPlutoOneWay(

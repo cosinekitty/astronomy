@@ -8,22 +8,18 @@ version = "1.0.0"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 repositories {
     mavenCentral()
-    // maven("https://jitpack.io")
 }
 
 dependencies {
-    implementation(fileTree("../../source/kotlin/build/libs"))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.20") // Not needed if resolved from jitpack
-    // In an independent project resolve it from jitpack like,
-    //   implementation("com.github.cosinekitty:astronomy:x.y.z")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    implementation("io.github.cosinekitty:astronomy")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 application {

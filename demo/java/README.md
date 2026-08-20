@@ -1,34 +1,27 @@
 # Astronomy Engine examples in Java
 
 The class file [Main.java](src/main/java/io/github/cosinekitty/astronomy/demo/Main.java)
-shows examples of how to use the Kotlin version of Astronomy Engine from a Java program.
+shows examples of how to use the Kotlin Multiplatform version of Astronomy Engine from a Java program.
 
 The demo program is split into separate source files, one for each topic, as listed below.
 Each topic is chosen by a command line parameter.
-To build the demo program, run this command in Linux or Mac:
+
+## Building and running
 
 ```
-./gradlew jar
+./gradlew run --args="seasons 2026"
+./gradlew run --args="moonphase"
+./gradlew run --args="positions 29 -81"
 ```
 
-On Windows, use this command to build the demo program:
+Run without arguments to see usage text:
 
 ```
-gradlew.bat jar
+./gradlew run
 ```
 
-Then use the `rundemo` script (or `rundemo.bat` file on Windows) to
-run the demo program, to see usage text:
-
-```
-./rundemo
-```
-
-As an example, to run the MoonPhase demo, try this:
-
-```
-./rundemo moonphase
-```
+This requires the library at `../../source/kotlin` to be available (it is referenced
+via Gradle composite build).
 
 ---
 

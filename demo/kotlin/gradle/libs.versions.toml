@@ -1,0 +1,9 @@
+[versions]
+kotlin = "2.4.10"
+kotlinx-datetime = "0.6.2"
+
+[libraries]
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+
+[plugins]
+multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

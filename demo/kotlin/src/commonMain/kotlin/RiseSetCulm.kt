@@ -55,9 +55,9 @@ private class AstroEvent(
         : this(name, hourAngleInfo.time, hourAngleInfo.hor.altitude)
 
     fun display() {
-        print("%-8s : %s".format(name, time))
+        print("${fmtStr(name, -8)} : $time")
         if (altitude != null) {
-            print("   altitude = %5.2f".format(altitude))
+            print("   altitude = ${fmtDouble(altitude, 2, 5)}")
         }
         println()
     }

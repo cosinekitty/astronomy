@@ -1,0 +1,11 @@
+[versions]
+kotlin = "2.4.10"
+kotlinx-io = "0.9.1"
+agp = "9.2.1"
+
+[libraries]
+kotlinx-io-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-io-core", version.ref = "kotlinx-io" }
+
+[plugins]
+multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }

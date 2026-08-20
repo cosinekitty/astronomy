@@ -15,12 +15,12 @@ internal fun `Moon Phase demo`(time: Time): Int {
     // 180 degrees = full moon,
     // 270 degrees = third quarter
     val phase = moonPhase(time)
-    println("$time : Moon's ecliptic phase angle = %.3f degrees.".format(phase))
+    println("$time : Moon's ecliptic phase angle = ${fmtDouble(phase, 3)} degrees.")
 
     // Calculate the fraction of the Moon's disc that appears
     // illuminated, as seen from the Earth.
     val illum = illumination(Body.Moon, time)
-    println("$time : Moon's illuminated fraction = %.2f%%.".format(100.0 * illum.phaseFraction))
+    println("$time : Moon's illuminated fraction = ${fmtDouble(100.0 * illum.phaseFraction, 2)}%.")
 
     // Predict when the next 10 lunar quarter phases will happen.
     println()

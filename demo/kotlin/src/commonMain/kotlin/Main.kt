@@ -1,7 +1,5 @@
-import java.time.Instant
-import java.time.format.DateTimeParseException
 import io.github.cosinekitty.astronomy.*
-import kotlin.system.exitProcess
+import kotlinx.datetime.Clock
 
 private const val usageText = """
 In all demos that include [yyyy-mm-ddThh:mm:ssZ]
@@ -71,10 +69,12 @@ internal class Demo(
 )
 
 fun main(args: Array<String>) {
-    exitProcess(runDemo(args))
+    runDemo(args)
 }
 
 class DemoException(message:String): Exception(message)
+
+private val regexDateTime = Regex("""^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)Z$""")
 
 private fun runDemo(args: Array<String>): Int {
     if (args.isEmpty()) return printUsage()
@@ -90,9 +90,6 @@ private fun runDemo(args: Array<String>): Int {
     }
     return try {
         demo.func(args)
-    } catch (_: DateTimeParseException) {
-        println("ERROR: Invalid date/time format on command line.")
-        1
     } catch (e: DemoException) {
         println("ERROR: ${e.message}")
         1
@@ -100,12 +97,20 @@ private fun runDemo(args: Array<String>): Int {
 }
 
 internal fun parseTime(args: Array<String>, index: Int): Time {
-    val millis = (
-        if (index >= 0 && index < args.size)
-            Instant.parse(args[index]).toEpochMilli()
-        else
-            System.currentTimeMillis()
-    )
+    if (index >= 0 && index < args.size) {
+        val text = args[index]
+        val m = regexDateTime.matchEntire(text)
+            ?: throw DemoException("Invalid date/time format: '$text'. Expected yyyy-mm-ddThh:mm:ssZ")
+        return Time(
+            m.groupValues[1].toInt(),
+            m.groupValues[2].toInt(),
+            m.groupValues[3].toInt(),
+            m.groupValues[4].toInt(),
+            m.groupValues[5].toInt(),
+            m.groupValues[6].toDouble()
+        )
+    }
+    val millis = Clock.System.now().toEpochMilliseconds()
     return Time.fromMillisecondsSince1970(millis)
 }
 

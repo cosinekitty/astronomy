@@ -1,8 +1,11 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+@file:OptIn(ExperimentalWasmDsl::class, ExperimentalKotlinGradlePluginApi::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 
 plugins {
-    kotlin("jvm") version "1.6.21"
-    application
+    alias(libs.plugins.multiplatform)
 }
 
 group = "io.github.cosinekitty.astronomy.demo"
@@ -12,28 +15,38 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation(fileTree("../../source/kotlin/build/libs"))
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
-    kotlinOptions {
-        allWarningsAsErrors = true
+kotlin {
+    jvm {
+        mainRun {
+            mainClass.set("MainKt")
+        }
     }
-}
 
-tasks.jar {
-    manifest.attributes["Main-Class"] = "MainKt"
-    from(configurations.runtimeClasspath.get().map(::zipTree))
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
+    wasmWasi {
+        nodejs()
+        binaries.executable()
+    }
 
-application {
-    mainClass.set("MainKt")
+    linuxX64 {
+        binaries {
+            executable {
+                entryPoint = "main"
+            }
+        }
+    }
+
+    mingwX64 {
+        binaries {
+            executable {
+                entryPoint = "main"
+            }
+        }
+    }
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.cosinekitty:astronomy")
+            implementation(libs.kotlinx.datetime)
+        }
+    }
 }
