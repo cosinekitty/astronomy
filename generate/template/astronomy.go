@@ -133,8 +133,21 @@ func makeTime(ut float64, tt float64) AstroTime {
 	}
 }
 
+// deltaTFunc holds the active Delta T model. By default it is the
+// Espenak-Meeus model, but it can be replaced with SetDeltaTFunction.
+var deltaTFunc DeltaTimeFunc = deltaTime
+
+// SetDeltaTFunction replaces the default Delta T model used to convert between
+// Universal Time and Terrestrial Time.
+func SetDeltaTFunction(f DeltaTimeFunc) {
+	if f == nil {
+		f = deltaTime
+	}
+	deltaTFunc = f
+}
+
 func terrestrialTime(ut float64) float64 {
-	return ut + deltaTime(ut)/86400.0
+	return ut + deltaTFunc(ut)/86400.0
 }
 
 func universalTime(tt float64) float64 {
@@ -3875,6 +3888,196 @@ func Elongation(body Body, time AstroTime) (ElongationInfo, error) {
 		Elongation:         elong,
 		EclipticSeparation: eclipticSeparation,
 	}, nil
+}
+
+// negElongSlope measures the rate of change of the elongation angle, used to
+// find the moment of maximum elongation.
+func negElongSlope(body Body, time AstroTime) (float64, error) {
+	const dt = 0.1
+	t1 := time.AddDays(-dt / 2.0)
+	t2 := time.AddDays(+dt / 2.0)
+	e1, err := AngleFromSun(body, t1)
+	if err != nil {
+		return 0.0, err
+	}
+	e2, err := AngleFromSun(body, t2)
+	if err != nil {
+		return 0.0, err
+	}
+	return (e1 - e2) / dt, nil
+}
+
+// SearchMaxElongation searches for the next maximum elongation of Mercury or
+// Venus, which is when the planet appears farthest from the Sun as seen from
+// the Earth.
+func SearchMaxElongation(body Body, startTime AstroTime) (ElongationInfo, error) {
+	var s1, s2 float64
+	switch body {
+	case Mercury:
+		s1, s2 = 50.0, 85.0
+	case Venus:
+		s1, s2 = 40.0, 50.0
+	default:
+		return ElongationInfo{}, errors.New("Invalid body for maximum elongation")
+	}
+	syn, err := synodicPeriod(body)
+	if err != nil {
+		return ElongationInfo{}, err
+	}
+	for iter := 0; iter < 2; iter++ {
+		plon, err := EclipticLongitude(body, startTime)
+		if err != nil {
+			return ElongationInfo{}, err
+		}
+		elon, err := EclipticLongitude(Earth, startTime)
+		if err != nil {
+			return ElongationInfo{}, err
+		}
+		rlon := longitudeOffset(plon - elon) // clamp to (-180, +180]
+		var adjustDays, rlonLo, rlonHi float64
+		if rlon >= -s1 && rlon < +s1 {
+			adjustDays = 0.0
+			rlonLo, rlonHi = +s1, +s2
+		} else if rlon > +s2 || rlon < -s2 {
+			adjustDays = 0.0
+			rlonLo, rlonHi = -s2, -s1
+		} else if rlon >= 0.0 {
+			adjustDays = -syn / 4.0
+			rlonLo, rlonHi = +s1, +s2
+		} else {
+			adjustDays = -syn / 4.0
+			rlonLo, rlonHi = -s2, -s1
+		}
+		tStart := startTime.AddDays(adjustDays)
+		t1, err := SearchRelativeLongitude(body, rlonLo, tStart)
+		if err != nil {
+			return ElongationInfo{}, err
+		}
+		t2, err := SearchRelativeLongitude(body, rlonHi, t1)
+		if err != nil {
+			return ElongationInfo{}, err
+		}
+		m1, err := negElongSlope(body, t1)
+		if err != nil {
+			return ElongationInfo{}, err
+		}
+		if m1 >= 0 {
+			return ElongationInfo{}, errors.New("Internal error in maximum elongation bracketing")
+		}
+		m2, err := negElongSlope(body, t2)
+		if err != nil {
+			return ElongationInfo{}, err
+		}
+		if m2 <= 0 {
+			return ElongationInfo{}, errors.New("Internal error in maximum elongation bracketing")
+		}
+		root, err := Search(func(t AstroTime) (float64, error) {
+			return negElongSlope(body, t)
+		}, t1, t2, 10.0)
+		if err != nil {
+			return ElongationInfo{}, err
+		}
+		if root.Tt >= startTime.Tt {
+			return Elongation(body, root)
+		}
+		startTime = t2.AddDays(1.0)
+	}
+	return ElongationInfo{}, errors.New("Maximum elongation search failed")
+}
+
+// magSlope measures the rate of change of a body's visual magnitude, used to
+// find when the body is brightest.
+func magSlope(body Body, time AstroTime) (float64, error) {
+	// dy/dt is negative as an object gets brighter; at peak magnitude dy/dt = 0.
+	const dt = 0.01
+	t1 := time.AddDays(-dt / 2.0)
+	t2 := time.AddDays(+dt / 2.0)
+	y1, err := Illumination(body, t1)
+	if err != nil {
+		return 0.0, err
+	}
+	y2, err := Illumination(body, t2)
+	if err != nil {
+		return 0.0, err
+	}
+	return (y2.Mag - y1.Mag) / dt, nil
+}
+
+// SearchPeakMagnitude finds the date and time when Venus appears brightest as
+// seen from the Earth.
+func SearchPeakMagnitude(body Body, startTime AstroTime) (IlluminationInfo, error) {
+	const s1 = 10.0
+	const s2 = 30.0
+	if body != Venus {
+		return IlluminationInfo{}, errors.New("Invalid body for peak magnitude")
+	}
+	for iter := 0; iter < 2; iter++ {
+		plon, err := EclipticLongitude(body, startTime)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+		elon, err := EclipticLongitude(Earth, startTime)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+		rlon := longitudeOffset(plon - elon) // clamp to (-180, +180]
+		var adjustDays, rlonLo, rlonHi float64
+		if rlon >= -s1 && rlon < +s1 {
+			adjustDays = 0.0
+			rlonLo, rlonHi = +s1, +s2
+		} else if rlon >= +s2 || rlon < -s2 {
+			adjustDays = 0.0
+			rlonLo, rlonHi = -s2, -s1
+		} else if rlon >= 0 {
+			syn, err := synodicPeriod(body)
+			if err != nil {
+				return IlluminationInfo{}, err
+			}
+			adjustDays = -syn / 4.0
+			rlonLo, rlonHi = +s1, +s2
+		} else {
+			syn, err := synodicPeriod(body)
+			if err != nil {
+				return IlluminationInfo{}, err
+			}
+			adjustDays = -syn / 4.0
+			rlonLo, rlonHi = -s2, -s1
+		}
+		tStart := startTime.AddDays(adjustDays)
+		t1, err := SearchRelativeLongitude(body, rlonLo, tStart)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+		t2, err := SearchRelativeLongitude(body, rlonHi, t1)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+		m1, err := magSlope(body, t1)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+		if m1 >= 0 {
+			return IlluminationInfo{}, errors.New("Internal error in peak magnitude bracketing")
+		}
+		m2, err := magSlope(body, t2)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+		if m2 <= 0 {
+			return IlluminationInfo{}, errors.New("Internal error in peak magnitude bracketing")
+		}
+		root, err := Search(func(t AstroTime) (float64, error) {
+			return magSlope(body, t)
+		}, t1, t2, 10.0)
+		if err != nil {
+			return IlluminationInfo{}, err
+		}
+		if root.Tt >= startTime.Tt {
+			return Illumination(body, root)
+		}
+		startTime = t2.AddDays(1.0)
+	}
+	return IlluminationInfo{}, errors.New("Peak magnitude search failed")
 }
 
 // PairLongitude calculates the difference in geocentric ecliptic longitudes
