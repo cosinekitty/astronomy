@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"runtime"
+	"sync"
 	"time"
 )
 
@@ -5058,6 +5060,308 @@ func SearchTransit(body Body, startTime AstroTime) (TransitInfo, error) {
 // transit time.
 func NextTransit(body Body, prevTransitTime AstroTime) (TransitInfo, error) {
 	return SearchTransit(body, prevTransitTime.AddDays(100.0))
+}
+
+// gravSimEndpoint stores the state of a gravity simulation at one moment.
+type gravSimEndpoint struct {
+	time        AstroTime
+	gravitators [14]bodyState
+	bodies      []bodyGravCalc
+}
+
+// GravSim is a gravitational N-body simulator for studying the motion of small
+// bodies under the gravitational influence of the Sun and the eight planets.
+type GravSim struct {
+	originBody Body
+	numBodies  int
+	endpoint   [2]gravSimEndpoint
+	prev       *gravSimEndpoint
+	curr       *gravSimEndpoint
+}
+
+// NewGravSim creates a gravity simulator with the given origin body and a set
+// of initial body states. The origin body is the reference point for the
+// returned state vectors (typically Ssb for the Solar System Barycenter).
+func NewGravSim(originBody Body, time AstroTime, numBodies int, bodyStateArray []StateVector) (*GravSim, error) {
+	if numBodies < 0 {
+		return nil, errors.New("Invalid number of bodies")
+	}
+	if numBodies > 0 && len(bodyStateArray) != numBodies {
+		return nil, errors.New("Invalid body state array length")
+	}
+	if originBody < Mercury || originBody > Ssb {
+		return nil, errors.New("Invalid origin body")
+	}
+	for i := 0; i < numBodies; i++ {
+		dt := bodyStateArray[i].T.Tt - time.Tt
+		if dt < 0.0 {
+			dt = -dt
+		}
+		if dt > 1.0e-9 {
+			return nil, errors.New("Inconsistent times in body states")
+		}
+	}
+
+	sim := &GravSim{
+		originBody: originBody,
+		numBodies:  numBodies,
+	}
+	sim.prev = &sim.endpoint[0]
+	sim.curr = &sim.endpoint[1]
+	sim.curr.time = time
+	if numBodies > 0 {
+		sim.prev.bodies = make([]bodyGravCalc, numBodies)
+		sim.curr.bodies = make([]bodyGravCalc, numBodies)
+	}
+
+	// Convert the given states into internal barycentric gravity calculations.
+	for i := 0; i < numBodies; i++ {
+		sim.curr.bodies[i].Tt = bodyStateArray[i].T.Tt
+		sim.curr.bodies[i].R = terseVector{X: bodyStateArray[i].X, Y: bodyStateArray[i].Y, Z: bodyStateArray[i].Z}
+		sim.curr.bodies[i].V = terseVector{X: bodyStateArray[i].Vx, Y: bodyStateArray[i].Vy, Z: bodyStateArray[i].Vz}
+	}
+
+	sim.calcSolarSystem()
+
+	if originBody != Ssb {
+		// Convert from origin-relative to barycentric coordinates.
+		originState, err := sim.gravSimBodyState(originBody)
+		if err != nil {
+			return nil, err
+		}
+		for i := 0; i < numBodies; i++ {
+			sim.curr.bodies[i].R.X += originState.X
+			sim.curr.bodies[i].R.Y += originState.Y
+			sim.curr.bodies[i].R.Z += originState.Z
+			sim.curr.bodies[i].V.X += originState.Vx
+			sim.curr.bodies[i].V.Y += originState.Vy
+			sim.curr.bodies[i].V.Z += originState.Vz
+		}
+	}
+
+	sim.calcBodyAccelerations()
+	sim.duplicate()
+	return sim, nil
+}
+
+// duplicate copies the current simulation state into the previous state.
+func (sim *GravSim) duplicate() {
+	sim.prev.time = sim.curr.time
+	sim.prev.gravitators = sim.curr.gravitators
+	copy(sim.prev.bodies, sim.curr.bodies)
+}
+
+// swap exchanges the current and previous simulation states.
+func (sim *GravSim) swap() {
+	sim.prev, sim.curr = sim.curr, sim.prev
+}
+
+// calcSolarSystem computes the barycentric positions of the Sun and the eight
+// planets at the current simulation time.
+func (sim *GravSim) calcSolarSystem() {
+	tt := sim.curr.time.Tt
+	grav := &sim.curr.gravitators
+	sun := &grav[Sun]
+	sun.tt = tt
+	sun.r = terseVector{}
+	sun.v = terseVector{}
+
+	grav[Mercury] = adjustBarycenterPosVel(sun, tt, Mercury, mercuryGM)
+	grav[Venus] = adjustBarycenterPosVel(sun, tt, Venus, venusGM)
+	grav[Earth] = adjustBarycenterPosVel(sun, tt, Earth, earthGM+moonGM)
+	grav[Mars] = adjustBarycenterPosVel(sun, tt, Mars, marsGM)
+	grav[Jupiter] = adjustBarycenterPosVel(sun, tt, Jupiter, jupiterGM)
+	grav[Saturn] = adjustBarycenterPosVel(sun, tt, Saturn, saturnGM)
+	grav[Uranus] = adjustBarycenterPosVel(sun, tt, Uranus, uranusGM)
+	grav[Neptune] = adjustBarycenterPosVel(sun, tt, Neptune, neptuneGM)
+
+	for body := Mercury; body <= Neptune; body++ {
+		grav[body].r.X -= sun.r.X
+		grav[body].r.Y -= sun.r.Y
+		grav[body].r.Z -= sun.r.Z
+		grav[body].v.X -= sun.v.X
+		grav[body].v.Y -= sun.v.Y
+		grav[body].v.Z -= sun.v.Z
+	}
+	sun.r.X = -sun.r.X
+	sun.r.Y = -sun.r.Y
+	sun.r.Z = -sun.r.Z
+	sun.v.X = -sun.v.X
+	sun.v.Y = -sun.v.Y
+	sun.v.Z = -sun.v.Z
+}
+
+// calcBodyAccelerations calculates the acceleration of every simulated body.
+// Each body's acceleration is an independent sum, so the work is spread across
+// multiple goroutines; the per-body summation order is unchanged, so results
+// are bit-identical to a serial computation.
+func (sim *GravSim) calcBodyAccelerations() {
+	grav := &sim.curr.gravitators
+	n := sim.numBodies
+	if n == 0 {
+		return
+	}
+	workers := runtime.GOMAXPROCS(0)
+	if workers > n {
+		workers = n
+	}
+	sem := make(chan struct{}, workers)
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			calc := &sim.curr.bodies[i]
+			var acc terseVector
+			addAcceleration(&acc, calc.R, sunGM, grav[Sun].r)
+			addAcceleration(&acc, calc.R, mercuryGM, grav[Mercury].r)
+			addAcceleration(&acc, calc.R, venusGM, grav[Venus].r)
+			addAcceleration(&acc, calc.R, earthGM+moonGM, grav[Earth].r)
+			addAcceleration(&acc, calc.R, marsGM, grav[Mars].r)
+			addAcceleration(&acc, calc.R, jupiterGM, grav[Jupiter].r)
+			addAcceleration(&acc, calc.R, saturnGM, grav[Saturn].r)
+			addAcceleration(&acc, calc.R, uranusGM, grav[Uranus].r)
+			addAcceleration(&acc, calc.R, neptuneGM, grav[Neptune].r)
+			calc.A = acc
+		}(i)
+	}
+	wg.Wait()
+}
+
+// gravSimBodyStatePtr returns a pointer to the cached barycentric state of the
+// given body, or nil if the body is not one used for gravitational
+// interactions.
+func (sim *GravSim) gravSimBodyStatePtr(body Body) *bodyState {
+	if body == Sun || (body >= Mercury && body <= Neptune) {
+		return &sim.curr.gravitators[body]
+	}
+	return nil
+}
+
+// gravSimOriginState returns the state of the origin body.
+func (sim *GravSim) gravSimOriginState() (StateVector, error) {
+	time := sim.curr.time
+	if sim.originBody == Ssb {
+		return StateVector{T: time}, nil
+	}
+	bptr := sim.gravSimBodyStatePtr(sim.originBody)
+	if bptr == nil {
+		return StateVector{}, errors.New("Invalid origin body")
+	}
+	return exportState(*bptr, time), nil
+}
+
+// gravSimBodyState returns the state of the given body in the reference frame
+// of the simulation's origin body.
+func (sim *GravSim) gravSimBodyState(body Body) (StateVector, error) {
+	bptr := sim.gravSimBodyStatePtr(body)
+	if bptr == nil {
+		return StateVector{}, errors.New("Invalid body for gravity simulation")
+	}
+	origin, err := sim.gravSimOriginState()
+	if err != nil {
+		return StateVector{}, err
+	}
+	// Subtract the origin's state from the body's barycentric state.
+	return StateVector{
+		X:  bptr.r.X - origin.X, Y: bptr.r.Y - origin.Y, Z: bptr.r.Z - origin.Z,
+		Vx: bptr.v.X - origin.Vx, Vy: bptr.v.Y - origin.Vy, Vz: bptr.v.Z - origin.Vz,
+		T: origin.T,
+	}, nil
+}
+
+// BodyState returns the position and velocity of a simulated or gravitating
+// body, expressed in the reference frame of the simulation's origin body.
+func (sim *GravSim) BodyState(body Body) (StateVector, error) {
+	return sim.gravSimBodyState(body)
+}
+
+// Time returns the current simulation time.
+func (sim *GravSim) Time() AstroTime {
+	return sim.curr.time
+}
+
+// NumBodies returns the number of simulated small bodies.
+func (sim *GravSim) NumBodies() int {
+	return sim.numBodies
+}
+
+// Origin returns the origin body of the simulation.
+func (sim *GravSim) Origin() Body {
+	return sim.originBody
+}
+
+// Update advances the simulation to the given time, using the current state as
+// the starting point. The provided bodyStateArray receives the updated states
+// of the simulated bodies, or may be nil if the output is not needed.
+func (sim *GravSim) Update(time AstroTime, numBodies int, bodyStateArray []StateVector) error {
+	if numBodies != sim.numBodies {
+		return errors.New("Invalid number of bodies for gravity simulation update")
+	}
+	dt := time.Tt - sim.curr.time.Tt
+	if dt == 0.0 {
+		// The time has not changed; just duplicate the state and allow a query.
+		sim.duplicate()
+	} else {
+		sim.swap()
+		sim.curr.time = time
+		sim.calcSolarSystem()
+
+		// Estimate the next positions as if the current accelerations apply
+		// across the whole interval.
+		for i := 0; i < numBodies; i++ {
+			prev := &sim.prev.bodies[i]
+			sim.curr.bodies[i].R = updatePosition(dt, prev.R, prev.V, prev.A)
+		}
+		sim.calcBodyAccelerations()
+
+		// Refine positions and velocities using the mean accelerations.
+		for i := 0; i < numBodies; i++ {
+			prev := &sim.prev.bodies[i]
+			curr := &sim.curr.bodies[i]
+			acc := terseVector{
+				X: (prev.A.X + curr.A.X) / 2,
+				Y: (prev.A.Y + curr.A.Y) / 2,
+				Z: (prev.A.Z + curr.A.Z) / 2,
+			}
+			curr.Tt = time.Tt
+			curr.R = updatePosition(dt, prev.R, prev.V, acc)
+			curr.V = updateVelocity(dt, prev.V, acc)
+		}
+		sim.calcBodyAccelerations()
+	}
+
+	if bodyStateArray != nil {
+		for i := 0; i < numBodies; i++ {
+			bodyStateArray[i] = exportGravCalc(sim.curr.bodies[i], time)
+		}
+		if sim.originBody != Ssb {
+			originState, err := sim.gravSimOriginState()
+			if err != nil {
+				return err
+			}
+			for i := 0; i < numBodies; i++ {
+				bodyStateArray[i].X -= originState.X
+				bodyStateArray[i].Y -= originState.Y
+				bodyStateArray[i].Z -= originState.Z
+				bodyStateArray[i].Vx -= originState.Vx
+				bodyStateArray[i].Vy -= originState.Vy
+				bodyStateArray[i].Vz -= originState.Vz
+			}
+		}
+	}
+	return nil
+}
+
+// exportGravCalc converts an internal gravity calculation into a state vector.
+func exportGravCalc(calc bodyGravCalc, time AstroTime) StateVector {
+	return StateVector{
+		X:  calc.R.X, Y: calc.R.Y, Z: calc.R.Z,
+		Vx: calc.V.X, Vy: calc.V.Y, Vz: calc.V.Z,
+		T: time,
+	}
 }
 
 // calcJupiterMoon calculates the jovicentric position and velocity of one of
