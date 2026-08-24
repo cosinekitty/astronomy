@@ -6,7 +6,8 @@ Fail()
     exit 1
 }
 
-go build ./... || Fail "Error building Go demos."
+go build -o /tmp/astronomy-demo/demobin ./... || Fail "Error building Go demos."
+trap 'rm -f /tmp/astronomy-demo/demobin' EXIT
 
 echo "Testing Go demo: positions"
 go run . positions +45.6 -90.7 2018-11-30T17:55:07.234Z > /dev/null || Fail "positions"
