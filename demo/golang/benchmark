@@ -1,0 +1,218 @@
+#!/bin/bash
+# Benchmarks the Astronomy Engine demos, comparing the Go and C implementations.
+#
+# Usage: ./benchmark [iterations]
+#
+#   iterations   how many times to run each demo (default: 3)
+#
+# For every demo that exists in both demo/golang and demo/c, this script
+# times one C run and one Go run per iteration, then writes the results to:
+#   demo/golang/benchmark/results_go.txt
+#   demo/golang/benchmark/results_c.txt
+#   demo/golang/benchmark/comparison.txt
+# (mirrored into demo/c/benchmark/).
+#
+# The demos' full output is printed as they run, so the timing includes
+# terminal output as well as computation.
+
+Fail()
+{
+    echo "FATAL($0): $1"
+    exit 1
+}
+
+IsInstalled()
+{
+    type "$1" > /dev/null 2>&1
+}
+
+# --- configuration -----------------------------------------------------------
+
+ITERATIONS="${1:-3}"
+if ! [[ "$ITERATIONS" =~ ^[0-9]+$ ]] || [[ "$ITERATIONS" -lt 1 ]]; then
+    Fail "invalid iteration count '$1'; expected a positive integer"
+fi
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+GODEMO="$HERE"
+CDEMO="$HERE/../c"
+
+# Run from the directory that contains this script (demo/golang).
+cd "$HERE" || exit 1
+
+BENCH_DIR_GO="$GODEMO/benchmarks"
+BENCH_DIR_C="$CDEMO/benchmarks"
+GOBIN=/tmp/astronomy-demo/godemo
+CBIN="$CDEMO/bin"
+
+# --- toolchain checks ----------------------------------------------------------
+
+IsInstalled go || Fail "Cannot find the Go compiler."
+IsInstalled gcc || Fail "Cannot find the C compiler (needed to build the C demos)."
+
+go version | head -1
+gcc --version | head -1
+
+echo "Building Go demo binary..."
+go build -o "$GOBIN" ./... || Fail "Error building Go demos."
+trap 'rm -f "$GOBIN"' EXIT
+
+echo "Building C demos..."
+(cd "$CDEMO" && ./build) || Fail "Error building C demos."
+
+mkdir -p "$BENCH_DIR_GO" "$BENCH_DIR_C" || Fail "Cannot create benchmark directories."
+
+# --- demos shared by both languages (name|args...) -----------------------------
+
+DEMOS=(
+    "positions|+45.6|-90.7|2018-11-30T17:55:07.234Z"
+    "riseset|45|-90|2019-06-14T21:45:25Z"
+    "moonphase|2019-06-15T09:15:32.987Z"
+    "seasons|2020"
+    "culminate|+30|-90|2015-02-28T00:00:00Z"
+    "horizon|+25.5|-85.3|2016-12-25T12:30:45Z"
+    "lunar_eclipse|1988-01-01T00:00:00Z"
+    "solar_time|+38.88|-77.03|2023-02-12T17:00:00Z"
+    "gravity|29.0|1000.0"
+    "galactic|38.92056|-77.0658|22.793498|197.070510|2025-04-06T00:00:00Z"
+)
+
+now_ns()
+{
+    date +%s%N
+}
+
+# run_c <demo> <args...>   -> sets TIME_MS to elapsed wall time in ms
+run_c()
+{
+    local name="$1"; shift
+    local start end
+    start=$(now_ns)
+    "$CBIN/$name" "$@" || Fail "C demo '$name' failed"
+    end=$(now_ns)
+    TIME_MS=$(awk -v a="$start" -v b="$end" 'BEGIN { printf "%.3f", (b-a)/1000000.0 }')
+}
+
+# run_go <demo> <args...>  -> sets TIME_MS to elapsed wall time in ms
+run_go()
+{
+    local name="$1"; shift
+    local start end
+    start=$(now_ns)
+    "$GOBIN" "$name" "$@" || Fail "Go demo '$name' failed"
+    end=$(now_ns)
+    TIME_MS=$(awk -v a="$start" -v b="$end" 'BEGIN { printf "%.3f", (b-a)/1000000.0 }')
+}
+
+# compute_stats <space-separated ms values> -> prints "min avg"
+compute_stats()
+{
+    awk -v vals="$1" 'BEGIN {
+        n = split(vals, a, " ");
+        min = a[1]; sum = 0;
+        for (i = 1; i <= n; ++i) {
+            if (a[i] < min) min = a[i];
+            sum += a[i];
+        }
+        printf "%.3f %.3f", min, sum/n;
+    }'
+}
+
+echo ""
+echo "Benchmarking $ITERATIONS iteration(s) for each of ${#DEMOS[@]} demos..."
+echo ""
+
+declare -A GO_MIN GO_AVG C_MIN C_AVG
+NAMES=()
+
+for entry in "${DEMOS[@]}"; do
+    IFS='|' read -ra parts <<< "$entry"
+    name="${parts[0]}"
+    args=("${parts[@]:1}")
+    NAMES+=("$name")
+
+    go_vals=()
+    c_vals=()
+    for ((i = 1; i <= ITERATIONS; ++i)); do
+        echo "--- [$i/$ITERATIONS] $name (C) ---"
+        run_c "$name" "${args[@]}"
+        c_vals+=("$TIME_MS")
+        echo "--- [$i/$ITERATIONS] $name (Go) ---"
+        run_go "$name" "${args[@]}"
+        go_vals+=("$TIME_MS")
+    done
+
+    stats=$(compute_stats "${c_vals[*]}")
+    C_MIN[$name]=$(echo "$stats" | awk '{print $1}')
+    C_AVG[$name]=$(echo "$stats" | awk '{print $2}')
+
+    stats=$(compute_stats "${go_vals[*]}")
+    GO_MIN[$name]=$(echo "$stats" | awk '{print $1}')
+    GO_AVG[$name]=$(echo "$stats" | awk '{print $2}')
+done
+
+# --- write result files ---------------------------------------------------------
+
+stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+gover=$(go version | awk '{print $3}')
+gccver=$(gcc --version | head -1 | awk '{print $NF}')
+
+write_result_file()
+{
+    local outfile="$1" label="$2"
+    {
+        echo "Astronomy Engine demo benchmark"
+        echo "Language: $label"
+        echo "Toolchain: $gover / gcc $gccver"
+        echo "Iterations: $ITERATIONS"
+        echo "Date: $stamp"
+        echo ""
+        printf "%-16s %12s %12s\n" "demo" "min(ms)" "avg(ms)"
+        for name in "${NAMES[@]}"; do
+            if [[ "$label" == "C" ]]; then
+                printf "%-16s %12s %12s\n" "$name" "${C_MIN[$name]}" "${C_AVG[$name]}"
+            else
+                printf "%-16s %12s %12s\n" "$name" "${GO_MIN[$name]}" "${GO_AVG[$name]}"
+            fi
+        done
+    } > "$outfile"
+}
+
+write_result_file "$BENCH_DIR_GO/results_c.txt" "C"
+write_result_file "$BENCH_DIR_GO/results_go.txt" "Go"
+
+{
+    echo "Astronomy Engine demo benchmark: C vs Go"
+    echo "Iterations: $ITERATIONS"
+    echo "Date: $stamp"
+    echo ""
+    printf "%-16s %14s %14s %12s\n" "demo" "C min(ms)" "Go min(ms)" "C/Go"
+    for name in "${NAMES[@]}"; do
+        ratio=$(awk -v c="${C_MIN[$name]}" -v g="${GO_MIN[$name]}" \
+            'BEGIN { if (g > 0) printf "%.2f", c/g; else print "n/a" }')
+        printf "%-16s %14s %14s %12s\n" "$name" "${C_MIN[$name]}" "${GO_MIN[$name]}" "$ratio"
+    done
+    echo ""
+    echo "A C/Go ratio > 1 means the Go demo is faster than the C demo."
+} > "$BENCH_DIR_GO/comparison.txt"
+
+cp "$BENCH_DIR_GO/results_c.txt"    "$BENCH_DIR_C/results_c.txt"
+cp "$BENCH_DIR_GO/results_go.txt"   "$BENCH_DIR_C/results_go.txt"
+cp "$BENCH_DIR_GO/comparison.txt"   "$BENCH_DIR_C/comparison.txt"
+
+# --- print summary --------------------------------------------------------------
+
+echo ""
+echo "==================================================================="
+echo "                            RESULTS"
+echo "==================================================================="
+cat "$BENCH_DIR_GO/comparison.txt"
+echo ""
+echo "Detailed results written to:"
+echo "  $BENCH_DIR_GO/results_go.txt"
+echo "  $BENCH_DIR_GO/results_c.txt"
+echo "  $BENCH_DIR_GO/comparison.txt"
+echo "  (mirrored into $BENCH_DIR_C/)"
+echo ""
+echo "benchmark: success"
+exit 0

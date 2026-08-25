@@ -45,8 +45,27 @@ go run . horizon    +25.5 -85.3 2016-12-25T12:30:45Z
 
 ## Testing
 
-Run all demos to confirm they work:
+Run all demos to confirm they work. Each demo's output is printed to the console:
 
 ```bash
 ./demotest
 ```
+
+## Benchmarking
+
+Compare the performance of the Go demos against the C demos:
+
+```bash
+./benchmark [iterations]
+```
+
+For every demo shared by both languages, the script times one C run and one Go
+run per iteration (default 3) and reports the minimum and average wall time. The
+demos' full output is shown as they run. Results are written to:
+
+- `benchmarks/results_go.txt`
+- `benchmarks/results_c.txt`
+- `benchmarks/comparison.txt`
+
+and mirrored into `demo/c/benchmarks/`. The result files are gitignored; only the
+script itself is tracked. Building the C demos requires a C compiler (`gcc`).
