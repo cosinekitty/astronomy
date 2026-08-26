@@ -181,16 +181,20 @@ write_result_file()
 write_result_file "$BENCH_DIR_GO/results_c.txt" "C"
 write_result_file "$BENCH_DIR_GO/results_go.txt" "Go"
 
+# Side-by-side comparison: C and Go columns in a single table.
 {
-    echo "Astronomy Engine demo benchmark: C vs Go"
+    echo "Astronomy Engine demo benchmark: C vs Go (side by side)"
+    echo "Toolchain: $gover / gcc $gccver"
     echo "Iterations: $ITERATIONS"
     echo "Date: $stamp"
     echo ""
-    printf "%-16s %14s %14s %12s\n" "demo" "C min(ms)" "Go min(ms)" "C/Go"
+    printf "%-16s %14s %14s %14s %14s %10s\n" \
+        "demo" "C min(ms)" "C avg(ms)" "Go min(ms)" "Go avg(ms)" "C/Go"
     for name in "${NAMES[@]}"; do
         ratio=$(awk -v c="${C_MIN[$name]}" -v g="${GO_MIN[$name]}" \
             'BEGIN { if (g > 0) printf "%.2f", c/g; else print "n/a" }')
-        printf "%-16s %14s %14s %12s\n" "$name" "${C_MIN[$name]}" "${GO_MIN[$name]}" "$ratio"
+        printf "%-16s %14s %14s %14s %14s %10s\n" \
+            "$name" "${C_MIN[$name]}" "${C_AVG[$name]}" "${GO_MIN[$name]}" "${GO_AVG[$name]}" "$ratio"
     done
     echo ""
     echo "A C/Go ratio > 1 means the Go demo is faster than the C demo."
