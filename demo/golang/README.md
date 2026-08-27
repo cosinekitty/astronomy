@@ -51,6 +51,22 @@ Run all demos to confirm they work. Each demo's output is printed to the console
 ./demotest
 ```
 
+## Comparing output with the C demos
+
+To quickly verify that the Go demos produce the same output as the C demos,
+run each demo in both languages and view their stdout side by side:
+
+```bash
+./compare_output
+```
+
+For every demo shared by both languages, the script prints the C output on the
+left and the Go output on the right (using `diff -y`). A `|` marks a changed
+line, `<` marks a line only in the C output, and `>` marks a line only in the
+Go output. The Go demos are written to produce byte-identical output to the C
+demos, so you should see `outputs identical` for every demo. This is purely an
+output check; it measures no timing.
+
 ## Benchmarking
 
 Compare the performance of the Go demos against the C demos:

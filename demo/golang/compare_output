@@ -1,0 +1,88 @@
+#!/bin/bash
+# compare_output: run each shared demo in C and Go and show their output
+# side by side, so you can quickly verify that both implementations produce
+# the same results. This is NOT a timing benchmark.
+#
+# Usage: ./compare_output
+#
+# For every demo that exists in both demo/golang and demo/c, this script runs
+# the C binary and the Go binary, then prints both outputs in two columns.
+# A '*' in the left margin marks a line where the C and Go text differ
+# (often only a formatting difference, e.g. fractional seconds).
+
+Fail()
+{
+    echo "FATAL($0): $1"
+    exit 1
+}
+
+cd "$(dirname "$0")" || exit 1
+
+HERE="$(pwd)"
+CDEMO="$HERE/../c"
+GOBIN=/tmp/astronomy-demo/godemo_cmp
+CBIN="$CDEMO/bin"
+TMPDIR=/tmp/astronomy-demo/cmp
+
+type go  > /dev/null 2>&1 || Fail "Cannot find the Go compiler."
+type gcc > /dev/null 2>&1 || Fail "Cannot find the C compiler."
+
+echo "Building Go demo binary..."
+go build -o "$GOBIN" ./... || Fail "Error building Go demos."
+trap 'rm -f "$GOBIN"; rm -rf "$TMPDIR"' EXIT
+
+echo "Building C demos..."
+(cd "$CDEMO" && ./build) || Fail "Error building C demos."
+
+mkdir -p "$TMPDIR" || Fail "Cannot create temporary directory."
+
+DEMOS=(
+    "positions|+45.6|-90.7|2018-11-30T17:55:07.234Z"
+    "riseset|45|-90|2019-06-14T21:45:25Z"
+    "moonphase|2019-06-15T09:15:32.987Z"
+    "seasons|2020"
+    "culminate|+30|-90|2015-02-28T00:00:00Z"
+    "horizon|+25.5|-85.3|2016-12-25T12:30:45Z"
+    "lunar_eclipse|1988-01-01T00:00:00Z"
+    "solar_time|+38.88|-77.03|2023-02-12T17:00:00Z"
+    "gravity|29.0|1000.0"
+    "galactic|38.92056|-77.0658|22.793498|197.070510|2025-04-06T00:00:00Z"
+)
+
+# show_side_by_side <c-file> <go-file>
+# Prints the two files side by side. '|' marks a changed line, '<' a line only
+# in the C output, and '>' a line only in the Go output.
+show_side_by_side()
+{
+    diff -y -W 220 "$1" "$2"
+}
+
+identical=0
+different=0
+
+for entry in "${DEMOS[@]}"; do
+    IFS='|' read -ra parts <<< "$entry"
+    name="${parts[0]}"
+    args=("${parts[@]:1}")
+
+    echo ""
+    echo "=== $name ==="
+
+    "$CBIN/$name" "${args[@]}" > "$TMPDIR/$name.c" 2>&1 || Fail "C demo '$name' failed"
+    "$GOBIN" "$name" "${args[@]}" > "$TMPDIR/$name.go" 2>&1 || Fail "Go demo '$name' failed"
+
+    show_side_by_side "$TMPDIR/$name.c" "$TMPDIR/$name.go"
+
+    if cmp -s "$TMPDIR/$name.c" "$TMPDIR/$name.go"; then
+        echo "  -> outputs identical"
+        identical=$((identical + 1))
+    else
+        echo "  -> outputs differ (see '|' '<' '>' marks above; often only formatting)"
+        different=$((different + 1))
+    fi
+done
+
+echo ""
+echo "Summary: $identical identical, $different with formatting differences."
+echo "compare_output: success"
+exit 0

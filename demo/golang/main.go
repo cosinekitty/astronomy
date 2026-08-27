@@ -98,16 +98,6 @@ func parseTime(text string) (astronomy.AstroTime, error) {
 	return astronomy.TimeFromCalendar(year, month, day, hour, minute, second), nil
 }
 
-// formatTime renders a UTC time in ISO 8601 form.
-func formatTime(time astronomy.AstroTime) string {
-	cal, err := astronomy.CalendarFromDays(time.Ut)
-	if err != nil {
-		return fmt.Sprintf("<error: %v>", err)
-	}
-	return fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:%06.3fZ",
-		cal.Year, cal.Month, cal.Day, cal.Hour, cal.Minute, cal.Second)
-}
-
 func main() {
 	prog := os.Args[0]
 	if len(os.Args) < 2 {
