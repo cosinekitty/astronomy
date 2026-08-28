@@ -50,15 +50,38 @@ DEMOS=(
 )
 
 # show_side_by_side <c-file> <go-file>
-# Prints the two files side by side. '|' marks a changed line, '<' a line only
-# in the C output, and '>' a line only in the Go output.
+# Prints the two outputs in aligned columns with a header that labels which
+# column is C and which is Go. A '*' in the left margin marks a differing line.
 show_side_by_side()
 {
-    diff -y -W 220 "$1" "$2"
+    awk -v LF="$1" -v RF="$2" '
+        BEGIN {
+            nl = 0; nr = 0;
+            while ((getline a < LF) > 0) left[++nl] = a;
+            while ((getline b < RF) > 0) right[++nr] = b;
+            n = (nl > nr) ? nl : nr;
+            width = 0;
+            for (i = 1; i <= n; ++i) if (length(left[i]) > width) width = length(left[i]);
+            if (width > 76) width = 76;
+            if (width < 9) width = 9;
+            printf "  %-*s |  %s\n", width, "C output", "Go output";
+            for (i = 1; i <= n; ++i) {
+                mark = " ";
+                if (left[i] != right[i]) mark = "*";
+                l = left[i];
+                if (length(l) > width) l = substr(l, 1, width);
+                printf "%s %-*s |  %s\n", mark, width, l, right[i];
+            }
+        }
+    '
 }
 
 identical=0
 different=0
+
+echo ""
+echo "Legend: left column = C output, right column = Go output; '*' marks a differing line."
+echo ""
 
 for entry in "${DEMOS[@]}"; do
     IFS='|' read -ra parts <<< "$entry"
@@ -77,7 +100,7 @@ for entry in "${DEMOS[@]}"; do
         echo "  -> outputs identical"
         identical=$((identical + 1))
     else
-        echo "  -> outputs differ (see '|' '<' '>' marks above; often only formatting)"
+        echo "  -> outputs differ (see '*' marks above; often only formatting)"
         different=$((different + 1))
     fi
 done
