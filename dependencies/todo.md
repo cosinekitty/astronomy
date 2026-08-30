@@ -1,6 +1,6 @@
 # AstroTime
-    [ ] TerrestrialTime
-    [ ] UniversalTime
-    [ ] UniversalTimeFromCalendar
-    [ ] AddDays
-    [ ] CalendarDateTime
+    [x] TerrestrialTime
+    [x] UniversalTime
+    [-] UniversalTimeFromCalendar
+    [x] AddDays
+    [x] CalendarDateTime
