@@ -3864,7 +3864,7 @@ namespace CosineKitty
         /// add the jovicentric positions. Likewise, you can call #Astronomy.GeoVector
         /// to convert to geocentric positions; however, you will have to manually
         /// correct for light travel time from the Jupiter system to Earth to
-        /// figure out what time to pass to `jupiterMoons` to get an accurate picture
+        /// figure out what time to pass to `JupiterMoons` to get an accurate picture
         /// of how Jupiter and its moons look from Earth.
         /// </remarks>
         /// <param name="time">The date and time for which to calculate the position vectors.</param>
@@ -5802,7 +5802,7 @@ namespace CosineKitty
         /// `Search` uses a combination of bisection and quadratic interpolation
         /// to minimize the number of function calls. However, it is critical that the
         /// supplied time window be small enough that there cannot be more than one root
-        /// (ascedning or descending) within it; otherwise the search can fail.
+        /// (ascending or descending) within it; otherwise the search can fail.
         /// Beyond that, it helps to make the time window as small as possible, ideally
         /// such that the function itself resembles a smooth parabolic curve within that window.
         ///

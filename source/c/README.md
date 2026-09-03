@@ -168,8 +168,8 @@ these are used in function and type names.
 | [Rotation_EQD_ECL](#Astronomy_Rotation_EQD_ECL) | Calculates a rotation matrix from true equator of date (EQD) to J2000 mean ecliptic (ECL). |
 | [Rotation_EQD_HOR](#Astronomy_Rotation_EQD_HOR) | Calculates a rotation matrix from true equator of date (EQD) to horizontal (HOR). |
 | [Rotation_EQJ_EQD](#Astronomy_Rotation_EQJ_EQD) | Calculates a rotation matrix from J2000 mean equator (EQJ) to true equator of date (EQD). |
-| [Rotation_EQJ_ECT](#Astronomy_Rotation_EQJ_ECT) | Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL). |
-| [Rotation_EQJ_ECL](#Astronomy_Rotation_EQJ_ECL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT). |
+| [Rotation_EQJ_ECT](#Astronomy_Rotation_EQJ_ECT) | Calculates a rotation matrix from J2000 mean equator (EQJ) to  true ecliptic of date (ECT). |
+| [Rotation_EQJ_ECL](#Astronomy_Rotation_EQJ_ECL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL). |
 | [Rotation_EQJ_HOR](#Astronomy_Rotation_EQJ_HOR) | Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR). |
 | [Rotation_ECT_EQD](#Astronomy_Rotation_ECT_EQD) | Calculates a rotation matrix from true ecliptic of date (ECT) to true equator of date (EQD). |
 | [Rotation_ECT_EQJ](#Astronomy_Rotation_ECT_EQJ) | Calculates a rotation matrix from true ecliptic of date (ECT) J2000 mean equator (EQJ). |
@@ -3068,7 +3068,7 @@ Given a date and time, this function calculates the rotation of the Earth, repre
 
 | Type | Parameter | Description |
 | --- | --- | --- |
-| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time for which to find GAST. The parameter is passed by address because it can be modified by the call: As an optimization, this function caches the sidereal time value in `time`, unless it has already been cached, in which case the cached value is reused. | 
+| <code><a href="#astro_time_t">astro_time_t</a> *</code> | `time` |  The date and time for which to find GAST. The parameter is passed by address because it can be modified by the call: As an optimization, this function caches the sidereal time value in `time`, unless it has already been cached, in which case the cached value is reused. If the `time` pointer is NULL, this function returns a NAN value. | 
 
 
 

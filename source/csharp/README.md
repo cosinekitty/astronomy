@@ -152,7 +152,7 @@ these are used in function and type names.
 | [Rotation_EQD_ECL](#Astronomy.Rotation_EQD_ECL) | Calculates a rotation matrix from true equator of date (EQD) to J2000 mean ecliptic (ECL). |
 | [Rotation_EQD_HOR](#Astronomy.Rotation_EQD_HOR) | Calculates a rotation matrix from true equator of date (EQD) to horizontal (HOR). |
 | [Rotation_EQJ_EQD](#Astronomy.Rotation_EQJ_EQD) | Calculates a rotation matrix from J2000 mean equator (EQJ) to true equator of date (EQD). |
-| [Rotation_EQJ_ECT](#Astronomy.Rotation_EQJ_ECT) | Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL). |
+| [Rotation_EQJ_ECT](#Astronomy.Rotation_EQJ_ECT) | Calculates a rotation matrix from J2000 mean equator (EQJ) to true ecliptic of date (ECT). |
 | [Rotation_EQJ_ECL](#Astronomy.Rotation_EQJ_ECL) | Calculates a rotation matrix from J2000 mean equator (EQJ) to J2000 mean ecliptic (ECL). |
 | [Rotation_EQJ_HOR](#Astronomy.Rotation_EQJ_HOR) | Calculates a rotation matrix from J2000 mean equator (EQJ) to horizontal (HOR). |
 | [Rotation_ECT_EQD](#Astronomy.Rotation_ECT_EQD) | Calculates a rotation matrix from true ecliptic of date (ECT) to true equator of date (EQD). |
@@ -957,7 +957,7 @@ with `Body.Jupiter` to get Jupiter's heliocentric position, then
 add the jovicentric positions. Likewise, you can call [`Astronomy.GeoVector`](#Astronomy.GeoVector)
 to convert to geocentric positions; however, you will have to manually
 correct for light travel time from the Jupiter system to Earth to
-figure out what time to pass to `jupiterMoons` to get an accurate picture
+figure out what time to pass to `JupiterMoons` to get an accurate picture
 of how Jupiter and its moons look from Earth.
 
 | Type | Parameter | Description |
@@ -1842,7 +1842,7 @@ reports a solution outside this time window.
 `Search` uses a combination of bisection and quadratic interpolation
 to minimize the number of function calls. However, it is critical that the
 supplied time window be small enough that there cannot be more than one root
-(ascedning or descending) within it; otherwise the search can fail.
+(ascending or descending) within it; otherwise the search can fail.
 Beyond that, it helps to make the time window as small as possible, ideally
 such that the function itself resembles a smooth parabolic curve within that window.
 

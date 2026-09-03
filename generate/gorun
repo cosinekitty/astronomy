@@ -1,0 +1,24 @@
+#!/bin/bash
+Fail()
+{
+    echo "ERROR($0): $1"
+    exit 1
+}
+
+echo "Generating target code."
+./generate source || Fail "Problem generating target code."
+
+echo "Formatting and documenting Go code."
+cd ../source/golang
+echo "GOROOT = ${GOROOT}"
+echo "GOPATH = ${GOPATH}"
+echo "PATH = ${PATH}"
+echo "GITHUB_REF_NAME = ${GITHUB_REF_NAME}"
+go version || Fail "Cannot find Go compiler."
+go fmt ./... || Fail "Error in 'go fmt' command."
+gomarkdoc --repository.url "https://github.com/cosinekitty/astronomy" --repository.default-branch golang --repository.path "/source/golang" -o README.md . || Fail "Error generating Go documentation using 'gomarkdoc'."
+cd ../../generate
+
+./unit_test_golang || exit $?
+echo "gorun: SUCCESS"
+exit 0
