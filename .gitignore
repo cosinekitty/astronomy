@@ -4,3 +4,7 @@
 __pycache__
 .mypy_cache
 bin/
+dependencies/Astronomy function dependencies - plan.csv
+dependencies/todo.md
+report.md
+arch.md
